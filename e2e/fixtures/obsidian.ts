@@ -1,90 +1,86 @@
-import { test as base, expect, _electron as electron } from '@playwright/test'
-import type { ElectronApplication, Page } from '@playwright/test'
-// eslint-disable-next-line import/no-nodejs-modules
+import { test as base, expect, chromium } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
-// eslint-disable-next-line import/no-nodejs-modules
-import * as os from 'node:os'
-// eslint-disable-next-line import/no-nodejs-modules
-import * as fs from 'node:fs'
+import * as net from 'node:net'
 
-// Helper to find the Obsidian executable based on the OS
-function getObsidianExecutablePath(): string {
-  const platform = os.platform()
-  if (platform === 'darwin') {
-    return process.env.OBSIDIAN_EXECUTABLE_PATH || '/Applications/Obsidian.app/Contents/MacOS/Obsidian'
-  }
-  else if (platform === 'win32') {
-    return process.env.OBSIDIAN_EXECUTABLE_PATH || path.join(process.env.LOCALAPPDATA || '', 'Programs', 'obsidian', 'Obsidian.exe')
-  }
-  else if (platform === 'linux') {
-    // Requires OBSIDIAN_EXECUTABLE_PATH to be set in CI (e.g., extracted AppImage)
-    return process.env.OBSIDIAN_EXECUTABLE_PATH || '/opt/Obsidian/obsidian'
-  }
-  throw new Error(`Unsupported platform: ${platform}`)
+const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
+const VAULT_PATH = path.join(ROOT_DIR, 'example')
+const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
+
+function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.listen(0, () => {
+      const addr = server.address()
+      server.close(() => {
+        if (addr !== null && typeof addr === 'object') {
+          resolve(addr.port)
+        }
+        else {
+          reject(new Error('Could not determine free port'))
+        }
+      })
+    })
+  })
 }
 
-type ObsidianFixtures = {
-  obsidianApp: ElectronApplication
-  obsidianPage: { page: Page }
+async function waitForCDP(port: number, maxAttempts = 30, delayMs = 500): Promise<void> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
+      await browser.close()
+      return
+    }
+    catch {
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+  }
+  throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`)
 }
+
+export type ObsidianPage = Readonly<{
+  page: Page
+}>
+
+type ObsidianFixtures = Readonly<{
+  obsidianPage: ObsidianPage
+}>
 
 export const test = base.extend<ObsidianFixtures>({
-  // eslint-disable-next-line no-empty-pattern
-  obsidianApp: async ({ }, use) => {
-    // resolve to the root directory's example vault
-    const rootDir = path.resolve(import.meta.dirname, '../../')
-    const testVaultPath = path.join(rootDir, 'example')
+  obsidianPage: async (_, use) => {
+    const port = await findFreePort()
+    const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 
-    // Copy the built plugin files into the test vault
-    const pluginId = 'obsidian-bases-charts'
-    // eslint-disable-next-line obsidianmd/hardcoded-config-path
-    const pluginDir = path.join(testVaultPath, '.obsidian', 'plugins', pluginId)
-    fs.mkdirSync(pluginDir, { recursive: true })
-
-    const filesToCopy = ['main.js', 'manifest.json', 'styles.css']
-    for (const file of filesToCopy) {
-      const src = path.join(rootDir, file)
-      const dest = path.join(pluginDir, file)
-      if (fs.existsSync(src)) {
-        fs.copyFileSync(src, dest)
-      }
-    }
-
-    const executablePath = getObsidianExecutablePath()
-
-    const app = await electron.launch({
-      executablePath,
-      args: [testVaultPath, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--remote-debugging-port=9222'],
-      env: { ...process.env, NODE_ENV: 'test' },
+    const { proc } = await launcher.launch({
+      appVersion: 'earliest',
+      installerVersion: 'earliest',
+      vault: VAULT_PATH,
+      copy: true,
+      plugins: [ROOT_DIR],
+      args: [
+        `--remote-debugging-port=${port}`,
+        '--no-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+      ],
     })
 
-    await use(app)
-    await app.close()
-  },
+    await waitForCDP(port)
 
-  obsidianPage: async ({ obsidianApp }, use) => {
-    // Grab the first window to interact with the Obsidian UI
-    // Sometimes it takes a moment to open
-    let page = await obsidianApp.firstWindow()
+    const browser = await chromium.connectOverCDP(`http://localhost:${port}`)
+    const context = browser.contexts()[0] ?? await browser.newContext()
+    const page = context.pages()[0] ?? await context.newPage()
 
-    // It's possible for there to be a blank electron window first if we're too fast
-    for (let i = 0; i < 20; i++) {
-      const pages = obsidianApp.windows()
-      if (pages.length > 0) {
-        page = pages[0]!
-        const url = page.url()
-        if (url.includes('app.html') || url.includes('index.html')) {
-          break
-        }
-      }
-      await new Promise(resolve => setTimeout(resolve, 500))
-    }
-
-    // Wait for Obsidian app to initialize
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await page.waitForFunction(() => typeof (window as any).app !== 'undefined', { timeout: 30_000 })
+    await page.waitForFunction(
+      () => typeof (window as unknown as Record<string, unknown>).app !== 'undefined',
+      { timeout: 30_000 },
+    )
 
     await use({ page })
+
+    await browser.close()
+    proc.kill()
   },
 })
 

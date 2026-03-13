@@ -11,12 +11,16 @@ import yml from 'eslint-plugin-yml'
 
 const jsFiles = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs', '**/*.cjs', '**/*.mts', '**/*.cts']
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function restrictToJs(config: any) {
-  if (!config.files) {
-    return { ...config, files: jsFiles }
+  // Strip the `json` plugin from obsidianmd's bundled configs so our own @eslint/json
+  // registration doesn't conflict with obsidianmd's bundled instance.
+  const plugins: Record<string, any> = config.plugins ?? {}
+  const restPlugins = Object.fromEntries(Object.entries(plugins).filter(([k]) => k !== 'json'))
+  const cleaned = { ...config, plugins: restPlugins }
+  if (!cleaned.files) {
+    return { ...cleaned, files: jsFiles }
   }
-  return config
+  return cleaned
 }
 
 // Define custom rule for package.json dependency sorting
@@ -30,10 +34,8 @@ const packageJsonPlugin = {
         },
         fixable: 'code',
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       create(context: any) {
         return {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           'Member'(node: any) {
             if (
               node.name
@@ -42,7 +44,6 @@ const packageJsonPlugin = {
             ) {
               if (node.value && node.value.type === 'Object') {
                 const members = node.value.members
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const memberNames = members.map((m: any) => m.name.value)
                 const sortedMemberNames = [...memberNames].sort()
 
@@ -52,10 +53,7 @@ const packageJsonPlugin = {
                   context.report({
                     node: node.value,
                     message: `Dependencies in '${node.name.value}' should be sorted alphabetically.`,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     fix(fixer: any) {
-                      // Extract member pairs (key: value)
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const memberPairs = members.map((m: any) => {
                         return {
                           name: m.name.value,
@@ -66,15 +64,12 @@ const packageJsonPlugin = {
                         }
                       })
 
-                      // Sort pairs
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       memberPairs.sort((a: any, b: any) => a.name.localeCompare(b.name))
 
                       // Reconstruct the object content with indentation
                       // Assuming standard package.json indentation (tabs)
                       // The object itself is indented by 1 tab, so members are 2 tabs.
                       const indentation = '\t\t'
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const content = memberPairs.map((p: any) => `${indentation}${p.key}: ${p.value}`).join(',\n')
 
                       // Wrap in braces with correct outer indentation
@@ -130,13 +125,10 @@ export default tseslint.config(
   restrictToJs(functional.configs.strict),
   restrictToJs(functional.configs.stylistic),
   restrictToJs(stylistic.configs.recommended),
-  {
-    ...functional.configs.externalTypeScriptRecommended,
-    files: ['**/*.ts', '**/*.tsx'],
-  },
-
-  // Manual plugin setup
-  ...tseslint.configs.recommended,
+  // Note: tseslint.configs.recommended and functional.configs.externalTypeScriptRecommended
+  // are intentionally NOT spread here. obsidianmd.configs.recommended already registers the
+  // @typescript-eslint plugin via its internal extends. Spreading tseslint.configs.recommended
+  // would redefine the plugin with a different object instance and throw a ConfigError.
   {
     files: ['**/*.ts', '**/*.tsx'],
     plugins: {
@@ -286,6 +278,7 @@ export default tseslint.config(
       // Relax rules for Testing patterns (Assertions, Mocking, Setup/Teardown)
       'functional/no-expression-statements': 'off', // Needed for expect() assertions
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }], // Allow devDependencies in tests
+      'import/no-nodejs-modules': 'off', // Node built-ins are allowed in tests and e2e fixtures
       '@typescript-eslint/consistent-type-assertions': 'off', // Needed for mocking
       '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe args in tests
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -310,6 +303,7 @@ export default tseslint.config(
       }],
       'functional/no-let': 'off', // Allow let in Playwright e2e tests
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
+      '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
     },
   },
   // Legacy Transformers (Pending Refactor)
@@ -371,7 +365,7 @@ export default tseslint.config(
   },
   // Scripts
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'wdio.conf.mts'],
+    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -409,7 +403,7 @@ export default tseslint.config(
   },
   // Config files (relax rules)
   {
-    files: ['eslint.config.mts', 'wdio.conf.mts'],
+    files: ['eslint.config.mts', 'playwright.config.ts'],
     rules: {
       'functional/prefer-immutable-types': 'off',
       'functional/no-conditional-statements': 'off',
