@@ -1,5 +1,6 @@
 import { test as base, expect, chromium } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import type { ChildProcess } from 'node:child_process'
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
@@ -25,8 +26,11 @@ function findFreePort(): Promise<number> {
   })
 }
 
-async function waitForCDP(port: number, maxAttempts = 30, delayMs = 500): Promise<void> {
+async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, delayMs = 1000): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
+    if (proc.exitCode !== null) {
+      throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
+    }
     try {
       const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
       await browser.close()
@@ -53,20 +57,20 @@ export const test = base.extend<ObsidianFixtures>({
     const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 
     const { proc } = await launcher.launch({
-      appVersion: 'earliest',
-      installerVersion: 'earliest',
+      appVersion: 'latest',
+      installerVersion: 'latest',
       vault: VAULT_PATH,
       copy: true,
       plugins: [ROOT_DIR],
-      args: [
-        `--remote-debugging-port=${port}`,
-        '--no-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-      ],
+      args: [`--remote-debugging-port=${port}`],
+      spawnOptions: { stdio: 'pipe' },
     })
 
-    await waitForCDP(port)
+    if (proc.stderr) {
+      proc.stderr.on('data', (data: Buffer) => process.stderr.write(`[obsidian] ${data.toString()}`))
+    }
+
+    await waitForCDP(port, proc)
 
     const browser = await chromium.connectOverCDP(`http://localhost:${port}`)
     const context = browser.contexts()[0] ?? await browser.newContext()
