@@ -48,7 +48,7 @@ type ObsidianFixtures = Readonly<{
 }>
 
 export const test = base.extend<ObsidianFixtures>({
-  obsidianPage: async (_, use) => {
+  obsidianPage: async ({}, use) => {
     const port = await findFreePort()
     const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 

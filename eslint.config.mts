@@ -301,6 +301,7 @@ export default tseslint.config(
         ignoreClasses: true,
         ignoreAccessorPattern: ['this.**'],
       }],
+      'no-empty-pattern': 'off', // Playwright fixtures require ({}, use) destructure syntax
       'functional/no-let': 'off', // Allow let in Playwright e2e tests
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
