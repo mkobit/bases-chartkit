@@ -7,7 +7,7 @@ on:
         branches: ["**"]
 
 env:
-    BUN_VERSION: "1.2.14"
+    BUN_VERSION: "1.3.10"
 
 jobs:
     build:
@@ -81,18 +81,20 @@ jobs:
               with:
                   name: ${{ needs.build.outputs.artifact-name }}
 
-            - name: Setup Linux Environment
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y herbstluftwm
-
             - name: Cache Obsidian
               uses: actions/cache@v5
               with:
                   path: .obsidian-cache
-                  key: obsidian-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'wdio.conf.mts') }}
+                  key: obsidian-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'playwright.config.ts') }}
                   restore-keys: |
                       obsidian-cache-${{ runner.os }}-
 
             - name: Run E2E Tests
-              run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bash -c "herbstluftwm & bun run test:e2e"
+              run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bun run test:e2e
+
+            - name: Upload Playwright Report
+              if: failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: playwright-report
+                  path: playwright-report/

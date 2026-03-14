@@ -1,6 +1,5 @@
-// eslint-disable-next-line import/no-nodejs-modules
 import * as fs from 'node:fs/promises'
-// eslint-disable-next-line import/no-nodejs-modules
+
 import * as path from 'node:path'
 import type { NoteDefinition } from './schema'
 import { serializeFrontmatter } from './serializer'

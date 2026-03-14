@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-nodejs-modules
 import * as path from 'node:path'
 import type { FrontmatterValue, NoteDefinition } from './schema'
 

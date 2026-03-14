@@ -1,22 +1,22 @@
-# E2E Testing (WebdriverIO)
+# E2E Testing (Playwright)
 
 ## Core Strategy
-**Avoid UI Scraping**: Use `browser.executeObsidian` to interact with the internal Obsidian API for robust state verification.
+**Avoid UI Scraping**: Use `evaluateObsidian` to interact with the internal Obsidian API for robust state verification.
 
 ```typescript
 // Good: Verify file existence via internal API
-const exists = await browser.executeObsidian(({ app }) => {
+const exists = await evaluateObsidian(page, (app) => {
   return app.vault.getAbstractFileByPath("MyFile.md") !== null;
 });
 ```
 
 ## Context Isolation
-Variables from the test scope are **not** available inside `executeObsidian`. Pass them explicitly as arguments.
+Variables from the test scope are **not** available inside `evaluateObsidian`. Pass them explicitly as arguments using `evaluateObsidianWith`.
 
 ```typescript
 const filename = "note.md";
-await browser.executeObsidian(({ app }, name) => {
-  // 'name' is available here, 'filename' is NOT
-  app.vault.create(name, "");
-}, filename);
+await evaluateObsidianWith(page, async (app, args) => {
+  // 'args.filename' is available here, 'filename' is NOT
+  await app.vault.create(args.filename, "");
+}, { filename });
 ```
