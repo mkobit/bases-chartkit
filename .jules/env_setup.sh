@@ -41,6 +41,8 @@ fi
 echo "mise found. Installing tools..."
 mise trust
 mise install
+eval "$(mise activate bash)"
+mise doctor
 
 # 3. Install dependencies
 echo "Installing dependencies with bun..."
