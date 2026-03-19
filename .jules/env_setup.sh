@@ -42,16 +42,12 @@ echo "mise found. Installing tools..."
 mise trust
 mise install
 eval "$(mise activate bash)"
+mise doctor
 
-# 3. Install dependencies
 echo "Installing dependencies with bun..."
-if ! command -v bun &> /dev/null; then
-    echo "Error: 'bun' was not found after 'mise install'."
-    exit 1
-fi
 bun install --frozen-lockfile
 
-# 4. Diagnostic Info
+echo "Diagnostic Info:"
 echo "User: $(whoami)"
 echo "Git Commit: $(git rev-parse --short HEAD) ($(git log -1 --format=%cI))"
 echo "Bun Version: $(bun --version)"
