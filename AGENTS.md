@@ -15,3 +15,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 | `bun run build` | Full production build (Type check + Build). |
 | `bun test` | Run unit tests. |
 | `bun run test:e2e` | Run end-to-end tests via WebdriverIO. |
+
+## Dependency Installation Handling
+This project is configured to ignore newly released packages for up to 2 weeks via the `minimumReleaseAge` setting in `.bunfig.toml`. This is a security measure.
+If you encounter failures stemming from this config (e.g., package not found during `bun install`, or an agent unproductively spinning its wheels trying to install a very new package version), **do not** attempt to alter the package manager or bypass the configuration. Instead, identify an older, stable version of the package (released more than 2 weeks ago) and install that version.
