@@ -15,3 +15,8 @@ The project enforces strict Functional Programming principles via `eslint`.
 | `bun run build` | Full production build (Type check + Build). |
 | `bun test` | Run unit tests. |
 | `bun run test:e2e` | Run end-to-end tests via WebdriverIO. |
+
+## Dependency Installation Handling
+We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
+If `bun install` fails to find a package, do not try to alter the package manager or bypass the configuration.
+Instead, identify and install an older, stable version of the package.
