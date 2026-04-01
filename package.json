@@ -18,7 +18,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
-		"@eslint/core": "^1.1.0",
+		"@eslint/core": "^1.1.1",
 		"@eslint/js": "^10.0.1",
 		"@eslint/json": "^1.0.1",
 		"@playwright/test": "^1.58.2",
