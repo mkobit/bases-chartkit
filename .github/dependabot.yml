@@ -3,16 +3,20 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     assignees:
       - "mkobit"
     open-pull-requests-limit: 10
+    cooldown:
+      default-days: 14
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     assignees:
       - "mkobit"
     open-pull-requests-limit: 10
     ignore:
       - dependency-name: "obsidian"
+    cooldown:
+      default-days: 14
