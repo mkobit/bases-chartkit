@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "obsidian-bases-charts",
@@ -25,7 +26,7 @@
         "@wdio/cli": "^9.24.0",
         "@wdio/globals": "^9.23.0",
         "@wdio/local-runner": "^9.24.0",
-        "@wdio/mocha-framework": "^9.24.0",
+        "@wdio/mocha-framework": "^9.26.1",
         "@wdio/spec-reporter": "^9.24.0",
         "commander": "^14.0.3",
         "esbuild": "0.27.3",
@@ -327,7 +328,7 @@
 
     "@wdio/logger": ["@wdio/logger@9.18.0", "", { "dependencies": { "chalk": "^5.1.2", "loglevel": "^1.6.0", "loglevel-plugin-prefix": "^0.8.4", "safe-regex2": "^5.0.0", "strip-ansi": "^7.1.0" } }, "sha512-HdzDrRs+ywAqbXGKqe1i/bLtCv47plz4TvsHFH3j729OooT5VH38ctFn5aLXgECmiAKDkmH/A6kOq2Zh5DIxww=="],
 
-    "@wdio/mocha-framework": ["@wdio/mocha-framework@9.24.0", "", { "dependencies": { "@types/mocha": "^10.0.6", "@types/node": "^20.11.28", "@wdio/logger": "9.18.0", "@wdio/types": "9.24.0", "@wdio/utils": "9.24.0", "mocha": "^10.3.0" } }, "sha512-zzTfFk79Zx3qZgfbgpJ7o0euzgXIQSCzbfFPjgtEx8u7fvrhB8tbgf+EGPOEGPBOH/X1GvpAfDkhkgZ6roDR2Q=="],
+    "@wdio/mocha-framework": ["@wdio/mocha-framework@9.26.1", "", { "dependencies": { "@types/mocha": "^10.0.6", "@types/node": "^20.11.28", "@wdio/logger": "9.18.0", "@wdio/types": "9.26.1", "@wdio/utils": "9.26.1", "mocha": "^10.3.0" } }, "sha512-/yxEziBCZgxGG2atM0CScSpBZbxy1AFK4m7Gw073i2xMxbWjL1UsXR6fre9Wmgc5bTso7b6kkKsNZYy2hNKXnw=="],
 
     "@wdio/protocols": ["@wdio/protocols@9.24.0", "", {}, "sha512-ozQKYddBLT4TRvU9J+fGrhVUtx3iDAe+KNCJcTDMFMxNSdDMR2xFQdNp8HLHypspk58oXTYCvz6ZYjySthhqsw=="],
 
@@ -1570,6 +1571,10 @@
     "@wdio/local-runner/@types/node": ["@types/node@20.12.12", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-eWLDGF/FOSPtAvEqeRAQ4C8LSA7M1I7i0ky1I8U7kD1J5ITyW3AsRhQrKVoWf5pFKZ2kILsEGJhsI9r93PYnOw=="],
 
     "@wdio/mocha-framework/@types/node": ["@types/node@20.12.12", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-eWLDGF/FOSPtAvEqeRAQ4C8LSA7M1I7i0ky1I8U7kD1J5ITyW3AsRhQrKVoWf5pFKZ2kILsEGJhsI9r93PYnOw=="],
+
+    "@wdio/mocha-framework/@wdio/types": ["@wdio/types@9.26.1", "", { "dependencies": { "@types/node": "^20.1.0" } }, "sha512-U6JTbwVvDoSHBvFNuE6GbiW4fX0gl7wyrtJVsgv0vYkt4qzssVPFpE19ndBY1PZ59dLWU6llDEgyyTtIcXwSfQ=="],
+
+    "@wdio/mocha-framework/@wdio/utils": ["@wdio/utils@9.26.1", "", { "dependencies": { "@puppeteer/browsers": "^2.2.0", "@wdio/logger": "9.18.0", "@wdio/types": "9.26.1", "decamelize": "^6.0.0", "deepmerge-ts": "^7.0.3", "edgedriver": "^6.1.2", "geckodriver": "^6.1.0", "get-port": "^7.0.0", "import-meta-resolve": "^4.0.0", "locate-app": "^2.2.24", "mitt": "^3.0.1", "safaridriver": "^1.0.0", "split2": "^4.2.0", "wait-port": "^1.1.0" } }, "sha512-EfXS438cLc54+XQFcFcbcTWLJ4VSEpjtEHQ/v3QFB+mbBezJUC15rf/zEG4fFjhP1ENAAmZZtjc/l6bGEFFk2A=="],
 
     "@wdio/repl/@types/node": ["@types/node@20.12.12", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-eWLDGF/FOSPtAvEqeRAQ4C8LSA7M1I7i0ky1I8U7kD1J5ITyW3AsRhQrKVoWf5pFKZ2kILsEGJhsI9r93PYnOw=="],
 
