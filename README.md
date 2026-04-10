@@ -1,7 +1,14 @@
 # Obsidian Bases Charts
 
+[![Obsidian Badge](https://img.shields.io/badge/obsidian-plugin-7a3ee8?logo=obsidian)](https://obsidian.md/)
+[![CI](https://github.com/mkobit/obsidian-bases-charts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mkobit/obsidian-bases-charts/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mkobit/obsidian-bases-charts)](https://github.com/mkobit/obsidian-bases-charts/releases)
+[![Codecov](https://codecov.io/gh/mkobit/obsidian-bases-charts/branch/main/graph/badge.svg)](https://codecov.io/gh/mkobit/obsidian-bases-charts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
+
 > [!WARNING]
-> **Work in Progress** as of 2026-01-07. This plugin is under active development.
+> **Work in Progress** as of 2026-04-10. This plugin is under active development.
 
 ## Project summary
 
