@@ -9,10 +9,11 @@ export default defineConfig({
   reporter: [
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
     ['list'],
+    ['github'],
   ],
   use: {
     screenshot: 'only-on-failure',
-    video: 'off',
-    trace: 'on-first-retry',
+    video: 'retain-on-failure',
+    trace: 'retain-on-failure',
   },
 })
