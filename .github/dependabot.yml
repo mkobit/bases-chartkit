@@ -20,3 +20,7 @@ updates:
       - dependency-name: "obsidian"
     cooldown:
       default-days: 14
+    groups:
+      bun-ecosystem:
+        patterns:
+          - "*"
