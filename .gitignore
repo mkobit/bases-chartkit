@@ -24,3 +24,8 @@ coverage
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 .obsidian-cache/
+
+# Playwright & Integration testing
+playwright-report/
+test-results/
+.obsidian-bin/
