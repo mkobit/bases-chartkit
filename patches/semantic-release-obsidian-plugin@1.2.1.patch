@@ -1,0 +1,13 @@
+diff --git a/node_modules/semantic-release-obsidian-plugin/.bun-tag-2d37c530b37e289e b/.bun-tag-2d37c530b37e289e
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/src/constants.js b/src/constants.js
+index 0ec82e91bf78b75d9fd8e5eb108a22212ebbd3c2..d88b57d3b5a8c85bd4848fc9f65a2f9c5617beb7 100644
+--- a/src/constants.js
++++ b/src/constants.js
+@@ -1,4 +1,4 @@
+ /** Returns the list of files the plugin expects to read to/write from. */
+ export function getPluginFiles() {
+-    return ["package.json", "package-lock.json", "manifest.json", "versions.json"];
++    return ["package.json", "manifest.json", "versions.json"];
+ }
