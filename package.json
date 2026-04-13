@@ -66,5 +66,8 @@
 		"remeda": "^2.33.6",
 		"temporal-polyfill": "^0.3.2",
 		"zod": "^4.3.6"
+	},
+	"patchedDependencies": {
+		"semantic-release-obsidian-plugin@1.2.1": "patches/semantic-release-obsidian-plugin@1.2.1.patch"
 	}
 }
