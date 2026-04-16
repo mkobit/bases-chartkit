@@ -1,2 +1,6 @@
 [tools]
 bun = "1.3.12"
+
+[settings]
+locked = true
+http_retries = 5
