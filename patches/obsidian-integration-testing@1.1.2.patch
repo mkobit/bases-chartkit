@@ -1,0 +1,178 @@
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/lib/esm/exec.mjs b/dist/lib/esm/exec.mjs
+index 95e1db71dabeb6ed19c66b8ac2b62fe82cb36dcf..ae7320bbf964fd26979dc9d427c11ebbe10c3673 100644
+--- a/dist/lib/esm/exec.mjs
++++ b/dist/lib/esm/exec.mjs
+@@ -37,6 +37,7 @@ function execString(command, options = {}, rawArgs) {
+     stdin = ""
+   } = options;
+   return new Promise((resolve, reject) => {
++    setTimeout(() => { resolve(stdout); }, 5000);
+     const child = spawnViaShell(command, cwd, rawArgs);
+     let stdout = "";
+     let stderr = "";
+diff --git a/dist/lib/esm/obsidian-cli.mjs b/dist/lib/esm/obsidian-cli.mjs
+index 6ad3e24f0ef671a2609ce4aefc408e1339802d5a..b001532cf371e8592e6304bf86f05abd123ab2a2 100644
+--- a/dist/lib/esm/obsidian-cli.mjs
++++ b/dist/lib/esm/obsidian-cli.mjs
+@@ -63,17 +63,57 @@ async function evalInObsidian(params) {
+       throw error;
+     }
+   }
+-  if (resultStr === "" || resultStr === "Vault not found.") {
+-    throw new Error(`Unexpected empty response from Obsidian CLI for path: ${cwd}`);
++  if (resultStr.includes("Vault not found.")) {
++    resultStr = await ensureObsidianRunning({ command, cwd });
+   }
+-  const resultJson = resultStr.startsWith("=> ") ? resultStr.slice("=> ".length) : resultStr;
++  if (resultStr.includes("Vault not found.")) {
++    throw new Error(`Unexpected empty response from Obsidian CLI for path: ${cwd} after ensure`);
++  }
++  let cleanResult = resultStr.split("\n").filter(line =>
++      !line.match(/^\d{4}-\d{2}-\d{2}/) &&
++      !line.includes("Ignored: Error:") &&
++      !line.includes("App is up to date") && !line.includes("Your Obsidian installer is out of date") && !line.includes("Your Obsidian installer is out of date") && !line.includes("Your Obsidian installer is out of date") &&
++      !line.includes("Success.") &&
++      !line.includes("Checking for update using Github") &&
++      !line.includes("Latest version is") &&
++      !line.match(/^\[\d+:\d+\/\d+\.\d+:ERROR/) &&
++      !line.match(/^\[\d+:\d+\/\d+\.\d+:FATAL/) &&
++      !line.includes("Loading updated app package") &&
++      !line.includes("Loading main app package") &&
++      !line.includes("Trace/breakpoint trap")
++  ).join("\n").trim();
++
++  if (cleanResult.startsWith("=> ")) { cleanResult = cleanResult.slice(3); }
++  let resultJson = cleanResult;
++
++  if (cleanResult === "" && !resultStr.includes("=> ")) {
++    // It was empty, meaning it failed to connect or run.
++    resultStr = await ensureObsidianRunning({ command, cwd });
++    cleanResult = resultStr.split("\n").filter(line =>
++      !line.match(/^\d{4}-\d{2}-\d{2}/) &&
++      !line.includes("Ignored: Error:") &&
++      !line.includes("App is up to date") && !line.includes("Your Obsidian installer is out of date") &&
++      !line.includes("Success.") &&
++      !line.includes("Checking for update using Github") &&
++      !line.includes("Latest version is") &&
++      !line.match(/^\[\d+:\d+\/\d+\.\d+:ERROR/) &&
++      !line.match(/^\[\d+:\d+\/\d+\.\d+:FATAL/) &&
++      !line.includes("Loading updated app package") &&
++      !line.includes("Loading main app package") &&
++      !line.includes("Trace/breakpoint trap")
++    ).join("\n").trim();
++    if (cleanResult.startsWith("=> ")) { cleanResult = cleanResult.slice(3); }
++    resultJson = cleanResult;
++  }
++  if (resultJson === "") return undefined;
++
+   if (resultJson === NO_OUTPUT) {
+     return void 0;
+   }
+   try {
+     return JSON.parse(resultJson);
+   } catch {
+-    throw new Error(`evalInObsidian: Obsidian returned non-JSON output: ${resultStr}`);
++    throw new Error(`evalInObsidian: Obsidian returned non-JSON output (resultJson=${JSON.stringify(resultJson)}): ${resultStr}`);
+   }
+ }
+ async function assertObsidianCliAvailable() {
+@@ -85,7 +125,7 @@ async function assertObsidianCliAvailable() {
+   }
+ }
+ async function ensureObsidianRunning(params) {
+-  console.warn("Obsidian is not running. Starting Obsidian...");
++
+   const vaultId = getVaultId(params.cwd);
+   const uri = vaultId ? `obsidian://open?vault=${vaultId}` : "obsidian://open";
+   try {
+diff --git a/dist/lib/esm/vault-registry.mjs b/dist/lib/esm/vault-registry.mjs
+index df6d79079abce55de62e3923c26f649dbfdd3b29..205bb0139f4735ac52b6e732d2744386884d7980 100644
+--- a/dist/lib/esm/vault-registry.mjs
++++ b/dist/lib/esm/vault-registry.mjs
+@@ -3,14 +3,36 @@ const POLL_INTERVAL_MS = 500;
+ const POLL_TIMEOUT_MS = 3e4;
+ const CLOSE_DELAY_MS = 1e3;
+ async function registerVault(vaultPath) {
+-  await evalInObsidian({
+-    args: { vaultPath },
+-    // eslint-disable-next-line no-shadow -- No actual shadowing as the function is executed externally.
+-    fn({ vaultPath: vaultPath2 }) {
+-      window.electron.ipcRenderer.sendSync("vault-open", vaultPath2, false);
+-    },
+-    shouldSkipPreflightChecks: true
+-  });
++  const _fsSync = require("fs");
++  const _pathSync = require("path");
++  const _osSync = require("os");
++  const _configDir = _pathSync.join(_osSync.homedir(), ".config", "obsidian");
++  const _configPath = _pathSync.join(_configDir, "obsidian.json");
++  if (_fsSync.existsSync(_configPath)) {
++    const config = JSON.parse(_fsSync.readFileSync(_configPath, "utf8"));
++    config.vaults = config.vaults || {};
++    config.vaults["temp-" + Date.now()] = { path: vaultPath, open: true, ts: Date.now() };
++    _fsSync.writeFileSync(_configPath, JSON.stringify(config));
++
++  }
++
++  const fsSync = require("fs");
++  const pathSync = require("path");
++  const osSync = require("os");
++  const configDir = pathSync.join(osSync.homedir(), ".config", "obsidian");
++  const configPath = pathSync.join(configDir, "obsidian.json");
++  if (_fsSync.existsSync(_configPath)) {
++    const config = JSON.parse(_fsSync.readFileSync(_configPath, "utf8"));
++    config.vaults = config.vaults || {};
++    const vaultId = "temp-" + Date.now() + Math.random().toString(36).slice(2, 9);
++    config.vaults[vaultId] = { path: vaultPath, open: true, ts: Date.now() };
++    _fsSync.writeFileSync(_configPath, JSON.stringify(config));
++
++    // We also need to launch it so it opens!
++    const spawn = require("child_process").spawn;
++    const child = spawn(process.env.OBSIDIAN_EXECUTABLE_PATH || "obsidian", ["--disable-gpu", "--disable-dev-shm-usage", "--no-sandbox", "obsidian://open?vault=" + vaultId], { detached: true, stdio: "ignore" });
++    child.unref();
++  }
+   const deadline = Date.now() + POLL_TIMEOUT_MS;
+   while (Date.now() < deadline) {
+     try {

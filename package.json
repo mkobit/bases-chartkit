@@ -11,7 +11,7 @@
 		"prepare": "husky",
 		"test": "bun test ./tests",
 		"test:coverage": "bun test ./tests --coverage --coverage-reporter=lcov",
-		"test:e2e": "playwright test",
+		"test:e2e": "bun scripts/test-harness.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"keywords": [],
@@ -46,6 +46,7 @@
 		"husky": "^9.1.7",
 		"jiti": "^2.6.1",
 		"lint-staged": "^16.4.0",
+		"obsidian-integration-testing": "^1.1.2",
 		"obsidian-launcher": "^3.0.2",
 		"semantic-release": "~24.2.3",
 		"semantic-release-obsidian-plugin": "^1.2.1",
@@ -68,6 +69,7 @@
 		"zod": "^4.3.6"
 	},
 	"patchedDependencies": {
-		"semantic-release-obsidian-plugin@1.2.1": "patches/semantic-release-obsidian-plugin@1.2.1.patch"
+		"semantic-release-obsidian-plugin@1.2.1": "patches/semantic-release-obsidian-plugin@1.2.1.patch",
+		"obsidian-integration-testing@1.1.2": "patches/obsidian-integration-testing@1.1.2.patch"
 	}
 }
