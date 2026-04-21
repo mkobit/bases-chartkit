@@ -1,17 +1,16 @@
 import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
 import { evalInObsidian } from 'obsidian-integration-testing'
 import { setupVault, teardownVault, globalVault } from './setup'
+import type { App } from 'obsidian'
 
 describe('Obsidian Bases Charts Plugin', () => {
   beforeAll(async () => {
     await setupVault()
 
-    // Enable the plugin using Obsidian API inside the running instance
     await evalInObsidian({
       vaultPath: globalVault.path,
       args: { pluginId: 'obsidian-bases-charts' },
       fn: async ({ app, pluginId }) => {
-        // 'plugins' is internal API, but typed via obsidian-typings
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const plugins = (app as any).plugins
 
@@ -50,25 +49,25 @@ describe('Obsidian Bases Charts Plugin', () => {
     const filename = 'test-chart.md'
     const content = '```chart\n\n```'
 
-    // Create file
     await evalInObsidian({
       vaultPath: globalVault.path,
       args: { filename, content },
       fn: async ({ app, filename, content }) => {
-        const existing = app.vault.getAbstractFileByPath(filename)
+        const typedApp = app as unknown as App
+        const existing = typedApp.vault.getAbstractFileByPath(filename)
         if (existing) {
-          await app.fileManager.trashFile(existing)
+          await typedApp.fileManager.trashFile(existing)
         }
-        await app.vault.create(filename, content)
+        await typedApp.vault.create(filename, content)
       },
     })
 
-    // Verify it exists
     const exists = await evalInObsidian({
       vaultPath: globalVault.path,
       args: { filename },
       fn: ({ app, filename }) => {
-        return app.vault.getAbstractFileByPath(filename) !== null
+        const typedApp = app as unknown as App
+        return typedApp.vault.getAbstractFileByPath(filename) !== null
       },
     })
     expect(exists).toBe(true)
