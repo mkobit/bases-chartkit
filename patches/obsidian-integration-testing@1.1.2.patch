@@ -1,57 +1,36 @@
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/dist/lib/esm/exec.mjs b/dist/lib/esm/exec.mjs
-index 95e1db71dabeb6ed19c66b8ac2b62fe82cb36dcf..ae7320bbf964fd26979dc9d427c11ebbe10c3673 100644
+index 95e1db71dabeb6ed19c66b8ac2b62fe82cb36dcf..e1278e70cfe542b9460d29a5fa51f60c631f76f5 100644
 --- a/dist/lib/esm/exec.mjs
 +++ b/dist/lib/esm/exec.mjs
-@@ -37,6 +37,7 @@ function execString(command, options = {}, rawArgs) {
+@@ -37,24 +37,22 @@ function execString(command, options = {}, rawArgs) {
      stdin = ""
    } = options;
    return new Promise((resolve, reject) => {
 +    setTimeout(() => { resolve(stdout); }, 5000);
++    setTimeout(() => { resolve(stdout); }, 5000);
      const child = spawnViaShell(command, cwd, rawArgs);
      let stdout = "";
      let stderr = "";
+     child.stdin.write(stdin);
+     child.stdin.end();
+     child.stdout.on("data", (data) => {
+-      if (!quiet) {
+-        process.stdout.write(data);
+-      }
++      const str = data.toString("utf-8");
++      if (str.includes("=> ") || str.includes("Vault not found.")) { resolve(str); }
+       stdout += data.toString("utf-8");
+     });
+     child.stdout.on("end", () => {
+       stdout = trimEnd(stdout, "\n");
+     });
+     child.stderr.on("data", (data) => {
+-      if (!quiet) {
+-        process.stderr.write(data);
+-      }
+       stderr += data.toString("utf-8");
+     });
+     child.stderr.on("end", () => {
 diff --git a/dist/lib/esm/obsidian-cli.mjs b/dist/lib/esm/obsidian-cli.mjs
 index 6ad3e24f0ef671a2609ce4aefc408e1339802d5a..b001532cf371e8592e6304bf86f05abd123ab2a2 100644
 --- a/dist/lib/esm/obsidian-cli.mjs
