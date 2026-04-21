@@ -1,3 +1,6 @@
+diff --git a/node_modules/obsidian-integration-testing/.bun-tag-14d47cedbcb9e3ce b/.bun-tag-14d47cedbcb9e3ce
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/node_modules/obsidian-integration-testing/.bun-tag-1c14528317b110fc b/.bun-tag-1c14528317b110fc
 new file mode 100644
 index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
@@ -16,8 +19,14 @@ index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2
 diff --git a/node_modules/obsidian-integration-testing/.bun-tag-cf55909dbc9246c5 b/.bun-tag-cf55909dbc9246c5
 new file mode 100644
 index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/obsidian-integration-testing/.bun-tag-d161ff6cb2b957ec b/.bun-tag-d161ff6cb2b957ec
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/obsidian-integration-testing/.bun-tag-ee17d4f623dccea b/.bun-tag-ee17d4f623dccea
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/dist/lib/esm/exec.mjs b/dist/lib/esm/exec.mjs
-index 95e1db71dabeb6ed19c66b8ac2b62fe82cb36dcf..c59a8919a753a492cab0021777a94dc16530cf84 100644
+index 590a46a6c43fb37d08e3d34136a558160e2838d0..cd42062a4b98b06dba749cbf5f3b7e8250308897 100644
 --- a/dist/lib/esm/exec.mjs
 +++ b/dist/lib/esm/exec.mjs
 @@ -37,24 +37,21 @@ function execString(command, options = {}, rawArgs) {
@@ -48,8 +57,23 @@ index 95e1db71dabeb6ed19c66b8ac2b62fe82cb36dcf..c59a8919a753a492cab0021777a94dc1
        stderr += data.toString("utf-8");
      });
      child.stderr.on("end", () => {
+@@ -212,6 +209,14 @@ function spawnViaShell(command, cwd, rawArgs) {
+     });
+   }
+   const shellCommand = process.platform === "win32" ? cmdEscapeCommandLine(command) : command;
++  if (rawArgs) {
++    const [program, ...args] = rawArgs;
++    return spawn(program, args, {
++      cwd,
++      env: CHILD_ENV,
++      stdio: "pipe"
++    });
++  }
+   return spawn(shellCommand, [], {
+     cwd,
+     env: CHILD_ENV,
 diff --git a/dist/lib/esm/obsidian-cli.mjs b/dist/lib/esm/obsidian-cli.mjs
-index 6ad3e24f0ef671a2609ce4aefc408e1339802d5a..0b8d0531883d71138982a6091a5b8ba1d45eaf45 100644
+index bd321551c8beee86b5cc36521247ed2718cd69a4..ee091a83a7166d3362665d8e04b6129ddfb6eda7 100644
 --- a/dist/lib/esm/obsidian-cli.mjs
 +++ b/dist/lib/esm/obsidian-cli.mjs
 @@ -63,10 +63,29 @@ async function evalInObsidian(params) {
