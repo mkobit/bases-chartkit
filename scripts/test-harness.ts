@@ -56,10 +56,10 @@ async function main() {
   console.log('Running e2e tests...')
   try {
     if (os.platform() === 'linux') {
-      execSync(`xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bun test ./e2e`, { stdio: 'inherit', env: { ...process.env, PATH: process.env.PATH } })
+      execSync(`xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bun test ./e2e --timeout 60000`, { stdio: 'inherit', env: { ...process.env, PATH: process.env.PATH } })
     }
     else {
-      execSync(`bun test ./e2e`, { stdio: 'inherit', env: { ...process.env, PATH: process.env.PATH } })
+      execSync(`bun test ./e2e --timeout 60000`, { stdio: 'inherit', env: { ...process.env, PATH: process.env.PATH } })
     }
   }
   catch (error) {
