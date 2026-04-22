@@ -25,6 +25,9 @@ index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2
 diff --git a/node_modules/obsidian-integration-testing/.bun-tag-ee17d4f623dccea b/.bun-tag-ee17d4f623dccea
 new file mode 100644
 index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/obsidian-integration-testing/.bun-tag-eee3bcf7271ec15f b/.bun-tag-eee3bcf7271ec15f
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/dist/lib/esm/exec.mjs b/dist/lib/esm/exec.mjs
 index 590a46a6c43fb37d08e3d34136a558160e2838d0..cd42062a4b98b06dba749cbf5f3b7e8250308897 100644
 --- a/dist/lib/esm/exec.mjs
@@ -73,9 +76,18 @@ index 590a46a6c43fb37d08e3d34136a558160e2838d0..cd42062a4b98b06dba749cbf5f3b7e82
      cwd,
      env: CHILD_ENV,
 diff --git a/dist/lib/esm/obsidian-cli.mjs b/dist/lib/esm/obsidian-cli.mjs
-index bd321551c8beee86b5cc36521247ed2718cd69a4..ee091a83a7166d3362665d8e04b6129ddfb6eda7 100644
+index bd321551c8beee86b5cc36521247ed2718cd69a4..2da4a99406c989ea6c0d4a384c4bd8c3c8f3e91f 100644
 --- a/dist/lib/esm/obsidian-cli.mjs
 +++ b/dist/lib/esm/obsidian-cli.mjs
+@@ -54,7 +54,7 @@ async function evalInObsidian(params) {
+   const command = ["obsidian", "eval", `code=${expression}`];
+   let resultStr;
+   try {
+-    resultStr = await exec(command, { cwd, isQuiet: true });
++    resultStr = await exec(command, { cwd, isQuiet: true }, command);
+   } catch (error) {
+     const message = error instanceof Error ? error.message : String(error);
+     if (message.includes(UNABLE_TO_FIND_OBSIDIAN)) {
 @@ -63,10 +63,29 @@ async function evalInObsidian(params) {
        throw error;
      }
@@ -109,6 +121,15 @@ index bd321551c8beee86b5cc36521247ed2718cd69a4..ee091a83a7166d3362665d8e04b6129d
    if (resultJson === NO_OUTPUT) {
      return void 0;
    }
+@@ -98,7 +117,7 @@ async function ensureObsidianRunning(params) {
+       setTimeout(r, AUTO_START_POLL_INTERVAL_MS);
+     });
+     try {
+-      return await exec(params.command, { cwd: params.cwd, isQuiet: true });
++      return await exec(params.command, { cwd: params.cwd, isQuiet: true }, params.command);
+     } catch (error) {
+       const message = error instanceof Error ? error.message : String(error);
+       if (!message.includes(UNABLE_TO_FIND_OBSIDIAN)) {
 diff --git a/dist/lib/esm/vault-registry.mjs b/dist/lib/esm/vault-registry.mjs
 index df6d79079abce55de62e3923c26f649dbfdd3b29..e7f574e3f0daf58b5a61f1baa07f6f07a3f9b039 100644
 --- a/dist/lib/esm/vault-registry.mjs
