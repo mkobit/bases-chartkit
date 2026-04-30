@@ -22,4 +22,6 @@ export interface BaseTransformerOptions extends VisualMapOptions {
   readonly flipAxis?: boolean
   readonly isMobile?: boolean
   readonly containerWidth?: number
+  readonly upColor?: string
+  readonly downColor?: string
 }

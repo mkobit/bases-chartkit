@@ -330,6 +330,16 @@
 			"desc": "The default height for charts (e.g. 500px, 50vh).",
 			"placeholder": "500px"
 		},
+		"up_color": {
+			"name": "Positive value color",
+			"desc": "Color used for positive values (up) in specific charts.",
+			"placeholder": "#14b143"
+		},
+		"down_color": {
+			"name": "Negative value color",
+			"desc": "Color used for negative values (down) in specific charts.",
+			"placeholder": "#ef232a"
+		},
 		"global_theme": {
 			"name": "Default global theme",
 			"desc": "Select the default theme to apply to all charts unless overridden.",

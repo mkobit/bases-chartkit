@@ -139,6 +139,8 @@ export abstract class BaseChartView extends BasesView {
       xAxisLabelRotate: Number(this.config.get(BaseChartView.X_AXIS_LABEL_ROTATE_KEY) || 0),
       isMobile: Platform.isMobile,
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
+      upColor: this.plugin.settings.upColor,
+      downColor: this.plugin.settings.downColor,
     }
 
     if (this.isFullScreenGeneration) {

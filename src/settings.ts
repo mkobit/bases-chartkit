@@ -10,6 +10,8 @@ export interface CustomTheme {
 }
 
 export interface BarePluginSettings {
+  upColor: string
+  downColor: string
   mySetting: string
   defaultHeight: string
   customThemes: CustomTheme[]
@@ -17,6 +19,8 @@ export interface BarePluginSettings {
 }
 
 export const DEFAULT_SETTINGS: BarePluginSettings = {
+  upColor: '#14b143',
+  downColor: '#ef232a',
   mySetting: 'default',
   defaultHeight: '500px',
   customThemes: [],
@@ -47,6 +51,28 @@ export class SettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.defaultHeight)
         .onChange(async (value) => {
           this.plugin.settings.defaultHeight = value
+          await this.plugin.saveSettings()
+        }))
+
+    new Setting(containerEl)
+      .setName(t('settings.up_color.name'))
+      .setDesc(t('settings.up_color.desc'))
+      .addText(text => text
+        .setPlaceholder(t('settings.up_color.placeholder'))
+        .setValue(this.plugin.settings.upColor)
+        .onChange(async (value) => {
+          this.plugin.settings.upColor = value
+          await this.plugin.saveSettings()
+        }))
+
+    new Setting(containerEl)
+      .setName(t('settings.down_color.name'))
+      .setDesc(t('settings.down_color.desc'))
+      .addText(text => text
+        .setPlaceholder(t('settings.down_color.placeholder'))
+        .setValue(this.plugin.settings.downColor)
+        .onChange(async (value) => {
+          this.plugin.settings.downColor = value
           await this.plugin.saveSettings()
         }))
 

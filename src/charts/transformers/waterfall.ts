@@ -133,7 +133,7 @@ export function createWaterfallChartOption(
       },
       data: riseData,
       itemStyle: {
-        color: '#14b143', // Western standard Green
+        color: options?.upColor ?? '#14b143',
       },
     },
     {
@@ -146,7 +146,7 @@ export function createWaterfallChartOption(
       },
       data: fallData,
       itemStyle: {
-        color: '#ef232a', // Western standard Red
+        color: options?.downColor ?? '#ef232a',
       },
     },
   ]
@@ -181,7 +181,7 @@ export function createWaterfallChartOption(
           : (fallParam && fallParam.value !== '-' ? -Number(fallParam.value) : 0)
 
         const type = isRising ? 'Increase' : 'Decrease'
-        const color = isRising ? '#14b143' : '#ef232a'
+        const color = isRising ? (options?.upColor ?? '#14b143') : (options?.downColor ?? '#ef232a')
         const displayValue = isRising ? value : -Math.abs(value)
 
         return `${name}<br/>${type}: <span style="color:${color}">${displayValue}</span>`
