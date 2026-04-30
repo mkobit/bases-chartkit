@@ -20,8 +20,8 @@ describe(
           'category',
           'value',
           'rose',
-        ) as unknown as Readonly<{ series: readonly PieSeriesOption[]
-          dataset: readonly { source: readonly unknown[] }[] }>
+        ) as unknown as { readonly series: readonly PieSeriesOption[]
+          readonly dataset: readonly { source: readonly unknown[] }[] }
 
         expect(option.series).toBeDefined()
         expect(option.series).toHaveLength(1)
@@ -54,8 +54,8 @@ describe(
           'category',
           'value',
           'rose',
-        ) as unknown as Readonly<{ series: readonly PieSeriesOption[]
-          dataset: readonly DatasetComponentOption[] }>
+        ) as unknown as { readonly series: readonly PieSeriesOption[]
+          readonly dataset: readonly DatasetComponentOption[] }
         const [series] = option.series
         if (!series) {
           expect(series).toBeDefined()

@@ -41,7 +41,7 @@ describe(
         expect(series.type).toBe('sankey')
 
         // Nodes should include A, B, C, D
-        const nodeNames = (series.data as readonly Readonly<{ name: string }>[]).map(n => n.name).sort()
+        const nodeNames = (series.data as readonly { readonly name: string }[]).map(n => n.name).sort()
         expect(nodeNames).toEqual(['A',
           'B',
           'C',

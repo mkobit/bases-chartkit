@@ -18,7 +18,7 @@ interface TestOption {
   readonly parallel?: unknown
   readonly parallelAxis?: readonly TestParallelAxis[]
   readonly series?: readonly TestSeries[]
-  readonly title?: Readonly<{ text: string }>
+  readonly title?: { readonly text: string }
 }
 
 describe(

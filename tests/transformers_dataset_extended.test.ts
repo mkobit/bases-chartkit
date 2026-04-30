@@ -54,7 +54,7 @@ describe(
             expect(Array.isArray(option.dataset)).toBe(true)
 
             const datasets = option.dataset as readonly DatasetComponentOption[]
-            const sourceDataset = datasets[0] as Readonly<{ source: readonly ScatterDatasetSource[] }>
+            const sourceDataset = datasets[0] as { readonly source: readonly ScatterDatasetSource[] }
             expect(sourceDataset.source).toHaveLength(3)
 
             // Check normalization
@@ -119,7 +119,7 @@ describe(
 
             expect(option.dataset).toBeDefined()
             const datasets = option.dataset as readonly DatasetComponentOption[]
-            const sourceDataset = datasets[0] as Readonly<{ source: readonly CandlestickDatasetSource[] }>
+            const sourceDataset = datasets[0] as { readonly source: readonly CandlestickDatasetSource[] }
 
             expect(sourceDataset.source).toEqual([{ x: '2023-01-01',
               open: 10,

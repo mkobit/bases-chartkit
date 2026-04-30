@@ -58,7 +58,7 @@ describe(
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dataset = option.dataset as readonly Readonly<{ source: readonly any[] }>[]
+        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
         const source = dataset[0]!.source
 
         expect(source).toHaveLength(3)
@@ -130,7 +130,7 @@ describe(
           return
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dataset = option.dataset as readonly Readonly<{ source: readonly any[] }>[]
+        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
         const source = dataset[0]!.source
 
         // Should ignore invalid rows (open: null and low: undefined should cause rows to be skipped)
@@ -166,7 +166,7 @@ describe(
           return
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dataset = option.dataset as readonly Readonly<{ source: readonly any[] }>[]
+        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
         const source = dataset[0]!.source
 
         expect(source).toHaveLength(3)

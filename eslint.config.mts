@@ -144,7 +144,7 @@ export default tseslint.config(
       'obsidianmd/prefer-file-manager-trash-file': 'error',
 
       // Additional clean code rules
-      'no-console': 'warn',
+      'no-console': 'error',
       'eqeqeq': 'error',
       'curly': 'error',
 
@@ -180,6 +180,12 @@ export default tseslint.config(
       'functional/no-mixed-types': 'error',
       'functional/no-try-statements': 'error',
       'functional/no-throw-statements': 'error',
+      'functional/no-promise-reject': 'error',
+      'functional/prefer-property-signatures': 'error',
+      'functional/prefer-tacit': 'error',
+      'functional/readonly-type': ['error', 'keyword'],
+      'functional/no-class-inheritance': 'error',
+      'functional/functional-parameters': 'error',
       'functional/immutable-data': ['error', {
         ignoreClasses: true,
         ignoreAccessorPattern: ['this.**'],
@@ -255,6 +261,7 @@ export default tseslint.config(
       'functional/no-return-void': 'off',
       'functional/no-try-statements': 'off',
       'functional/no-throw-statements': 'off',
+      'functional/no-promise-reject': 'off',
       'functional/no-loop-statements': 'off',
       'functional/no-conditional-statements': 'off',
       'functional/no-mixed-types': 'off',
@@ -294,6 +301,7 @@ export default tseslint.config(
       'functional/no-this-expressions': 'off',
       'functional/no-try-statements': 'off',
       'functional/no-throw-statements': 'off',
+      'functional/no-promise-reject': 'off',
       'functional/no-loop-statements': 'off',
       'functional/no-conditional-statements': 'off',
       'functional/no-mixed-types': 'off',
@@ -383,6 +391,7 @@ export default tseslint.config(
       'functional/no-return-void': 'off',
       'functional/no-try-statements': 'off',
       'functional/no-throw-statements': 'off',
+      'functional/no-promise-reject': 'off',
       'functional/no-loop-statements': 'off',
       'functional/immutable-data': 'off',
       'functional/prefer-immutable-types': 'off',
@@ -398,7 +407,7 @@ export default tseslint.config(
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'functional/no-expression-statements': 'off',
       'functional/no-try-statements': 'off',
       'functional/prefer-immutable-types': 'off',
