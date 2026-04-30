@@ -98,11 +98,10 @@ export function createCandlestickChartOption(
         'high'],
     },
     itemStyle: {
-      // Western standard: Up = Green, Down = Red
-      color: '#14b143',
-      color0: '#ef232a',
-      borderColor: '#14b143',
-      borderColor0: '#ef232a',
+      color: options?.upColor ?? '#14b143',
+      color0: options?.downColor ?? '#ef232a',
+      borderColor: options?.upColor ?? '#14b143',
+      borderColor0: options?.downColor ?? '#ef232a',
     },
   }
 

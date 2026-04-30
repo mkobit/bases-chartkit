@@ -37,6 +37,7 @@ export class CandlestickChartView extends BaseChartView {
       '',
       'candlestick',
       {
+        ...this.getCommonTransformerOptions(),
         xAxisLabel,
         yAxisLabel,
         xAxisLabelRotate,
