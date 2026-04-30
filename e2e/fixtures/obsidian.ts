@@ -43,13 +43,13 @@ async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, de
   throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`)
 }
 
-export type ObsidianPage = Readonly<{
-  page: Page
-}>
+export type ObsidianPage = {
+  readonly page: Page
+}
 
-type ObsidianFixtures = Readonly<{
-  obsidianPage: ObsidianPage
-}>
+type ObsidianFixtures = {
+  readonly obsidianPage: ObsidianPage
+}
 
 export const test = base.extend<ObsidianFixtures>({
   obsidianPage: async ({}, use) => {

@@ -32,8 +32,8 @@ describe(
         expect(series.length).toBe(1)
         expect(series[0]!.type).toBe('treemap')
 
-        const seriesData = series[0]!.data as readonly Readonly<{ name: string
-          value: number }>[]
+        const seriesData = series[0]!.data as readonly { readonly name: string
+          value: number }[]
         expect(seriesData.length).toBe(2)
 
         const itemA = seriesData.find(d => d.name === 'A')
