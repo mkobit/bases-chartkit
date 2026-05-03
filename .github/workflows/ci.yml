@@ -83,7 +83,7 @@ jobs:
                   name: ${{ needs.build.outputs.artifact-name }}
 
             - name: Cache Obsidian
-              uses: actions/cache@v5.0.4
+              uses: actions/cache@v5.0.5
               with:
                   path: .obsidian-cache
                   key: obsidian-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'playwright.config.ts') }}
