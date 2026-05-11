@@ -52,6 +52,7 @@ export class MapChartView extends BaseChartView {
         this.executeRender()
       }
       catch (e) {
+        /* eslint-disable-next-line no-console */
         console.error(
           'Failed to load map file',
           e,

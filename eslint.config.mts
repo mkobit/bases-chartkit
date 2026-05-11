@@ -322,6 +322,7 @@ export default tseslint.config(
   {
     files: ['src/charts/transformers/**/*.ts', 'src/@types/**/*.ts', 'src/charts/transformer.ts'],
     rules: {
+      'functional/no-return-void': 'off',
       'functional/prefer-immutable-types': 'off',
       'functional/type-declaration-immutability': 'off',
       'functional/readonly-type': 'off',
@@ -384,10 +385,20 @@ export default tseslint.config(
       },
     },
     rules: {
+      'obsidianmd/no-plugin-as-component': 'off',
+      'obsidianmd/no-view-references-in-plugin': 'off',
+      'obsidianmd/prefer-file-manager-trash-file': 'off',
+      'obsidianmd/prefer-active-window-timers': 'off',
+      'obsidianmd/prefer-active-doc': 'off',
+      'obsidianmd/prefer-instanceof': 'off',
+      'obsidianmd/no-obsidian-internal-api': 'off',
+      'obsidianmd/no-unsupported-features': 'off',
+      'obsidianmd/no-unsupported-api': 'off',
       'functional/no-conditional-statements': 'off',
       'functional/no-expression-statements': 'off',
       'import/no-nodejs-modules': 'off',
       'no-console': 'off',
+      'obsidianmd/rule-custom-message': 'off',
       'functional/no-return-void': 'off',
       'functional/no-try-statements': 'off',
       'functional/no-throw-statements': 'off',

@@ -37,6 +37,7 @@ async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, de
       return
     }
     catch {
+      // eslint-disable-next-line obsidianmd/prefer-active-window-timers
       await new Promise(resolve => setTimeout(resolve, delayMs))
     }
   }
@@ -77,7 +78,7 @@ export const test = base.extend<ObsidianFixtures>({
     const page = context.pages()[0] ?? await context.newPage()
 
     await page.waitForFunction(
-      () => typeof (window as unknown as Record<string, unknown>).app !== 'undefined',
+      () => typeof (activeWindow as unknown as Record<string, unknown>).app !== 'undefined',
       { timeout: 30_000 },
     )
 

@@ -86,9 +86,9 @@ export abstract class BaseChartView extends BasesView {
 
   private triggerResize(): void {
     if (this.resizeTimeout !== null) {
-      window.clearTimeout(this.resizeTimeout)
+      activeWindow.clearTimeout(this.resizeTimeout)
     }
-    this.resizeTimeout = window.setTimeout(() => {
+    this.resizeTimeout = activeWindow.setTimeout(() => {
       this.chart?.resize()
       this.renderChart()
     }, 100)
@@ -147,7 +147,7 @@ export abstract class BaseChartView extends BasesView {
       return {
         ...options,
         isMobile: false,
-        containerWidth: window.innerWidth,
+        containerWidth: activeWindow.innerWidth,
       }
     }
 
@@ -218,7 +218,7 @@ export abstract class BaseChartView extends BasesView {
   }
 
   private isDarkMode(): boolean {
-    return document.body.classList.contains('theme-dark')
+    return activeDocument.body.classList.contains('theme-dark')
   }
 
   static getCommonViewOptions(plugin?: BarePlugin): ViewOption[] {
