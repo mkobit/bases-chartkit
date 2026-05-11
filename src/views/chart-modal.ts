@@ -28,12 +28,12 @@ export class ChartModal extends Modal {
       this.chart = echarts.init(chartEl)
       this.chart.setOption(this.option)
 
-      window.addEventListener('resize', this.handleResize)
+      activeWindow.addEventListener('resize', this.handleResize)
     })
   }
 
   onClose() {
-    window.removeEventListener('resize', this.handleResize)
+    activeWindow.removeEventListener('resize', this.handleResize)
     this.chart?.dispose()
     this.chart = null
     this.contentEl.empty()

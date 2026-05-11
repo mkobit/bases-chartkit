@@ -582,6 +582,7 @@ export default class BarePlugin extends Plugin {
         echarts.registerTheme(customTheme.name, theme)
       }
       else {
+        /* eslint-disable-next-line no-console */
         console.error(`Failed to parse custom ECharts theme: ${customTheme.name}`)
       }
     })
