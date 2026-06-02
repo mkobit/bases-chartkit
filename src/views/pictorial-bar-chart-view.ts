@@ -50,7 +50,7 @@ export class PictorialBarChartView extends BaseChartView {
           arrow: t('views.pictorial_bar.symbol_options.arrow'),
           none: t('views.pictorial_bar.symbol_options.none'),
         },
-      } as ViewOption,
+      },
       {
         key: 'symbolRepeat',
         displayName: t('views.pictorial_bar.symbol_repeat'),
@@ -60,7 +60,7 @@ export class PictorialBarChartView extends BaseChartView {
           true: t('views.pictorial_bar.symbol_repeat_options.true'),
           fixed: t('views.pictorial_bar.symbol_repeat_options.fixed'),
         },
-      } as ViewOption,
+      },
       {
         key: 'symbolClip',
         displayName: t('views.pictorial_bar.symbol_clip'),

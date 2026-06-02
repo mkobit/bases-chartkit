@@ -41,8 +41,8 @@ export function createPieChartOption(
   )
 
   const dataset: DatasetComponentOption = {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    source: normalizedData as unknown as Record<string, unknown>[],
+
+    source: normalizedData,
   }
 
   const seriesItem: PieSeriesOption = {

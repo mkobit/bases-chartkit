@@ -32,10 +32,10 @@ export class SettingTab extends PluginSettingTab {
 
   constructor(app: Readonly<App>, plugin: Readonly<BarePlugin>) {
     super(
-      app as App,
-      plugin as BarePlugin,
+      app,
+      plugin,
     )
-    this.plugin = plugin as BarePlugin
+    this.plugin = plugin
   }
 
   display(): void {

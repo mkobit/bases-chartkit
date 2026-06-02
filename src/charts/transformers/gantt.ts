@@ -34,8 +34,8 @@ export interface GanttTooltipParam {
 function normalizeDate(val: unknown): number | null {
   return typeof val === 'number'
     ? val
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    : (val && typeof val === 'object' && 'getTime' in val && typeof (val as { getTime: unknown }).getTime === 'function')
+
+    : (val && typeof val === 'object' && 'getTime' in val && typeof (val).getTime === 'function')
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         ? (val as { getTime: () => number }).getTime()
         : typeof val === 'string'

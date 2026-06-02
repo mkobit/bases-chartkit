@@ -199,8 +199,8 @@ export function createScatterChartOption(
       trigger: 'item',
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    ...(visualMapOption ? { visualMap: visualMapOption as VisualMapComponentOption } : {}),
+
+    ...(visualMapOption ? { visualMap: visualMapOption } : {}),
   }
 
   return opt

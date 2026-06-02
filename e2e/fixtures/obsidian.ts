@@ -37,7 +37,7 @@ async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, de
       return
     }
     catch {
-      // eslint-disable-next-line obsidianmd/prefer-active-window-timers
+      // eslint-disable-next-line obsidianmd/prefer-window-timers
       await new Promise(resolve => setTimeout(resolve, delayMs))
     }
   }
