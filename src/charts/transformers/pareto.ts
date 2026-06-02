@@ -151,8 +151,8 @@ export function createParetoChartOption(
       },
     ],
     dataset: {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-      source: finalData as any,
+
+      source: finalData,
     },
     series: [barSeries,
       lineSeries],

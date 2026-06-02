@@ -53,9 +53,9 @@ export abstract class BaseChartView extends BasesView {
   public static readonly VISUAL_MAP_TYPE_KEY = 'visualMapType'
 
   constructor(controller: Readonly<QueryController>, scrollEl: Readonly<HTMLElement>, plugin: Readonly<BarePlugin>) {
-    super(controller as QueryController)
-    this.scrollEl = scrollEl as HTMLElement
-    this.plugin = plugin as BarePlugin
+    super(controller)
+    this.scrollEl = scrollEl
+    this.plugin = plugin
     this.containerEl = this.scrollEl.createDiv({ cls: 'bases-echarts-container' })
     this.chartEl = this.containerEl.createDiv({ cls: 'bases-echarts' })
   }
@@ -86,9 +86,9 @@ export abstract class BaseChartView extends BasesView {
 
   private triggerResize(): void {
     if (this.resizeTimeout !== null) {
-      activeWindow.clearTimeout(this.resizeTimeout)
+      window.clearTimeout(this.resizeTimeout)
     }
-    this.resizeTimeout = activeWindow.setTimeout(() => {
+    this.resizeTimeout = window.setTimeout(() => {
       this.chart?.resize()
       this.renderChart()
     }, 100)
@@ -238,7 +238,7 @@ export abstract class BaseChartView extends BasesView {
         type: 'dropdown',
         key: BaseChartView.THEME_KEY,
         options: themeOptions,
-      } as ViewOption,
+      },
       {
         displayName: t('views.common.x_axis_prop'),
         type: 'property',
@@ -272,7 +272,7 @@ export abstract class BaseChartView extends BasesView {
           left: t('views.common.legend_position_options.left'),
           right: t('views.common.legend_position_options.right'),
         },
-      } as ViewOption,
+      },
       {
         displayName: t('views.common.legend_orient'),
         type: 'dropdown',
@@ -281,7 +281,7 @@ export abstract class BaseChartView extends BasesView {
           horizontal: t('views.common.legend_orient_options.horizontal'),
           vertical: t('views.common.legend_orient_options.vertical'),
         },
-      } as ViewOption,
+      },
       {
         displayName: t('views.common.height'),
         type: 'text',

@@ -24,7 +24,7 @@ export class ChartModal extends Modal {
     const chartEl = chartContainer.createDiv({ cls: 'bases-echarts' })
 
     // Wait for layout paint
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       this.chart = echarts.init(chartEl)
       this.chart.setOption(this.option)
 

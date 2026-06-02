@@ -11,7 +11,7 @@
 		"prepare": "husky",
 		"test": "bun test ./tests",
 		"test:coverage": "bun test ./tests --coverage --coverage-reporter=lcov",
-		"test:e2e": "playwright test",
+		"test:e2e": "bun scripts/test-harness.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"keywords": [],

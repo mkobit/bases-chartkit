@@ -65,8 +65,8 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
   const posConfig = positionMap[position] ?? positionMap['top']!
 
   return showLegend
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
     ? { ...base,
-        ...posConfig } as Readonly<LegendComponentOption>
+        ...posConfig }
     : undefined
 }
