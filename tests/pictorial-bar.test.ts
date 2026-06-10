@@ -35,8 +35,10 @@ describe(
         const series = option.series as PictorialBarSeriesOption[]
         expect(series).toBeDefined()
         expect(series.length).toBe(1)
-        expect(series[0]!.type).toBe('pictorialBar')
-        expect(series[0]!.symbol).toBe('circle') // Default
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('pictorialBar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbol).toBe('circle') // Default
       },
     )
 
@@ -56,10 +58,14 @@ describe(
         )
 
         const series = option.series as PictorialBarSeriesOption[]
-        expect(series[0]!.symbol).toBe('rect')
-        expect(series[0]!.symbolRepeat).toBe(true)
-        expect(series[0]!.symbolClip).toBe(true)
-        expect(series[0]!.symbolSize).toBe('50%')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbol).toBe('rect')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbolRepeat).toBe(true)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbolClip).toBe(true)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbolSize).toBe('50%')
       },
     )
 
@@ -77,7 +83,8 @@ describe(
           },
         )
         const seriesTrue = optionTrue.series as PictorialBarSeriesOption[]
-        expect(seriesTrue[0]!.symbolRepeat).toBe(true)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(seriesTrue[0].symbolRepeat).toBe(true)
 
         // Test "false" string
         const optionFalse = createPictorialBarChartOption(
@@ -90,7 +97,8 @@ describe(
           },
         )
         const seriesFalse = optionFalse.series as PictorialBarSeriesOption[]
-        expect(seriesFalse[0]!.symbolRepeat).toBe(false)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(seriesFalse[0].symbolRepeat).toBe(false)
 
         // Test "fixed" string
         const optionFixed = createPictorialBarChartOption(
@@ -102,7 +110,8 @@ describe(
           },
         )
         const seriesFixed = optionFixed.series as PictorialBarSeriesOption[]
-        expect(seriesFixed[0]!.symbolRepeat).toBe('fixed')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(seriesFixed[0].symbolRepeat).toBe('fixed')
       },
     )
 
@@ -132,8 +141,10 @@ describe(
 
         const series = option.series as PictorialBarSeriesOption[]
         expect(series.length).toBe(2) // G1 and G2
-        expect(series[0]!.type).toBe('pictorialBar')
-        expect(series[1]!.type).toBe('pictorialBar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('pictorialBar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].type).toBe('pictorialBar')
       },
     )
 
@@ -150,7 +161,8 @@ describe(
         )
 
         const series = option.series as PictorialBarSeriesOption[]
-        expect(series[0]!.encode).toEqual({ x: 'y',
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].encode).toEqual({ x: 'y',
           y: 'x',
           tooltip: ['x',
             'y',

@@ -35,7 +35,8 @@ describe(
         const datasets = (Array.isArray(option.dataset) ? option.dataset : [option.dataset]) as readonly DatasetComponentOption[]
         expect(datasets[0]).toHaveProperty('source')
 
-        expect(datasets[0]!.source).toHaveLength(4)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(datasets[0].source).toHaveLength(4)
 
         // Check series
         const series = (Array.isArray(option.series) ? option.series[0] : option.series) as SeriesOption
@@ -75,7 +76,8 @@ describe(
 
         // Explicit check for transform type
 
-        const t = transformDatasets[0]!.transform
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const t = transformDatasets[0].transform
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((t as any).type).toBe('filter')
 

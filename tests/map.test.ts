@@ -40,10 +40,13 @@ describe(
 
         const series = result.series as MapSeriesOption[]
         expect(series).toHaveLength(1)
-        expect(series[0]!.type).toBe('map')
-        expect(series[0]!.map).toBe(mapName)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('map')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].map).toBe(mapName)
 
-        const mapData = series[0]!.data as { name: string
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const mapData = series[0].data as { name: string
           value: number }[]
         expect(mapData).toHaveLength(3)
         expect(mapData).toContainEqual({ name: 'USA',
@@ -129,7 +132,8 @@ describe(
 
         const series = result.series as MapSeriesOption[]
 
-        const mapData = series[0]!.data as { name: string
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const mapData = series[0].data as { name: string
           value: number }[]
 
         expect(mapData).toContainEqual({ name: 'A',

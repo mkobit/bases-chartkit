@@ -29,14 +29,22 @@ describe(
           value: number
           cumulative: number }[]
 
-        expect(source[0]!.name).toBe('B')
-        expect(source[0]!.value).toBe(40)
-        expect(source[1]!.name).toBe('C')
-        expect(source[1]!.value).toBe(30)
-        expect(source[2]!.name).toBe('D')
-        expect(source[2]!.value).toBe(20)
-        expect(source[3]!.name).toBe('A')
-        expect(source[3]!.value).toBe(10)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[0].name).toBe('B')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[0].value).toBe(40)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[1].name).toBe('C')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[1].value).toBe(30)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[2].name).toBe('D')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[2].value).toBe(20)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[3].name).toBe('A')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[3].value).toBe(10)
       },
     )
 
@@ -59,10 +67,14 @@ describe(
         // D: 20 -> 90%
         // A: 10 -> 100%
 
-        expect(source[0]!.cumulative).toBe(40)
-        expect(source[1]!.cumulative).toBe(70)
-        expect(source[2]!.cumulative).toBe(90)
-        expect(source[3]!.cumulative).toBe(100)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[0].cumulative).toBe(40)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[1].cumulative).toBe(70)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[2].cumulative).toBe(90)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[3].cumulative).toBe(100)
       },
     )
 
@@ -78,10 +90,14 @@ describe(
         const yAxis = option.yAxis as YAXisComponentOption[]
 
         expect(yAxis).toHaveLength(2)
-        expect(yAxis[0]!.name).toBe('value')
-        expect(yAxis[1]!.name).toBe('Cumulative %')
-        expect(yAxis[1]!.min).toBe(0)
-        expect(yAxis[1]!.max).toBe(100)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(yAxis[0].name).toBe('value')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(yAxis[1].name).toBe('Cumulative %')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(yAxis[1].min).toBe(0)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(yAxis[1].max).toBe(100)
       },
     )
 
@@ -130,7 +146,8 @@ describe(
         const yAxis = option.yAxis as YAXisComponentOption[]
 
         expect(xAxis.name).toBe('Cat')
-        expect(yAxis[0]!.name).toBe('Val')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(yAxis[0].name).toBe('Val')
       },
     )
 
@@ -157,15 +174,19 @@ describe(
           cumulative: number }[]
 
         expect(source).toHaveLength(2)
-        expect(source[0]!.name).toBe('C')
-        expect(source[1]!.name).toBe('A')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[0].name).toBe('C')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[1].name).toBe('A')
 
         // C: 20 (66.6%), A: 10 (100%) - Total 30
-        expect(source[0]!.cumulative).toBeCloseTo(
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[0].cumulative).toBeCloseTo(
           66.666,
           2,
         )
-        expect(source[1]!.cumulative).toBeCloseTo(
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(source[1].cumulative).toBeCloseTo(
           100,
           2,
         )

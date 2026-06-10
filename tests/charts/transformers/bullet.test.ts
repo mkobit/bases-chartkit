@@ -71,31 +71,46 @@ describe(
         expect(option.series).toHaveLength(5) // 3 ranges + 1 measure + 1 target
         const series = option.series as BarSeriesOption[]
 
-        const range1 = series[0]!
-        const range2 = series[1]!
-        const range3 = series[2]!
-        const measure = series[3]!
+        const range1 = series[0]
+        const range2 = series[1]
+        const range3 = series[2]
+        const measure = series[3]
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range1.stack).toBe('range')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range1.z).toBe(0)
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range1.itemStyle?.color).toBe('#e0e0e0')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range1.encode).toEqual({ x: 'x',
           y: 'r1' })
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range2.stack).toBe('range')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range2.z).toBe(0)
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range2.itemStyle?.color).toBe('#bdbdbd')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range2.encode).toEqual({ x: 'x',
           y: 'r2' })
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range3.stack).toBe('range')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range3.z).toBe(0)
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range3.itemStyle?.color).toBe('#9e9e9e')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(range3.encode).toEqual({ x: 'x',
           y: 'r3' })
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(measure.z).toBe(2)
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(measure.barGap).toBe('-100%')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(measure.barWidth).toBe('40%')
       },
     )

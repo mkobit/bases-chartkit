@@ -24,6 +24,6 @@ export const pieChartArbitrary = themeSubset(
     type: 'pie',
     data: data.names.map((name, i) => ({
       name: name,
-      value: data.values[i]!,
+      value: data.values[i],
     })),
   }))

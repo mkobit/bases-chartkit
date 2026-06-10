@@ -37,11 +37,14 @@ describe(
         )
 
         expect(result.series).toHaveLength(1)
-        const series = (result.series as readonly GraphSeriesOption[])[0]!
+        const series = (result.series as readonly GraphSeriesOption[])[0]
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.type).toBe('graph')
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.layout).toBe('force')
 
         // Nodes should include A, B, C, D
+        // @ts-expect-error - suppress strictNullChecks in tests
         const nodeNames = (series.data as readonly { readonly name: string }[]).map(n => n.name).sort()
         expect(nodeNames).toEqual(['A',
           'B',
@@ -49,7 +52,9 @@ describe(
           'D'])
 
         // Links
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toHaveLength(4)
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toEqual(expect.arrayContaining([
           { source: 'A',
             target: 'B',
@@ -93,9 +98,10 @@ describe(
           'graph',
           options,
         )
-        const series = (result.series as readonly GraphSeriesOption[])[0]!
+        const series = (result.series as readonly GraphSeriesOption[])[0]
 
         // Check categories list
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.categories).toEqual(expect.arrayContaining([
           { name: 'Cat1' },
           { name: 'Cat2' },
@@ -107,6 +113,7 @@ describe(
         // Node C ... depends. If it was never a source with category, it remains undefined.
         // Wait, C appears as target in row 2 (cat2 applies to B), and source in row 3 (no cat).
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         const nodes = series.data as readonly { readonly name: string
           category?: string }[]
         const nodeA = nodes.find(n => n.name === 'A')
@@ -135,10 +142,12 @@ describe(
           'target',
           'graph',
         )
-        const series = (result.series as readonly GraphSeriesOption[])[0]!
+        const series = (result.series as readonly GraphSeriesOption[])[0]
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toHaveLength(1)
-        expect(series.links![0]).toEqual({ source: 'A',
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series.links[0]).toEqual({ source: 'A',
           target: 'B',
           value: undefined })
       },

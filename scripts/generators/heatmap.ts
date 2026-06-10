@@ -50,7 +50,7 @@ export const heatmapChartArbitrary = fc.record({
         return {
           day,
           hour,
-          activity: values[index]!,
+          activity: values[index],
         }
       })
     })

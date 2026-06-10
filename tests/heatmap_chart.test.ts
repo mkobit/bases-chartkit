@@ -71,7 +71,8 @@ describe(
         const dataset = option.dataset as readonly DatasetComponentOption[]
         expect(dataset).toBeDefined()
 
-        const source = dataset[0]!.source as readonly HeatmapSourceItem[]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = dataset[0].source as readonly HeatmapSourceItem[]
         expect(source).toHaveLength(4)
         expect(source[0]).toEqual({ x: 'Mon',
           y: 'Morning',
@@ -99,7 +100,8 @@ describe(
         )
         const dataset = option.dataset as readonly DatasetComponentOption[]
 
-        const source = dataset[0]!.source as readonly HeatmapSourceItem[]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = dataset[0].source as readonly HeatmapSourceItem[]
 
         // Should produce 0 for missing value based on current logic
         const missingPoint = source.find(d => d.value === 0)

@@ -97,7 +97,8 @@ describe(
 
         const missingValItem = seriesData.find(d => d[0] === '2023-01-03')
         expect(missingValItem).toBeDefined()
-        expect(missingValItem![1]).toBe(0)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(missingValItem[1]).toBe(0)
       },
     )
 

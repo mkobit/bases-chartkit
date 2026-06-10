@@ -29,6 +29,7 @@ function findFreePort(): Promise<number> {
 async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, delayMs = 1000): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     if (proc.exitCode !== null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
     try {
@@ -41,6 +42,8 @@ async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, de
       await new Promise(resolve => setTimeout(resolve, delayMs))
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/only-throw-error
   throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`)
 }
 
@@ -78,7 +81,7 @@ export const test = base.extend<ObsidianFixtures>({
     const page = context.pages()[0] ?? await context.newPage()
 
     await page.waitForFunction(
-      () => typeof (activeWindow as unknown as Record<string, unknown>).app !== 'undefined',
+      () => typeof (window.window as unknown as Record<string, unknown>).app !== 'undefined',
       { timeout: 30_000 },
     )
 

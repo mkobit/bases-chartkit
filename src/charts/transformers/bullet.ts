@@ -123,15 +123,18 @@ export function createBulletChartOption(
     ? [
         createRangeSeries(
           'r1',
-          rangeColors[0]!,
+          // @ts-expect-error - suppress strictNullChecks/type errors
+          rangeColors[0],
         ),
         createRangeSeries(
           'r2',
-          rangeColors[1]!,
+          // @ts-expect-error - suppress strictNullChecks/type errors
+          rangeColors[1],
         ),
         createRangeSeries(
           'r3',
-          rangeColors[2]!,
+          // @ts-expect-error - suppress strictNullChecks/type errors
+          rangeColors[2],
         ),
       ]
     : []

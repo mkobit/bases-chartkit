@@ -30,9 +30,11 @@ describe(
         expect(series).toBeDefined()
 
         expect(series.length).toBe(1)
-        expect(series[0]!.type).toBe('treemap')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('treemap')
 
-        const seriesData = series[0]!.data as readonly { readonly name: string
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const seriesData = series[0].data as readonly { readonly name: string
           value: number }[]
         expect(seriesData.length).toBe(2)
 

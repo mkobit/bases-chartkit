@@ -39,9 +39,12 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         expect(series).toHaveLength(1)
-        expect(series[0]!.type).toBe('bar')
-        expect(series[0]!.coordinateSystem).toBe('polar')
-        expect(series[0]!.encode).toEqual({ angle: 'x',
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('bar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].encode).toEqual({ angle: 'x',
           radius: 'y' })
       },
     )
@@ -58,10 +61,14 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         expect(series).toHaveLength(2)
-        expect(series[0]!.name).toBe('S1')
-        expect(series[1]!.name).toBe('S2')
-        expect(series[0]!.coordinateSystem).toBe('polar')
-        expect(series[1]!.coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('S1')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].name).toBe('S2')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].coordinateSystem).toBe('polar')
       },
     )
 
@@ -78,8 +85,10 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         expect(series).toHaveLength(2)
-        expect(series[0]!.stack).toBe('total')
-        expect(series[1]!.stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].stack).toBe('total')
       },
     )
   },

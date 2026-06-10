@@ -24,6 +24,6 @@ export const barChartArbitrary = themeSubset(
     type: 'bar',
     data: data.categories.map((cat, i) => ({
       category: cat,
-      value: data.values[i]!,
+      value: data.values[i],
     })),
   }))

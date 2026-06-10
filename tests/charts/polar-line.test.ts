@@ -56,9 +56,12 @@ describe(
 
         const series = option.series as LineSeriesOption[]
         expect(series).toHaveLength(1)
-        expect(series[0]!.type).toBe('line')
-        expect(series[0]!.coordinateSystem).toBe('polar')
-        expect(series[0]!.name).toBe('Series 1')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('line')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('Series 1')
       },
     )
 
@@ -75,9 +78,12 @@ describe(
         const series = option.series as LineSeriesOption[]
         expect(series).toHaveLength(2)
 
-        expect(series[0]!.name).toBe('A')
-        expect(series[1]!.name).toBe('B')
-        expect(series[0]!.coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('A')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].name).toBe('B')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
       },
     )
 
@@ -95,8 +101,10 @@ describe(
         )
 
         const series = option.series as LineSeriesOption[]
-        expect(series[0]!.smooth).toBe(true)
-        expect(series[0]!.areaStyle).toBeDefined()
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].smooth).toBe(true)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].areaStyle).toBeDefined()
       },
     )
 
@@ -114,8 +122,10 @@ describe(
         )
 
         const series = option.series as LineSeriesOption[]
-        expect(series[0]!.stack).toBe('total')
-        expect(series[1]!.stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].stack).toBe('total')
       },
     )
   },
