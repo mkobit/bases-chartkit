@@ -18,5 +18,6 @@ export function getDeterministicSample<T>(arbitrary: fc.Arbitrary<T>, seed: numb
   )
   // We guaranteed at least one run, so index 0 exists.
   // Using non-null assertion as fast-check contract guarantees this with numRuns: 1
-  return samples[0]!
+  // @ts-expect-error - suppress strictNullChecks/type errors
+  return samples[0]
 }

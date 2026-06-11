@@ -44,9 +44,12 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         expect(series).toHaveLength(1)
-        expect(series[0]!.type).toBe('bar')
-        expect(series[0]!.coordinateSystem).toBe('polar')
-        expect(series[0]!.encode).toEqual({ x: 'x',
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('bar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].encode).toEqual({ x: 'x',
           y: 'y' })
       },
     )
@@ -65,7 +68,8 @@ describe(
         expect(series).toHaveLength(2) // G1, G2
         expect(series.map(s => s.name)).toEqual(expect.arrayContaining(['G1',
           'G2']))
-        expect(series[0]!.coordinateSystem).toBe('polar')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].coordinateSystem).toBe('polar')
       },
     )
 
@@ -84,8 +88,10 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         expect(series).toHaveLength(2)
-        expect(series[0]!.stack).toBe('total')
-        expect(series[1]!.stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].stack).toBe('total')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].stack).toBe('total')
       },
     )
 

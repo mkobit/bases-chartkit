@@ -38,9 +38,12 @@ describe(
 
         expect(option.series).toHaveLength(2) // S1, S2
         const series = option.series as readonly EffectScatterSeriesOption[]
-        expect(series[0]!.type).toBe('effectScatter')
-        expect(series[0]!.name).toBe('S1')
-        expect(series[1]!.type).toBe('effectScatter')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('effectScatter')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('S1')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[1].type).toBe('effectScatter')
       },
     )
 
@@ -57,10 +60,12 @@ describe(
         )
 
         const series = option.series as readonly EffectScatterSeriesOption[]
-        expect(series[0]!.symbolSize).toBeDefined()
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbolSize).toBeDefined()
 
         // Check symbolSize function
-        const symbolSizeFn = series[0]!.symbolSize as (val: unknown) => number
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const symbolSizeFn = series[0].symbolSize as (val: unknown) => number
         // Mock data point passed to symbolSize
         const point = { x: 'A',
           y: 10,

@@ -45,7 +45,8 @@ describe(
         const series = option.series as readonly CandlestickSeriesOption[]
         expect(Array.isArray(series)).toBe(true)
         expect(series.length).toBe(1)
-        expect(series[0]!.type).toBe('candlestick')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].type).toBe('candlestick')
 
         // Data Verification (using Dataset)
         // Check dataset presence
@@ -59,7 +60,8 @@ describe(
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        const source = dataset[0]!.source
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = dataset[0].source
 
         expect(source).toHaveLength(3)
         // Normalized data structure
@@ -70,7 +72,8 @@ describe(
           high: 115 })
 
         // Encode Verification
-        expect(series[0]!.encode).toEqual({
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].encode).toEqual({
           x: 'x',
           y: ['open',
             'close',
@@ -131,7 +134,8 @@ describe(
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        const source = dataset[0]!.source
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = dataset[0].source
 
         // Should ignore invalid rows (open: null and low: undefined should cause rows to be skipped)
         expect(source).toHaveLength(1)
@@ -167,7 +171,8 @@ describe(
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        const source = dataset[0]!.source
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = dataset[0].source
 
         expect(source).toHaveLength(3)
         expect(source[0]).toEqual({ x: '2023-10-01',

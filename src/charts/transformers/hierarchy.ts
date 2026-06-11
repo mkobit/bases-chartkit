@@ -76,7 +76,7 @@ function buildHierarchy(
   const buildLevel = (items: readonly PathItem[]): readonly HierarchyNode[] => {
     return R.pipe(
       items,
-      R.groupBy(item => item.parts[0]!), // Group by current level name
+      R.groupBy(item => item.parts[0]), // Group by current level name
       R.entries(),
       R.map(([name,
         group]) => {

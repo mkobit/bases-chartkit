@@ -62,7 +62,7 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
       left: 'center' },
   }
 
-  const posConfig = positionMap[position] ?? positionMap['top']!
+  const posConfig = positionMap[position] ?? positionMap['top']
 
   return showLegend
 

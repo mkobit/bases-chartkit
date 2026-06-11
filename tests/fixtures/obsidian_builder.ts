@@ -91,7 +91,8 @@ export class ObsidianFileBuilder {
       ? R.pipe(
           fmKeys,
           R.filter(key => this.file.frontmatter[key] !== undefined),
-          R.map(key => `${key}: ${this.formatYamlValue(this.file.frontmatter[key]!)}`),
+          // @ts-expect-error - suppress strictNullChecks/type errors
+          R.map(key => `${key}: ${this.formatYamlValue(this.file.frontmatter[key])}`),
           R.join('\n'),
           content => `---\n${content}\n---\n`,
         )

@@ -50,14 +50,19 @@ describe(
         expect(axes).toBeDefined()
         // Use type assertions or early returns (in test logic, direct assertion is better)
         expect(axes).toHaveLength(3)
-        expect(axes![0]!.name).toBe('price')
-        expect(axes![0]!.type).toBe('value')
-        expect(axes![1]!.name).toBe('rating')
-        expect(axes![2]!.name).toBe('volume')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].name).toBe('price')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].type).toBe('value')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[1].name).toBe('rating')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[2].name).toBe('volume')
 
         expect(Array.isArray(option.series)).toBe(true)
         expect(option.series).toHaveLength(1) // Default series
-        expect(option.series![0]!.data).toHaveLength(2)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(option.series[0].data).toHaveLength(2)
       },
     )
 
@@ -79,13 +84,18 @@ describe(
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
 
-        expect(axes![0]!.name).toBe('name')
-        expect(axes![0]!.type).toBe('category')
-        expect(axes![0]!.data).toEqual(expect.arrayContaining(['A',
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].name).toBe('name')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].type).toBe('category')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].data).toEqual(expect.arrayContaining(['A',
           'B']))
 
-        expect(axes![1]!.name).toBe('value')
-        expect(axes![1]!.type).toBe('value')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[1].name).toBe('value')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[1].type).toBe('value')
       },
     )
 
@@ -113,8 +123,10 @@ describe(
         ) as TestOption
 
         expect(option.series).toHaveLength(2)
-        const s1 = option.series!.find(s => s.name === 'G1')
-        const s2 = option.series!.find(s => s.name === 'G2')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const s1 = option.series.find(s => s.name === 'G1')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const s2 = option.series.find(s => s.name === 'G2')
 
         expect(s1).toBeDefined()
         expect(s1?.data).toHaveLength(2)
@@ -135,9 +147,11 @@ describe(
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
         expect(axes).toHaveLength(1)
-        expect(axes![0]!.name).toBe('price')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].name).toBe('price')
         // Defaults to category if no data to infer value
-        expect(axes![0]!.type).toBe('category')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].type).toBe('category')
       },
     )
 

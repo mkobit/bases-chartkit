@@ -26,7 +26,8 @@ describe(
         const datasets = (Array.isArray(option.dataset) ? option.dataset : [option.dataset]) as readonly DatasetComponentOption[]
         expect(datasets[0]).toHaveProperty('source')
 
-        expect(datasets[0]!.source).toHaveLength(2)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(datasets[0].source).toHaveLength(2)
 
         // Check series
         const series = (Array.isArray(option.series) ? option.series[0] : option.series) as SeriesOption

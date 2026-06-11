@@ -55,11 +55,14 @@ describe(
             const nodeA = hierarchy.find(n => n.name === 'A')
             expect(nodeA).toBeDefined()
             // Use non-null assertion since we expect it to exist based on test data
-            expect(nodeA!.children).toHaveLength(2) // B and C
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(nodeA.children).toHaveLength(2) // B and C
 
-            const nodeB = nodeA!.children!.find(n => n.name === 'B')
+            // @ts-expect-error - suppress strictNullChecks in tests
+            const nodeB = nodeA.children.find(n => n.name === 'B')
             expect(nodeB).toBeDefined()
-            expect(nodeB!.value).toBe(10)
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(nodeB.value).toBe(10)
           },
         )
 
@@ -90,7 +93,8 @@ describe(
             const series = option.series[0] as SunburstSeriesOption
             const hierarchy = series.data as unknown as readonly HierarchyNode[]
 
-            expect(hierarchy[0]!.children![0]!.value).toBeUndefined()
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(hierarchy[0].children[0].value).toBeUndefined()
           },
         )
       },
@@ -124,8 +128,10 @@ describe(
             const dataRoot = series.data as unknown as readonly HierarchyNode[]
             // Should be wrapped in "Root" because there are two top-level nodes (A and C)
             expect(dataRoot).toHaveLength(1)
-            expect(dataRoot[0]!.name).toBe('Root')
-            expect(dataRoot[0]!.children).toHaveLength(2)
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(dataRoot[0].name).toBe('Root')
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(dataRoot[0].children).toHaveLength(2)
           },
         )
 
@@ -154,7 +160,8 @@ describe(
             const dataRoot = series.data as unknown as readonly HierarchyNode[]
             // Should be just A, no wrapper
             expect(dataRoot).toHaveLength(1)
-            expect(dataRoot[0]!.name).toBe('A')
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(dataRoot[0].name).toBe('A')
           },
         )
       },

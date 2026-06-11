@@ -26,7 +26,7 @@ export const radarChartArbitrary = fc.record({
         return {
           attribute: ind,
           class: series,
-          score: values[index]!,
+          score: values[index],
         }
       })
     })

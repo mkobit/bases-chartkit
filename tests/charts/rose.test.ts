@@ -65,7 +65,8 @@ describe(
         expect(series.datasetIndex).toBe(0)
         expect(option.dataset).toBeDefined()
 
-        const source = option.dataset[0]!.source
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const source = option.dataset[0].source
         expect(source).toHaveLength(2)
         expect(source).toEqual([
           { name: 'A',

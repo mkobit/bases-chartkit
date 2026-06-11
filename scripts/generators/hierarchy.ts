@@ -52,6 +52,6 @@ export const treemapChartArbitrary = themeSubset(PRODUCT_NAMES, 4)
     type: 'treemap',
     data: data.names.map((name, i) => ({
       name: name,
-      value: data.values[i]!,
+      value: data.values[i],
     })),
   }))

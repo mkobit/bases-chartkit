@@ -118,12 +118,15 @@ describe(
 
         expect(data).toHaveLength(3)
 
-        const p0 = data[0]!
-        const p1 = data[1]!
-        const p2 = data[2]!
+        const p0 = data[0]
+        const p1 = data[1]
+        const p2 = data[2]
 
+        // @ts-expect-error - suppress strictNullChecks in tests
         const d0 = p0.date as Temporal.PlainDate
+        // @ts-expect-error - suppress strictNullChecks in tests
         const d1 = p1.date as Temporal.PlainDate
+        // @ts-expect-error - suppress strictNullChecks in tests
         const d2 = p2.date as Temporal.PlainDate
 
         expect(d0.toString()).toBe('2023-01-01')

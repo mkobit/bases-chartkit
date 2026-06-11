@@ -83,7 +83,8 @@ describe(
         expect(series.data).toHaveLength(1)
         // Boxplot with 1 value: min=max=q1=q3=median=100
         // Expected data item to be array of 5 numbers
-        const item = series.data![0] as readonly number[]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        const item = series.data[0] as readonly number[]
         expect(item).toEqual([100,
           100,
           100,

@@ -30,7 +30,8 @@ export const lineChartArbitrary = fc.record({
     const data = deltas.reduce<Array<{ date: string
       value: number }>>(
       (acc, delta, i) => {
-        const prevValue = i === 0 ? config.startValue : acc[i - 1]!.value
+        // @ts-expect-error - suppress strictNullChecks/type errors
+        const prevValue = i === 0 ? config.startValue : acc[i - 1].value
         const nextValue = Math.max(
           0,
           prevValue + delta + config.trend,

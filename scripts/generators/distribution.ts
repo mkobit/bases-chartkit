@@ -66,7 +66,7 @@ export const paretoChartArbitrary = themeSubset(PRODUCT_NAMES, 4)
     type: 'pareto',
     data: data.names.map((name, i) => ({
       name: name,
-      value: data.values[i]!,
+      value: data.values[i],
     })),
   }))
 
