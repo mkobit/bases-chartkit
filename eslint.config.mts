@@ -160,6 +160,7 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-assertions': ['error', {
         assertionStyle: 'never',
       }],
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       // Enforce separate type imports (User Request)
       '@typescript-eslint/consistent-type-imports': ['error', {
         prefer: 'type-imports',
@@ -255,6 +256,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/prefer-readonly': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       'functional/no-classes': 'off',
       'functional/no-class-inheritance': 'off',
       'functional/no-this-expressions': 'off',
