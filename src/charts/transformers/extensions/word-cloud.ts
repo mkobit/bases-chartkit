@@ -1,3 +1,4 @@
+import type * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from '../base'
@@ -69,7 +70,7 @@ export function createWordCloudChartOption(
     tooltip: {
       show: true,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-    series: [seriesItem as any],
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    series: [seriesItem as unknown as echarts.SeriesOption],
   }
 }

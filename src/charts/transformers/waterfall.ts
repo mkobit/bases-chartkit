@@ -162,7 +162,7 @@ export function createWaterfallChartOption(
           return ''
         }
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        const pList = params as TooltipParam[]
+        const pList = params as unknown as TooltipParam[]
 
         const firstParam = pList[0]
         if (!firstParam) {

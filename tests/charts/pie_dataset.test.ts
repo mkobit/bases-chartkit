@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createPieChartOption } from '../../src/charts/transformers/pie'
-import type { DatasetComponentOption, SeriesOption } from 'echarts'
+import type { DatasetComponentOption, SeriesOption, PieSeriesOption } from 'echarts'
 
 describe(
   'Pie Chart Transformer (Dataset Architecture)',
@@ -33,10 +33,8 @@ describe(
         const series = (Array.isArray(option.series) ? option.series[0] : option.series) as SeriesOption
         expect(series).toBeDefined()
         expect(series.type).toBe('pie')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((series as any).datasetIndex).toBe(0)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((series as any).encode).toEqual({ itemName: 'name',
+        expect((series as PieSeriesOption).datasetIndex).toBe(0)
+        expect((series as PieSeriesOption).encode).toEqual({ itemName: 'name',
           value: 'value' })
       },
     )

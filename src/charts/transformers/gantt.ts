@@ -198,8 +198,14 @@ export function createGanttChartOption(
           label: {
             show: true,
             position: 'inside',
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            formatter: (p: unknown) => (p as GanttTooltipParam).seriesName === 'Task' ? '' : (p as GanttTooltipParam).seriesName,
+            formatter: (p: unknown) => {
+              if (!p || typeof p !== 'object' || !('seriesName' in p)) {
+                return ''
+              }
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              const param = p as unknown as GanttTooltipParam
+              return param.seriesName === 'Task' ? '' : param.seriesName ?? ''
+            },
           },
         },
       ]
@@ -209,8 +215,8 @@ export function createGanttChartOption(
   return {
     tooltip: {
       trigger: 'item',
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      formatter: formatTooltip as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+      formatter: formatTooltip as any,
     },
     legend: getLegendOption(options),
     grid: {

@@ -25,6 +25,7 @@ function parseInteger(value: string) {
     10,
   )
   if (isNaN(parsedValue)) {
+    // Disabled the lint rule as commander's Error subclass handling conflicts with strict settings here
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw new InvalidArgumentError('Not a number.')
   }
