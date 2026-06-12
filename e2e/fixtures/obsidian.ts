@@ -29,7 +29,8 @@ function findFreePort(): Promise<number> {
 async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, delayMs = 1000): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     if (proc.exitCode !== null) {
-      throw new Error(`Obsidian process exited early with code ${proc.exitCode}`) as unknown
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
     try {
       const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
@@ -42,7 +43,8 @@ async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, de
     }
   }
 
-  throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`) as unknown
+  // eslint-disable-next-line @typescript-eslint/only-throw-error
+  throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`)
 }
 
 export type ObsidianPage = {
