@@ -34,11 +34,15 @@ describe(
         const series = option.series[0] as FunnelSeriesOption
         expect(series.type).toBe('funnel')
 
-        const seriesData = series.data as { name: string, value: number }[]
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
         expect(seriesData).toHaveLength(3)
         // Order should be sorted descending by value, which it already is in the input
-        expect(seriesData[0].name).toBe('Step 1')
-        expect(seriesData[0].value).toBe(100)
+        expect(seriesData[0]?.name).toBe('Step 1')
+        expect(seriesData[0]?.value).toBe(100)
       },
     )
 
@@ -66,15 +70,19 @@ describe(
         }
 
         const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name: string, value: number }[]
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
 
         expect(seriesData).toHaveLength(3)
-        expect(seriesData[0].name).toBe('Step 1')
-        expect(seriesData[0].value).toBe(100)
-        expect(seriesData[1].name).toBe('Step 2')
-        expect(seriesData[1].value).toBe(80)
-        expect(seriesData[2].name).toBe('Step 3')
-        expect(seriesData[2].value).toBe(60)
+        expect(seriesData[0]?.name).toBe('Step 1')
+        expect(seriesData[0]?.value).toBe(100)
+        expect(seriesData[1]?.name).toBe('Step 2')
+        expect(seriesData[1]?.value).toBe(80)
+        expect(seriesData[2]?.name).toBe('Step 3')
+        expect(seriesData[2]?.value).toBe(60)
       },
     )
 
@@ -101,12 +109,16 @@ describe(
         }
 
         const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name: string, value: number }[]
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
 
         expect(seriesData).toHaveLength(3)
-        expect(seriesData[0].name).toBe('Unknown')
-        expect(seriesData[1].name).toBe('Unknown')
-        expect(seriesData[2].name).toBe('Unknown')
+        expect(seriesData[0]?.name).toBe('Unknown')
+        expect(seriesData[1]?.name).toBe('Unknown')
+        expect(seriesData[2]?.name).toBe('Unknown')
       },
     )
 
@@ -133,24 +145,28 @@ describe(
         }
 
         const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name: string, value: number }[]
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
 
         expect(seriesData).toHaveLength(3)
 
         // Since it's sorted descending, 'Valid' (100) will be first, followed by the two 0s
-        expect(seriesData[0].name).toBe('Valid')
-        expect(seriesData[0].value).toBe(100)
+        expect(seriesData[0]?.name).toBe('Valid')
+        expect(seriesData[0]?.value).toBe(100)
 
         // The NaN values should be coerced to 0
-        expect(seriesData[1].value).toBe(0)
-        expect(seriesData[2].value).toBe(0)
+        expect(seriesData[1]?.value).toBe(0)
+        expect(seriesData[2]?.value).toBe(0)
       },
     )
 
     it(
       'should handle empty data',
       () => {
-        const data: unknown[] = []
+        const data: readonly Readonly<Record<string, unknown>>[] = []
 
         const option = transformDataToChartOption(
           data,
@@ -164,7 +180,11 @@ describe(
         }
 
         const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name: string, value: number }[]
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
 
         expect(seriesData).toHaveLength(0)
       },
