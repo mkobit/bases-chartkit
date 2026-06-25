@@ -34,9 +34,6 @@ jobs:
             - name: Check types
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run typecheck
-            - name: Verify semantic-release
-              if: (success() || failure()) && steps.setup.outcome == 'success'
-              run: bun x --bun semantic-release --help
             - name: Build
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run build

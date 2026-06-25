@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "bootstrap-sha": "dc9096fba49e5672c6b465a470c861d8fd78fb78",
+      "include-v-in-tag": false,
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "manifest.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug fixes"},
+        {"type": "perf", "section": "Performance improvements"},
+        {"type": "deps", "section": "Dependency updates"},
+        {"type": "docs", "section": "Documentation"},
+        {"type": "infra", "section": "Infrastructure", "hidden": true},
+        {"type": "build", "section": "Infrastructure", "hidden": true},
+        {"type": "ci", "section": "CI", "hidden": true},
+        {"type": "chore", "section": "Miscellaneous", "hidden": true},
+        {"type": "test", "section": "Tests", "hidden": true},
+        {"type": "refactor", "section": "Refactoring", "hidden": true},
+        {"type": "style", "section": "Style", "hidden": true},
+        {"type": "revert", "section": "Reverts", "hidden": true}
+      ]
+    }
+  }
+}

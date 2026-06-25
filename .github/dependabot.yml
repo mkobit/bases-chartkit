@@ -18,8 +18,6 @@ updates:
     open-pull-requests-limit: 10
     ignore:
       - dependency-name: "obsidian"
-      # Ignore semantic-release v25+ until Bun simulates a Node version >= 24.10.0
-      - dependency-name: "semantic-release"
     cooldown:
       default-days: 14
     groups:
