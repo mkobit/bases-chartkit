@@ -5,7 +5,6 @@
 	"minAppVersion": "1.11.4",
 	"description": "Advanced visualization for Obsidian via the Bases API.",
 	"author": "mkobit",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/mkobit",
 	"isDesktopOnly": false
 }
