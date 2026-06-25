@@ -25,7 +25,6 @@ function parseInteger(value: string) {
     10,
   )
   if (isNaN(parsedValue)) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw new InvalidArgumentError('Not a number.')
   }
   return parsedValue
