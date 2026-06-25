@@ -24,6 +24,56 @@ By leveraging the **Obsidian Bases API** for data querying and **Apache ECharts*
 - **Performance**: Ensure high performance and responsiveness, even with large datasets, by using optimized data structures and chart rendering techniques.
 - **Extensibility**: Lay the groundwork for future integrations, such as Mermaid diagrams or custom chart types.
 
+## Installation (manual)
+
+- Download `main.js`, `manifest.json`, and `styles.css` from the latest GitHub release.
+- Place them in `<vault>/.obsidian/plugins/obsidian-bases-charts/`.
+- Enable the plugin in Obsidian Settings → Community Plugins.
+
+## Usage
+
+Create a minimal sample `.base` file to visualize your data. For example, to analyze stock data with a candlestick chart:
+
+```yaml
+properties:
+  note.Date:
+    displayName: Date
+  note.Open:
+    displayName: Open Price
+  note.Close:
+    displayName: Close Price
+  note.High:
+    displayName: High Price
+  note.Low:
+    displayName: Low Price
+views:
+  - type: candlestick-chart
+    name: AAPL Stock Analysis
+    xAxisProp: note.Date
+    openProp: note.Open
+    closeProp: note.Close
+    highProp: note.High
+    lowProp: note.Low
+    showLegend: true
+    filters:
+      and:
+        - note.Symbol == "AAPL"
+```
+
+This configuration extracts the Date, Open, Close, High, and Low properties from your vault's notes that contain stock data for "AAPL" and renders a candlestick chart representing the stock analysis.
+
+<!-- TODO: screenshot -->
+
+## Configuration
+
+The plugin provides several user-configurable settings accessible in the Obsidian Settings panel:
+
+- **Default Height**: The default height for rendered charts (e.g., `500px`).
+- **Up Color**: The color to represent an upward trend or positive value (e.g., in candlestick charts).
+- **Down Color**: The color to represent a downward trend or negative value.
+- **Global Theme**: Select a default theme for all charts from the default options or your custom themes.
+- **Custom Themes**: Define and manage custom JSON-based ECharts themes.
+
 ## Development
 
 This project uses [Bun](https://bun.sh/) and Node.js.
