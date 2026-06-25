@@ -28,7 +28,7 @@ describe('jsonParsed', () => {
     const result = parser.safeParse(input)
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Invalid JSON')
+      expect(result.error.issues[0]?.message).toBe('Invalid JSON')
     }
   })
 
@@ -43,8 +43,8 @@ describe('jsonParsed', () => {
     const result = parser.safeParse(input)
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].path).toEqual(['age'])
-      expect(result.error.issues[0].code).toBe('invalid_type')
+      expect(result.error.issues[0]?.path).toEqual(['age'])
+      expect(result.error.issues[0]?.code).toBe('invalid_type')
     }
   })
 
@@ -58,7 +58,7 @@ describe('jsonParsed', () => {
     const result = parser.safeParse(input)
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe('Invalid JSON')
+      expect(result.error.issues[0]?.message).toBe('Invalid JSON')
     }
   })
 
