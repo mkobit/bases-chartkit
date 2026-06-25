@@ -109,7 +109,7 @@ describe(
     it(
       'should handle empty data',
       () => {
-        const data: unknown[] = []
+        const data: Record<string, unknown>[] = []
         const option = transformDataToChartOption(
           data,
           'name',
