@@ -1,13 +1,19 @@
 import { test as base, expect, chromium } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import type { ChildProcess } from 'node:child_process'
-import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
+import {
+  OBSIDIAN_VERSION,
+  launchObsidian,
+  prepareObsidian,
+  prepareVault,
+} from '../../scripts/lib/obsidian'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
+const PLUGIN_ID = 'obsidian-bases-charts'
 
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -56,16 +62,18 @@ type ObsidianFixtures = {
 export const test = base.extend<ObsidianFixtures>({
   obsidianPage: async ({}, use) => {
     const port = await findFreePort()
-    const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
-
-    const { proc } = await launcher.launch({
-      appVersion: 'latest',
-      installerVersion: 'latest',
+    const binary = await prepareObsidian({ version: OBSIDIAN_VERSION, cacheDir: CACHE_DIR })
+    const vault = await prepareVault({
       vault: VAULT_PATH,
       copy: true,
-      plugins: [ROOT_DIR],
-      args: [`--remote-debugging-port=${port}`],
-      spawnOptions: { stdio: 'pipe' },
+      plugin: { id: PLUGIN_ID, sourceDir: ROOT_DIR },
+    })
+
+    const { proc } = launchObsidian({
+      binary,
+      vault: vault.path,
+      remoteDebuggingPort: port,
+      stdio: 'pipe',
     })
 
     if (proc.stderr) {
@@ -87,6 +95,7 @@ export const test = base.extend<ObsidianFixtures>({
 
     await browser.close()
     proc.kill()
+    await vault.cleanup()
   },
 })
 

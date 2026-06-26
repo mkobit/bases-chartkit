@@ -14,7 +14,9 @@ The project enforces strict Functional Programming principles via `eslint`.
 | :--- | :--- |
 | `bun run build` | Full production build (Type check + Build). |
 | `bun test` | Run unit tests. |
-| `bun run test:e2e` | Run end-to-end tests via WebdriverIO. |
+| `bun run test:e2e` | Run end-to-end tests via Playwright. |
+| `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `obsidian-bases-charts-example-vault/` (requires `bun run build` first). |
+| `bun run vault:install` | Install the built plugin into the in-repo example vault without launching. |
 
 ## Dependency Installation Handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
