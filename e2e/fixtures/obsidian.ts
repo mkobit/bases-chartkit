@@ -6,7 +6,7 @@ import * as path from 'node:path'
 import * as net from 'node:net'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
-const VAULT_PATH = path.join(ROOT_DIR, 'example')
+const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
 function findFreePort(): Promise<number> {
