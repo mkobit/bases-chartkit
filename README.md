@@ -118,7 +118,7 @@ For more details, see [`e2e/AGENTS.md`](e2e/AGENTS.md).
 
 To test the plugin in Obsidian, you need to load the built files into a vault.
 
-1.  **Prepare a Vault**: You can use the provided `example/` directory as a test vault, or create a new one.
+1.  **Prepare a Vault**: You can use the provided `obsidian-bases-charts-example-vault/` directory as a test vault, or create a new one.
 2.  **Install the Plugin**: Create a directory inside your vault at `.obsidian/plugins/obsidian-bases-charts` (or your preferred ID).
 3.  **Deploy Files**: Copy `main.js`, `manifest.json`, and `styles.css` into that directory.
 
