@@ -403,7 +403,6 @@ export default tseslint.config(
       'obsidianmd/no-unsupported-api': 'off',
       'obsidianmd/hardcoded-config-path': 'off',
       'functional/no-conditional-statements': 'off',
-      'functional/no-mixed-types': 'off',
       'functional/no-expression-statements': 'off',
       'import/no-nodejs-modules': 'off',
       'no-console': 'off',

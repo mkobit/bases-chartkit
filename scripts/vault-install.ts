@@ -1,19 +1,15 @@
 #!/usr/bin/env bun
+import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
-import { prepareVault } from './lib/obsidian'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
-const PLUGIN_ID = 'obsidian-bases-charts'
+const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
 async function main(): Promise<void> {
-  const vault = await prepareVault({
-    vault: VAULT_PATH,
-    copy: false,
-    plugin: { id: PLUGIN_ID, sourceDir: ROOT_DIR },
-  })
-
-  console.log(`Installed plugin into ${path.join(vault.path, '.obsidian', 'plugins', PLUGIN_ID)}`)
+  const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
+  await launcher.installPlugins(VAULT_PATH, [{ path: ROOT_DIR }])
+  console.log(`Installed plugin into ${path.join(VAULT_PATH, '.obsidian', 'plugins')}`)
 }
 
 main().catch((err: unknown) => {
