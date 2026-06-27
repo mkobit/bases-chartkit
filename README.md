@@ -106,24 +106,33 @@ bun run build
 
 ### Automated testing
 
-We use WebdriverIO for end-to-end testing.
+We use Playwright for end-to-end testing.
 
 ```bash
 bun run test:e2e
 ```
 
+The e2e fixture downloads a sandboxed Linux Obsidian AppImage to `.obsidian-cache/` on first run and launches it against a temp-copied vault for each test.
 For more details, see [`e2e/AGENTS.md`](e2e/AGENTS.md).
 
 ### Manual testing
 
-To test the plugin in Obsidian, you need to load the built files into a vault.
+To test the plugin against a real Obsidian instance using the canonical in-repo `obsidian-bases-charts-example-vault/`:
 
-1.  **Prepare a Vault**: You can use the provided `obsidian-bases-charts-example-vault/` directory as a test vault, or create a new one.
-2.  **Install the Plugin**: Create a directory inside your vault at `.obsidian/plugins/obsidian-bases-charts` (or your preferred ID).
-3.  **Deploy Files**: Copy `main.js`, `manifest.json`, and `styles.css` into that directory.
+```bash
+bun run build      # generate main.js / styles.css
+bun run vault:dev  # downloads sandboxed Obsidian (one-time, cached) and launches it
+```
 
-For a smoother development experience, we recommend using the **Hot Reload** plugin:
--   [https://github.com/pjeby/hot-reload](https://github.com/pjeby/hot-reload)
+The launcher uses the same `scripts/lib/obsidian.ts` module as the e2e fixture. On WSL2, GUI rendering goes through WSLg.
+
+To install the built plugin into the example vault without launching (e.g. for use with your own Obsidian):
+
+```bash
+bun run vault:install
+```
+
+This populates `obsidian-bases-charts-example-vault/.obsidian/plugins/obsidian-bases-charts/` with the freshly built `main.js`, `manifest.json`, and `styles.css`.
 
 ### Resources
 

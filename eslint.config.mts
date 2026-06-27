@@ -90,6 +90,13 @@ const packageJsonPlugin = {
 
 export default tseslint.config(
   {
+    ignores: [
+      // Plugin install artifacts inside the test vault — populated at runtime by `bun run vault:install`
+      // eslint-disable-next-line obsidianmd/hardcoded-config-path
+      'obsidian-bases-charts-example-vault/.obsidian/plugins/**',
+    ],
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -394,6 +401,7 @@ export default tseslint.config(
       'obsidianmd/no-obsidian-internal-api': 'off',
       'obsidianmd/no-unsupported-features': 'off',
       'obsidianmd/no-unsupported-api': 'off',
+      'obsidianmd/hardcoded-config-path': 'off',
       'functional/no-conditional-statements': 'off',
       'functional/no-expression-statements': 'off',
       'import/no-nodejs-modules': 'off',
