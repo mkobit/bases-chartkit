@@ -55,7 +55,8 @@ export const prepareObsidian = async (opts: {
     if (!response.ok) {
       throw new Error(`Download failed for Obsidian ${opts.version}: ${response.status} ${response.statusText}`)
     }
-    await Bun.write(appImagePath, response)
+    const buffer = await response.arrayBuffer()
+    await fs.writeFile(appImagePath, new Uint8Array(buffer))
   }
   await fs.chmod(appImagePath, 0o755)
 
