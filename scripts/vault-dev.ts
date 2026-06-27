@@ -15,6 +15,7 @@ async function main(): Promise<void> {
     vault: VAULT_PATH,
     copy: false,
     plugins: [ROOT_DIR],
+    args: ['--disable-gpu'],
     spawnOptions: { stdio: 'inherit' },
   })
 
