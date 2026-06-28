@@ -1,50 +1,54 @@
 import { test, expect } from './fixtures/obsidian'
+import { evaluateObsidian } from './helpers/evaluate'
 
-import { evaluateObsidian, evaluateObsidianWith } from './helpers/evaluate'
-import type { App } from 'obsidian'
+const PLUGIN_ID = 'obsidian-bases-charts'
 
-test.describe('Obsidian Bases Charts Plugin', () => {
-  test('should launch Obsidian and load the plugin', async ({ obsidianPage: { page } }) => {
-    // Verify the plugin is loaded in the internal registry
-    await expect.poll(async () => {
-      return await evaluateObsidian(page, (app: App) => {
-        // 'plugins' is not in the public API but exists at runtime
-        const internalApp = app as unknown as { plugins: { plugins: Record<string, unknown> } }
-        return internalApp.plugins.plugins['obsidian-bases-charts'] !== undefined
-      })
-    }).toBe(true)
+test.describe('plugin lifecycle', () => {
+  test('loads into the plugin registry', async ({ obsidianPage: { page } }) => {
+    await expect.poll(async () =>
+      evaluateObsidian(
+        page,
+        (app, args: { pluginId: string }) => app.plugins.plugins[args.pluginId] !== undefined,
+        { pluginId: PLUGIN_ID },
+      ),
+    ).toBe(true)
   })
 
-  test('should register the settings tab', async ({ obsidianPage: { page } }) => {
-    // Verify that the plugin registered its settings tab
-    await expect.poll(async () => {
-      return await evaluateObsidian(page, (app: App) => {
-        // 'setting' is internal
-        const internalApp = app as unknown as { setting: { pluginTabs: { id: string }[] } }
-        return internalApp.setting.pluginTabs.some(t => t.id === 'obsidian-bases-charts')
-      })
-    }).toBe(true)
+  test('registers a settings tab', async ({ obsidianPage: { page } }) => {
+    await expect.poll(async () =>
+      evaluateObsidian(
+        page,
+        (app, args: { pluginId: string }) => app.setting.pluginTabs.some(t => t.id === args.pluginId),
+        { pluginId: PLUGIN_ID },
+      ),
+    ).toBe(true)
   })
 
-  test('should be able to create a file in the vault', async ({ obsidianPage: { page } }) => {
-    // Demonstrate best practice: interacting with the vault directly
+  test('can create a markdown file in the vault', async ({ obsidianPage: { page } }) => {
     const filename = 'test-chart.md'
-    const content = '```chart\n\n```'
 
-    // Create file
-    await evaluateObsidianWith(page, async (app: App, args: { filename: string, content: string }) => {
+    await evaluateObsidian(page, async (app, args: { filename: string }) => {
       const existing = app.vault.getAbstractFileByPath(args.filename)
       if (existing) {
         await app.fileManager.trashFile(existing)
       }
-      await app.vault.create(args.filename, args.content)
-    }, { filename, content })
+      await app.vault.create(args.filename, '```chart\n\n```')
+    }, { filename })
 
-    // Verify it exists via internal API
-    await expect.poll(async () => {
-      return await evaluateObsidianWith(page, (app: App, args: { filename: string }) => {
-        return app.vault.getAbstractFileByPath(args.filename) !== null
-      }, { filename })
-    }).toBe(true)
+    await expect.poll(async () =>
+      evaluateObsidian(
+        page,
+        (app, args: { filename: string }) => app.vault.getAbstractFileByPath(args.filename) !== null,
+        { filename },
+      ),
+    ).toBe(true)
+
+    // cleanup
+    await evaluateObsidian(page, async (app, args: { filename: string }) => {
+      const f = app.vault.getAbstractFileByPath(args.filename)
+      if (f) {
+        await app.fileManager.trashFile(f)
+      }
+    }, { filename })
   })
 })

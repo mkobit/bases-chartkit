@@ -11,12 +11,15 @@ const exists = await evaluateObsidian(page, (app) => {
 ```
 
 ## Context Isolation
-Variables from the test scope are **not** available inside `evaluateObsidian`. Pass them explicitly as arguments using `evaluateObsidianWith`.
+Variables from the test scope are **not** available inside `evaluateObsidian` — the function is serialized via `.toString()` and re-evaluated in the renderer. Pass everything explicitly as the third argument.
 
 ```typescript
 const filename = "note.md";
-await evaluateObsidianWith(page, async (app, args) => {
+await evaluateObsidian(page, async (app, args: { filename: string }) => {
   // 'args.filename' is available here, 'filename' is NOT
   await app.vault.create(args.filename, "");
 }, { filename });
 ```
+
+## Typing internal Obsidian APIs
+`e2e/obsidian-internal.d.ts` augments `App` with internal members used by e2e tests (`app.plugins`, `app.setting`, `app.internalPlugins`). When a new test needs a different internal API, add it there — don't use `as unknown as` casts (the e2e lint rule blocks them).

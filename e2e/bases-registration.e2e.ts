@@ -1,57 +1,16 @@
 import { test, expect } from './fixtures/obsidian'
 import { evaluateObsidian } from './helpers/evaluate'
-import type { App } from 'obsidian'
-
-const EXPECTED_CHART_VIEW_TYPES = [
-  'area-chart',
-  'bar-chart',
-  'boxplot-chart',
-  'bubble-chart',
-  'bullet-chart',
-  'calendar-chart',
-  'candlestick-chart',
-  'effect-scatter-chart',
-  'funnel-chart',
-  'gantt-chart',
-  'gauge-chart',
-  'graph-chart',
-  'heatmap-chart',
-  'histogram-chart',
-  'line-chart',
-  'lines-chart',
-  'map-chart',
-  'parallel-chart',
-  'pareto-chart',
-  'pictorial-bar-chart',
-  'pie-chart',
-  'polar-bar-chart',
-  'polar-line-chart',
-  'polar-scatter-chart',
-  'radar-chart',
-  'radial-bar-chart',
-  'rose-chart',
-  'sankey-chart',
-  'scatter-chart',
-  'stacked-bar-chart',
-  'sunburst-chart',
-  'theme-river-chart',
-  'tree-chart',
-  'treemap-chart',
-  'waterfall-chart',
-  'word-cloud-chart',
-] as const
+import { REGISTERED_CHART_VIEW_TYPES } from '../src/charts/registered-views'
 
 test.describe('Bases view registration', () => {
-  test('plugin registers all chart view types with the Bases core plugin', async ({ obsidianPage: { page } }) => {
-    const registeredViews = await evaluateObsidian(page, (app: App) => {
-      const internal = app as unknown as {
-        internalPlugins: { plugins: Record<string, { instance?: { registrations?: Record<string, unknown> } }> }
-      }
-      const registrations = internal.internalPlugins.plugins.bases?.instance?.registrations
-      return registrations ? Object.keys(registrations).sort() : []
-    })
+  for (const viewType of REGISTERED_CHART_VIEW_TYPES) {
+    test(`registers ${viewType} with the Bases core plugin`, async ({ obsidianPage: { page } }) => {
+      const registered = await evaluateObsidian(page, (app, args: { viewType: string }) => {
+        const registrations = app.internalPlugins.plugins.bases?.instance?.registrations
+        return registrations !== undefined && args.viewType in registrations
+      }, { viewType })
 
-    const missing = EXPECTED_CHART_VIEW_TYPES.filter(t => !registeredViews.includes(t))
-    expect(missing).toEqual([])
-  })
+      expect(registered).toBe(true)
+    })
+  }
 })

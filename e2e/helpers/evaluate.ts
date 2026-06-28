@@ -1,20 +1,27 @@
 import type { App } from 'obsidian'
 import type { Page } from '@playwright/test'
 
-export async function evaluateObsidian<T>(page: Page, fn: (app: App) => T | Promise<T>): Promise<T> {
+// Unified runner: evaluates `fn` inside the Obsidian renderer. When `args` is
+// omitted the function receives only `app`. Args must be JSON-serializable
+// since they're shipped over CDP.
+export async function evaluateObsidian<T>(
+  page: Page,
+  fn: (app: App) => T | Promise<T>,
+): Promise<T>
+export async function evaluateObsidian<T, A>(
+  page: Page,
+  fn: (app: App, args: A) => T | Promise<T>,
+  args: A,
+): Promise<T>
+export async function evaluateObsidian<T, A>(
+  page: Page,
+  fn: ((app: App) => T | Promise<T>) | ((app: App, args: A) => T | Promise<T>),
+  args?: A,
+): Promise<T> {
   const fnSrc = fn.toString()
-
-  return page.evaluate((src) => {
-    const fnObj = new Function(`return (${src})`)() as (app: App) => T | Promise<T>
-    return fnObj((activeWindow as unknown as { app: App }).app)
-  }, fnSrc)
-}
-
-export async function evaluateObsidianWith<T, A>(page: Page, fn: (app: App, args: A) => T | Promise<T>, args: A): Promise<T> {
-  const fnSrc = fn.toString()
-
   return page.evaluate(([src, fnArgs]) => {
-    const fnObj = new Function(`return (${src})`)() as (app: App, a: A) => T | Promise<T>
-    return fnObj((activeWindow as unknown as { app: App }).app, fnArgs as A)
+    const fnObj = new Function(`return (${src})`)() as (app: App, a?: unknown) => T | Promise<T>
+    const obsidianApp = (activeWindow as Window & { app: App }).app
+    return fnObj(obsidianApp, fnArgs)
   }, [fnSrc, args] as const)
 }
