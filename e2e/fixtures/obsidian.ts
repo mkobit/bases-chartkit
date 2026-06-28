@@ -26,23 +26,14 @@ function findFreePort(): Promise<number> {
   })
 }
 
-async function waitForCDP(port: number, proc: ChildProcess, maxAttempts = 30, delayMs = 1000): Promise<void> {
-  for (let i = 0; i < maxAttempts; i++) {
+async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
+  await expect(async () => {
     if (proc.exitCode !== null) {
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
-    try {
-      const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
-      await browser.close()
-      return
-    }
-    catch {
-      // eslint-disable-next-line obsidianmd/prefer-window-timers
-      await new Promise(resolve => setTimeout(resolve, delayMs))
-    }
-  }
-
-  throw new Error(`Obsidian CDP on port ${port} did not become ready after ${maxAttempts} attempts`)
+    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
+    await browser.close()
+  }).toPass({ intervals: [1000], timeout: 30_000 })
 }
 
 export type ObsidianPage = {
@@ -79,7 +70,7 @@ export const test = base.extend<ObsidianFixtures>({
     const page = context.pages()[0] ?? await context.newPage()
 
     await page.waitForFunction(
-      () => typeof (window.window as unknown as Record<string, unknown>).app !== 'undefined',
+      () => typeof (window as { app?: unknown }).app !== 'undefined',
       { timeout: 30_000 },
     )
 

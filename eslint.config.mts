@@ -433,6 +433,17 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
+  {
+    // e2e tests should never need `as unknown as T` casts — augment the Obsidian
+    // App interface in e2e/obsidian-internal.d.ts instead.
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', {
+        selector: 'TSAsExpression > TSAsExpression[typeAnnotation.type=\'TSUnknownKeyword\']',
+        message: 'Avoid `as unknown as T` casts. Augment the Obsidian App interface in e2e/obsidian-internal.d.ts or use a typed accessor.',
+      }],
+    },
+  },
   // Config files (relax rules)
   {
     files: ['eslint.config.mts', 'playwright.config.ts'],

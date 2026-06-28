@@ -1,0 +1,43 @@
+// Canonical list of Bases view types registered by this plugin.
+// src/main.ts registers each entry via `registerBasesView()`; e2e tests
+// iterate this list to assert registration. Keep alphabetized.
+export const REGISTERED_CHART_VIEW_TYPES = [
+  'area-chart',
+  'bar-chart',
+  'boxplot-chart',
+  'bubble-chart',
+  'bullet-chart',
+  'calendar-chart',
+  'candlestick-chart',
+  'effect-scatter-chart',
+  'funnel-chart',
+  'gantt-chart',
+  'gauge-chart',
+  'graph-chart',
+  'heatmap-chart',
+  'histogram-chart',
+  'line-chart',
+  'lines-chart',
+  'map-chart',
+  'parallel-chart',
+  'pareto-chart',
+  'pictorial-bar-chart',
+  'pie-chart',
+  'polar-bar-chart',
+  'polar-line-chart',
+  'polar-scatter-chart',
+  'radar-chart',
+  'radial-bar-chart',
+  'rose-chart',
+  'sankey-chart',
+  'scatter-chart',
+  'stacked-bar-chart',
+  'sunburst-chart',
+  'theme-river-chart',
+  'tree-chart',
+  'treemap-chart',
+  'waterfall-chart',
+  'word-cloud-chart',
+] as const
+
+export type RegisteredChartViewType = typeof REGISTERED_CHART_VIEW_TYPES[number]
