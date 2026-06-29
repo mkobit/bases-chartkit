@@ -36,3 +36,7 @@ e2e/test-vault/
 
 # Stray build output capture
 build_output.log
+
+# Local dev/test artifacts — screenshots from `bun run vault:screenshot`,
+# anywhere a tool wants to dump throwaway output.
+.test-output/
