@@ -89,8 +89,10 @@ export abstract class BaseChartView extends BasesView {
       window.clearTimeout(this.resizeTimeout)
     }
     this.resizeTimeout = window.setTimeout(() => {
+      // Only resize an already-mounted chart. Don't initiate the first render
+      // from a ResizeObserver — `this.config` isn't set until Obsidian invokes
+      // the BasesView lifecycle (which calls `onDataUpdated`).
       this.chart?.resize()
-      this.renderChart()
     }, 100)
   }
 
@@ -166,7 +168,13 @@ export abstract class BaseChartView extends BasesView {
   }
 
   protected renderChart(): void {
-    !this.chartEl ? undefined : this.executeRender()
+    // Guard: Obsidian sets `this.config` after construction but before
+    // `onDataUpdated`. Any early caller (e.g. a ResizeObserver) would otherwise
+    // crash inside `executeRender` → `getStringOption` → `this.config.get(...)`.
+    if (!this.chartEl || !this.config) {
+      return
+    }
+    this.executeRender()
   }
 
   protected executeRender(): void {
