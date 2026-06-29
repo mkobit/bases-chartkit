@@ -38,4 +38,4 @@ e2e/test-vault/
 build_output.log
 
 # Dev screenshots from `bun run vault:screenshot`
-vault-screenshot*.png
+images/vault-screenshot*.png

@@ -4,9 +4,10 @@
 // Default output: ./vault-screenshot-<timestamp>.png
 
 import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 
 const CDP_PORT = 9222
-const outputPath = process.argv[2] ?? 'vault-screenshot.png'
+const outputPath = process.argv[2] ?? path.join('images', 'vault-screenshot.png')
 
 interface CdpPage {
   readonly type: string
@@ -70,6 +71,7 @@ async function main(): Promise<void> {
   }
 
   const png = await captureViaWebsocket(page.webSocketDebuggerUrl)
+  await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await fs.writeFile(outputPath, png)
   console.log(`Screenshot written: ${outputPath} (${png.byteLength} bytes)`)
 }
