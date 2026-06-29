@@ -36,3 +36,6 @@ e2e/test-vault/
 
 # Stray build output capture
 build_output.log
+
+# Dev screenshots from `bun run vault:screenshot`
+vault-screenshot*.png

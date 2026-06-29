@@ -14,7 +14,10 @@
 		"test:e2e": "bun x playwright test",
 		"typecheck": "tsc --noEmit",
 		"vault:dev": "bun scripts/vault-dev.ts",
-		"vault:install": "bun scripts/vault-install.ts"
+		"vault:eval": "bun scripts/vault-eval.ts",
+		"vault:install": "bun scripts/vault-install.ts",
+		"vault:reload": "bun scripts/vault-reload.ts",
+		"vault:screenshot": "bun scripts/vault-screenshot.ts"
 	},
 	"keywords": [],
 	"license": "MIT",
