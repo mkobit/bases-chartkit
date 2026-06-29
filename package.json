@@ -17,7 +17,8 @@
 		"vault:eval": "bun scripts/vault-eval.ts",
 		"vault:install": "bun scripts/vault-install.ts",
 		"vault:reload": "bun scripts/vault-reload.ts",
-		"vault:screenshot": "bun scripts/vault-screenshot.ts"
+		"vault:screenshot": "bun scripts/vault-screenshot.ts",
+		"vault:sync": "bun scripts/vault-sync.ts"
 	},
 	"keywords": [],
 	"license": "MIT",
