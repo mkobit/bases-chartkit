@@ -7,7 +7,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
 const CDP_PORT = 9222
-const outputPath = process.argv[2] ?? path.join('images', 'vault-screenshot.png')
+const outputPath = process.argv[2] ?? path.join('.test-output', 'vault-screenshot.png')
 
 interface CdpPage {
   readonly type: string
