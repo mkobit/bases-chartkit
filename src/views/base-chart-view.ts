@@ -1,7 +1,6 @@
 import type {
   QueryController,
-  ViewOption,
-  ItemView } from 'obsidian'
+  ViewOption } from 'obsidian'
 import {
   BasesView,
   Platform,
@@ -70,11 +69,13 @@ export abstract class BaseChartView extends BasesView {
     this.resizeObserver = new ResizeObserver((_entries) => {
       this.triggerResize()
     })
-    this.resizeObserver.observe(this.containerEl);
+    this.resizeObserver.observe(this.containerEl)
 
-    (this as unknown as ItemView).addAction('expand', 'Full Screen', () => {
-      this.openFullScreen()
-    })
+    // NOTE: `(this as unknown as ItemView).addAction(...)` used to register a
+    // "Full Screen" toolbar button here. That cast was a lie — `BasesView`
+    // (our actual parent) does not extend ItemView, so `addAction` was
+    // undefined at runtime and threw on first view load. Re-add a fullscreen
+    // affordance via the proper Bases API (or a command) in a follow-up.
   }
 
   onunload() {
