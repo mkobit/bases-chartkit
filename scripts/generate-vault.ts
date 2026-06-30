@@ -92,7 +92,7 @@ async function main() {
   console.log('\nVault generated successfully!')
 }
 
-main().catch((error) => {
-  console.error('Failed to generate vault:', error)
+main().catch((error: unknown) => {
+  console.error('Failed to generate vault:', error instanceof Error ? error.message : String(error))
   process.exit(1)
 })

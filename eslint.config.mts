@@ -440,10 +440,26 @@ export default tseslint.config(
     // `// eslint-disable-next-line no-restricted-syntax -- reason` with a
     // genuine reason (library type bridge, etc.).
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    plugins: {
+      unicorn,
+    },
     rules: {
+      'unicorn/prefer-optional-catch-binding': 'error',
       'no-restricted-syntax': ['error', {
         selector: 'TSAsExpression > TSAsExpression[typeAnnotation.type=\'TSUnknownKeyword\']',
         message: 'Avoid `as unknown as T` casts. Augment types or extract a typed accessor. If a library type bridge genuinely needs it, eslint-disable-next-line with a reason comment.',
+      },
+      {
+        selector: 'CatchClause > BlockStatement[body.length=0]',
+        message: 'Empty catch blocks are forbidden. Handle the error or use an eslint-disable comment with a reason.',
+      },
+      {
+        selector: 'CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name=\'console\'][callee.property.name=/^(error|log|warn|info)$/]',
+        message: 'Catch blocks that only log are forbidden. Re-throw, handle via Notice, or wrap the error.',
+      },
+      {
+        selector: 'CatchClause > Identifier[typeAnnotation.typeAnnotation.type=\'TSAnyKeyword\']',
+        message: 'Catch clauses with \'any\' type annotation are forbidden. Bind typed error or omit if unused.',
       }],
     },
   },

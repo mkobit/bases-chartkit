@@ -83,6 +83,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: unknown) => {
-  console.error(err)
+  console.error('Fatal error in vault-eval:', err instanceof Error ? err.message : String(err))
   process.exit(1)
 })
