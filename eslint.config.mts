@@ -434,13 +434,16 @@ export default tseslint.config(
     },
   },
   {
-    // e2e tests should never need `as unknown as T` casts — augment the Obsidian
-    // App interface in e2e/obsidian-internal.d.ts instead.
-    files: ['e2e/**/*.ts'],
+    // `as unknown as T` strips type safety and has shipped two real
+    // runtime bugs in this repo (BaseChartView.config and ItemView.addAction).
+    // Block the pattern repo-wide. To override at a specific site, add
+    // `// eslint-disable-next-line no-restricted-syntax -- reason` with a
+    // genuine reason (library type bridge, etc.).
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
     rules: {
       'no-restricted-syntax': ['error', {
         selector: 'TSAsExpression > TSAsExpression[typeAnnotation.type=\'TSUnknownKeyword\']',
-        message: 'Avoid `as unknown as T` casts. Augment the Obsidian App interface in e2e/obsidian-internal.d.ts or use a typed accessor.',
+        message: 'Avoid `as unknown as T` casts. Augment types or extract a typed accessor. If a library type bridge genuinely needs it, eslint-disable-next-line with a reason comment.',
       }],
     },
   },

@@ -209,7 +209,7 @@ export function createGanttChartOption(
   return {
     tooltip: {
       trigger: 'item',
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
       formatter: formatTooltip as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
     },
     legend: getLegendOption(options),

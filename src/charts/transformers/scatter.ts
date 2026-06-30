@@ -23,7 +23,7 @@ function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
 function getDimension(dimName: string): number {
   // ECharts types claim dimension must be number (index), but string (name) works for object datasets.
   // Isolate this lie.
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
   return dimName as unknown as number
 }
 
@@ -91,7 +91,7 @@ export function createScatterChartOption(
   // 4. Create Datasets
   // Dataset source accepts array, so we might need to cast to mutable or spread
   const sourceDataset: DatasetComponentOption = {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
     source: normalizedData as unknown as Record<string, unknown>[],
   }
 

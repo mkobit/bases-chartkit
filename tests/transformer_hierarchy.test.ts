@@ -48,7 +48,8 @@ describe(
             const series = option.series[0] as SunburstSeriesOption
             expect(series.type).toBe('sunburst')
 
-            // Cast data to known structure
+            // ECharts series.data is `OptionDataItem[]`; narrow to our shape for assertions.
+            // eslint-disable-next-line no-restricted-syntax
             const hierarchy = series.data as unknown as readonly HierarchyNode[]
             expect(hierarchy).toHaveLength(2) // A and D
 
@@ -91,6 +92,8 @@ describe(
             }
 
             const series = option.series[0] as SunburstSeriesOption
+            // ECharts series.data narrowed for assertions.
+            // eslint-disable-next-line no-restricted-syntax
             const hierarchy = series.data as unknown as readonly HierarchyNode[]
 
             // @ts-expect-error - suppress strictNullChecks in tests
@@ -125,6 +128,8 @@ describe(
 
             const series = option.series[0] as TreeSeriesOption
 
+            // ECharts series.data narrowed for assertions.
+            // eslint-disable-next-line no-restricted-syntax
             const dataRoot = series.data as unknown as readonly HierarchyNode[]
             // Should be wrapped in "Root" because there are two top-level nodes (A and C)
             expect(dataRoot).toHaveLength(1)
@@ -157,6 +162,8 @@ describe(
 
             const series = option.series[0] as TreeSeriesOption
 
+            // ECharts series.data narrowed for assertions.
+            // eslint-disable-next-line no-restricted-syntax
             const dataRoot = series.data as unknown as readonly HierarchyNode[]
             // Should be just A, no wrapper
             expect(dataRoot).toHaveLength(1)
