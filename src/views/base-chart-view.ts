@@ -159,6 +159,10 @@ export abstract class BaseChartView extends BasesView {
 
   private openFullScreen() {
     this.isFullScreenGeneration = true
+    // Obsidian's `BasesView.data.data` and our internal `BasesData` share the
+    // same name + shape but are declared in separate modules. TODO(cast-audit):
+    // rename internal type to remove the bridge.
+    // eslint-disable-next-line no-restricted-syntax
     const data = this.data.data as unknown as BasesData
     const option = this.getChartOption(data)
     this.isFullScreenGeneration = false
@@ -189,6 +193,8 @@ export abstract class BaseChartView extends BasesView {
           this.getTheme(),
         ))
 
+    // See openFullScreen above for the BasesData bridge.
+    // eslint-disable-next-line no-restricted-syntax
     const data = this.data.data as unknown as BasesData
     const option = this.getChartOption(data)
 

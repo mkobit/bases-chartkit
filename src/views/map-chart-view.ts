@@ -46,6 +46,9 @@ export class MapChartView extends BaseChartView {
 
         echarts.registerMap(
           mapFile,
+          // zod parse yields a generic GeoJSON object; ECharts' registerMap
+          // parameter type is an unexported internal shape that overlaps.
+          // eslint-disable-next-line no-restricted-syntax
           (geoJson as unknown) as Parameters<typeof echarts.registerMap>[1],
         )
         this.registeredMapName = mapFile

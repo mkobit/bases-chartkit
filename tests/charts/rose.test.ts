@@ -15,6 +15,8 @@ describe(
             value: 20 },
         ]
 
+        // ECharts EChartsOption return is a wide union; narrow to assertion shape.
+        // eslint-disable-next-line no-restricted-syntax
         const option = transformDataToChartOption(
           data,
           'category',
@@ -49,6 +51,8 @@ describe(
             value: 20 },
         ]
 
+        // ECharts EChartsOption return is a wide union; narrow to assertion shape.
+        // eslint-disable-next-line no-restricted-syntax
         const option = transformDataToChartOption(
           data,
           'category',

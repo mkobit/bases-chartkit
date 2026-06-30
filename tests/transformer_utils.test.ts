@@ -180,6 +180,8 @@ describe('Transformer Utils', () => {
       })
 
       it('should fall back to top for unknown user-specified positions', () => {
+        // Intentionally malformed input — verifies invalid-position fallback.
+        // eslint-disable-next-line no-restricted-syntax
         const result = getLegendOption({ legend: true, legendPosition: 'unknown-position' } as unknown as BaseTransformerOptions)
         expect(result).toBeDefined()
         if (result) {
