@@ -96,6 +96,36 @@ describe('Transformer Utils', () => {
       expect(getNestedValue('string', 'a')).toBeUndefined()
       expect(getNestedValue(42, 'a')).toBeUndefined()
     })
+
+    it('should fall back to a .get(key) accessor for class-instance fields like BasesNote', () => {
+      // Mimics Obsidian's BasesNote: properties are accessed via .get(key),
+      // not direct field access. Reproduces the empty-chart bug from
+      // Sales-Dashboard.base where item.note.Date returned undefined.
+      const basesNote = {
+        get(key: string): unknown {
+          return key === 'Date'
+            ? '2023-01-01'
+            : key === 'Revenue' ? 1335 : undefined
+        },
+      }
+      const item = { note: basesNote }
+      expect(getNestedValue(item, 'note.Date')).toBe('2023-01-01')
+      expect(getNestedValue(item, 'note.Revenue')).toBe(1335)
+      expect(getNestedValue(item, 'note.Missing')).toBeUndefined()
+    })
+
+    it('should prefer direct property access over the .get accessor', () => {
+      // If both forms exist, direct wins — preserves backward compat.
+      const obj = {
+        wrapper: {
+          inline: 'direct',
+          get(_key: string): unknown {
+            return 'via-get'
+          },
+        },
+      }
+      expect(getNestedValue(obj, 'wrapper.inline')).toBe('direct')
+    })
   })
 
   describe('getLegendOption', () => {
