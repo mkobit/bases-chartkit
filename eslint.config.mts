@@ -417,6 +417,15 @@ export default tseslint.config(
       'functional/type-declaration-immutability': 'off',
       'functional/readonly-type': 'off',
       'functional/functional-parameters': 'off',
+      'functional/no-let': 'off',
+      // Scripts run under Node, not in an Obsidian renderer — the
+      // window-timer and Temporal-over-Date guidance doesn't apply.
+      'obsidianmd/prefer-window-timers': 'off',
+      'no-restricted-globals': 'off',
+      // Watcher uses a then/catch/finally chain — `promise/*` rules
+      // optimized for return-value chains add noise here.
+      'promise/catch-or-return': 'off',
+      'promise/always-return': 'off',
       // Allow require in scripts
       '@typescript-eslint/no-require-imports': 'off',
       // Relax stylistic indent for scripts if mixed content, but generally enforce tab
