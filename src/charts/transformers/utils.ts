@@ -15,14 +15,28 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+// Obsidian's BasesView passes data items whose `note` (and similar) fields
+// are class instances (e.g. `BasesNote`) — properties are accessed via
+// `.get(key)`, NOT direct property access. We duck-type that: when direct
+// access fails, fall back to a `.get(key)` accessor if one exists.
+function isRecordWithGetAccessor(
+  o: Record<string, unknown>,
+): o is Record<string, unknown> & { readonly get: (key: string) => unknown } {
+  return typeof o.get === 'function'
+}
+
 export function getNestedValue(obj: unknown, path: string): unknown {
   return (typeof obj !== 'object' || obj === null)
     ? undefined
     : path.split('.').reduce(
         (o: unknown, key: string): unknown => {
-          return (isRecord(o) && key in o)
-            ? o[key]
-            : undefined
+          if (!isRecord(o)) {
+            return undefined
+          }
+          const direct = key in o ? o[key] : undefined
+          return direct !== undefined
+            ? direct
+            : isRecordWithGetAccessor(o) ? o.get(key) : undefined
         },
         obj,
       )
