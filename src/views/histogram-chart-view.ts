@@ -38,8 +38,8 @@ export class HistogramChartView extends BaseChartView {
       ...this.getCommonTransformerOptions(),
       binCount,
       // Map common labels if needed
-      yAxisLabel: this.config.get(BaseChartView.Y_AXIS_LABEL_KEY) as string || 'Frequency',
-      xAxisLabel: this.config.get(BaseChartView.X_AXIS_LABEL_KEY) as string || valueProp,
+      yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? 'Frequency',
+      xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? valueProp,
     }
 
     return createHistogramChartOption(

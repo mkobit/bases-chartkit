@@ -115,6 +115,16 @@ export abstract class BaseChartView extends BasesView {
     return typeof val === 'string' ? val : undefined
   }
 
+  // Resolves a property-picker option (e.g. X_AXIS_PROP_KEY) to the
+  // user-facing name Bases shows for that property — either the `displayName`
+  // configured in the .base file's `properties:` block, or Obsidian's own
+  // default naming (property-type prefix stripped). Falls back to undefined
+  // (not the raw property path) so callers can chain further fallbacks.
+  protected getPropDisplayName(key: string): string | undefined {
+    const propertyId = this.config.getAsPropertyId(key)
+    return propertyId ? this.config.getDisplayName(propertyId) : undefined
+  }
+
   protected getVisualMapTransformerOptions(): VisualMapOptions {
     const visualMapMin = this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)) : undefined
     const visualMapMax = this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)) : undefined
@@ -137,8 +147,8 @@ export abstract class BaseChartView extends BasesView {
       legendPosition: this.config.get(BaseChartView.LEGEND_POSITION_KEY) as 'top' | 'bottom' | 'left' | 'right',
       legendOrient: this.config.get(BaseChartView.LEGEND_ORIENT_KEY) as 'horizontal' | 'vertical',
       flipAxis: this.getBooleanOption(BaseChartView.FLIP_AXIS_KEY),
-      xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY),
-      yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY),
+      xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.X_AXIS_PROP_KEY),
+      yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY),
       xAxisLabelRotate: Number(this.config.get(BaseChartView.X_AXIS_LABEL_ROTATE_KEY) || 0),
       isMobile: Platform.isMobile,
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
