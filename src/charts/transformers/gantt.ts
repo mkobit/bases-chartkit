@@ -2,7 +2,7 @@ import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getLegendOption, getNestedValue, safeToString } from './utils'
+import { getLegendOption, getNestedValue, isRecord, safeToString } from './utils'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
   readonly taskProp: string
@@ -38,21 +38,27 @@ function normalizeDate(val: unknown): number | null {
     : (val && typeof val === 'object' && 'getTime' in val && typeof (val).getTime === 'function')
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         ? (val as { getTime: () => number }).getTime()
-        : typeof val === 'string'
-          ? (() => {
-              try {
-                return Temporal.Instant.from(val).epochMilliseconds
-              }
-              catch {
-                try {
-                  return Temporal.PlainDate.from(val).toZonedDateTime('UTC').epochMilliseconds
-                }
-                catch {
-                  return null
-                }
-              }
-            })()
-          : null
+        // Bases' Value wrapper for date properties isn't a string or a
+        // native Date — unwrap it via safeToString (-> ISO date string)
+        // before parsing, or Temporal.Instant/PlainDate always throw.
+        : (() => {
+            const str = typeof val === 'string' ? val : isRecord(val) ? safeToString(val) : null
+            return str === null
+              ? null
+              : (() => {
+                  try {
+                    return Temporal.Instant.from(str).epochMilliseconds
+                  }
+                  catch {
+                    try {
+                      return Temporal.PlainDate.from(str).toZonedDateTime('UTC').epochMilliseconds
+                    }
+                    catch {
+                      return null
+                    }
+                  }
+                })()
+          })()
 }
 
 function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>): string {
@@ -132,6 +138,16 @@ export function createGanttChartOption(
     R.map(d => d.task),
     R.unique(),
   )
+
+  // The invisible '_start' series stacks from 0, so ECharts' default time-axis
+  // auto-range spans [epoch, max end] instead of the actual task window —
+  // pin min/max to the real data range explicitly.
+  const axisRange = validData.length === 0
+    ? undefined
+    : {
+        min: Math.min(...validData.map(d => d.start)),
+        max: Math.max(...validData.map(d => d.end)),
+      }
 
   const groupedData = R.groupBy(
     validData,
@@ -220,9 +236,17 @@ export function createGanttChartOption(
       bottom: '3%',
     },
     xAxis: {
-      type: 'time',
+      // 'time' would be the natural axis type, but ECharts doesn't compute
+      // stacked-bar positions correctly against a 'time' axis — bars silently
+      // fail to render. Epoch ms are plain numbers, so 'value' positions them
+      // correctly; axisLabel.formatter restores human-readable date ticks.
+      type: 'value',
       position: 'top',
       splitLine: { show: true },
+      axisLabel: {
+        formatter: (value: number) => Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
+      },
+      ...axisRange,
     },
     yAxis: {
       type: 'category',

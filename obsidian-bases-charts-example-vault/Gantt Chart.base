@@ -1,5 +1,20 @@
-type: gantt-chart
-taskProp: note.Task
-startProp: note.Start
-endProp: note.End
-seriesProp: note.Project
+properties:
+  note.Task:
+    displayName: Task
+  note.Start:
+    displayName: Start
+  note.End:
+    displayName: End
+  note.Project:
+    displayName: Project
+views:
+  - type: gantt-chart
+    name: Project Gantt Chart
+    filters:
+      and:
+        - note.Task != null
+    taskProp: note.Task
+    startProp: note.Start
+    endProp: note.End
+    seriesProp: note.Project
+    showLegend: true
