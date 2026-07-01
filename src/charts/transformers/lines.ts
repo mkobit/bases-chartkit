@@ -55,7 +55,7 @@ export function createLinesChartOption(
                   item,
                   seriesProp,
                 ))
-              : 'Series 1'
+              : yAxisLabel
 
             return (Number.isNaN(x1) || Number.isNaN(y1) || Number.isNaN(x2) || Number.isNaN(y2))
               ? null

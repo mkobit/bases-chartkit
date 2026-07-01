@@ -57,6 +57,14 @@ describe(
         expect(option.xAxis.data).toContain('A')
         // @ts-ignore
         expect(option.xAxis.data).toContain('B')
+
+        // Regression: series name and axis titles should reflect the actual
+        // fields plotted, not a hardcoded 'Series 1' or a blank axis title.
+        expect(series.name).toBe('val')
+        // @ts-ignore
+        expect(option.xAxis.name).toBe('cat')
+        // @ts-ignore
+        expect(option.yAxis.name).toBe('val')
       },
     )
 

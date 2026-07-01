@@ -17,10 +17,6 @@ export class CandlestickChartView extends BaseChartView {
   readonly type = 'candlestick-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
     const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const xAxisLabel = this.config.get(BaseChartView.X_AXIS_LABEL_KEY) as string
-    const yAxisLabel = this.config.get(BaseChartView.Y_AXIS_LABEL_KEY) as string
-    const xAxisLabelRotate = Number(this.config.get(BaseChartView.X_AXIS_LABEL_ROTATE_KEY))
-    const flipAxis = this.config.get(BaseChartView.FLIP_AXIS_KEY) as boolean
 
     const openProp = this.config.get(CandlestickChartView.OPEN_PROP_KEY) as string
     const closeProp = this.config.get(CandlestickChartView.CLOSE_PROP_KEY) as string
@@ -38,10 +34,6 @@ export class CandlestickChartView extends BaseChartView {
       'candlestick',
       {
         ...this.getCommonTransformerOptions(),
-        xAxisLabel,
-        yAxisLabel,
-        xAxisLabelRotate,
-        flipAxis,
         openProp,
         closeProp,
         lowProp,

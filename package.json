@@ -12,6 +12,7 @@
 		"test": "bun test ./tests",
 		"test:coverage": "bun test ./tests --coverage --coverage-reporter=lcov",
 		"test:e2e": "bun x playwright test",
+		"test:e2e:headless": "xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' bun x playwright test",
 		"typecheck": "tsc --noEmit",
 		"vault:dev": "bun scripts/vault-dev.ts",
 		"vault:eval": "bun scripts/vault-eval.ts",

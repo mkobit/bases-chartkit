@@ -28,6 +28,8 @@ export function createBoxplotChartOption(
   options?: BoxplotTransformerOptions,
 ): EChartsOption {
   const seriesProp = options?.seriesProp
+  const xAxisLabel = options?.xAxisLabel ?? xProp
+  const yAxisLabel = options?.yAxisLabel ?? yProp
 
   // 1. Collect all unique X values (categories)
   const xAxisData = R.pipe(
@@ -48,13 +50,13 @@ export function createBoxplotChartOption(
     data,
     R.groupBy((item) => {
       return !seriesProp
-        ? yProp
+        ? yAxisLabel
         : (() => {
             const sRaw = getNestedValue(
               item,
               seriesProp,
             )
-            return sRaw === undefined || sRaw === null ? 'Series 1' : safeToString(sRaw)
+            return sRaw === undefined || sRaw === null ? 'Unknown' : safeToString(sRaw)
           })()
     }),
     R.mapValues((items) => {
@@ -120,6 +122,7 @@ export function createBoxplotChartOption(
     xAxis: {
       type: 'category',
       data: xAxisData,
+      name: xAxisLabel,
       boundaryGap: true,
       splitArea: {
         show: false,
@@ -130,6 +133,7 @@ export function createBoxplotChartOption(
     },
     yAxis: {
       type: 'value',
+      name: yAxisLabel,
       splitArea: {
         show: true,
       },

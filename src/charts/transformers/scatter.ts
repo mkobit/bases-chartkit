@@ -68,7 +68,7 @@ export function createScatterChartOption(
       return {
         x: xRaw === undefined || xRaw === null ? 'Unknown' : safeToString(xRaw),
         y: Number.isNaN(yRaw) ? null : yRaw,
-        s: seriesProp && sRaw !== undefined && sRaw !== null ? safeToString(sRaw) : 'Series 1',
+        s: seriesProp && sRaw !== undefined && sRaw !== null ? safeToString(sRaw) : yAxisLabel,
         ...(sizeProp ? { size: Number.isNaN(sizeRaw) ? 0 : sizeRaw } : {}),
       }
     },

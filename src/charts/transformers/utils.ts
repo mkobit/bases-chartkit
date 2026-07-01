@@ -1,14 +1,36 @@
 import type { LegendComponentOption } from 'echarts'
 import type { BaseTransformerOptions } from './base'
 
+// Obsidian's BasesNote#get() returns a `Value` wrapper (e.g.
+// `{ icon: 'lucide-calendar', date: Date, time: false }` or
+// `{ icon: 'lucide-binary', data: 3503 }`), not the raw property value.
+// It duck-types as a record with a `renderTo` method (used internally by
+// Obsidian to paint the value into the DOM) whose `toString()` produces the
+// correctly formatted display text — unlike JSON.stringify, which dumps the
+// wrapper's internal shape verbatim.
+function isRenderableValue(
+  o: Record<string, unknown>,
+): o is Record<string, unknown> & { readonly toString: () => string } {
+  return typeof o.renderTo === 'function'
+}
+
 export function safeToString(val: unknown): string {
-  return val === null || val === undefined
-    ? ''
-    : typeof val === 'string'
-      ? val
-      : typeof val === 'number' || typeof val === 'boolean'
-        ? String(val)
-        : JSON.stringify(val)
+  if (val === null || val === undefined) {
+    return ''
+  }
+  if (typeof val === 'string') {
+    return val
+  }
+  if (typeof val === 'number' || typeof val === 'boolean') {
+    return String(val)
+  }
+  if (isRecord(val) && isRenderableValue(val)) {
+    // isRenderableValue narrows toString to `() => string`, but the rule's
+    // type resolution doesn't see through the Record<string, unknown> intersection.
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return val.toString()
+  }
+  return JSON.stringify(val)
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

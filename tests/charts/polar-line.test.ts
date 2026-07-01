@@ -61,7 +61,7 @@ describe(
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].coordinateSystem).toBe('polar')
         // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].name).toBe('Series 1')
+        expect(series[0].name).toBe('value')
       },
     )
 

@@ -54,6 +54,27 @@ describe(
     )
 
     it(
+      'should use the y-field label as the legend/series name when no seriesProp is configured',
+      () => {
+        // Reproduces the Sales-Dashboard.base bug: a single-series bar chart's
+        // legend showed the generic 'Series 1' instead of the Revenue field name.
+        const option = createCartesianChartOption(
+          data,
+          'date',
+          'value',
+          'bar',
+        )
+
+        const dataset = (Array.isArray(option.dataset) ? option.dataset[0] : option.dataset) as DatasetComponentOption
+        const source = dataset.source as { s: string }[]
+        expect(source.every(row => row.s === 'value')).toBe(true)
+
+        const series = (Array.isArray(option.series) ? option.series[0] : option.series) as SeriesOption
+        expect(series.name).toBe('value')
+      },
+    )
+
+    it(
       'should handle series grouping using filter transforms',
       () => {
         const option = createCartesianChartOption(

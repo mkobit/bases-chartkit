@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import { Temporal } from 'temporal-polyfill'
 import { createGanttChartOption } from '../../../src/charts/transformers/gantt'
 import type { BarSeriesOption } from 'echarts'
 
@@ -127,6 +128,90 @@ describe(
         // 4 days in ms
 
         expect(data0?.value).toBe(4 * 24 * 60 * 60 * 1000)
+      },
+    )
+
+    it(
+      'should unwrap Obsidian Value-wrapped date properties instead of dropping the task',
+      () => {
+        // Reproduces the Gantt-Chart.base bug: BasesNote#get() returns a
+        // `Value` wrapper for date properties (e.g. { icon, date, time,
+        // renderTo(), toString() -> '2023-10-01' }), not a raw string or
+        // native Date. normalizeDate() didn't unwrap it, so every task's
+        // start/end failed to parse and got filtered out (blank chart).
+        const wrappedDate = (iso: string) => ({
+          icon: 'lucide-calendar',
+          time: false,
+          renderTo: () => undefined,
+          toString: () => iso,
+        })
+
+        const wrappedData = [
+          { task: 'Planning',
+            start: wrappedDate('2023-10-01'),
+            end: wrappedDate('2023-10-05') },
+        ]
+
+        const option = createGanttChartOption(
+          wrappedData,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+          },
+        )
+
+        const yAxis = option.yAxis as { data?: string[] }
+        expect(yAxis.data).toContain('Planning')
+      },
+    )
+
+    it(
+      'should pin the time axis to the actual task window, not the stacked-from-epoch range',
+      () => {
+        // Regression: the invisible '_start' series stacks bar values from 0,
+        // so ECharts' default time-axis auto-range spanned [epoch, max end]
+        // (decades) instead of the real task window (days).
+        const option = createGanttChartOption(
+          data,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+          },
+        )
+
+        const xAxis = option.xAxis as { min?: number, max?: number }
+        expect(xAxis.min).toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
+        expect(xAxis.max).toBe(Temporal.PlainDate.from('2023-01-10').toZonedDateTime('UTC').epochMilliseconds)
+      },
+    )
+
+    it(
+      'should use a value axis (not time) so stacked bars actually render, formatting ticks as dates',
+      () => {
+        // Regression: ECharts fails to position stacked bars against a
+        // 'time'-type axis at all (bars silently disappear) even though the
+        // same numeric values render correctly on a 'value'-type axis —
+        // verified empirically against a live chart instance. Epoch ms are
+        // plain numbers, so 'value' + an axisLabel formatter gets both a
+        // working chart and human-readable date ticks.
+        const option = createGanttChartOption(
+          data,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+          },
+        )
+
+        const xAxis = option.xAxis as { type?: string, axisLabel?: { formatter?: (value: number) => string } }
+        expect(xAxis.type).toBe('value')
+
+        const formatted = xAxis.axisLabel?.formatter?.(
+          Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
+        )
+        expect(formatted).toBe('2023-01-01')
       },
     )
 

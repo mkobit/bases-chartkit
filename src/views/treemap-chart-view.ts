@@ -32,7 +32,7 @@ export class TreemapChartView extends BaseChartView {
       {
         displayName: t('views.treemap.value_prop'),
         type: 'property',
-        key: BaseChartView.Y_AXIS_PROP_KEY, // Map to Value
+        key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.treemap.value_prop_placeholder'),
       },
     ]
@@ -40,7 +40,7 @@ export class TreemapChartView extends BaseChartView {
 
   protected getChartOption(data: BasesData): EChartsOption | null {
     const nameProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY) as string
+    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
 
     if (!nameProp || !valueProp) {
       return null

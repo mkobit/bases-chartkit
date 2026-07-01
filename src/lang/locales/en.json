@@ -138,7 +138,9 @@
 		"radar": {
 			"name": "Radar chart",
 			"indicator_prop": "Indicator property",
-			"indicator_prop_placeholder": "Select indicator/category property"
+			"indicator_prop_placeholder": "Select indicator/category property",
+			"metric_props": "Metric properties (comma-separated)",
+			"metric_props_placeholder": "e.g. note.Strength, note.Intelligence, note.Agility"
 		},
 		"funnel": {
 			"name": "Funnel chart"

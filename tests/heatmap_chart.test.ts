@@ -110,6 +110,34 @@ describe(
     )
 
     it(
+      'should format cell labels from dataset-encoded params instead of showing a bare dash',
+      () => {
+        // Regression: ECharts can't derive a default label from our
+        // dataset+encode series (only from raw [x, y, value] tuples) —
+        // without an explicit formatter every cell rendered '-'.
+        const data = [
+          { x: 'Mon',
+            y: 'Morning',
+            val: 5 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const series = option.series as any
+        const formatter = series[0].label.formatter as (params: unknown) => string
+
+        expect(formatter({ value: { x: 'Mon', y: 'Morning', value: 5 } })).toBe('5')
+        expect(formatter({ value: undefined })).toBe('')
+      },
+    )
+
+    it(
       'should calculate visualMap min/max correctly',
       () => {
         const data = [
