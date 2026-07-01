@@ -7,6 +7,18 @@ export interface HeatmapTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
 }
 
+// ECharts doesn't derive a default cell label from our dataset + encode series
+// (only from raw [x, y, value] tuples), so `label.formatter` is required or
+// every cell renders as '-'. Isolate the loosely-typed callback param.
+function asHeatmapLabelParams(params: unknown): Readonly<{ value?: Readonly<{ value?: number }> }> {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  return params as any
+}
+
+function asHeatmapCellValue(params: unknown): number | undefined {
+  return asHeatmapLabelParams(params).value?.value
+}
+
 export function createHeatmapChartOption(
   data: BasesData,
   xProp: string,
@@ -87,6 +99,10 @@ export function createHeatmapChartOption(
     },
     label: {
       show: true,
+      formatter: (params: unknown) => {
+        const val = asHeatmapCellValue(params)
+        return val === undefined || Number.isNaN(val) ? '' : safeToString(val)
+      },
     },
   }
 
