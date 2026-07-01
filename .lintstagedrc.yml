@@ -1,5 +1,0 @@
-"*.{js,ts,mts,cts,jsx,tsx}":
-  - eslint --fix
-
-"*.{ts,mts,cts,tsx}":
-  - tsc-files -p tsconfig.json --noEmit
