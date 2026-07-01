@@ -5,9 +5,85 @@ import * as R from 'remeda'
 
 export interface RadarTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
+  readonly metricProps?: readonly string[]
 }
 
 export function createRadarChartOption(
+  data: BasesData,
+  indicatorProp: string,
+  valueProp: string,
+  options?: RadarTransformerOptions,
+): EChartsOption {
+  return options?.metricProps && options.metricProps.length > 0
+    ? createWideFormatRadarOption(
+        data,
+        indicatorProp,
+        options.metricProps,
+        options,
+      )
+    : createLongFormatRadarOption(
+        data,
+        indicatorProp,
+        valueProp,
+        options,
+      )
+}
+
+// Wide format: one row per entity with a column per metric (e.g. one row per
+// character with Strength/Intelligence/Agility columns). nameProp identifies
+// each series (polygon); metricProps become the radar's indicators (axes).
+function createWideFormatRadarOption(
+  data: BasesData,
+  nameProp: string,
+  metricProps: readonly string[],
+  options?: RadarTransformerOptions,
+): EChartsOption {
+  const radarIndicators = metricProps.map(prop => ({ name: prop }))
+
+  const seriesData = data.map((item) => {
+    const nameRaw = getNestedValue(
+      item,
+      nameProp,
+    )
+    const name = nameRaw === undefined || nameRaw === null ? 'Unknown' : safeToString(nameRaw)
+    const values = metricProps.map((prop) => {
+      const val = Number(getNestedValue(
+        item,
+        prop,
+      ))
+      return Number.isNaN(val) ? 0 : val
+    })
+    return { value: values,
+      name }
+  })
+
+  const seriesItem: RadarSeriesOption = {
+    type: 'radar',
+    data: seriesData,
+  }
+
+  return {
+    radar: {
+      indicator: radarIndicators,
+    },
+    series: [seriesItem],
+    tooltip: {
+      trigger: 'item',
+    },
+    ...(getLegendOption(options)
+      ? {
+          legend: {
+            data: seriesData.map(d => d.name),
+            ...getLegendOption(options),
+          },
+        }
+      : {}),
+  }
+}
+
+// Long format: one row per (series, indicator, value) triple — indicators are
+// distinct values of indicatorProp, grouped into series by seriesProp.
+function createLongFormatRadarOption(
   data: BasesData,
   indicatorProp: string,
   valueProp: string,
@@ -104,7 +180,7 @@ export function createRadarChartOption(
     ...(getLegendOption(options)
       ? {
           legend: {
-            data: R.keys(seriesData),
+            data: seriesData.map(d => d.name),
             ...getLegendOption(options),
           },
         }

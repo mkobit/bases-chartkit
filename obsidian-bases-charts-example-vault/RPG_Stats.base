@@ -1,4 +1,6 @@
 properties:
+  note.Name:
+    displayName: Name
   note.Class:
     displayName: Class
   note.Strength:
@@ -10,9 +12,9 @@ properties:
 views:
   - type: radar-chart
     name: Character Stats Radar
-    xAxisProp: note.Strength, note.Intelligence, note.Agility
-    seriesProp: note.Class
-    showLegend: true
     filters:
       and:
         - note.Class != null
+    xAxisProp: note.Name
+    metricProps: note.Strength, note.Intelligence, note.Agility
+    showLegend: true
