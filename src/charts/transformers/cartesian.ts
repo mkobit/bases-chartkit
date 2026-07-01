@@ -61,7 +61,7 @@ export function createCartesianChartOption(
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : 'Series 1',
+        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
       }
     },
   )

@@ -47,7 +47,7 @@ export function createThemeRiverChartOption(
                   themeProp,
                 )
               : undefined
-            const theme = (tRaw !== undefined && tRaw !== null) ? safeToString(tRaw) : 'Series 1'
+            const theme = (tRaw !== undefined && tRaw !== null) ? safeToString(tRaw) : (valueProp ?? 'Value')
 
             // Explicitly type the tuple
             const res: ThemeRiverItem = [dateVal,

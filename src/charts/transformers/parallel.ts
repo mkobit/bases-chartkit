@@ -81,7 +81,7 @@ export function createParallelChartOption(
                     item,
                     seriesProp,
                   )
-                  return (sValRaw !== undefined && sValRaw !== null) ? safeToString(sValRaw) : 'Series 1'
+                  return (sValRaw !== undefined && sValRaw !== null) ? safeToString(sValRaw) : 'Unknown'
                 })()
               : 'Series 1'
           }),

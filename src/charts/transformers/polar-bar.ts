@@ -16,6 +16,7 @@ export function createPolarBarChartOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
   const isStacked = options?.stack
+  const yAxisLabel = options?.yAxisLabel ?? yProp
 
   // 1. Normalize Data for Dataset
   // Structure: { x, y, s }
@@ -40,7 +41,7 @@ export function createPolarBarChartOption(
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : 'Series 1',
+        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
       }
     },
   )

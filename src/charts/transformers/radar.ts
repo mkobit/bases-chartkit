@@ -39,7 +39,7 @@ export function createRadarChartOption(
               item,
               seriesProp,
             )
-            return valRaw === undefined || valRaw === null ? 'Series 1' : safeToString(valRaw)
+            return valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
           })()
         : valueProp // Use value prop name as default series name if no grouping
     },
