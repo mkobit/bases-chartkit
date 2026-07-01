@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import { Temporal } from 'temporal-polyfill'
 import {
   safeToString,
   isRecord,
@@ -29,6 +30,29 @@ describe('Transformer Utils', () => {
     it('should JSON stringify objects and arrays', () => {
       expect(safeToString({ a: 1 })).toBe('{"a":1}')
       expect(safeToString([1, 2, 3])).toBe('[1,2,3]')
+    })
+
+    it('should defer to toString() for Obsidian Value wrappers instead of dumping their shape', () => {
+      // Mimics the object BasesNote#get() actually returns (verified live via
+      // CDP): a `Value` instance with a `renderTo` DOM-painting method and a
+      // `toString()` that formats correctly, e.g. { icon, data: 3503 } -> '3503'
+      // and { icon, date: Date, time: false } -> '2023-01-29'. Without this,
+      // safeToString JSON.stringifies the wrapper's internal shape verbatim.
+      const numberValue = {
+        icon: 'lucide-binary',
+        data: 3503,
+        renderTo: () => undefined,
+        toString: () => '3503',
+      }
+      const dateValue = {
+        icon: 'lucide-calendar',
+        date: Temporal.PlainDate.from('2023-01-29'),
+        time: false,
+        renderTo: () => undefined,
+        toString: () => '2023-01-29',
+      }
+      expect(safeToString(numberValue)).toBe('3503')
+      expect(safeToString(dateValue)).toBe('2023-01-29')
     })
   })
 
