@@ -1,5 +1,6 @@
 [tools]
 bun = "1.3.12"
+"github:gastownhall/beads" = "1.0.3"
 
 [settings]
 locked = true
