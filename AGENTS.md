@@ -23,3 +23,8 @@ The project enforces strict Functional Programming principles via `eslint`.
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
 If `bun install` fails to find a package, do not try to alter the package manager or bypass the configuration.
 Instead, identify and install an older, stable version of the package.
+
+## Issue tracking
+This project tracks longer-lived follow-up work with `bd` (beads).
+Use `bd ready` to find open issues, `bd show <id>` for details, `bd close <id>` to complete one.
+This is separate from in-session task tracking (`TaskCreate`) and cross-session memory (`MEMORY.md`) — use whichever tool fits the scope of what you're tracking.
