@@ -476,5 +476,7 @@ export default tseslint.config(
     'coverage',
     'playwright-report/**',
     'test-results/**',
+    // bd-managed scaffolding, not project source
+    '.beads/**',
   ]),
 )
