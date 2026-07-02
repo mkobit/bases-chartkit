@@ -1,0 +1,14 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: rose-chart
+    name: Department Spend (Rose)
+    filters:
+      and:
+        - note.Spend != null
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true

@@ -1,0 +1,14 @@
+properties:
+  note.Word:
+    displayName: Word
+  note.Frequency:
+    displayName: Frequency
+views:
+  - type: word-cloud-chart
+    name: Keyword Frequency (Word Cloud)
+    filters:
+      and:
+        - note.Word != null
+    xAxisProp: note.Word
+    yAxisProp: note.Frequency
+    shape: circle

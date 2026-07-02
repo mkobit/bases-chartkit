@@ -1,0 +1,13 @@
+properties:
+  note.Step:
+    displayName: Step
+  note.Change:
+    displayName: Change
+views:
+  - type: waterfall-chart
+    name: Budget Waterfall
+    filters:
+      and:
+        - note.Step != null
+    xAxisProp: note.Step
+    yAxisProp: note.Change

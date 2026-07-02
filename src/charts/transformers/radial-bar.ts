@@ -87,8 +87,10 @@ export function createRadialBarChartOption(
       name: name,
       coordinateSystem: 'polar',
       datasetIndex: datasetIndex,
-      encode: { x: 'x',
-        y: 'y' },
+      // polar bar series read radius/angle encode channels, not x/y —
+      // with x/y no bars render even though the angleAxis still draws.
+      encode: { angle: 'x',
+        radius: 'y' },
       ...(isStacked ? { stack: 'total' } : {}),
     }
   })

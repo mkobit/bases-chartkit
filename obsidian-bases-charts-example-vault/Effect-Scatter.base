@@ -1,0 +1,21 @@
+properties:
+  note.GDP:
+    displayName: GDP
+  note.LifeExpectancy:
+    displayName: Life Expectancy
+  note.Population:
+    displayName: Population
+  note.Continent:
+    displayName: Continent
+  note.FunnelStage:
+    displayName: Funnel Stage
+views:
+  - type: effect-scatter-chart
+    name: GDP vs Life Expectancy (Effect Scatter)
+    filters:
+      and:
+        - note.GDP != null
+    xAxisProp: note.GDP
+    yAxisProp: note.LifeExpectancy
+    seriesProp: note.Continent
+    showLegend: true
