@@ -2,6 +2,21 @@
 
 This document provides a reference for every chart type supported by the plugin, along with a minimal sample `.base` configuration for each.
 
+## area
+Displays quantitative data over an interval, similar to a line chart but with the area beneath the line filled in to emphasize magnitude.
+```yaml
+properties:
+  note.Date:
+    displayName: Date
+  note.Value:
+    displayName: Value
+views:
+  - type: area-chart
+    name: Area Chart Sample
+    xAxisProp: note.Date
+    yAxisProp: note.Value
+```
+
 ## bar
 Displays categorical data with rectangular bars with heights or lengths proportional to the values that they represent.
 ```yaml
@@ -61,8 +76,8 @@ properties:
 views:
   - type: bullet-chart
     name: Bullet Chart Sample
-    yAxisProp: note.Metric
-    xAxisProp: note.Value
+    xAxisProp: note.Metric
+    valueProp: note.Value
 ```
 
 ## calendar
@@ -76,7 +91,7 @@ properties:
 views:
   - type: calendar-chart
     name: Calendar Sample
-    dateProp: note.Date
+    xAxisProp: note.Date
     valueProp: note.Value
 ```
 
@@ -130,8 +145,8 @@ properties:
 views:
   - type: funnel-chart
     name: Funnel Chart Sample
-    nameProp: note.Stage
-    valueProp: note.Value
+    xAxisProp: note.Stage
+    yAxisProp: note.Value
 ```
 
 ## gantt
@@ -156,15 +171,12 @@ views:
 Displays a single value within a given quantitative context, resembling a speedometer or dial.
 ```yaml
 properties:
-  note.Metric:
-    displayName: Metric
   note.Value:
     displayName: Value
 views:
   - type: gauge-chart
     name: Gauge Chart Sample
-    nameProp: note.Metric
-    valueProp: note.Value
+    yAxisProp: note.Value
 ```
 
 ## graph
@@ -231,15 +243,21 @@ views:
 Displays multiple lines mapping paths, routes, or connections between geographical or abstract coordinates.
 ```yaml
 properties:
-  note.Route:
-    displayName: Route
-  note.Coordinates:
-    displayName: Coordinates
+  note.StartX:
+    displayName: Start X
+  note.StartY:
+    displayName: Start Y
+  note.EndX:
+    displayName: End X
+  note.EndY:
+    displayName: End Y
 views:
   - type: lines-chart
     name: Lines Chart Sample
-    routeProp: note.Route
-    coordProp: note.Coordinates
+    xAxisProp: note.StartX
+    yAxisProp: note.StartY
+    end_x_prop: note.EndX
+    end_y_prop: note.EndY
 ```
 
 ## map
@@ -253,6 +271,7 @@ properties:
 views:
   - type: map-chart
     name: Map Chart Sample
+    mapFile: assets/world.geojson
     regionProp: note.Region
     valueProp: note.Value
 ```
@@ -270,10 +289,7 @@ properties:
 views:
   - type: parallel-chart
     name: Parallel Coordinates Sample
-    props:
-      - note.Metric1
-      - note.Metric2
-      - note.Metric3
+    xProp: note.Metric1, note.Metric2, note.Metric3
 ```
 
 ## pareto
@@ -317,8 +333,8 @@ properties:
 views:
   - type: pie-chart
     name: Pie Chart Sample
-    nameProp: note.Category
-    valueProp: note.Value
+    xAxisProp: note.Category
+    yAxisProp: note.Value
 ```
 
 ## polarBar
@@ -332,8 +348,8 @@ properties:
 views:
   - type: polar-bar-chart
     name: Polar Bar Sample
-    angleProp: note.Direction
-    radiusProp: note.Value
+    xAxisProp: note.Direction
+    valueProp: note.Value
 ```
 
 ## polarLine
@@ -347,8 +363,8 @@ properties:
 views:
   - type: polar-line-chart
     name: Polar Line Sample
-    angleProp: note.Angle
-    radiusProp: note.Value
+    xAxisProp: note.Angle
+    valueProp: note.Value
 ```
 
 ## polarScatter
@@ -362,8 +378,8 @@ properties:
 views:
   - type: polar-scatter-chart
     name: Polar Scatter Sample
-    angleProp: note.Angle
-    radiusProp: note.Distance
+    xAxisProp: note.Angle
+    yAxisProp: note.Distance
 ```
 
 ## radar
@@ -379,10 +395,8 @@ properties:
 views:
   - type: radar-chart
     name: Radar Chart Sample
-    nameProp: note.Category
-    metricProps:
-      - note.Metric1
-      - note.Metric2
+    xAxisProp: note.Category
+    metricProps: note.Metric1, note.Metric2
 ```
 
 ## radialBar
@@ -396,8 +410,8 @@ properties:
 views:
   - type: radial-bar-chart
     name: Radial Bar Sample
-    angleProp: note.Category
-    radiusProp: note.Value
+    xAxisProp: note.Category
+    yAxisProp: note.Value
 ```
 
 ## rose
@@ -411,8 +425,8 @@ properties:
 views:
   - type: rose-chart
     name: Rose Chart Sample
-    nameProp: note.Category
-    valueProp: note.Value
+    xAxisProp: note.Category
+    yAxisProp: note.Value
 ```
 
 ## sankey
@@ -428,8 +442,8 @@ properties:
 views:
   - type: sankey-chart
     name: Sankey Chart Sample
-    sourceProp: note.Source
-    targetProp: note.Target
+    xAxisProp: note.Source
+    yAxisProp: note.Target
     valueProp: note.Value
 ```
 
@@ -448,6 +462,24 @@ views:
     yAxisProp: note.Y
 ```
 
+## stackedBar
+Displays categorical data as stacked segments within each bar, useful for comparing totals and part-to-whole relationships across series.
+```yaml
+properties:
+  note.Quarter:
+    displayName: Quarter
+  note.Revenue:
+    displayName: Revenue
+  note.Region:
+    displayName: Region
+views:
+  - type: stacked-bar-chart
+    name: Stacked Bar Chart Sample
+    xAxisProp: note.Quarter
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
+```
+
 ## sunburst
 Displays hierarchical data as a series of concentric rings, where each ring corresponds to a level in the hierarchy.
 ```yaml
@@ -459,7 +491,7 @@ properties:
 views:
   - type: sunburst-chart
     name: Sunburst Chart Sample
-    pathProp: note.Path
+    xAxisProp: note.Path
     valueProp: note.Value
 ```
 
@@ -476,24 +508,21 @@ properties:
 views:
   - type: theme-river-chart
     name: Theme River Sample
-    dateProp: note.Date
-    categoryProp: note.Category
+    xAxisProp: note.Date
     valueProp: note.Value
+    seriesProp: note.Category
 ```
 
 ## tree
 Displays hierarchical data in a standard node-link tree structure, illustrating parent-child relationships.
 ```yaml
 properties:
-  note.Parent:
-    displayName: Parent
-  note.Child:
-    displayName: Child
+  note.Path:
+    displayName: Path
 views:
   - type: tree-chart
     name: Tree Chart Sample
-    parentProp: note.Parent
-    childProp: note.Child
+    xAxisProp: note.Path
 ```
 
 ## treemap
@@ -507,7 +536,7 @@ properties:
 views:
   - type: treemap-chart
     name: Treemap Sample
-    nameProp: note.Category
+    xAxisProp: note.Category
     valueProp: note.Value
 ```
 
@@ -537,6 +566,6 @@ properties:
 views:
   - type: word-cloud-chart
     name: Word Cloud Sample
-    wordProp: note.Word
-    weightProp: note.Weight
+    xAxisProp: note.Word
+    yAxisProp: note.Weight
 ```
