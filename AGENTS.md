@@ -26,6 +26,11 @@ Instead, identify and install an older, stable version of the package.
 
 ## Issue tracking
 This project tracks longer-lived follow-up work with `bd` (beads), running in stealth mode (local-only, not git-tracked).
-Use `bd ready` to find open issues, `bd show <id>` for details, `bd close <id>` to complete one.
+Run `bd prime` at session start for full workflow context.
+Use `bd ready` to find open issues, `bd show <id>` for details, `bd update <id> --claim` to claim one, `bd close <id>` to complete one.
 Sync across machines manually with `bd dolt push`/`bd dolt pull` when needed — it does not happen automatically.
 This is separate from in-session task tracking (`TaskCreate`) and cross-session memory (`MEMORY.md`) — use whichever tool fits the scope of what you're tracking.
+
+## Git
+`main` is protected — direct pushes are rejected (GH013); open a PR instead.
+Confirm with the user before `git push`, PR merges, or other shared-state/hard-to-reverse actions.
