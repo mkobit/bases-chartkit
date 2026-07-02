@@ -1,0 +1,13 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: pareto-chart
+    name: Department Spend (Pareto)
+    filters:
+      and:
+        - note.Spend != null
+    xAxisProp: note.Department
+    yAxisProp: note.Spend

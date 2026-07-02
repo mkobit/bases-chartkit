@@ -49,8 +49,8 @@ describe(
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].coordinateSystem).toBe('polar')
         // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].encode).toEqual({ x: 'x',
-          y: 'y' })
+        expect(series[0].encode).toEqual({ angle: 'x',
+          radius: 'y' })
       },
     )
 

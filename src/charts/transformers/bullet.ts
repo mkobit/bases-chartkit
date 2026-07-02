@@ -111,6 +111,11 @@ export function createBulletChartOption(
     barWidth: '80%',
     z: 0,
     itemStyle: { color },
+    // r1/r2/r3 are stacked *deltas* between the configured range
+    // thresholds, not the threshold values themselves — showing them in
+    // the tooltip (unnamed or named) is either blank or misleading, so
+    // they're excluded like waterfall's invisible "_base" series.
+    tooltip: { show: false },
     encode: flipAxis
       ? { x: key,
           y: 'x' }

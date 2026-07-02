@@ -1,0 +1,15 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: pictorial-bar-chart
+    name: Department Spend (Pictorial Bar)
+    filters:
+      and:
+        - note.Spend != null
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    symbol: rect
+    showLegend: true

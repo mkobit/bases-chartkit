@@ -1,0 +1,23 @@
+properties:
+  note.StartX:
+    displayName: Start X
+  note.StartY:
+    displayName: Start Y
+  note.EndX:
+    displayName: End X
+  note.EndY:
+    displayName: End Y
+  note.RouteType:
+    displayName: Route Type
+views:
+  - type: lines-chart
+    name: Route Lines
+    filters:
+      and:
+        - note.StartX != null
+    xAxisProp: note.StartX
+    yAxisProp: note.StartY
+    end_x_prop: note.EndX
+    end_y_prop: note.EndY
+    seriesProp: note.RouteType
+    showLegend: true

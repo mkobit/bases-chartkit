@@ -14,13 +14,20 @@ export function createHistogramChartOption(
   options?: HistogramTransformerOptions,
 ): EChartsOption {
   // 1. Extract and filter valid numeric values
+  // Number(...) coercion is required: Bases' note.get() returns a wrapper
+  // object (e.g. `{ icon, data: 60 }`) for numeric properties, not a raw
+  // number — it does support numeric coercion via its own valueOf(), but
+  // `typeof` on the wrapper itself is always 'object'. null/undefined are
+  // filtered before coercion since Number(null) is 0, not NaN.
   const values = R.pipe(
     data,
     R.map(row => getNestedValue(
       row,
       valueProp,
     )),
-    R.filter((v): v is number => typeof v === 'number' && !Number.isNaN(v)),
+    R.filter(v => v !== null && v !== undefined),
+    R.map(Number),
+    R.filter((v): v is number => !Number.isNaN(v)),
   )
 
   const n = values.length

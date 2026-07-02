@@ -1,0 +1,25 @@
+properties:
+  note.Metric:
+    displayName: Metric
+  note.Value:
+    displayName: Value
+  note.Target:
+    displayName: Target
+  note.RangeLow:
+    displayName: Range Low
+  note.RangeMid:
+    displayName: Range Mid
+  note.RangeHigh:
+    displayName: Range High
+views:
+  - type: bullet-chart
+    name: KPI Bullet Chart
+    filters:
+      and:
+        - note.Metric != null
+    xAxisProp: note.Metric
+    valueProp: note.Value
+    targetProp: note.Target
+    rangeLowProp: note.RangeLow
+    rangeMidProp: note.RangeMid
+    rangeHighProp: note.RangeHigh

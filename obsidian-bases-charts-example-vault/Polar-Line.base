@@ -1,0 +1,19 @@
+properties:
+  note.Time:
+    displayName: Time
+  note.Server:
+    displayName: Server
+  note.Load:
+    displayName: Load
+  note.Status:
+    displayName: Status
+views:
+  - type: polar-line-chart
+    name: Server Load (Polar Line)
+    filters:
+      and:
+        - note.Load != null
+    xAxisProp: note.Time
+    valueProp: note.Load
+    seriesProp: note.Server
+    showLegend: true

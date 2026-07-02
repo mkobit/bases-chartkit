@@ -1,0 +1,14 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: radial-bar-chart
+    name: Department Spend (Radial Bar)
+    filters:
+      and:
+        - note.Spend != null
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
