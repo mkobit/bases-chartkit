@@ -28,4 +28,4 @@ Confirm with the user before `git push`, PR merges, or other shared-state/hard-t
 
 ## Build, test, conventions
 
-See `AGENTS.md` — build/test commands, code style, and repo conventions are documented there and apply to all agents working in this repo.
+@AGENTS.md
