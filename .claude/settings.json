@@ -1,4 +1,48 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(rg *)",
+      "Bash(bun run lint *)",
+      "Bash(bun run typecheck *)",
+      "Bash(bun run build *)",
+      "Bash(bun test *)",
+      "Bash(bun x playwright test *)",
+      "Bash(bunx playwright test *)",
+      "Bash(bd show *)",
+      "Bash(bd list *)",
+      "Bash(bd ready *)",
+      "Bash(bd lint *)",
+      "Bash(bd query *)",
+      "Bash(bd memories *)",
+      "Bash(bd prime *)",
+      "Bash(bd search *)",
+      "Bash(bd stats *)",
+      "Bash(bd help *)",
+      "Bash(bd --version)",
+      "Bash(bd config get *)",
+      "Bash(bd config list *)",
+      "Bash(bd dolt remote list *)",
+      "Bash(bd dolt pull *)",
+      "Bash(bd setup claude --check *)",
+      "Bash(bd create *)",
+      "Bash(bd update *)",
+      "Bash(bd close *)",
+      "Bash(bd dep *)",
+      "Bash(bd remember *)",
+      "Bash(bd supersede *)",
+      "Bash(jules session show *)",
+      "Bash(jules session list *)",
+      "Bash(jules activity list *)",
+      "Bash(git fetch origin *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git rm *)",
+      "Bash(git check-ignore *)",
+      "WebFetch(domain:obsidian.md)",
+      "WebFetch(domain:docs.obsidian.md)"
+    ]
+  },
   "hooks": {
     "PreCompact": [
       {
