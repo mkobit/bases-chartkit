@@ -38,7 +38,7 @@ describe(
         expect(series[0].type).toBe('treemap')
 
         // eslint-disable-next-line no-restricted-syntax
-        const hierarchy = series[0].data as unknown as readonly HierarchyNode[]
+        const hierarchy = series[0]?.data as unknown as readonly HierarchyNode[]
         expect(hierarchy).toHaveLength(1) // single top-level node: Project
 
         const project = hierarchy[0]
