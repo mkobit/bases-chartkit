@@ -28,7 +28,13 @@ export function safeToString(val: unknown): string {
     // isRenderableValue narrows toString to `() => string`, but the rule's
     // type resolution doesn't see through the Record<string, unknown> intersection.
     // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    return val.toString()
+    const rendered = val.toString()
+    // A note that matches the base's filter but was never given this
+    // property surfaces as Obsidian's `NullValue` sentinel -- a Value wrapper
+    // like any other, but its `toString()` renders the literal text "null"
+    // rather than an empty string. Treat that placeholder as absent so it
+    // doesn't leak into chart labels/categories as a bogus "null" entry.
+    return rendered === 'null' ? '' : rendered
   }
   return JSON.stringify(val)
 }

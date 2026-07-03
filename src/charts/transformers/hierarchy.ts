@@ -1,6 +1,6 @@
 import type { EChartsOption, SunburstSeriesOption, TreeSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue } from './utils'
+import { getNestedValue, safeToString } from './utils'
 import * as R from 'remeda'
 
 export interface SunburstTransformerOptions extends BaseTransformerOptions {
@@ -9,7 +9,7 @@ export interface SunburstTransformerOptions extends BaseTransformerOptions {
 
 export type TreeTransformerOptions = BaseTransformerOptions
 
-interface HierarchyNode {
+export interface HierarchyNode {
   readonly name: string
   readonly value?: number
   readonly children?: readonly HierarchyNode[]
@@ -34,7 +34,7 @@ function asTreeData(data: readonly HierarchyNode[]): TreeSeriesOption['data'] {
  * Helper to build a tree structure from slash-separated paths.
  * Refactored to be functional using recursion instead of mutation loops.
  */
-function buildHierarchy(
+export function buildHierarchy(
   data: BasesData,
   pathProp: string,
   valueProp?: string,
@@ -47,10 +47,14 @@ function buildHierarchy(
         item,
         pathProp,
       )
-      return (typeof pathRaw !== 'string' || !pathRaw)
+      // `pathRaw` is typically a Bases `Value` wrapper (from `.get()`), not a
+      // raw string -- unwrap it via `safeToString` the same way every other
+      // transformer does before treating it as text to split on '/'.
+      const pathStr = pathRaw === undefined || pathRaw === null ? '' : safeToString(pathRaw)
+      return !pathStr
         ? null
         : (() => {
-            const parts = pathRaw.split('/').filter(p => p.length > 0)
+            const parts = pathStr.split('/').filter(p => p.length > 0)
             return parts.length === 0
               ? null
               : (() => {
