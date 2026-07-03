@@ -1,41 +1,33 @@
 import type { EChartsOption, TreemapSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue } from './utils'
+import { buildHierarchy, type HierarchyNode } from './hierarchy'
 
 export type TreemapTransformerOptions = BaseTransformerOptions
 
+function asTreemapData(data: readonly HierarchyNode[]): TreemapSeriesOption['data'] {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  return data as any
+}
+
 export function createTreemapChartOption(
   data: BasesData,
-  nameProp: string,
+  pathProp: string,
   valueProp: string,
-  options?: TreemapTransformerOptions,
+  _options?: TreemapTransformerOptions,
 ): EChartsOption {
-  const seriesData = data.map((item) => {
-    const valRaw = getNestedValue(
-      item,
-      nameProp,
-    )
-    const name = valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
-
-    const val = Number(getNestedValue(
-      item,
-      valueProp,
-    ))
-    return {
-      name: name,
-      value: Number.isNaN(val) ? 0 : val,
-    }
-  })
-
-  // Treemaps often benefit from sorting, but ECharts handles layout.
-  // We filter out zero or negative values as treemap area must be positive usually,
-  // though 0 might just be invisible.
-  const validData = seriesData.filter(d => d.value > 0)
+  const hierarchyData = buildHierarchy(
+    data,
+    pathProp,
+    valueProp,
+  )
 
   const seriesItem: TreemapSeriesOption = {
     type: 'treemap',
-    data: validData,
+    data: asTreemapData(hierarchyData),
     roam: false, // Zoom/pan
+    breadcrumb: {
+      show: false,
+    },
     label: {
       show: true,
       formatter: '{b}',
@@ -45,17 +37,11 @@ export function createTreemapChartOption(
     },
   }
 
-  const opt: EChartsOption = {
+  return {
     series: [seriesItem],
     tooltip: {
       trigger: 'item',
       formatter: '{b}: {c}',
     },
   }
-
-  // Use side-effect free logic for legend check (though modifying opt implicitly)
-  // Actually we can just spread it.
-  return options?.legend
-    ? { ...opt } // Placeholder if we implemented legend logic
-    : opt
 }

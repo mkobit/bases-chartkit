@@ -2,52 +2,73 @@ import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import type { TreemapSeriesOption } from 'echarts'
 
+interface HierarchyNode {
+  readonly name: string
+  readonly value?: number
+  readonly children?: readonly HierarchyNode[]
+}
+
 describe(
   'Treemap Transformer',
   () => {
     it(
-      'should transform data correctly for treemap',
+      'should build nested hierarchy from slash-separated path property',
       () => {
         const data = [
-          { name: 'A',
+          { path: 'Project/Frontend/UI',
             val: 10 },
-          { name: 'B',
+          { path: 'Project/Backend/API',
             val: 20 },
-          { name: 'C',
-            val: -5 }, // Should be ignored
+          { path: 'Project/Backend/DB',
+            val: 5 },
         ]
 
         const option = transformDataToChartOption(
           data,
-          'name',
+          'path',
           'val',
           'treemap',
           {},
         )
 
-        expect(option).toBeDefined()
         const series = option.series as readonly TreemapSeriesOption[]
         expect(series).toBeDefined()
-
         expect(series.length).toBe(1)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('treemap')
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const seriesData = series[0].data as readonly { readonly name: string
-          value: number }[]
-        expect(seriesData.length).toBe(2)
+        // eslint-disable-next-line no-restricted-syntax
+        const hierarchy = series[0]?.data as unknown as readonly HierarchyNode[]
+        expect(hierarchy).toHaveLength(1) // single top-level node: Project
 
-        const itemA = seriesData.find(d => d.name === 'A')
-        expect(itemA).toBeDefined()
-        expect(itemA?.value).toBe(10)
+        const project = hierarchy[0]
+        expect(project?.name).toBe('Project')
+        expect(project?.children).toHaveLength(2) // Frontend and Backend
 
-        const itemB = seriesData.find(d => d.name === 'B')
-        expect(itemB).toBeDefined()
-        expect(itemB?.value).toBe(20)
+        const backend = project?.children?.find(n => n.name === 'Backend')
+        expect(backend?.children).toHaveLength(2) // API and DB
 
-        const itemC = seriesData.find(d => d.name === 'C')
-        expect(itemC).toBeUndefined()
+        const api = backend?.children?.find(n => n.name === 'API')
+        expect(api?.value).toBe(20)
+      },
+    )
+
+    it(
+      'should disable the built-in breadcrumb so it does not duplicate the top-level label',
+      () => {
+        const data = [{ path: 'A/B',
+          val: 10 }]
+
+        const option = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          {},
+        )
+
+        const series = option.series as readonly TreemapSeriesOption[]
+        expect(series[0]?.breadcrumb?.show).toBe(false)
       },
     )
 
@@ -55,24 +76,22 @@ describe(
       'should handle missing values gracefully',
       () => {
         const data = [
-          { name: 'A',
-            val: null },
-          { name: 'B' }, // missing val
+          { path: 'A' }, // missing val
         ]
 
         const option = transformDataToChartOption(
           data,
-          'name',
+          'path',
           'val',
           'treemap',
           {},
         )
         const series = option.series as readonly TreemapSeriesOption[]
 
-        // Safety check before access
-        const seriesData = series?.[0]?.data as readonly unknown[]
-        expect(seriesData).toBeDefined()
-        expect(seriesData).toHaveLength(0)
+        // eslint-disable-next-line no-restricted-syntax
+        const hierarchy = series?.[0]?.data as unknown as readonly HierarchyNode[]
+        expect(hierarchy).toHaveLength(1)
+        expect(hierarchy[0]?.value).toBeUndefined()
       },
     )
   },

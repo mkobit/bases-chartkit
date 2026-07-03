@@ -24,10 +24,10 @@ export class TreemapChartView extends BaseChartView {
   static getViewOptions(): ViewOption[] {
     return [
       {
-        displayName: t('views.treemap.name_prop'),
+        displayName: t('views.treemap.path_prop'),
         type: 'property',
-        key: BaseChartView.X_AXIS_PROP_KEY, // Map to Name
-        placeholder: t('views.treemap.name_prop_placeholder'),
+        key: BaseChartView.X_AXIS_PROP_KEY, // Map to Path
+        placeholder: t('views.treemap.path_placeholder'),
       },
       {
         displayName: t('views.treemap.value_prop'),
@@ -39,16 +39,16 @@ export class TreemapChartView extends BaseChartView {
   }
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const nameProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
+    const pathProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
     const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
 
-    if (!nameProp || !valueProp) {
+    if (!pathProp || !valueProp) {
       return null
     }
 
     return transformDataToChartOption(
       data,
-      nameProp,
+      pathProp,
       valueProp,
       'treemap',
       {},

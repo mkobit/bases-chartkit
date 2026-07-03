@@ -56,8 +56,8 @@
 		},
 		"treemap": {
 			"name": "Treemap",
-			"name_prop": "Name property",
-			"name_prop_placeholder": "Select name property",
+			"path_prop": "Path property (e.g. \"Folder/Subfolder\")",
+			"path_placeholder": "Select path property",
 			"value_prop": "Value property",
 			"value_prop_placeholder": "Select value property"
 		},
