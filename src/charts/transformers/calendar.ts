@@ -99,9 +99,16 @@ export function createCalendarChartOption(
 
         const calendarItem: CalendarComponentOption = {
           top: 120,
+          // ECharts forces cellSize's width back to 'auto' whenever both
+          // `left` and `right` are set (they imply a fixed total width,
+          // which conflicts with a fixed per-cell width) - see
+          // mergeAndNormalizeLayoutParams/sizeCalculable in echarts'
+          // CalendarModel. Setting only `left` lets our explicit cellSize
+          // stick, so day cells render as small GitHub-style squares
+          // instead of stretching to fill the container (which, for a
+          // short date range, collapses into a few wide solid bands).
           left: 30,
-          right: 30,
-          cellSize: ['auto',
+          cellSize: [13,
             13],
           range: [minDate,
             maxDate],

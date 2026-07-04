@@ -35,6 +35,15 @@ describe(
         expect(calendar.range).toEqual(['2023-01-01',
           '2023-02-01'])
 
+        // ECharts forces cellSize's width back to 'auto' whenever both
+        // `left` and `right` are set on the calendar component (see
+        // CalendarModel's mergeAndNormalizeLayoutParams/sizeCalculable) -
+        // only `left` may be set, or day cells silently stop being fixed
+        // squares and stretch to fill the container instead.
+        expect(calendar.cellSize).toEqual([13,
+          13])
+        expect(calendar.right).toBeUndefined()
+
         // Check Series
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as readonly any[]
