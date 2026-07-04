@@ -161,16 +161,45 @@ describe(
         const dataset = option.dataset[0] as DatasetComponentOption
         const source = dataset.source as ReadonlyArray<{ readonly name: string, readonly value: number }>
 
-        expect(source).toHaveLength(3)
-        // null name -> 'Unknown', undefined value -> 0
+        // All three rows fall back to name 'Unknown', so they aggregate into
+        // a single slice rather than three separate 'Unknown' slices.
+        expect(source).toHaveLength(1)
         expect(source[0]).toEqual({ name: 'Unknown',
           value: 0 })
-        // undefined name -> 'Unknown', null value -> 0
-        expect(source[1]).toEqual({ name: 'Unknown',
-          value: 0 })
-        // missing props -> 'Unknown', 0
-        expect(source[2]).toEqual({ name: 'Unknown',
-          value: 0 })
+      },
+    )
+
+    it(
+      'should aggregate duplicate categories by summing their values',
+      () => {
+        const data = [
+          { region: 'North',
+            revenue: 100 },
+          { region: 'South',
+            revenue: 50 },
+          { region: 'North',
+            revenue: 75 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'region',
+          'revenue',
+          'pie',
+        )
+
+        expect(Array.isArray(option.dataset)).toBe(true)
+        if (!Array.isArray(option.dataset)) {
+          return
+        }
+        const dataset = option.dataset[0] as DatasetComponentOption
+        const source = dataset.source as ReadonlyArray<{ readonly name: string, readonly value: number }>
+
+        expect(source).toHaveLength(2)
+        expect(source[0]).toEqual({ name: 'North',
+          value: 175 })
+        expect(source[1]).toEqual({ name: 'South',
+          value: 50 })
       },
     )
 

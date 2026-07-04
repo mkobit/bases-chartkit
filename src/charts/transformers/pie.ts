@@ -18,11 +18,12 @@ export function createPieChartOption(
   valueProp: string,
   options?: PieTransformerOptions,
 ): EChartsOption {
-  // 1. Normalize Data for Dataset
+  // 1. Normalize Data for Dataset, aggregating rows that share a name
+  // so duplicate categories sum into a single slice instead of one per row.
   // Structure: { name, value }
-  const normalizedData: ReadonlyArray<PieDataPoint> = R.map(
+  const normalizedData: ReadonlyArray<PieDataPoint> = R.pipe(
     data,
-    (item): PieDataPoint => {
+    R.map((item): PieDataPoint => {
       const valRaw = getNestedValue(
         item,
         nameProp,
@@ -37,7 +38,13 @@ export function createPieChartOption(
         name: name,
         value: Number.isNaN(val) ? 0 : val,
       }
-    },
+    }),
+    R.groupBy(d => d.name),
+    R.entries(),
+    R.map(([name, items]): PieDataPoint => ({
+      name,
+      value: R.sumBy(items, d => d.value),
+    })),
   )
 
   const dataset: DatasetComponentOption = {

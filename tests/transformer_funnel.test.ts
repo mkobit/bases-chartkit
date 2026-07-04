@@ -115,10 +115,55 @@ describe(
           return
         }
 
-        expect(seriesData).toHaveLength(3)
+        // All three rows fall back to name 'Unknown', so they aggregate into
+        // a single stage rather than three separate 'Unknown' segments.
+        expect(seriesData).toHaveLength(1)
         expect(seriesData[0]?.name).toBe('Unknown')
-        expect(seriesData[1]?.name).toBe('Unknown')
-        expect(seriesData[2]?.name).toBe('Unknown')
+        expect(seriesData[0]?.value).toBe(175)
+      },
+    )
+
+    it(
+      'should aggregate duplicate categories by summing their values',
+      () => {
+        const data = [
+          { name: 'Visit',
+            value: 100 },
+          { name: 'Visit',
+            value: 100 },
+          { name: 'Visit',
+            value: 100 },
+          { name: 'Cart',
+            value: 50 },
+          { name: 'Purchase',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+        )
+
+        if (!Array.isArray(option.series)) {
+          return
+        }
+
+        const series = option.series[0] as FunnelSeriesOption
+        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        expect(seriesData).toBeDefined()
+        if (!seriesData) {
+          return
+        }
+
+        expect(seriesData).toHaveLength(3)
+        expect(seriesData[0]).toEqual({ name: 'Visit',
+          value: 300 })
+        expect(seriesData[1]).toEqual({ name: 'Cart',
+          value: 50 })
+        expect(seriesData[2]).toEqual({ name: 'Purchase',
+          value: 10 })
       },
     )
 

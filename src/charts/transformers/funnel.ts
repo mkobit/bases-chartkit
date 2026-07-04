@@ -9,6 +9,8 @@ export function createFunnelChartOption(
   valueProp: string,
   options?: BaseTransformerOptions,
 ): EChartsOption {
+  // Aggregate rows that share a name so duplicate categories sum into a
+  // single funnel stage instead of one segment per row.
   const seriesData = R.pipe(
     data,
     R.map((item) => {
@@ -27,6 +29,12 @@ export function createFunnelChartOption(
         value: Number.isNaN(val) ? 0 : val,
       }
     }),
+    R.groupBy(d => d.name),
+    R.entries(),
+    R.map(([name, items]) => ({
+      name,
+      value: R.sumBy(items, d => d.value),
+    })),
     R.sortBy([x => x.value,
       'desc']),
   )
