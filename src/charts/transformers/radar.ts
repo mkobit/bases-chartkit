@@ -6,6 +6,7 @@ import * as R from 'remeda'
 export interface RadarTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly metricProps?: readonly string[]
+  readonly metricLabels?: Readonly<Record<string, string>>
 }
 
 export function createRadarChartOption(
@@ -38,7 +39,7 @@ function createWideFormatRadarOption(
   metricProps: readonly string[],
   options?: RadarTransformerOptions,
 ): EChartsOption {
-  const radarIndicators = metricProps.map(prop => ({ name: prop }))
+  const radarIndicators = metricProps.map(prop => ({ name: options?.metricLabels?.[prop] ?? prop }))
 
   const seriesData = data.map((item) => {
     const nameRaw = getNestedValue(

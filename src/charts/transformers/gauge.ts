@@ -41,7 +41,7 @@ export function createGaugeChartOption(
     data: [
       {
         value: total,
-        name: valueProp,
+        name: options?.yAxisLabel ?? valueProp,
       },
     ],
   }

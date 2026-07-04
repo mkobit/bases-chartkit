@@ -216,6 +216,41 @@ describe(
     )
 
     it(
+      'should exclude the invisible _start series from the legend',
+      () => {
+        // Regression (fs4.11): ECharts lists every series in the legend when
+        // `legend.data` isn't set explicitly, so the invisible '_start'
+        // helper series (used to offset stacked bars) leaked into it as a
+        // raw internal name.
+        const groupedData = [
+          { task: 'Task 1',
+            start: '2023-01-01',
+            end: '2023-01-05',
+            type: 'Dev' },
+          { task: 'Task 2',
+            start: '2023-01-02',
+            end: '2023-01-08',
+            type: 'Test' },
+        ]
+
+        const option = createGanttChartOption(
+          groupedData,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+            seriesProp: 'type',
+            legend: true,
+          },
+        )
+
+        const legend = option.legend as { data?: string[] }
+        expect(legend.data).toEqual(['Dev', 'Test'])
+        expect(legend.data).not.toContain('_start')
+      },
+    )
+
+    it(
       'should filter invalid data',
       () => {
         const option = createGanttChartOption(

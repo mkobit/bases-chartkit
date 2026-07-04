@@ -73,6 +73,43 @@ describe(
     )
 
     it(
+      'should use yAxisLabel as the default series name when there is no seriesProp',
+      () => {
+        // Regression (fs4.11): polar-bar's radius prop uses VALUE_PROP_KEY
+        // (not Y_AXIS_PROP_KEY), so the view's common-options helper never
+        // resolved a display name for it, and the series name always fell
+        // back to the raw property path (e.g. 'note.Spend' instead of
+        // 'Spend').
+        const option = createPolarBarChartOption(
+          data,
+          'angle',
+          'radius',
+          { yAxisLabel: 'Spend' },
+        )
+
+        const series = option.series as BarSeriesOption[]
+        expect(series).toHaveLength(1)
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('Spend')
+      },
+    )
+
+    it(
+      'should fall back to the raw prop key when yAxisLabel is not provided',
+      () => {
+        const option = createPolarBarChartOption(
+          data,
+          'angle',
+          'radius',
+        )
+
+        const series = option.series as BarSeriesOption[]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].name).toBe('radius')
+      },
+    )
+
+    it(
       'should handle stacking',
       () => {
         const option = createPolarBarChartOption(

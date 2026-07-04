@@ -152,5 +152,55 @@ describe(
         expect(series.max).toBe(100)
       },
     )
+
+    it(
+      'should use yAxisLabel as the data point name instead of the raw prop key',
+      () => {
+        // Regression (fs4.11): the gauge view never resolved a friendly
+        // display name, so the data point name always fell back to the raw
+        // property path (e.g. 'note.Load' instead of 'Load').
+        const data = [{ val: 50 }]
+
+        const option = transformDataToChartOption(
+          data,
+          '',
+          'val',
+          'gauge',
+          { yAxisLabel: 'Load' },
+        )
+
+        expect(Array.isArray(option.series)).toBe(true)
+        if (!Array.isArray(option.series)) {
+          return
+        }
+
+        const series = option.series[0] as GaugeSeriesOption
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series.data[0].name).toBe('Load')
+      },
+    )
+
+    it(
+      'should fall back to the raw prop key when yAxisLabel is not provided',
+      () => {
+        const data = [{ val: 50 }]
+
+        const option = transformDataToChartOption(
+          data,
+          '',
+          'val',
+          'gauge',
+        )
+
+        expect(Array.isArray(option.series)).toBe(true)
+        if (!Array.isArray(option.series)) {
+          return
+        }
+
+        const series = option.series[0] as GaugeSeriesOption
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series.data[0].name).toBe('val')
+      },
+    )
   },
 )

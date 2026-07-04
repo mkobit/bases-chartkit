@@ -5,6 +5,7 @@ import * as R from 'remeda'
 
 export interface ParallelTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
+  readonly dimensionLabels?: Readonly<Record<string, string>>
 }
 
 // ECharts parallelAxis type is complex union
@@ -49,10 +50,12 @@ export function createParallelChartOption(
           )
           const isNumeric = nonNullValues.every(v => !Number.isNaN(Number(v)))
 
+          const name = options?.dimensionLabels?.[dim] ?? dim
+
           return (isNumeric && nonNullValues.length > 0)
             ? {
                 dim: index,
-                name: dim,
+                name,
                 type: 'value' as const,
               }
             : (() => {
@@ -63,7 +66,7 @@ export function createParallelChartOption(
                 )
                 return {
                   dim: index,
-                  name: dim,
+                  name,
                   type: 'category' as const,
                   data: uniqueVals,
                 }
@@ -91,7 +94,7 @@ export function createParallelChartOption(
               (item) => {
                 return R.map(
                   dims,
-                  (dim) => {
+                  (dim, index) => {
                     const valRaw = getNestedValue(
                       item,
                       dim,
@@ -100,7 +103,10 @@ export function createParallelChartOption(
                     return (valRaw === null || valRaw === undefined || valRaw === '')
                       ? null
                       : (() => {
-                          const axis = parallelAxis.find(a => a.name === dim)
+                          // Look up by index, not by resolved axis name — the
+                          // axis `name` may now be a friendly displayName that
+                          // no longer matches the raw `dim` property path.
+                          const axis = parallelAxis[index]
                           const isNum = axis?.type === 'value'
                           return isNum ? Number(valRaw) : safeToString(valRaw)
                         })()

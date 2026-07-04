@@ -222,13 +222,19 @@ export function createGanttChartOption(
     }),
   )
 
+  const legendOption = getLegendOption(options)
+
   return {
     tooltip: {
       trigger: 'item',
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
       formatter: formatTooltip as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
     },
-    legend: getLegendOption(options),
+    // ECharts defaults to listing every series in the legend when `data`
+    // isn't set explicitly — that would include the invisible '_start'
+    // helper series (used to offset stacked bars), so pin `data` to the
+    // real group names only.
+    legend: legendOption && { ...legendOption, data: Object.keys(groupedData) },
     grid: {
       containLabel: true,
       left: '3%',

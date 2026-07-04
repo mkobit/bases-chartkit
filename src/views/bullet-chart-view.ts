@@ -33,6 +33,7 @@ export class BulletChartView extends BaseChartView {
       'bullet',
       {
         ...this.getCommonTransformerOptions(),
+        yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? valueProp,
         targetProp,
         rangeLowProp,
         rangeMidProp,
