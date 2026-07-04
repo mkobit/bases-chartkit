@@ -69,6 +69,22 @@ export function createLinesChartOption(
             series: string }> => d !== null),
         )
 
+        // 'lines' series data only exposes a scalar `value` dimension to
+        // ECharts, never the coords themselves, so it never contributes to
+        // value-axis auto-scaling. With no other series present, both axes
+        // silently default to [0, 1], clipping most segments off-canvas.
+        // Pin min/max to the real coordinate range explicitly.
+        const allX = normalizedData.flatMap(d => [d.coords[0][0], d.coords[1][0]])
+        const allY = normalizedData.flatMap(d => [d.coords[0][1], d.coords[1][1]])
+        const axisRangeX = allX.length === 0
+          ? undefined
+          : { min: Math.min(...allX),
+              max: Math.max(...allX) }
+        const axisRangeY = allY.length === 0
+          ? undefined
+          : { min: Math.min(...allY),
+              max: Math.max(...allY) }
+
         // 2. Group by Series
         const groupedData = R.groupBy(
           normalizedData,
@@ -103,11 +119,13 @@ export function createLinesChartOption(
             type: 'value',
             name: xAxisLabel,
             splitLine: { show: false },
+            ...axisRangeX,
           },
           yAxis: {
             type: 'value',
             name: yAxisLabel,
             splitLine: { show: false },
+            ...axisRangeY,
           },
           series: seriesOptions,
           ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
