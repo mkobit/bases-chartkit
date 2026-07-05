@@ -6,7 +6,6 @@ import * as R from 'remeda'
 export interface RadialBarTransformerOptions extends BaseTransformerOptions {
   readonly stack?: boolean
   readonly seriesProp?: string
-  readonly maxAngle?: number
 }
 
 export function createRadialBarChartOption(

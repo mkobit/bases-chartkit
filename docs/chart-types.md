@@ -337,21 +337,6 @@ views:
     yAxisProp: note.Value
 ```
 
-## polarBar
-Displays a bar chart plotted on a polar coordinate system, often used to show directional data.
-```yaml
-properties:
-  note.Direction:
-    displayName: Direction
-  note.Value:
-    displayName: Value
-views:
-  - type: polar-bar-chart
-    name: Polar Bar Sample
-    xAxisProp: note.Direction
-    valueProp: note.Value
-```
-
 ## polarLine
 Displays a line chart plotted on a polar coordinate system, connecting data points around a central hub.
 ```yaml

@@ -280,8 +280,7 @@
 			"category_prop": "Category property",
 			"category_placeholder": "Select category property",
 			"value_prop": "Value property",
-			"value_placeholder": "Select value property",
-			"max_value": "Max value"
+			"value_placeholder": "Select value property"
 		},
 		"polar": {
 			"angle_prop": "Angle property",
@@ -294,9 +293,6 @@
 		},
 		"polar_line": {
 			"name": "Polar line chart"
-		},
-		"polar_bar": {
-			"name": "Polar bar chart"
 		},
 		"polar_scatter": {
 			"name": "Polar scatter chart"
