@@ -18,8 +18,9 @@ views:
       and:
         - note.Load != null
   - type: gauge-chart
-    name: Server Load Gauge (Aggregated)
+    name: Server Load Gauge (Average)
     yAxisProp: note.Load
+    aggregation: avg
     minVal: 0
     maxVal: 100
     filters:

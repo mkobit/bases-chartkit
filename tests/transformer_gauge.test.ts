@@ -202,5 +202,79 @@ describe(
         expect(series.data[0].name).toBe('val')
       },
     )
+
+    describe(
+      'aggregation option (fs4.13)',
+      () => {
+        // Regression: gauge always summed every matching row into one total,
+        // with no way to average, which silently blew past a 0-100 scale for
+        // rate/percentage metrics (e.g. server load % across several rows).
+        const data = [
+          { val: 50 },
+          { val: 20 },
+          { val: 80 },
+        ]
+
+        it(
+          'should default to sum when aggregation is omitted',
+          () => {
+            const option = transformDataToChartOption(data, '', 'val', 'gauge')
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(150)
+          },
+        )
+
+        it(
+          'should average values when aggregation is avg',
+          () => {
+            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'avg' })
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(50)
+          },
+        )
+
+        it(
+          'should take the minimum when aggregation is min',
+          () => {
+            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'min' })
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(20)
+          },
+        )
+
+        it(
+          'should take the maximum when aggregation is max',
+          () => {
+            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'max' })
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(80)
+          },
+        )
+
+        it(
+          'should take the last value when aggregation is last',
+          () => {
+            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'last' })
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(80)
+          },
+        )
+
+        it(
+          'should result in 0 for any aggregation when data is empty',
+          () => {
+            const option = transformDataToChartOption([], '', 'val', 'gauge', { aggregation: 'avg' })
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(0)
+          },
+        )
+      },
+    )
   },
 )

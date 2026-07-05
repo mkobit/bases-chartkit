@@ -149,6 +149,14 @@
 			"name": "Gauge chart",
 			"value_prop": "Value property",
 			"value_prop_placeholder": "Select value property",
+			"aggregation": "Aggregation",
+			"aggregation_options": {
+				"sum": "Sum",
+				"avg": "Average",
+				"min": "Minimum",
+				"max": "Maximum",
+				"last": "Last value"
+			},
 			"min_value": "Min value",
 			"max_value": "Max value"
 		},
