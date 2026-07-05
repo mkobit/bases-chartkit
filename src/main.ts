@@ -33,7 +33,6 @@ import { HistogramChartView } from './views/histogram-chart-view'
 import { BulletChartView } from './views/bullet-chart-view'
 import { RadialBarChartView } from './views/radial-bar-chart-view'
 import { PolarLineChartView } from './views/polar-line-chart-view'
-import { PolarBarChartView } from './views/polar-bar-chart-view'
 import { PolarScatterChartView } from './views/polar-scatter-chart-view'
 import { MapChartView } from './views/map-chart-view'
 import { WordCloudChartView } from './views/word-cloud-chart-view'
@@ -495,20 +494,6 @@ export default class BarePlugin extends Plugin {
           this,
         ),
         options: () => PolarLineChartView.getViewOptions(),
-      },
-    )
-
-    this.registerBasesView(
-      'polar-bar-chart',
-      {
-        name: t('views.polar_bar.name'),
-        icon: 'bar-chart-2',
-        factory: (controller, containerEl) => new PolarBarChartView(
-          controller,
-          containerEl,
-          this,
-        ),
-        options: () => PolarBarChartView.getViewOptions(),
       },
     )
 

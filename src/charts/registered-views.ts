@@ -23,7 +23,6 @@ export const REGISTERED_CHART_VIEW_TYPES = [
   'pareto-chart',
   'pictorial-bar-chart',
   'pie-chart',
-  'polar-bar-chart',
   'polar-line-chart',
   'polar-scatter-chart',
   'radar-chart',

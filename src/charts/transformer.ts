@@ -151,12 +151,6 @@ import {
   createPolarLineChartOption,
 } from './transformers/polar-line'
 import type {
-  PolarBarTransformerOptions,
-} from './transformers/polar-bar'
-import {
-  createPolarBarChartOption,
-} from './transformers/polar-bar'
-import type {
   PolarScatterTransformerOptions,
 } from './transformers/polar-scatter'
 import {
@@ -202,7 +196,6 @@ export type ChartTransformerOptions
     | BulletTransformerOptions
     | RadialBarTransformerOptions
     | PolarLineTransformerOptions
-    | PolarBarTransformerOptions
     | PolarScatterTransformerOptions
     | WordCloudTransformerOptions
 
@@ -390,12 +383,6 @@ const transformerMap: Readonly<Record<
     yProp,
     asOptions(options),
   ),
-  polarBar: (data, xProp, yProp, options): EChartsOption => createPolarBarChartOption(
-    data,
-    xProp,
-    yProp,
-    asOptions(options),
-  ),
   polarScatter: (data, xProp, yProp, options): EChartsOption => createPolarScatterChartOption(
     data,
     xProp,
@@ -471,7 +458,6 @@ export { type HistogramTransformerOptions } from './transformers/histogram'
 export { type BulletTransformerOptions } from './transformers/bullet'
 export { type RadialBarTransformerOptions } from './transformers/radial-bar'
 export { type PolarLineTransformerOptions } from './transformers/polar-line'
-export { type PolarBarTransformerOptions } from './transformers/polar-bar'
 export { type PolarScatterTransformerOptions } from './transformers/polar-scatter'
 export { type MapTransformerOptions } from './transformers/map'
 export { type WordCloudTransformerOptions } from './transformers/extensions/word-cloud'
