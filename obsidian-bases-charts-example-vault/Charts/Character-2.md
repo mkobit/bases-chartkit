@@ -3,7 +3,7 @@ Strength: 54
 Intelligence: 56
 Agility: 57
 Class: "Rogue"
-Name: "Hero 2"
+Name: "Locke"
 ---
 
 # Character-2

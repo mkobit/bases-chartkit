@@ -3,7 +3,7 @@ Strength: 51
 Intelligence: 40
 Agility: 35
 Class: "Warrior"
-Name: "Hero 0"
+Name: "Conan"
 ---
 
 # Character-0
