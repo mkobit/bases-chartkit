@@ -26,7 +26,7 @@ test.describe('tree chart async data update', () => {
       })
     }, { path: 'Project_Management.base', viewName: 'Project Tasks Tree' })
 
-    await expect.poll(async () => evaluateObsidian(page, () => {
+    await expect.poll(async () => evaluateObsidian(page, (app) => {
       // The tree-chart view is nested inside Bases' own container view, at a
       // depth that isn't part of any public API. Walk the object graph
       // looking for the instance with a `getChartOption` method (our

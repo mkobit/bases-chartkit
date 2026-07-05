@@ -9,7 +9,9 @@ export interface LinesTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
 }
 
-function asCoords(coords: readonly (readonly number[])[]): [number, number][] {
+type LineSegment = [[number, number], [number, number]]
+
+function asCoords(coords: readonly (readonly number[])[]): LineSegment {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
   return coords as any
 }
@@ -65,7 +67,7 @@ export function createLinesChartOption(
                   y2]]),
                 series }
           }),
-          R.filter((d): d is Readonly<{ coords: [number, number][]
+          R.filter((d): d is Readonly<{ coords: LineSegment
             series: string }> => d !== null),
         )
 

@@ -160,6 +160,7 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         const measure = series[0]
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(measure.name).toBe('Value')
       },
     )
@@ -175,6 +176,7 @@ describe(
 
         const series = option.series as BarSeriesOption[]
         const measure = series[0]
+        // @ts-expect-error - suppress strictNullChecks in tests
         expect(measure.name).toBe('value')
       },
     )
