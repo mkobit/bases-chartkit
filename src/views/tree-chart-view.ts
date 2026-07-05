@@ -38,4 +38,18 @@ export class TreeChartView extends BaseChartView {
       {},
     )
   }
+
+  // ECharts' `tree` series keeps internal expand/collapse view-state between
+  // `setOption` calls (via `expandAndCollapse`/animated updates). When Bases'
+  // query resolves asynchronously, the first render often mounts with an
+  // empty result set before the real data arrives; the follow-up render with
+  // populated data then throws inside ECharts' diffing
+  // ("Cannot read properties of null (reading '0')") because there's no
+  // previous root node to reconcile against, silently freezing the chart on
+  // the empty first paint. `clear()` drops that stale view-state so every
+  // render starts from a clean slate, same as a first mount.
+  protected executeRender(): void {
+    this.chart?.clear()
+    super.executeRender()
+  }
 }

@@ -9,7 +9,9 @@ export interface LinesTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
 }
 
-function asCoords(coords: readonly (readonly number[])[]): [number, number][] {
+type LineSegment = [[number, number], [number, number]]
+
+function asCoords(coords: readonly (readonly number[])[]): LineSegment {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
   return coords as any
 }
@@ -65,9 +67,25 @@ export function createLinesChartOption(
                   y2]]),
                 series }
           }),
-          R.filter((d): d is Readonly<{ coords: [number, number][]
+          R.filter((d): d is Readonly<{ coords: LineSegment
             series: string }> => d !== null),
         )
+
+        // 'lines' series data only exposes a scalar `value` dimension to
+        // ECharts, never the coords themselves, so it never contributes to
+        // value-axis auto-scaling. With no other series present, both axes
+        // silently default to [0, 1], clipping most segments off-canvas.
+        // Pin min/max to the real coordinate range explicitly.
+        const allX = normalizedData.flatMap(d => [d.coords[0][0], d.coords[1][0]])
+        const allY = normalizedData.flatMap(d => [d.coords[0][1], d.coords[1][1]])
+        const axisRangeX = allX.length === 0
+          ? undefined
+          : { min: Math.min(...allX),
+              max: Math.max(...allX) }
+        const axisRangeY = allY.length === 0
+          ? undefined
+          : { min: Math.min(...allY),
+              max: Math.max(...allY) }
 
         // 2. Group by Series
         const groupedData = R.groupBy(
@@ -103,11 +121,13 @@ export function createLinesChartOption(
             type: 'value',
             name: xAxisLabel,
             splitLine: { show: false },
+            ...axisRangeX,
           },
           yAxis: {
             type: 'value',
             name: yAxisLabel,
             splitLine: { show: false },
+            ...axisRangeY,
           },
           series: seriesOptions,
           ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),

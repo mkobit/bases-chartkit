@@ -21,6 +21,7 @@ export class PolarBarChartView extends BaseChartView {
       'polarBar',
       {
         ...this.getCommonTransformerOptions(),
+        yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? yProp,
         seriesProp,
         stack: isStacked,
       },

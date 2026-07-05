@@ -16,8 +16,7 @@ export class PictorialBarChartView extends BaseChartView {
       ...this.getCommonTransformerOptions(),
       seriesProp: this.config.get(BaseChartView.SERIES_PROP_KEY) as string,
       symbol: this.config.get('symbol') as string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      symbolRepeat: this.config.get('symbolRepeat') as any,
+      symbolRepeat: this.config.get('symbolRepeat') as PictorialBarTransformerOptions['symbolRepeat'],
       symbolClip: this.config.get('symbolClip') as boolean,
       symbolSize: this.config.get('symbolSize') as string | number,
     }

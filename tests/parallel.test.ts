@@ -156,6 +156,59 @@ describe(
     )
 
     it(
+      'should use dimensionLabels to resolve friendly axis names, keeping data extraction on the raw dim',
+      () => {
+        // Regression (fs4.11): parallel-chart's dimensions field is raw
+        // property paths typed by the user (e.g. 'note.Strength'), and the
+        // axis name was always that raw path — never resolved to a
+        // displayName the way the property-picker-based charts are.
+        const data = [
+          { note: { Strength: 51, Agility: 35 } },
+          { note: { Strength: 23, Agility: 56 } },
+        ]
+        const dimensions = 'note.Strength, note.Agility'
+        const options = {
+          dimensionLabels: {
+            'note.Strength': 'Strength',
+            'note.Agility': 'Agility',
+          },
+        }
+
+        const option = createParallelChartOption(
+          data,
+          dimensions,
+          options,
+        ) as TestOption
+
+        const axes = option.parallelAxis
+        expect(axes).toBeDefined()
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].name).toBe('Strength')
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[1].name).toBe('Agility')
+
+        // Data is still keyed by the raw property path, not the label.
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(option.series[0].data[0]).toEqual([51, 35])
+      },
+    )
+
+    it(
+      'should fall back to the raw dim when no dimensionLabels entry exists',
+      () => {
+        const data = [{ price: 100 }]
+        const option = createParallelChartOption(
+          data,
+          'price',
+        ) as TestOption
+
+        const axes = option.parallelAxis
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(axes[0].name).toBe('price')
+      },
+    )
+
+    it(
       'should return title message if no dimensions provided',
       () => {
         const option = createParallelChartOption(

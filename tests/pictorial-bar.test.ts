@@ -39,6 +39,11 @@ describe(
         expect(series[0].type).toBe('pictorialBar')
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].symbol).toBe('circle') // Default
+        // Default must repeat: a single non-repeating symbol is stretched by
+        // ECharts to fill the whole bar's bounding box, which looks identical
+        // to a plain bar (see obsidian-bases-charts-fs4.7).
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(series[0].symbolRepeat).toBe(true)
       },
     )
 
@@ -78,8 +83,7 @@ describe(
           'category',
           'value',
           {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            symbolRepeat: 'true' as any,
+            symbolRepeat: 'true',
           },
         )
         const seriesTrue = optionTrue.series as PictorialBarSeriesOption[]
@@ -92,8 +96,7 @@ describe(
           'category',
           'value',
           {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            symbolRepeat: 'false' as any,
+            symbolRepeat: 'false',
           },
         )
         const seriesFalse = optionFalse.series as PictorialBarSeriesOption[]

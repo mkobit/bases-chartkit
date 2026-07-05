@@ -5,7 +5,8 @@ import * as R from 'remeda'
 
 export interface PictorialBarTransformerOptions extends BaseTransformerOptions {
   readonly symbol?: string
-  readonly symbolRepeat?: boolean | 'fixed'
+  // ViewOption dropdowns hand back their raw string key ('true'/'false'), not a boolean.
+  readonly symbolRepeat?: boolean | 'fixed' | 'true' | 'false'
   readonly symbolClip?: boolean
   readonly symbolSize?: number | string
   readonly seriesProp?: string
@@ -85,10 +86,18 @@ export function createPictorialBarChartOption(
   const seriesOptions: PictorialBarSeriesOption[] = seriesNames.map((name, idx) => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
-    // Handle string booleans from ViewOption dropdowns
+    // Handle string booleans from ViewOption dropdowns. Default to a repeating
+    // pictogram when unset -- a single non-repeating symbol is stretched to
+    // fill the entire bar's bounding box by ECharts, which for most symbols
+    // (especially 'rect') is visually indistinguishable from a plain bar.
     const rawRepeat = options?.symbolRepeat
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-    const symbolRepeat = (rawRepeat as any) === 'true' ? true : (rawRepeat as any) === 'false' ? false : rawRepeat
+    const symbolRepeat = rawRepeat === undefined
+      ? true
+      : rawRepeat === 'true'
+        ? true
+        : rawRepeat === 'false'
+          ? false
+          : rawRepeat
 
     return {
       name: name,

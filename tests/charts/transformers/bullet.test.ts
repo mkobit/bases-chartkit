@@ -144,6 +144,44 @@ describe(
     )
 
     it(
+      'should use yAxisLabel as the measure series name instead of the raw prop key',
+      () => {
+        // Regression (fs4.11): bullet uses VALUE_PROP_KEY (not
+        // Y_AXIS_PROP_KEY), so the view's common-options helper never
+        // resolved a display name for it, and the series name always fell
+        // back to the raw property path (e.g. 'note.Value' instead of
+        // 'Value').
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          { yAxisLabel: 'Value' },
+        )
+
+        const series = option.series as BarSeriesOption[]
+        const measure = series[0]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(measure.name).toBe('Value')
+      },
+    )
+
+    it(
+      'should fall back to the raw prop key when yAxisLabel is not provided',
+      () => {
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+        )
+
+        const series = option.series as BarSeriesOption[]
+        const measure = series[0]
+        // @ts-expect-error - suppress strictNullChecks in tests
+        expect(measure.name).toBe('value')
+      },
+    )
+
+    it(
       'should handle flipped axis with ranges',
       () => {
         const option = createBulletChartOption(

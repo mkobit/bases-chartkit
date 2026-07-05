@@ -1,4 +1,5 @@
 import type {
+  BasesPropertyId,
   QueryController,
   ViewOption } from 'obsidian'
 import {
@@ -123,6 +124,15 @@ export abstract class BaseChartView extends BasesView {
   protected getPropDisplayName(key: string): string | undefined {
     const propertyId = this.config.getAsPropertyId(key)
     return propertyId ? this.config.getDisplayName(propertyId) : undefined
+  }
+
+  // Like getPropDisplayName, but for options where the user types one or more
+  // raw property paths directly (e.g. a comma-separated dimensions list)
+  // rather than picking a single property through a `type: 'property'` view
+  // option. The path is already in Bases' `type.name` id format (as typed in
+  // the .base file, e.g. 'note.Strength'), so it can be resolved directly.
+  protected getDisplayNameForPropertyPath(propertyPath: string): string {
+    return this.config.getDisplayName(propertyPath as BasesPropertyId)
   }
 
   protected getVisualMapTransformerOptions(): VisualMapOptions {

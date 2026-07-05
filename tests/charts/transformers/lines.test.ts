@@ -54,6 +54,14 @@ describe(
           10],
         [20,
           20]])
+
+        // 'lines' series never contributes its coords to ECharts' axis
+        // auto-scaling, so min/max must be pinned explicitly to the real
+        // data range or most segments render off-canvas.
+        expect(option.xAxis).toMatchObject({ min: 10,
+          max: 110 })
+        expect(option.yAxis).toMatchObject({ min: 10,
+          max: 110 })
       },
     )
 

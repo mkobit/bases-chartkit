@@ -25,6 +25,7 @@ export class GaugeChartView extends BaseChartView {
       {
         min: isNaN(minVal) ? 0 : minVal,
         max: isNaN(maxVal) ? 100 : maxVal,
+        yAxisLabel: this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY) ?? yProp,
       },
     )
   }

@@ -65,6 +65,36 @@ describe(
         )
 
         it(
+          'should use metricLabels to resolve friendly indicator names, keeping value lookups on the raw metric prop',
+          () => {
+            // Regression (fs4.11): metricProps are raw property paths typed
+            // by the user (e.g. 'note.Strength'), and the radar indicator
+            // name was always that raw path — never resolved to a
+            // displayName.
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                metricLabels: {
+                  Strength: 'STR',
+                  Intelligence: 'INT',
+                  Agility: 'AGI',
+                },
+              },
+            )
+
+            const radar = option.radar as { indicator?: { name: string }[] }
+            expect(radar.indicator).toEqual([
+              { name: 'STR' },
+              { name: 'INT' },
+              { name: 'AGI' },
+            ])
+          },
+        )
+
+        it(
           'should default missing/non-numeric metric values to 0',
           () => {
             const option = createRadarChartOption(

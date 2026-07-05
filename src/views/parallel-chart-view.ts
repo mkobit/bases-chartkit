@@ -31,9 +31,17 @@ export class ParallelChartView extends BaseChartView {
     const xProp = this.config.get('xProp') as string
     const seriesProp = this.config.get('seriesProp') as string
 
+    const dims = typeof xProp === 'string'
+      ? xProp.split(',').map(s => s.trim()).filter(s => s.length > 0)
+      : []
+    const dimensionLabels = Object.fromEntries(
+      dims.map(dim => [dim, this.getDisplayNameForPropertyPath(dim)]),
+    )
+
     const options: ParallelTransformerOptions = {
       ...this.getCommonTransformerOptions(),
       seriesProp,
+      dimensionLabels,
     }
 
     return transformDataToChartOption(

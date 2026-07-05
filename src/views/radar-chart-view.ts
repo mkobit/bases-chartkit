@@ -26,6 +26,9 @@ export class RadarChartView extends BaseChartView {
     // becomes a radar axis, xProp names each series.
     if (typeof metricPropsRaw === 'string' && metricPropsRaw.trim().length > 0) {
       const metricProps = metricPropsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0)
+      const metricLabels = Object.fromEntries(
+        metricProps.map(prop => [prop, this.getDisplayNameForPropertyPath(prop)]),
+      )
       return metricProps.length === 0
         ? null
         : transformDataToChartOption(
@@ -36,6 +39,7 @@ export class RadarChartView extends BaseChartView {
             {
               ...this.getCommonTransformerOptions(),
               metricProps,
+              metricLabels,
             },
           )
     }

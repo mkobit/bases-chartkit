@@ -145,7 +145,7 @@ export function createBulletChartOption(
     : []
 
   const barSeries: BarSeriesOption = {
-    name: valueProp,
+    name: yAxisLabel,
     type: 'bar',
     encode: flipAxis
       ? { x: 'y',
