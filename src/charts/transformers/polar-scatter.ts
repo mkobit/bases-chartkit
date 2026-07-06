@@ -184,6 +184,9 @@ export function createPolarScatterChartOption(
       data: angleAxisData,
       startAngle: 90,
       splitLine: { show: true },
+      axisLabel: {
+        hideOverlap: true,
+      },
     },
     radiusAxis: {
       type: 'value',

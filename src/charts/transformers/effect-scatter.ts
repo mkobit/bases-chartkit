@@ -138,6 +138,7 @@ export function createEffectScatterChartOption(
       splitLine: { show: true },
       axisLabel: {
         rotate: xAxisRotate,
+        hideOverlap: true,
       },
     },
     yAxis: {

@@ -98,5 +98,19 @@ describe(
         expect(series.encode?.tooltip).toContain('size')
       },
     )
+
+    it(
+      'should hide overlapping angle-axis labels (large numeric categories)',
+      () => {
+        const option = createPolarScatterChartOption(
+          data,
+          'angle',
+          'radius',
+        )
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect((option.angleAxis as any).axisLabel?.hideOverlap).toBe(true)
+      },
+    )
   },
 )

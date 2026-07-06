@@ -187,6 +187,7 @@ export function createScatterChartOption(
       splitLine: { show: true },
       axisLabel: {
         rotate: xAxisRotate,
+        hideOverlap: true,
       },
     },
     yAxis: {
