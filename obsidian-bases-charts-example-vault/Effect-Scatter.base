@@ -19,3 +19,12 @@ views:
     yAxisProp: note.LifeExpectancy
     seriesProp: note.Continent
     showLegend: true
+  - type: effect-scatter-chart
+    name: GDP vs Life Expectancy Sized by Population
+    filters:
+      and:
+        - note.GDP != null
+    xAxisProp: note.GDP
+    yAxisProp: note.LifeExpectancy
+    sizeProp: note.Population
+    showLegend: true
