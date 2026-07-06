@@ -45,17 +45,18 @@ test.describe('chart rendering', () => {
       })
     }, { path: 'Sales-Dashboard.base', viewName: 'Sales Bar Chart' })
 
-    // Wait for the chart to render.
+    // Wait for the chart to render and for its series to be populated.
     await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
+      async () => {
+        const opt = await getChartOption(page) as { readonly series?: ReadonlyArray<{ readonly type: string }> } | null
+        return opt?.series?.length ?? 0
+      },
       { timeout: 30_000 },
     ).toBeGreaterThan(0)
 
-    // Retrieve and verify the options using getChartOption.
+    // Verify the options.
     const option = await getChartOption(page) as { readonly series: ReadonlyArray<{ readonly type: string }> } | null
     expect(option).not.toBeNull()
-    expect(option?.series).toBeDefined()
-    expect(option?.series?.length).toBeGreaterThan(0)
     expect(option?.series?.[0]?.type).toBe('bar')
   })
 })
