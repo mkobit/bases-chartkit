@@ -94,5 +94,19 @@ describe(
         expect((option.yAxis as any).name).toBe('Val')
       },
     )
+
+    it(
+      'should hide overlapping x-axis labels (large numeric categories)',
+      () => {
+        const option = createEffectScatterChartOption(
+          data,
+          'category',
+          'value',
+        )
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect((option.xAxis as any).axisLabel?.hideOverlap).toBe(true)
+      },
+    )
   },
 )
