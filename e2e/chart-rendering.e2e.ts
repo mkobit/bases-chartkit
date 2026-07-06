@@ -59,4 +59,3 @@ test.describe('chart rendering', () => {
     expect(option?.series?.[0]?.type).toBe('bar')
   })
 })
-
