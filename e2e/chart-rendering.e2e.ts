@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption } from './helpers/evaluate'
 
 test.describe('chart rendering', () => {
   test('opens a .base file and mounts an echarts canvas', async ({ obsidianPage: { page } }) => {
@@ -29,4 +29,34 @@ test.describe('chart rendering', () => {
       { timeout: 30_000 },
     ).toBeGreaterThan(0)
   })
+
+  test('retrieves live ECharts option via getChartOption helper', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => {
+          resolve()
+        })
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'Sales-Dashboard.base', viewName: 'Sales Bar Chart' })
+
+    // Wait for the chart to render.
+    await expect.poll(
+      async () => page.locator('.bases-echarts canvas').count(),
+      { timeout: 30_000 },
+    ).toBeGreaterThan(0)
+
+    // Retrieve and verify the options using getChartOption.
+    const option = await getChartOption(page) as { readonly series: ReadonlyArray<{ readonly type: string }> } | null
+    expect(option).not.toBeNull()
+    expect(option?.series).toBeDefined()
+    expect(option?.series?.length).toBeGreaterThan(0)
+    expect(option?.series?.[0]?.type).toBe('bar')
+  })
 })
+
