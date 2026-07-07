@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-bases-charts",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "Advanced visualization for Obsidian via the Bases API.",
 	"main": "main.js",
 	"type": "module",
