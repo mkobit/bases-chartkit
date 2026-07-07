@@ -102,7 +102,7 @@ export function createBulletChartOption(
   const hasRanges = Boolean(rangeLowProp || rangeMidProp || rangeHighProp)
   const rangeColors = ['#e0e0e0',
     '#bdbdbd',
-    '#9e9e9e']
+    '#9e9e9e'] as const
 
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
@@ -128,17 +128,14 @@ export function createBulletChartOption(
     ? [
         createRangeSeries(
           'r1',
-          // @ts-expect-error - suppress strictNullChecks/type errors
           rangeColors[0],
         ),
         createRangeSeries(
           'r2',
-          // @ts-expect-error - suppress strictNullChecks/type errors
           rangeColors[1],
         ),
         createRangeSeries(
           'r3',
-          // @ts-expect-error - suppress strictNullChecks/type errors
           rangeColors[2],
         ),
       ]
