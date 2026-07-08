@@ -29,7 +29,7 @@ jobs:
               run: |
                   SAFE_BRANCH="${GITHUB_REF_NAME//\//-}"
                   SHORT_SHA="${GITHUB_SHA::7}"
-                  echo "artifact-name=obsidian-bases-charts-${SAFE_BRANCH}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+                  echo "artifact-name=bases-chartkit-${SAFE_BRANCH}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
             - name: Check types
               if: (success() || failure()) && steps.setup.outcome == 'success'

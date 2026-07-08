@@ -1,4 +1,4 @@
-# Obsidian Bases Charts
+# Bases Chart Kit
 
 This repository contains a bare-bones Obsidian plugin built with strict TypeScript enforcement and automated CI. It serves as the foundation for a future visualization-heavy plugin using **Apache ECharts** and the Obsidian Bases API.
 
