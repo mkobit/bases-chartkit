@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-bases-charts",
+	"name": "bases-chartkit",
 	"version": "0.0.1",
 	"description": "Advanced visualization for Obsidian via the Bases API.",
 	"main": "main.js",

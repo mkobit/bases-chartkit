@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures/obsidian'
 import { evaluateObsidian } from './helpers/evaluate'
 
-const PLUGIN_ID = 'obsidian-bases-charts'
+const PLUGIN_ID = 'bases-chartkit'
 
 test.describe('plugin lifecycle', () => {
   test('loads into the plugin registry', async ({ obsidianPage: { page } }) => {

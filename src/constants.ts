@@ -1,1 +1,1 @@
-export const PLUGIN_ID = 'obsidian-bases-charts'
+export const PLUGIN_ID = 'bases-chartkit'

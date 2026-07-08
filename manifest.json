@@ -1,6 +1,6 @@
 {
-	"id": "obsidian-bases-charts",
-	"name": "Bases Charts Plugin",
+	"id": "bases-chartkit",
+	"name": "Bases Chart Kit",
 	"version": "0.0.1",
 	"minAppVersion": "1.11.4",
 	"description": "Advanced visualization for Obsidian via the Bases API.",

@@ -1,8 +1,8 @@
-# Obsidian Bases Charts
+# Bases Chart Kit
 
 [![Obsidian Badge](https://img.shields.io/badge/obsidian-plugin-7a3ee8?logo=obsidian)](https://obsidian.md/)
-[![CI](https://github.com/mkobit/obsidian-bases-charts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mkobit/obsidian-bases-charts/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/mkobit/obsidian-bases-charts)](https://github.com/mkobit/obsidian-bases-charts/releases)
+[![CI](https://github.com/mkobit/bases-chartkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mkobit/bases-chartkit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mkobit/bases-chartkit)](https://github.com/mkobit/bases-chartkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
 
@@ -11,7 +11,7 @@
 
 ## Project summary
 
-Obsidian Bases Charts is a visualization-heavy plugin for Obsidian that bridges the gap between your vault's data and powerful, interactive charts.
+Bases Chart Kit is a visualization-heavy plugin for Obsidian that bridges the gap between your vault's data and powerful, interactive charts.
 
 By leveraging the **Obsidian Bases API** for data querying and **Apache ECharts** for rendering, this plugin allows you to create dynamic visualizations driven directly by the properties in your notes.
 
@@ -26,7 +26,7 @@ By leveraging the **Obsidian Bases API** for data querying and **Apache ECharts*
 ## Installation (manual)
 
 - Download `main.js`, `manifest.json`, and `styles.css` from the latest GitHub release.
-- Place them in `<vault>/.obsidian/plugins/obsidian-bases-charts/`.
+- Place them in `<vault>/.obsidian/plugins/bases-chartkit/`.
 - Enable the plugin in Obsidian Settings → Community Plugins.
 
 ## Usage
@@ -132,7 +132,7 @@ To install the built plugin into the example vault without launching (e.g. for u
 bun run vault:install
 ```
 
-This populates `obsidian-bases-charts-example-vault/.obsidian/plugins/obsidian-bases-charts/` with the freshly built `main.js`, `manifest.json`, and `styles.css`.
+This populates `obsidian-bases-charts-example-vault/.obsidian/plugins/bases-chartkit/` with the freshly built `main.js`, `manifest.json`, and `styles.css`.
 
 ### Resources
 
