@@ -33,7 +33,11 @@ test.describe('radar chart rendering', () => {
     ).toBeGreaterThan(0)
 
     const option = await getChartOption(page) as { readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }
-    const indicatorNames = option.radar[0]!.indicator.map(indicator => indicator.name)
+    expect(option.radar[0]).toBeDefined()
+    if (!option.radar[0]) {
+      return
+    }
+    const indicatorNames = option.radar[0].indicator.map(indicator => indicator.name)
 
     // RPG_Stats.base declares display names ("Strength", "Intelligence",
     // "Agility") for the underlying note.Strength/note.Intelligence/note.Agility

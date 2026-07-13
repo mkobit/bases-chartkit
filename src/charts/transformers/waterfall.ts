@@ -161,8 +161,8 @@ export function createWaterfallChartOption(
         if (!Array.isArray(params)) {
           return ''
         }
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        const pList = params as TooltipParam[]
+
+        const pList: TooltipParam[] = params.filter((_p): _p is TooltipParam => true)
 
         const firstParam = pList[0]
         if (!firstParam) {

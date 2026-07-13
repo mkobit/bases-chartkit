@@ -33,7 +33,8 @@ function findFreePort(): Promise<number> {
 async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   await expect(async () => {
     if (proc.exitCode !== null) {
-      throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw new Error(`Obsidian process exited early with code ${String(proc.exitCode)}`)
     }
     const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
     await browser.close()
