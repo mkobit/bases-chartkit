@@ -5,7 +5,7 @@ properties:
     displayName: Mood
 views:
   - type: calendar-chart
-    name: Mood Calendar
+    name: Mood calendar
     xAxisProp: note.Date
     valueProp: note.Mood
     showLegend: true

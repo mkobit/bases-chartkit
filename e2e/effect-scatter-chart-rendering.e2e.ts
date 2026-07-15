@@ -27,7 +27,7 @@ test.describe('effect-scatter chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'Effect-Scatter.base', viewName: 'GDP vs Life Expectancy Sized by Population' })
+    }, { path: 'Effect-Scatter.base', viewName: 'GDP vs life expectancy sized by population' })
 
     // Wait for the effect-scatter series to have resolved item visuals --
     // Bases resolves its query asynchronously, so population data (and the

@@ -2,16 +2,16 @@ properties:
   note.GDP:
     displayName: GDP
   note.LifeExpectancy:
-    displayName: Life Expectancy
+    displayName: Life expectancy
   note.Population:
     displayName: Population
   note.Continent:
     displayName: Continent
   note.FunnelStage:
-    displayName: Funnel Stage
+    displayName: Funnel stage
 views:
   - type: polar-scatter-chart
-    name: GDP vs Life Expectancy (Polar Scatter)
+    name: GDP vs life expectancy (polar scatter)
     filters:
       and:
         - note.GDP != null

@@ -5,7 +5,7 @@ properties:
     displayName: Score
 views:
   - type: histogram-chart
-    name: Score Distribution
+    name: Score distribution
     filters:
       and:
         - note.Score != null

@@ -7,7 +7,7 @@ properties:
     displayName: Topic
 views:
   - type: theme-river-chart
-    name: News Topics River
+    name: News topics river
     xAxisProp: note.Date
     valueProp: note.Mentions
     seriesProp: note.Topic

@@ -9,7 +9,7 @@ properties:
     displayName: Status
 views:
   - type: polar-line-chart
-    name: Server Load (Polar Line)
+    name: Server load (polar line)
     filters:
       and:
         - note.Load != null

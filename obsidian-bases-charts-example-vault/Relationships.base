@@ -7,7 +7,7 @@ properties:
     displayName: Amount
 views:
   - type: sankey-chart
-    name: Material Flow Sankey
+    name: Material flow Sankey
     xAxisProp: note.Source
     yAxisProp: note.Target
     valueProp: note.Amount
@@ -16,7 +16,7 @@ views:
       and:
         - note.Type == "Material"
   - type: graph-chart
-    name: Material Flow Graph
+    name: Material flow graph
     sourceProp: note.Source
     targetProp: note.Target
     valueProp: note.Amount

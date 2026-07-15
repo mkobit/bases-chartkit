@@ -2,16 +2,16 @@ properties:
   note.GDP:
     displayName: GDP
   note.LifeExpectancy:
-    displayName: Life Expectancy
+    displayName: Life expectancy
   note.Population:
     displayName: Population
   note.Continent:
     displayName: Continent
   note.FunnelStage:
-    displayName: Funnel Stage
+    displayName: Funnel stage
 views:
   - type: scatter-chart
-    name: GDP vs Life Expectancy
+    name: GDP vs life expectancy
     xAxisProp: note.GDP
     yAxisProp: note.LifeExpectancy
     seriesProp: note.Continent
@@ -20,7 +20,7 @@ views:
       and:
         - note.GDP != null
   - type: bubble-chart
-    name: Demographics Bubble Chart
+    name: Demographics bubble chart
     xAxisProp: note.GDP
     yAxisProp: note.LifeExpectancy
     sizeProp: note.Population
@@ -30,7 +30,7 @@ views:
       and:
         - note.GDP != null
   - type: funnel-chart
-    name: User Journey Funnel
+    name: User journey funnel
     xAxisProp: note.FunnelStage
     yAxisProp: note.Population
     showLegend: true

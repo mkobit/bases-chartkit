@@ -5,7 +5,7 @@ properties:
     displayName: Change
 views:
   - type: waterfall-chart
-    name: Budget Waterfall
+    name: Budget waterfall
     filters:
       and:
         - note.Step != null

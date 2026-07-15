@@ -8,10 +8,10 @@ properties:
   note.EndY:
     displayName: End Y
   note.RouteType:
-    displayName: Route Type
+    displayName: Route type
 views:
   - type: lines-chart
-    name: Route Lines
+    name: Route lines
     filters:
       and:
         - note.StartX != null

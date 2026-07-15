@@ -5,7 +5,7 @@ properties:
     displayName: Spend
 views:
   - type: radial-bar-chart
-    name: Department Spend (Radial Bar)
+    name: Department spend (radial bar)
     filters:
       and:
         - note.Spend != null
