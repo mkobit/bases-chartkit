@@ -35,6 +35,8 @@ This folder contains example data files and **.base** configuration files to dem
 *   **`Waterfall-Chart.base`**: Visualizes a budget walk with a Waterfall chart.
 *   **`Word-Cloud.base`**: Visualizes keyword frequency with a Word Cloud chart.
 *   **`Bullet-Chart.base`**: Tracks KPIs against targets and ranges with a Bullet chart.
+*   **`Map-Chart.base`**: Shades Chicago landmarks by event count using a Map (choropleth) chart.
 
 ## Data Source
 The raw data files are located in the `Charts/` directory. Each file contains YAML frontmatter properties corresponding to the chart configurations.
+The GeoJSON region asset used by `Map-Chart.base` is in `Assets/`.

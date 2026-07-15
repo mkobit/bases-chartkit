@@ -38,16 +38,16 @@ properties:
   note.Date:
     displayName: Date
   note.Open:
-    displayName: Open Price
+    displayName: Open price
   note.Close:
-    displayName: Close Price
+    displayName: Close price
   note.High:
-    displayName: High Price
+    displayName: High price
   note.Low:
-    displayName: Low Price
+    displayName: Low price
 views:
   - type: candlestick-chart
-    name: AAPL Stock Analysis
+    name: AAPL stock analysis
     xAxisProp: note.Date
     openProp: note.Open
     closeProp: note.Close

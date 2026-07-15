@@ -9,7 +9,7 @@ properties:
     displayName: Status
 views:
   - type: heatmap-chart
-    name: Server Load Heatmap
+    name: Server load heatmap
     xAxisProp: note.Time
     yAxisProp: note.Server
     valueProp: note.Load
@@ -18,7 +18,7 @@ views:
       and:
         - note.Load != null
   - type: gauge-chart
-    name: Server Load Gauge (Average)
+    name: Server load gauge (average)
     yAxisProp: note.Load
     aggregation: avg
     minVal: 0

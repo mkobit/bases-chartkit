@@ -5,7 +5,7 @@ properties:
     displayName: Spend
 views:
   - type: pictorial-bar-chart
-    name: Department Spend (Pictorial Bar)
+    name: Department spend (pictorial bar)
     filters:
       and:
         - note.Spend != null

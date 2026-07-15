@@ -5,7 +5,7 @@ properties:
     displayName: Spend
 views:
   - type: pareto-chart
-    name: Department Spend (Pareto)
+    name: Department spend (pareto)
     filters:
       and:
         - note.Spend != null

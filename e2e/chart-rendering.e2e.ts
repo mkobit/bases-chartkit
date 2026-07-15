@@ -3,7 +3,7 @@ import { evaluateObsidian, getChartOption } from './helpers/evaluate'
 
 test.describe('chart rendering', () => {
   test('opens a .base file and mounts an echarts canvas', async ({ obsidianPage: { page } }) => {
-    // Open Sales-Dashboard.base on its "Sales Bar Chart" view. Wait for the
+    // Open Sales-Dashboard.base on its "Sales bar chart" view. Wait for the
     // workspace layout so getLeaf has a tab group to attach to. Specify viewName
     // so the chart subview is the active one (without it the leaf may settle on
     // a non-rendering default view).
@@ -19,7 +19,7 @@ test.describe('chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'Sales-Dashboard.base', viewName: 'Sales Bar Chart' })
+    }, { path: 'Sales-Dashboard.base', viewName: 'Sales bar chart' })
 
     // Canvas presence in the DOM is the regression signal: it proves the chart
     // view's onload() ran cleanly (addAction-style bugs would throw and skip
@@ -43,7 +43,7 @@ test.describe('chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'Sales-Dashboard.base', viewName: 'Sales Bar Chart' })
+    }, { path: 'Sales-Dashboard.base', viewName: 'Sales bar chart' })
 
     // Wait for the chart to render and for its series to be populated.
     await expect.poll(

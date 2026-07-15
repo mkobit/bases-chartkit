@@ -5,7 +5,7 @@ properties:
     displayName: Frequency
 views:
   - type: word-cloud-chart
-    name: Keyword Frequency (Word Cloud)
+    name: Keyword frequency (word cloud)
     filters:
       and:
         - note.Word != null

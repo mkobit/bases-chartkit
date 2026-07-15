@@ -6,14 +6,14 @@ properties:
   note.Target:
     displayName: Target
   note.RangeLow:
-    displayName: Range Low
+    displayName: Range low
   note.RangeMid:
-    displayName: Range Mid
+    displayName: Range mid
   note.RangeHigh:
-    displayName: Range High
+    displayName: Range high
 views:
   - type: bullet-chart
-    name: KPI Bullet Chart
+    name: KPI bullet chart
     filters:
       and:
         - note.Metric != null

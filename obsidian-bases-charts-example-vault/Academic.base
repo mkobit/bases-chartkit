@@ -5,7 +5,7 @@ properties:
     displayName: Score
 views:
   - type: boxplot-chart
-    name: Exam Score Distribution
+    name: Exam score distribution
     xAxisProp: note.Subject
     yAxisProp: note.Score
     showLegend: true

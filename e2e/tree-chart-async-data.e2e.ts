@@ -24,7 +24,7 @@ test.describe('tree chart async data update', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'Project_Management.base', viewName: 'Project Tasks Tree' })
+    }, { path: 'Project_Management.base', viewName: 'Project tasks tree' })
 
     await expect.poll(async () => evaluateObsidian(page, (app) => {
       // The tree-chart view is nested inside Bases' own container view, at a

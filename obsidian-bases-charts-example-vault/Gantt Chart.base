@@ -9,7 +9,7 @@ properties:
     displayName: Project
 views:
   - type: gantt-chart
-    name: Project Gantt Chart
+    name: Project Gantt chart
     filters:
       and:
         - note.Task != null

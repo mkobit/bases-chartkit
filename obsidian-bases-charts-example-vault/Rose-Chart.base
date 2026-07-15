@@ -5,7 +5,7 @@ properties:
     displayName: Spend
 views:
   - type: rose-chart
-    name: Department Spend (Rose)
+    name: Department spend (rose)
     filters:
       and:
         - note.Spend != null

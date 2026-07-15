@@ -18,7 +18,7 @@ test.describe('radar chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'RPG_Stats.base', viewName: 'Character Stats Radar' })
+    }, { path: 'RPG_Stats.base', viewName: 'Character stats radar' })
 
     // Wait for the radar's indicator axes to be populated before asserting.
     // ECharts' getOption() always returns 'radar' as an array (it supports

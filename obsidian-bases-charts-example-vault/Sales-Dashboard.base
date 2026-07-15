@@ -9,7 +9,7 @@ properties:
     displayName: Category
 views:
   - type: bar-chart
-    name: Sales Bar Chart
+    name: Sales bar chart
     xAxisProp: note.Date
     yAxisProp: note.Revenue
     showLegend: true
@@ -17,7 +17,7 @@ views:
       and:
         - note.Category == "Sales"
   - type: line-chart
-    name: Sales Line Chart
+    name: Sales line chart
     xAxisProp: note.Date
     yAxisProp: note.Revenue
     showLegend: true
@@ -25,7 +25,7 @@ views:
       and:
         - note.Category == "Sales"
   - type: pie-chart
-    name: Sales by Region (Pie)
+    name: Sales by region (pie)
     xAxisProp: note.Region
     yAxisProp: note.Revenue
     showLegend: true
@@ -33,7 +33,7 @@ views:
       and:
         - note.Category == "Sales"
   - type: stacked-bar-chart
-    name: Sales by Quarter Stacked
+    name: Sales by quarter stacked
     xAxisProp: note.Quarter
     yAxisProp: note.Revenue
     seriesProp: note.Region
@@ -42,7 +42,7 @@ views:
       and:
         - note.Category == "Sales"
   - type: area-chart
-    name: Sales Area Chart
+    name: Sales area chart
     xAxisProp: note.Date
     yAxisProp: note.Revenue
     showLegend: true

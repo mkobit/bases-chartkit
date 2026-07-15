@@ -11,7 +11,7 @@ properties:
     displayName: Agility
 views:
   - type: radar-chart
-    name: Character Stats Radar
+    name: Character stats radar
     filters:
       and:
         - note.Class != null
