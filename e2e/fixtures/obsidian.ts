@@ -4,6 +4,7 @@ import type { ChildProcess } from 'node:child_process'
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
+import * as fs from 'node:fs/promises'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
@@ -53,7 +54,7 @@ export const test = base.extend<ObsidianFixtures>({
     const port = await findFreePort()
     const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 
-    const { proc } = await launcher.launch({
+    const { proc, configDir, vault } = await launcher.launch({
       appVersion: OBSIDIAN_APP_VERSION,
       installerVersion: OBSIDIAN_INSTALLER_VERSION,
       vault: VAULT_PATH,
@@ -81,7 +82,20 @@ export const test = base.extend<ObsidianFixtures>({
     await use({ page })
 
     await browser.close()
+    const exited = new Promise<void>(resolve => proc.once('exit', () => resolve()))
     proc.kill()
+    // `kill()` only sends the signal -- Electron still needs a moment to
+    // release its file locks on configDir, so cleanup must wait for the
+    // process to actually exit rather than racing it.
+    await exited
+
+    // obsidian-launcher doesn't clean up its own tmpdirs -- without this,
+    // every test run leaks a fresh configDir (~26MB) and vault copy into
+    // the OS tmpdir forever.
+    await Promise.allSettled([
+      fs.rm(configDir, { recursive: true, force: true }),
+      vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
+    ])
   },
 })
 

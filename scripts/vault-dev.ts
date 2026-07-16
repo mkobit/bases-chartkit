@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
+import * as fs from 'node:fs/promises'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
@@ -65,12 +66,18 @@ async function resizeWindowWhenReady(attemptsRemaining = 20): Promise<void> {
 async function main(): Promise<void> {
   const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 
-  const { proc } = await launcher.launch({
+  const { proc, configDir, vault } = await launcher.launch({
     appVersion: 'latest',
     installerVersion: 'latest',
     vault: VAULT_PATH,
-    copy: false,
-    plugins: [ROOT_DIR],
+    // Copied to a tmpdir so interactive poking never dirties the
+    // git-tracked example vault (Obsidian rewrites .base YAML and
+    // workspace state on every view interaction). Neither this copy nor
+    // `configDir` below is cleaned up by obsidian-launcher itself -- both
+    // are plain tmpdirs left for the caller to remove, which is what the
+    // `proc.on('close', ...)` cleanup does.
+    copy: true,
+    plugins: [ROOT_DIR, { id: 'hot-reload' }],
     args: [
       '--disable-gpu',
       `--remote-debugging-port=${CDP_PORT}`,
@@ -90,7 +97,10 @@ async function main(): Promise<void> {
   forwardSignal('SIGTERM')
 
   proc.on('close', (code) => {
-    process.exit(code ?? 0)
+    void Promise.allSettled([
+      fs.rm(configDir, { recursive: true, force: true }),
+      vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
+    ]).then(() => process.exit(code ?? 0))
   })
 }
 
