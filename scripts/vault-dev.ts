@@ -7,6 +7,10 @@ const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 const CDP_PORT = 9222
+// Pinned rather than left at 'latest', matching this file's Obsidian
+// app/installer version pins -- keeps `vault:dev` launches reproducible and
+// offline-friendly once cached. Bump deliberately.
+const HOT_RELOAD_VERSION = '0.3.1'
 // Electron ignores the `--window-size` Chromium switch and always opens at
 // its own ~1024x800 default for a fresh profile — resizing via the
 // renderer's `window.resizeTo` (which Electron forwards to the
@@ -77,7 +81,7 @@ async function main(): Promise<void> {
     // are plain tmpdirs left for the caller to remove, which is what the
     // `proc.on('close', ...)` cleanup does.
     copy: true,
-    plugins: [ROOT_DIR, { id: 'hot-reload' }],
+    plugins: [ROOT_DIR, { id: 'hot-reload', version: HOT_RELOAD_VERSION }],
     args: [
       '--disable-gpu',
       `--remote-debugging-port=${CDP_PORT}`,
@@ -100,7 +104,14 @@ async function main(): Promise<void> {
     void Promise.allSettled([
       fs.rm(configDir, { recursive: true, force: true }),
       vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
-    ]).then(() => process.exit(code ?? 0))
+    ]).then((results) => {
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          console.warn(`obsidian tmpdir cleanup failed: ${String(result.reason)}`)
+        }
+      }
+      return process.exit(code ?? 0)
+    })
   })
 }
 

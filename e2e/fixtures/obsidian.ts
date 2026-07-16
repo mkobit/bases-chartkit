@@ -41,6 +41,36 @@ async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   }).toPass({ intervals: [1000], timeout: 30_000 })
 }
 
+// obsidian-launcher doesn't clean up the configDir/vault-copy tmpdirs it
+// creates per launch -- without this, every test run leaks a fresh configDir
+// (~26MB) and vault copy into the OS tmpdir forever. Called from `finally`
+// so it still runs if setup (waitForCDP, connectOverCDP, etc.) throws --
+// otherwise a failed test run leaks a live Electron process, not just disk.
+async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
+  // Check whether the process already exited (e.g. it crashed on its own
+  // during the test) before registering the listener -- 'exit' only fires
+  // once, so registering it after the process has already exited would
+  // hang forever waiting for an event that already happened.
+  const exited = proc.exitCode !== null || proc.signalCode !== null
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => { proc.once('exit', () => resolve()) })
+  proc.kill()
+  // `kill()` only sends the signal -- Electron still needs a moment to
+  // release its file locks on configDir, so cleanup must wait for the
+  // process to actually exit rather than racing it.
+  await exited
+
+  const results = await Promise.allSettled([
+    fs.rm(configDir, { recursive: true, force: true }),
+    vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
+  ])
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      process.stderr.write(`obsidian tmpdir cleanup failed: ${String(result.reason)}\n`)
+    }
+  }
+}
+
 export type ObsidianPage = {
   readonly page: Page
 }
@@ -68,34 +98,25 @@ export const test = base.extend<ObsidianFixtures>({
       proc.stderr.on('data', (data: Buffer) => process.stderr.write(`[obsidian] ${data.toString()}`))
     }
 
-    await waitForCDP(port, proc)
+    try {
+      await waitForCDP(port, proc)
 
-    const browser = await chromium.connectOverCDP(`http://localhost:${port}`)
-    const context = browser.contexts()[0] ?? await browser.newContext()
-    const page = context.pages()[0] ?? await context.newPage()
+      const browser = await chromium.connectOverCDP(`http://localhost:${port}`)
+      const context = browser.contexts()[0] ?? await browser.newContext()
+      const page = context.pages()[0] ?? await context.newPage()
 
-    await page.waitForFunction(
-      () => typeof (window as { app?: unknown }).app !== 'undefined',
-      { timeout: 30_000 },
-    )
+      await page.waitForFunction(
+        () => typeof (window as { app?: unknown }).app !== 'undefined',
+        { timeout: 30_000 },
+      )
 
-    await use({ page })
+      await use({ page })
 
-    await browser.close()
-    const exited = new Promise<void>(resolve => proc.once('exit', () => resolve()))
-    proc.kill()
-    // `kill()` only sends the signal -- Electron still needs a moment to
-    // release its file locks on configDir, so cleanup must wait for the
-    // process to actually exit rather than racing it.
-    await exited
-
-    // obsidian-launcher doesn't clean up its own tmpdirs -- without this,
-    // every test run leaks a fresh configDir (~26MB) and vault copy into
-    // the OS tmpdir forever.
-    await Promise.allSettled([
-      fs.rm(configDir, { recursive: true, force: true }),
-      vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
-    ])
+      await browser.close()
+    }
+    finally {
+      await stopObsidian(proc, configDir, vault)
+    }
   },
 })
 
