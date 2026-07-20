@@ -25,6 +25,7 @@ function parseInteger(value: string) {
     10,
   )
   if (isNaN(parsedValue)) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- InvalidArgumentError extends CommanderError extends Error (verified in commander's own types); the rule can't resolve this through the argParser callback passed to .option().
     throw new InvalidArgumentError('Not a number.')
   }
   return parsedValue

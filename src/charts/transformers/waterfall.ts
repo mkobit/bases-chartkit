@@ -161,8 +161,8 @@ export function createWaterfallChartOption(
         if (!Array.isArray(params)) {
           return ''
         }
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
-        const pList = params as TooltipParam[]
+        // Array.isArray narrows to any[]; annotate (not assert) to recover the concrete element type ECharts actually passes.
+        const pList: TooltipParam[] = params
 
         const firstParam = pList[0]
         if (!firstParam) {

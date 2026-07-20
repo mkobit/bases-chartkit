@@ -33,6 +33,7 @@ test.describe('radar chart rendering', () => {
     ).toBeGreaterThan(0)
 
     const option = await getChartOption(page) as { readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- verified with `tsc --noEmit` directly: removing this produces TS2532 'Object is possibly undefined' under noUncheckedIndexedAccess. The lint rule's own type analysis disagrees with tsc here.
     const indicatorNames = option.radar[0]!.indicator.map(indicator => indicator.name)
 
     // RPG_Stats.base declares display names ("Strength", "Intelligence",
