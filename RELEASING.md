@@ -15,9 +15,11 @@
 ## Normal release
 
 Merge PRs to `main` using conventional commit prefixes (`feat:`, `fix:`, `deps:`, etc.).
-After each merge, `Release please` automatically opens or updates a `chore: release X.Y.Z` PR that bumps `package.json`, `manifest.json`, and updates `CHANGELOG.md`.
+`Release please` does **not** run automatically — feature/bugfix merges to `main` do not trigger it.
+When ready to cut a release, manually run it from the Actions tab → Release please → Run workflow (or `gh workflow run release-please.yml`).
+It opens or updates a `chore: release X.Y.Z` PR that bumps `package.json`, `manifest.json`, and updates `CHANGELOG.md`, based on conventional commits merged since the last release.
 Edit the CHANGELOG entry in that PR to customise the release notes before merging.
-Merging the release PR creates a bare `X.Y.Z` git tag, which triggers the `Release` workflow.
+Merging the release PR creates the git tag and GitHub Release immediately (this is the actual publish step, not a later manual one), and pushes the tag, which triggers the `Release` workflow.
 `Release` builds the plugin and uploads `main.js`, `manifest.json`, and `styles.css` to the GitHub release.
 
 ## Version bump rules
@@ -50,9 +52,10 @@ Only add an entry when the plugin's `minAppVersion` actually changes — e.g., i
 
 ## Manual re-trigger
 
-If the `Release` workflow fails after a release PR is merged, re-run it from the Actions tab → Release → Run workflow.
-The tag must already exist; the workflow reads it from the trigger ref or accepts manual dispatch.
+If the `Release` workflow fails, or didn't attach assets to an existing release, re-run it from the Actions tab → Release → Run workflow, supplying the existing release's tag as the `tag` input.
+The upload step uses `--clobber`, so re-running it is safe even if some assets already exist.
 
 ## Tag format
 
-Tags are bare `X.Y.Z` (no `v` prefix) per Obsidian community-plugin convention (`include-v-in-tag: false` in `release-please-config.json`).
+Tags are `{package.json name}-X.Y.Z` (e.g. `bases-chartkit-0.1.0`), no `v` prefix (`include-v-in-tag: false` in `release-please-config.json`).
+release-please prefixes the tag with the package name because `release-type` is `node`, which reads the component name from `package.json`'s `name` field.
