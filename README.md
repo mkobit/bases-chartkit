@@ -117,7 +117,7 @@ For more details, see [`e2e/AGENTS.md`](e2e/AGENTS.md).
 
 ### Manual testing
 
-To test the plugin against a real Obsidian instance using the canonical in-repo `obsidian-bases-charts-example-vault/`:
+To test the plugin against a real Obsidian instance using the canonical in-repo `bases-chartkit-example-vault/`:
 
 ```bash
 bun run build      # generate main.js / styles.css
@@ -132,7 +132,7 @@ To install the built plugin into the example vault without launching (e.g. for u
 bun run vault:install
 ```
 
-This populates `obsidian-bases-charts-example-vault/.obsidian/plugins/bases-chartkit/` with the freshly built `main.js`, `manifest.json`, and `styles.css`.
+This populates `bases-chartkit-example-vault/.obsidian/plugins/bases-chartkit/` with the freshly built `main.js`, `manifest.json`, and `styles.css`.
 
 ### Resources
 

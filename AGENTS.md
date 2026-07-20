@@ -16,7 +16,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 | `bun test` | Run unit tests. |
 | `bun run test:e2e` | Run end-to-end tests via Playwright (pops a real Obsidian window per test on Linux/WSLg). |
 | `bun run test:e2e:headless` | Same, under `xvfb-run` — no window ever appears, matches CI. Use this for local runs. |
-| `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `obsidian-bases-charts-example-vault/` (requires `bun run build` first). |
+| `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `bases-chartkit-example-vault/` (requires `bun run build` first). |
 | `bun run vault:install` | Install the built plugin into the in-repo example vault without launching. |
 
 ## Dependency Installation Handling

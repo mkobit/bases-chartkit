@@ -96,7 +96,7 @@ export default tseslint.config(
   {
     ignores: [
       // Plugin install artifacts inside the test vault — populated at runtime by `bun run vault:install`
-      'obsidian-bases-charts-example-vault/.obsidian/plugins/**',
+      'bases-chartkit-example-vault/.obsidian/plugins/**',
     ],
   },
   {

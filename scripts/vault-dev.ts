@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
-const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
+const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 const CDP_PORT = 9222
 // Pinned rather than left at 'latest', matching this file's Obsidian

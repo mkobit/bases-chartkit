@@ -12,7 +12,7 @@ import {
   serverMetricsDataset,
 } from '../e2e/fixtures/datasets'
 
-const OUTPUT_DIR = path.join(__dirname, '../obsidian-bases-charts-example-vault/Charts')
+const OUTPUT_DIR = path.join(__dirname, '../bases-chartkit-example-vault/Charts')
 
 async function confirmAction(promptText: string): Promise<boolean> {
   if (process.argv.includes('--force') || process.argv.includes('-f')) {

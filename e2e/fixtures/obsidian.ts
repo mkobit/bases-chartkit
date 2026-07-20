@@ -7,7 +7,7 @@ import * as net from 'node:net'
 import * as fs from 'node:fs/promises'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
-const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
+const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
 // Pinned rather than 'latest' so test runs are reproducible across time; bump deliberately.
