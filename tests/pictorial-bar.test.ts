@@ -172,7 +172,6 @@ describe(
             's'] })
 
         // yAxis should be category
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const yAxis = option.yAxis as any
 
         expect(yAxis.type).toBe('category')

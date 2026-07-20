@@ -25,9 +25,6 @@ export function safeToString(val: unknown): string {
     return String(val)
   }
   if (isRecord(val) && isRenderableValue(val)) {
-    // isRenderableValue narrows toString to `() => string`, but the rule's
-    // type resolution doesn't see through the Record<string, unknown> intersection.
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     const rendered = val.toString()
     // A note that matches the base's filter but was never given this
     // property surfaces as Obsidian's `NullValue` sentinel -- a Value wrapper

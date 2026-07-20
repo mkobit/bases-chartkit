@@ -39,7 +39,6 @@ describe(
 
         expect(option).toBeDefined()
         // Check X Axis
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const xAxis = option.xAxis as any
 
         expect(xAxis.type).toBe('category')
@@ -49,7 +48,6 @@ describe(
         expect(xAxis.data).toContain('Tue')
 
         // Check Y Axis
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const yAxis = option.yAxis as any
 
         expect(yAxis.type).toBe('category')
@@ -59,7 +57,6 @@ describe(
         expect(yAxis.data).toContain('Evening')
 
         // Check Series
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as readonly any[]
         expect(series).toHaveLength(1)
 
@@ -128,7 +125,6 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as any
         const formatter = series[0].label.formatter as (params: unknown) => string
 
@@ -156,7 +152,6 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const visualMap = option.visualMap as any
 
         expect(visualMap.min).toBe(10)

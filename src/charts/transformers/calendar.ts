@@ -9,8 +9,8 @@ export interface CalendarTransformerOptions extends BaseTransformerOptions {
 }
 
 function asCalendarTooltipParams(params: unknown): Readonly<{ value: readonly (number | string)[] }> {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return params as any
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts tooltip formatter callback params are typed as a wide union; bridge to the shape this chart's tooltip actually receives.
+  return params as Readonly<{ value: readonly (number | string)[] }>
 }
 
 export function createCalendarChartOption(

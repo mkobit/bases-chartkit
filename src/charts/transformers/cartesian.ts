@@ -82,7 +82,7 @@ export function createCartesianChartOption(
 
   // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
     source: normalizedData as unknown as Record<string, unknown>[],
   }
 

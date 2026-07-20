@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian'
+import { Notice, Plugin } from 'obsidian'
 import type { BarePluginSettings } from './settings'
 import { DEFAULT_SETTINGS, SettingTab } from './settings'
 import { BarChartView } from './views/bar-chart-view'
@@ -409,7 +409,7 @@ export default class BarePlugin extends Plugin {
           containerEl,
           this,
         ),
-        options: () => GanttChartView.getViewOptions(this),
+        options: () => GanttChartView.getViewOptions(),
       },
     )
 
@@ -567,8 +567,7 @@ export default class BarePlugin extends Plugin {
         echarts.registerTheme(customTheme.name, theme)
       }
       else {
-        /* eslint-disable-next-line no-console */
-        console.error(`Failed to parse custom ECharts theme: ${customTheme.name}`)
+        new Notice(t('settings.custom_themes.parse_error', { name: customTheme.name }))
       }
     })
   }

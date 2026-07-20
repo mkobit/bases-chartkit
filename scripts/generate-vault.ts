@@ -34,7 +34,7 @@ async function clearMarkdownFiles(dir: string): Promise<void> {
     }
   }
   catch (error: unknown) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- catch binding is typed unknown; narrow to Node's error shape to check .code
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       throw error
     }

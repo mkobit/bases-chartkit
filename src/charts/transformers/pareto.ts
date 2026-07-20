@@ -3,7 +3,7 @@ import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption } from './utils'
 import * as R from 'remeda'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- named alias kept for API consistency with other transformer options types, even though pareto adds no fields today
 export interface ParetoTransformerOptions extends BaseTransformerOptions {}
 
 export function createParetoChartOption(
@@ -96,7 +96,7 @@ export function createParetoChartOption(
     tooltip: {
       valueFormatter: (value: unknown) => {
         const v = Array.isArray(value) ? value[0] : value
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts tooltip valueFormatter param is untyped; narrow to what this series actually produces
         const val = v as number | string | null | undefined
         return (typeof val === 'number' ? val.toFixed(1) : String(val)) + ' %'
       },

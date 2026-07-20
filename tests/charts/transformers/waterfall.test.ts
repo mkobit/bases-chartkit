@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { describe, it, expect } from 'bun:test'
 import { createWaterfallChartOption } from '../../../src/charts/transformers/waterfall'
 

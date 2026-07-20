@@ -48,7 +48,6 @@ describe(
         )
 
         const series = option.series as ThemeRiverSeriesOption[]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const item = (series[0]?.data as any)[0]
         expect(item[1]).toBe(0)
       },
@@ -79,7 +78,6 @@ describe(
         )
 
         const series = option.series as ThemeRiverSeriesOption[]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const themes = (series[0]?.data as any).map((row: unknown[]) => row[2])
         expect(themes.every((t: string) => t === 'mentions')).toBe(true)
       },

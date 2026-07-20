@@ -36,7 +36,7 @@ function normalizeDate(val: unknown): number | null {
     ? val
 
     : (val && typeof val === 'object' && 'getTime' in val && typeof (val).getTime === 'function')
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- already narrowed via the 'getTime' in val + typeof check above
         ? (val as { getTime: () => number }).getTime()
         // Bases' Value wrapper for date properties isn't a string or a
         // native Date — unwrap it via safeToString (-> ISO date string)
@@ -62,14 +62,14 @@ function normalizeDate(val: unknown): number | null {
 }
 
 function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>): string {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
   const p = Array.isArray(params) ? params as ReadonlyArray<GanttTooltipParam> : [params] as ReadonlyArray<GanttTooltipParam>
   const visibleItems = p.filter((item: GanttTooltipParam) => item.seriesName !== '_start')
 
   return visibleItems.length === 0
     ? ''
     : (() => {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- length already checked above; noUncheckedIndexedAccess still types this access as possibly undefined
         const category = (visibleItems[0] as GanttTooltipParam).name
 
         const itemsHtml = visibleItems.map((item: GanttTooltipParam) => {
@@ -214,7 +214,7 @@ export function createGanttChartOption(
           label: {
             show: true,
             position: 'inside',
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts label formatter callback param is untyped; narrow to the shape this series actually receives
             formatter: (p: unknown) => (p as GanttTooltipParam).seriesName === 'Task' ? '' : (p as GanttTooltipParam).seriesName,
           },
         },
@@ -227,7 +227,7 @@ export function createGanttChartOption(
   return {
     tooltip: {
       trigger: 'item',
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- formatTooltip's params type is narrower than ECharts' generic tooltip formatter signature; bridge to the extracted formatter type.
       formatter: formatTooltip as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
     },
     // ECharts defaults to listing every series in the legend when `data`

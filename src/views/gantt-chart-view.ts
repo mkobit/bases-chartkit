@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { ViewOption } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -40,37 +38,31 @@ export class GanttChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(plugin?: unknown): ViewOption[] {
-    const p = plugin as any
-
+  static getViewOptions(): ViewOption[] {
     return [
       {
         key: GanttChartView.TASK_PROP_KEY,
         displayName: t('views.gantt.task_prop'),
-        type: 'dropdown',
-
-        options: p?.getProperties?.() ?? {},
+        type: 'property',
+        placeholder: t('views.gantt.task_prop_placeholder'),
       },
       {
         key: GanttChartView.START_PROP_KEY,
         displayName: t('views.gantt.start_prop'),
-        type: 'dropdown',
-
-        options: p?.getProperties?.() ?? {},
+        type: 'property',
+        placeholder: t('views.gantt.start_prop_placeholder'),
       },
       {
         key: GanttChartView.END_PROP_KEY,
         displayName: t('views.gantt.end_prop'),
-        type: 'dropdown',
-
-        options: p?.getProperties?.() ?? {},
+        type: 'property',
+        placeholder: t('views.gantt.end_prop_placeholder'),
       },
       {
         key: BaseChartView.SERIES_PROP_KEY,
         displayName: t('views.gantt.group_prop'),
-        type: 'dropdown',
-
-        options: p?.getProperties?.() ?? {},
+        type: 'property',
+        placeholder: t('views.gantt.group_prop_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((o) => {
         const key = (o as { key?: string }).key

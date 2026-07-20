@@ -57,13 +57,11 @@ export function chartDatasetArbitrary<T>(
   // Array.isArray(readonly array) is strict in TS, but runtime works.
   // Casting pointArbitrary to any[] or readonly string[] for the check is tricky if generics involved.
   // But Array.isArray(pointArbitrary) acts as type guard if T matches.
-  // fast-check Arbitrary<T> narrowing through a generic — TS can't prove
-  // the type guard on the array branch.
-  /* eslint-disable no-restricted-syntax */
+  /* eslint-disable no-restricted-syntax -- fast-check Arbitrary<T> narrowing through a generic; TS can't prove the type guard on the array branch. */
   const arb = (Array.isArray(pointArbitrary) || Object.prototype.toString.call(pointArbitrary) === '[object Array]')
     ? chartDataPointArbitrary(pointArbitrary as readonly string[]) as unknown as fc.Arbitrary<T>
     : pointArbitrary as fc.Arbitrary<T>
-  /* eslint-enable no-restricted-syntax */
+  /* eslint-enable no-restricted-syntax -- re-enable after the narrowed cast above */
 
   return fc.array(
     arb,

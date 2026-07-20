@@ -81,7 +81,6 @@ describe(
 
             const checkVisualMap = () => {
               const visualMap = option.visualMap as VisualMapComponentOption
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               expect((visualMap as any).dimension).toBe('size')
             }
 
@@ -91,7 +90,6 @@ describe(
               // We could test the function logic if we cast it, but presence is enough for this branch
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             option.visualMap ? checkVisualMap() : checkSymbolSizeFn()
           },
         )

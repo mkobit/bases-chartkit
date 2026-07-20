@@ -34,6 +34,7 @@ function findFreePort(): Promise<number> {
 async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   await expect(async () => {
     if (proc.exitCode !== null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; the rule can't resolve the thrown type through Playwright's generic expect() callback overload.
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
     const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
