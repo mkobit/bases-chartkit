@@ -45,7 +45,6 @@ describe(
         expect(calendar.right).toBeUndefined()
 
         // Check Series
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as readonly any[]
         expect(series).toHaveLength(1)
 
@@ -83,7 +82,6 @@ describe(
           { valueProp: 'val' },
         )
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as readonly any[]
 
         const seriesData = series[0].data as readonly (readonly [string, number])[]
@@ -147,7 +145,6 @@ describe(
           'calendar',
           { valueProp: 'val' },
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const series = option.series as readonly any[]
         expect(series).toHaveLength(0)
       },

@@ -28,7 +28,7 @@ interface CdpResponse {
 
 async function fetchPages(): Promise<readonly CdpPage[]> {
   const r = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- fetch().json() is untyped; CDP response shape is trusted here
   const data: readonly CdpPage[] = await r.json()
   return data
 }
@@ -48,7 +48,7 @@ function evaluate(wsUrl: string, expression: string): Promise<void> {
     })
     ws.addEventListener('message', (event) => {
       const raw: unknown = typeof event.data === 'string' ? event.data : ''
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON.parse is untyped; CDP response shape is trusted here
       const msg: CdpResponse = JSON.parse(String(raw))
       if (msg.id !== 1) {
         return

@@ -21,9 +21,7 @@ function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
 
 // Isolate cast for dimension
 function getDimension(dimName: string): number {
-  // ECharts types claim dimension must be number (index), but string (name) works for object datasets.
-  // Isolate this lie.
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- ECharts types claim dimension must be number (index), but string (name) works for object datasets. Isolate this lie.
   return dimName as unknown as number
 }
 
@@ -89,9 +87,8 @@ export function createScatterChartOption(
   )
 
   // 4. Create Datasets
-  // Dataset source accepts array, so we might need to cast to mutable or spread
   const sourceDataset: DatasetComponentOption = {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
     source: normalizedData as unknown as Record<string, unknown>[],
   }
 

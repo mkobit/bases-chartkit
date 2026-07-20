@@ -20,7 +20,6 @@ describe(
           'value',
         )
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((option.xAxis as any).axisLabel?.hideOverlap).toBe(true)
       },
     )

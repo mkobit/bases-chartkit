@@ -106,7 +106,6 @@ describe(
             )
 
             const series = option.series as RadarSeriesOption[]
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = series[0]?.data as any
             expect(data[0].value).toEqual([10, 0, 0])
           },
@@ -149,7 +148,6 @@ describe(
             ])
 
             const series = option.series as RadarSeriesOption[]
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const seriesData = series[0]?.data as any
             expect(seriesData).toEqual([
               { value: [90, 80],

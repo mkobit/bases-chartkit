@@ -130,7 +130,6 @@ describe(
         )
 
         const dataset = option.dataset as DatasetComponentOption[]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const source = (dataset[0] as DatasetComponentOption).source as any[]
 
         // A: low=5, mid=15, high=20

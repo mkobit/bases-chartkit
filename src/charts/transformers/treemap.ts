@@ -5,8 +5,8 @@ import { buildHierarchy, type HierarchyNode } from './hierarchy'
 export type TreemapTransformerOptions = BaseTransformerOptions
 
 function asTreemapData(data: readonly HierarchyNode[]): TreemapSeriesOption['data'] {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return data as any
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- our HierarchyNode tree shape structurally matches ECharts' treemap data nodes; bridge past the wide OptionDataValue union.
+  return data as unknown as TreemapSeriesOption['data']
 }
 
 export function createTreemapChartOption(

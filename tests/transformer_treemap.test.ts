@@ -37,7 +37,7 @@ describe(
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('treemap')
 
-        // eslint-disable-next-line no-restricted-syntax
+        // eslint-disable-next-line no-restricted-syntax -- ECharts series data is a wide OptionDataValue union; narrow to our HierarchyNode shape for assertions.
         const hierarchy = series[0]?.data as unknown as readonly HierarchyNode[]
         expect(hierarchy).toHaveLength(1) // single top-level node: Project
 
@@ -88,7 +88,7 @@ describe(
         )
         const series = option.series as readonly TreemapSeriesOption[]
 
-        // eslint-disable-next-line no-restricted-syntax
+        // eslint-disable-next-line no-restricted-syntax -- ECharts series data is a wide OptionDataValue union; narrow to our HierarchyNode shape for assertions.
         const hierarchy = series?.[0]?.data as unknown as readonly HierarchyNode[]
         expect(hierarchy).toHaveLength(1)
         expect(hierarchy[0]?.value).toBeUndefined()

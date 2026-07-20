@@ -12,8 +12,8 @@ export interface LinesTransformerOptions extends BaseTransformerOptions {
 type LineSegment = [[number, number], [number, number]]
 
 function asCoords(coords: readonly (readonly number[])[]): LineSegment {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return coords as any
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- caller guarantees exactly two [x, y] pairs; bridge past the general numeric-array type.
+  return coords as unknown as LineSegment
 }
 
 export function createLinesChartOption(

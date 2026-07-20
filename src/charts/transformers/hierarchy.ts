@@ -21,13 +21,13 @@ interface PathItem {
 }
 
 function asSunburstData(data: readonly HierarchyNode[]): SunburstSeriesOption['data'] {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return data as any
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- our HierarchyNode tree shape structurally matches ECharts' sunburst data nodes; bridge past the wide OptionDataValue union.
+  return data as unknown as SunburstSeriesOption['data']
 }
 
 function asTreeData(data: readonly HierarchyNode[]): TreeSeriesOption['data'] {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return data as any
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- our HierarchyNode tree shape structurally matches ECharts' tree data nodes; bridge past the wide OptionDataValue union.
+  return data as unknown as TreeSeriesOption['data']
 }
 
 /**

@@ -239,9 +239,13 @@
 		"gantt": {
 			"name": "Gantt chart",
 			"task_prop": "Task property",
+			"task_prop_placeholder": "Select task name property",
 			"start_prop": "Start time property",
+			"start_prop_placeholder": "Select start time property",
 			"end_prop": "End time property",
-			"group_prop": "Group by property"
+			"end_prop_placeholder": "Select end time property",
+			"group_prop": "Group by property",
+			"group_prop_placeholder": "Select property for grouping"
 		},
 		"waterfall": {
 			"name": "Waterfall chart",
@@ -354,7 +358,8 @@
 		"custom_themes": {
 			"title": "Custom themes",
 			"desc": "Custom ECharts theme",
-			"delete_tooltip": "Delete theme"
+			"delete_tooltip": "Delete theme",
+			"parse_error": "Failed to parse custom ECharts theme: {{name}}"
 		},
 		"add_theme": {
 			"title": "Add new theme",

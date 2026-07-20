@@ -88,9 +88,7 @@ describe(
           },
         )
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((option.xAxis as any).name).toBe('Cat')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((option.yAxis as any).name).toBe('Val')
       },
     )
@@ -104,7 +102,6 @@ describe(
           'value',
         )
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((option.xAxis as any).axisLabel?.hideOverlap).toBe(true)
       },
     )

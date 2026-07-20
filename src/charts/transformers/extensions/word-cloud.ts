@@ -1,4 +1,4 @@
-import type { EChartsOption } from 'echarts'
+import type { EChartsOption, SeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from '../base'
 import { getNestedValue, safeToString } from '../utils'
@@ -38,7 +38,7 @@ export function createWordCloudChartOption(
   )
 
   const seriesItem = {
-    type: 'wordCloud',
+    type: 'wordCloud' as const,
     gridSize: options?.gridSize ?? 2,
     sizeRange: [
       options?.sizeRangeMin ?? 12,
@@ -69,7 +69,7 @@ export function createWordCloudChartOption(
     tooltip: {
       show: true,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-    series: [seriesItem as any],
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- echarts-wordcloud's WordCloudSeriesOption augments echarts' internal RegisteredSeriesOption module path, which doesn't resolve through the public 'echarts' import; bridge to the wordCloud series shape directly.
+    series: [seriesItem as unknown as SeriesOption],
   }
 }

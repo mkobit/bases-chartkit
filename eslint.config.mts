@@ -5,22 +5,32 @@ import functional from 'eslint-plugin-functional'
 import promise from 'eslint-plugin-promise'
 import stylistic from '@stylistic/eslint-plugin'
 import unicorn from 'eslint-plugin-unicorn'
-import { globalIgnores } from 'eslint/config'
-import json from '@eslint/json'
+import { type Config, globalIgnores } from 'eslint/config'
+import json, { type JSONRuleDefinition } from '@eslint/json'
 import yml from 'eslint-plugin-yml'
 
 const jsFiles = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs', '**/*.cjs', '**/*.mts', '**/*.cts']
 
-function restrictToJs(config: any) {
+function restrictToJs(config: Config): Config {
   // Strip the `json` plugin from obsidianmd's bundled configs so our own @eslint/json
   // registration doesn't conflict with obsidianmd's bundled instance.
-  const plugins: Record<string, any> = config.plugins ?? {}
+  const plugins = config.plugins ?? {}
   const restPlugins = Object.fromEntries(Object.entries(plugins).filter(([k]) => k !== 'json'))
   const cleaned = { ...config, plugins: restPlugins }
   if (!cleaned.files) {
     return { ...cleaned, files: jsFiles }
   }
   return cleaned
+}
+
+const DEPENDENCY_LIST_KEYS = ['dependencies', 'devDependencies', 'peerDependencies', 'scripts']
+
+// JSON keys are always String nodes; Identifier nodes are a JSON5-only
+// extension that never appears in plain package.json. Narrowed rather than
+// asserted so a real (impossible-in-practice) Identifier key still sorts
+// using something -- its own name -- instead of throwing.
+function memberKeyName(member: { name: { type: string, value?: string, name?: string } }): string {
+  return member.name.type === 'String' ? (member.name.value ?? '') : (member.name.name ?? '')
 }
 
 // Define custom rule for package.json dependency sorting
@@ -33,58 +43,52 @@ const packageJsonPlugin = {
           description: 'Sort dependencies alphabetically',
         },
         fixable: 'code',
+        messages: {
+          unsorted: 'Dependencies in \'{{key}}\' should be sorted alphabetically.',
+        },
       },
-      create(context: any) {
+      create(context) {
         return {
-          'Member'(node: any) {
+          Member(node) {
             if (
-              node.name
-              && node.name.type === 'String'
-              && ['dependencies', 'devDependencies', 'peerDependencies', 'scripts'].includes(node.name.value)
+              node.name.type === 'String'
+              && DEPENDENCY_LIST_KEYS.includes(node.name.value)
+              && node.value.type === 'Object'
             ) {
-              if (node.value && node.value.type === 'Object') {
-                const members = node.value.members
-                const memberNames = members.map((m: any) => m.name.value)
-                const sortedMemberNames = [...memberNames].sort()
+              const members = node.value.members
+              const memberNames = members.map(memberKeyName)
+              const sortedMemberNames = [...memberNames].sort()
+              const isSorted = memberNames.every((name, index) => name === sortedMemberNames[index])
 
-                const isSorted = memberNames.every((name: string, index: number) => name === sortedMemberNames[index])
-
-                if (!isSorted) {
-                  context.report({
-                    node: node.value,
-                    message: `Dependencies in '${node.name.value}' should be sorted alphabetically.`,
-                    fix(fixer: any) {
-                      const memberPairs = members.map((m: any) => {
-                        return {
-                          name: m.name.value,
-                          // We reconstruct the JSON string for the member
-                          // Assuming simple key-value pairs for deps
-                          key: JSON.stringify(m.name.value),
-                          value: JSON.stringify(m.value.value),
-                        }
-                      })
-
-                      memberPairs.sort((a: any, b: any) => a.name.localeCompare(b.name))
-
-                      // Reconstruct the object content with indentation
-                      // Assuming standard package.json indentation (tabs)
-                      // The object itself is indented by 1 tab, so members are 2 tabs.
-                      const indentation = '\t\t'
-                      const content = memberPairs.map((p: any) => `${indentation}${p.key}: ${p.value}`).join(',\n')
-
-                      // Wrap in braces with correct outer indentation
-                      const newText = `{\n${content}\n\t}`
-
-                      return fixer.replaceText(node.value, newText)
-                    },
-                  })
-                }
+              if (!isSorted) {
+                const key = node.name.value
+                context.report({
+                  node: node.value,
+                  messageId: 'unsorted',
+                  data: { key },
+                  fix(fixer) {
+                    // Sort by swapping each member's exact source text (key
+                    // and value together) rather than rebuilding JSON by
+                    // hand, so quoting/formatting of the original is preserved.
+                    const memberPairs = members.map(m => ({
+                      name: memberKeyName(m),
+                      text: context.sourceCode.getText(m),
+                    }))
+                    memberPairs.sort((a, b) => a.name.localeCompare(b.name))
+                    // Standard package.json indentation: the object itself
+                    // is indented by 1 tab, so members are 2 tabs.
+                    const indentation = '\t\t'
+                    const content = memberPairs.map(p => `${indentation}${p.text}`).join(',\n')
+                    const newText = `{\n${content}\n\t}`
+                    return fixer.replaceText(node.value, newText)
+                  },
+                })
               }
             }
           },
         }
       },
-    },
+    } satisfies JSONRuleDefinition<{ MessageIds: 'unsorted' }>,
   },
 }
 
@@ -92,7 +96,6 @@ export default tseslint.config(
   {
     ignores: [
       // Plugin install artifacts inside the test vault — populated at runtime by `bun run vault:install`
-      // eslint-disable-next-line obsidianmd/hardcoded-config-path
       'obsidian-bases-charts-example-vault/.obsidian/plugins/**',
     ],
   },
@@ -141,10 +144,13 @@ export default tseslint.config(
     plugins: {
       obsidianmd,
       functional,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
       promise,
       unicorn,
     },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
     rules: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
       ...promise.configs.recommended.rules,
 
       // ObsidianMD Rules
@@ -297,6 +303,7 @@ export default tseslint.config(
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }], // Allow devDependencies in tests
       'import/no-nodejs-modules': 'off', // Node built-ins are allowed in tests and e2e fixtures
       '@typescript-eslint/consistent-type-assertions': 'off', // Needed for mocking
+      '@typescript-eslint/no-explicit-any': 'off', // Needed to narrow into ECharts' deeply-nested option union types for assertions
       '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe args in tests
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -323,6 +330,7 @@ export default tseslint.config(
       'functional/no-let': 'off', // Allow let in Playwright e2e tests
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
+      'obsidianmd/rule-custom-message': 'off', // same new Function() usage trips obsidianmd's no-new-func message too
     },
   },
   // Legacy Transformers (Pending Refactor)
@@ -475,6 +483,9 @@ export default tseslint.config(
       'functional/type-declaration-immutability': 'off',
       '@typescript-eslint/consistent-type-assertions': 'off',
       'no-undef': 'off',
+      // Not a runtime Vault path -- this is a static eslint ignore glob for
+      // a fixed repo directory, not the user-configurable Obsidian configDir.
+      'obsidianmd/hardcoded-config-path': 'off',
     },
   },
   {
