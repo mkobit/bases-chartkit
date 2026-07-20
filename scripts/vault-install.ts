@@ -3,7 +3,7 @@ import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
-const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
+const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
 async function main(): Promise<void> {

@@ -13,7 +13,7 @@ const CDP_PORT = 9222
 const PLUGIN_ID = 'bases-chartkit'
 const PLUGIN_ARTIFACTS = ['main.js', 'manifest.json', 'styles.css'] as const
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
-const VAULT_PATH = path.join(ROOT_DIR, 'obsidian-bases-charts-example-vault')
+const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 
 interface CdpPage {
   readonly type: string
