@@ -7,6 +7,8 @@
 	"scripts": {
 		"build": "bun esbuild.config.mjs production",
 		"dev": "bun esbuild.config.mjs",
+		"docs:screenshots": "bun scripts/collect-chart-views.ts && bun x playwright test --config=playwright.survey.config.ts",
+		"docs:screenshots:headless": "bun scripts/collect-chart-views.ts && xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' bun x playwright test --config=playwright.survey.config.ts",
 		"lint": "eslint .",
 		"test": "bun test ./tests",
 		"test:coverage": "bun test ./tests --coverage --coverage-reporter=lcov",
@@ -40,9 +42,7 @@
 		"eslint-plugin-yml": "^3.5.0",
 		"fast-check": "^4.8.0",
 		"globals": "17.7.0",
-		"jiti": "^2.7.0",
 		"obsidian-launcher": "^3.0.4",
-		"ts-node": "^10.9.2",
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "8.62.1"
