@@ -80,6 +80,27 @@ type ObsidianFixtures = {
   readonly obsidianPage: ObsidianPage
 }
 
+// Guarantees the child + its tmpdirs are cleaned up even if this worker
+// process itself is asked to terminate (Ctrl-C, an external test timeout
+// sending SIGTERM) while a test is mid-flight -- the try/finally below only
+// runs once the pending `await use(...)` actually settles, which a bare
+// signal doesn't force by itself. Re-raises the same signal against the
+// default disposition afterward so the process still terminates with the
+// exit code a caller would normally expect. A true SIGKILL of this worker
+// process can't be intercepted at all; that's a hard OS-level limit, not
+// something in-process code can work around.
+function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string | undefined): () => void {
+  const onSignal = (signal: NodeJS.Signals): void => {
+    void stopObsidian(proc, configDir, vault).finally(() => process.kill(process.pid, signal))
+  }
+  process.once('SIGTERM', onSignal)
+  process.once('SIGINT', onSignal)
+  return () => {
+    process.removeListener('SIGTERM', onSignal)
+    process.removeListener('SIGINT', onSignal)
+  }
+}
+
 export const test = base.extend<ObsidianFixtures>({
   obsidianPage: async ({}, use) => {
     const port = await findFreePort()
@@ -99,6 +120,8 @@ export const test = base.extend<ObsidianFixtures>({
       proc.stderr.on('data', (data: Buffer) => process.stderr.write(`[obsidian] ${data.toString()}`))
     }
 
+    const removeSignalHandlers = terminateOnSignal(proc, configDir, vault)
+
     try {
       await waitForCDP(port, proc)
 
@@ -116,6 +139,7 @@ export const test = base.extend<ObsidianFixtures>({
       await browser.close()
     }
     finally {
+      removeSignalHandlers()
       await stopObsidian(proc, configDir, vault)
     }
   },
