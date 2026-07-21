@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
     ".": {
-      "release-type": "node",
+      "release-type": "simple",
       "bootstrap-sha": "dc9096fba49e5672c6b465a470c861d8fd78fb78",
       "include-v-in-tag": false,
       "bump-minor-pre-major": true,
@@ -10,6 +10,11 @@
         {
           "type": "json",
           "path": "manifest.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "package.json",
           "jsonpath": "$.version"
         }
       ],

@@ -56,5 +56,8 @@ The upload step uses `--clobber`, so re-running it is safe even if some assets a
 
 ## Tag format
 
-Tags are `{package.json name}-X.Y.Z` (e.g. `bases-chartkit-0.1.0`), no `v` prefix (`include-v-in-tag: false` in `release-please-config.json`).
-release-please prefixes the tag with the package name because `release-type` is `node`, which reads the component name from `package.json`'s `name` field.
+Tags are bare `X.Y.Z` (no `v` prefix, no package-name prefix) per Obsidian community-plugin convention — the tag must exactly equal `manifest.json`'s version.
+`release-type` is `simple` and `include-v-in-tag` is `false` in `release-please-config.json` to produce this; `node` release-type would prepend `package.json`'s `name` to the tag, which Obsidian doesn't expect.
+
+> [!NOTE]
+> `bases-chartkit-0.1.0` (the first release) was tagged with the package-name prefix before this was corrected, and is permanently stuck with zero build assets due to GitHub's immutable-releases setting locking it before the fix landed. Treat it as broken; `0.1.1`+ are the first releases using the corrected bare tag format.
