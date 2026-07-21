@@ -6,6 +6,8 @@
       "bootstrap-sha": "dc9096fba49e5672c6b465a470c861d8fd78fb78",
       "include-v-in-tag": false,
       "bump-minor-pre-major": true,
+      "draft": true,
+      "force-tag-creation": true,
       "extra-files": [
         {
           "type": "json",
