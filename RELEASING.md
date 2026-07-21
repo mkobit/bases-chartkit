@@ -15,9 +15,8 @@
 ## Normal release
 
 Merge PRs to `main` using conventional commit prefixes (`feat:`, `fix:`, `deps:`, etc.).
-`Release please` does **not** run automatically — feature/bugfix merges to `main` do not trigger it.
-When ready to cut a release, manually run it from the Actions tab → Release please → Run workflow (or `gh workflow run release-please.yml`).
-It opens or updates a `chore: release X.Y.Z` PR that bumps `package.json`, `manifest.json`, and updates `CHANGELOG.md`, based on conventional commits merged since the last release.
+After each merge, `Release please` automatically opens or updates a `chore: release X.Y.Z` PR that bumps `package.json`, `manifest.json`, and updates `CHANGELOG.md`.
+This only maintains a pending PR — it does not publish anything by itself.
 Edit the CHANGELOG entry in that PR to customise the release notes before merging.
 Merging the release PR creates the git tag and GitHub Release immediately (this is the actual publish step, not a later manual one), and pushes the tag, which triggers the `Release` workflow.
 `Release` builds the plugin and uploads `main.js`, `manifest.json`, and `styles.css` to the GitHub release.
@@ -57,5 +56,8 @@ The upload step uses `--clobber`, so re-running it is safe even if some assets a
 
 ## Tag format
 
-Tags are `{package.json name}-X.Y.Z` (e.g. `bases-chartkit-0.1.0`), no `v` prefix (`include-v-in-tag: false` in `release-please-config.json`).
-release-please prefixes the tag with the package name because `release-type` is `node`, which reads the component name from `package.json`'s `name` field.
+Tags are bare `X.Y.Z` (no `v` prefix, no package-name prefix) per Obsidian community-plugin convention — the tag must exactly equal `manifest.json`'s version.
+`release-type` is `simple` and `include-v-in-tag` is `false` in `release-please-config.json` to produce this; `node` release-type would prepend `package.json`'s `name` to the tag, which Obsidian doesn't expect.
+
+> [!NOTE]
+> `bases-chartkit-0.1.0` (the first release) was tagged with the package-name prefix before this was corrected, and is permanently stuck with zero build assets due to GitHub's immutable-releases setting locking it before the fix landed. Treat it as broken; `0.1.1`+ are the first releases using the corrected bare tag format.
