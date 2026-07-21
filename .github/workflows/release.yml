@@ -24,10 +24,12 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Setup environment
         uses: ./.github/actions/setup-env
@@ -38,4 +40,16 @@ jobs:
       - name: Attach artifacts to GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}" main.js manifest.json styles.css --clobber
+        run: gh release upload "$RELEASE_TAG" main.js manifest.json styles.css --clobber
+
+      # release-please creates the release as a draft (config: draft +
+      # force-tag-creation) specifically so it isn't locked by GitHub's
+      # immutable-releases setting until assets are attached here -- undraft
+      # it as the last step so the published release always has all 3
+      # assets. Safe to run against an already-published release too (e.g. a
+      # workflow_dispatch re-run): --draft=false on a non-draft release is a
+      # no-op.
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$RELEASE_TAG" --draft=false
