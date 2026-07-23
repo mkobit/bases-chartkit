@@ -156,6 +156,96 @@ export async function getSeriesVisualValues(
   }, args)
 }
 
+/**
+ * Waits for the active chart view's ECharts instance to fire its 'finished'
+ * event -- ECharts' own signal that the current option has fully rendered,
+ * including entrance/update animations. Screenshotting before this fires
+ * captures whatever animation frame happened to be on-canvas at that instant,
+ * which varies run-to-run even with identical, deterministically-seeded data.
+ *
+ * Resolves immediately if no chart instance is found. Falls back to
+ * `timeoutMs` if 'finished' never fires (e.g. it already fired before this
+ * attached), so a stuck render can't hang the caller indefinitely.
+ */
+export async function waitForChartFinished(page: Page, timeoutMs = 1500): Promise<void> {
+  return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
+    interface EChartsInstanceLike {
+      readonly on: (event: string, handler: () => void) => void
+      readonly off: (event: string, handler: () => void) => void
+    }
+    interface ChartLike {
+      readonly chart: EChartsInstanceLike | null
+    }
+
+    const isChartView = (obj: unknown): obj is ChartLike => {
+      if (obj === null || typeof obj !== 'object') {
+        return false
+      }
+      if (!('getChartOption' in obj) || !('chart' in obj)) {
+        return false
+      }
+      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+    }
+
+    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
+      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+        return undefined
+      }
+      if (depth > 8 || visited.includes(obj)) {
+        return undefined
+      }
+      if (isChartView(obj)) {
+        return obj
+      }
+      const nextVisited = [...visited, obj]
+      // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
+      // no index-signature overload for a plain, non-indexed object type.
+      // Annotating immediately contains that `any` leak instead of letting it
+      // propagate through the rest of the traversal.
+      const values: readonly unknown[] = Object.values(obj)
+      return values
+        .map(value => findChartView(value, depth + 1, nextVisited))
+        .find((found): found is ChartLike => found !== undefined)
+    }
+
+    const leaves = [
+      app.workspace.getLeaf(false),
+      ...app.workspace.getLeavesOfType('bases'),
+    ]
+
+    const chartView = leaves
+      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
+      .find((view): view is ChartLike => view !== undefined)
+
+    const chart = chartView?.chart
+    if (!chart) {
+      return Promise.resolve()
+    }
+
+    return new Promise<void>((resolve) => {
+      let settled = false
+      const onFinished = () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        chart.off('finished', onFinished)
+        resolve()
+      }
+      const onTimeout = () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        chart.off('finished', onFinished)
+        resolve()
+      }
+      chart.on('finished', onFinished)
+      setTimeout(onTimeout, a.timeoutMs)
+    })
+  }, { timeoutMs })
+}
+
 export interface MapSeriesState {
   readonly subType: string | undefined
   readonly mapName: string | undefined
