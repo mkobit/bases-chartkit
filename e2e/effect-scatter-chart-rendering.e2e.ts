@@ -2,19 +2,12 @@ import { test, expect } from './fixtures/obsidian'
 import { evaluateObsidian, getSeriesVisualValues } from './helpers/evaluate'
 
 test.describe('effect-scatter chart rendering', () => {
-  // Regression test for obsidian-bases-charts-ma9: sizeProp must be normalized
-  // into a bounded pixel range (matching scatter.ts's visualMap-based
-  // approach), not used directly as a raw symbolSize. Real-world magnitudes
-  // (country population, in the millions here) would otherwise draw a circle
-  // large enough to cover the whole canvas.
+  // Regression test: sizeProp must be normalized into a bounded pixel range
+  // (matching scatter.ts's visualMap-based approach), not used directly as a
+  // raw symbolSize. Real-world magnitudes (country population, in the
+  // millions here) would otherwise draw a circle large enough to cover the
+  // whole canvas.
   test('normalizes sizeProp into a bounded symbol size, not raw data magnitude', async ({ obsidianPage: { page } }) => {
-    // ma9 is still open: symbolSize currently passes sizeProp's raw magnitude
-    // straight through as pixel size. Remove this once the transformer
-    // normalizes it (see scatter.ts's visualMap approach) -- Playwright fails
-    // the run if this test unexpectedly starts passing, which is the signal
-    // to remove the annotation.
-    test.fail()
-
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => {

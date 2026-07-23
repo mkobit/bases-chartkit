@@ -26,6 +26,7 @@ export class EffectScatterChartView extends BaseChartView {
         ...this.getCommonTransformerOptions(),
         seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
         sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
+        ...this.getVisualMapTransformerOptions(),
       },
     )
   }
@@ -40,6 +41,7 @@ export class EffectScatterChartView extends BaseChartView {
         displayName: t('views.effect_scatter.size_prop'),
         placeholder: t('views.effect_scatter.size_prop_placeholder'),
       },
+      ...BaseChartView.getVisualMapViewOptions(),
     ]
   }
 }
