@@ -8,6 +8,7 @@ import unicorn from 'eslint-plugin-unicorn'
 import { type Config, globalIgnores } from 'eslint/config'
 import json, { type JSONRuleDefinition } from '@eslint/json'
 import yml from 'eslint-plugin-yml'
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
 
 const jsFiles = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs', '**/*.cjs', '**/*.mts', '**/*.cts']
 
@@ -147,6 +148,7 @@ export default tseslint.config(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
       promise,
       unicorn,
+      'eslint-comments': eslintComments,
     },
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
     rules: {
@@ -173,6 +175,10 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-assertions': ['error', {
         assertionStyle: 'never',
       }],
+      // Every eslint-disable comment (the only way past the cast bans above)
+      // must carry a `-- reason` description -- otherwise the ban is just a
+      // suggestion, not an enforced escape-hatch discipline.
+      'eslint-comments/require-description': 'error',
       // Enforce separate type imports (User Request)
       '@typescript-eslint/consistent-type-imports': ['error', {
         prefer: 'type-imports',
