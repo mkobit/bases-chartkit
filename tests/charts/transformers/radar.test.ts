@@ -34,11 +34,11 @@ describe(
               { metricProps: ['Strength', 'Intelligence', 'Agility'] },
             )
 
-            const radar = option.radar as { indicator?: { name: string }[] }
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
             expect(radar.indicator).toEqual([
-              { name: 'Strength' },
-              { name: 'Intelligence' },
-              { name: 'Agility' },
+              { name: 'Strength', min: 0, max: 51 },
+              { name: 'Intelligence', min: 0, max: 93 },
+              { name: 'Agility', min: 0, max: 56 },
             ])
           },
         )
@@ -85,11 +85,11 @@ describe(
               },
             )
 
-            const radar = option.radar as { indicator?: { name: string }[] }
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
             expect(radar.indicator).toEqual([
-              { name: 'STR' },
-              { name: 'INT' },
-              { name: 'AGI' },
+              { name: 'STR', min: 0, max: 51 },
+              { name: 'INT', min: 0, max: 93 },
+              { name: 'AGI', min: 0, max: 56 },
             ])
           },
         )
@@ -108,6 +108,66 @@ describe(
             const series = option.series as RadarSeriesOption[]
             const data = series[0]?.data as any
             expect(data[0].value).toEqual([10, 0, 0])
+          },
+        )
+
+        it(
+          'should give each indicator its own auto-computed max instead of one shared/unscaled max',
+          () => {
+            // Regression (bck-3d5): a 0-20-ish metric plotted next to a
+            // 0-10000-ish metric on the same polygon, with no per-indicator
+            // max, made the small metric look "maxed out" relative to the
+            // large one. Each indicator's max must reflect its own data.
+            const option = createRadarChartOption(
+              [{ Name: 'Row',
+                Small: 20,
+                Large: 10_000 }],
+              'Name',
+              '',
+              { metricProps: ['Small', 'Large'] },
+            )
+
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            expect(radar.indicator).toEqual([
+              { name: 'Small', min: 0, max: 20 },
+              { name: 'Large', min: 0, max: 10_000 },
+            ])
+          },
+        )
+
+        it(
+          'should extend min below 0 when a metric has negative values, rather than clipping them',
+          () => {
+            const option = createRadarChartOption(
+              [{ Name: 'Row', Profit: -50 },
+                { Name: 'Row2', Profit: 30 }],
+              'Name',
+              '',
+              { metricProps: ['Profit'] },
+            )
+
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            expect(radar.indicator).toEqual([
+              { name: 'Profit', min: -50, max: 30 },
+            ])
+          },
+        )
+
+        it(
+          'should give an all-zero metric a non-zero-width range instead of a degenerate 0-0 axis',
+          () => {
+            const option = createRadarChartOption(
+              [{ Name: 'Row', Flat: 0 },
+                { Name: 'Row2', Flat: 0 }],
+              'Name',
+              '',
+              { metricProps: ['Flat'] },
+            )
+
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            expect(radar.indicator).toEqual([
+              { name: 'Flat', min: 0, max: 10 },
+            ])
           },
         )
       },
@@ -141,10 +201,10 @@ describe(
               { seriesProp: 'student' },
             )
 
-            const radar = option.radar as { indicator?: { name: string }[] }
+            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
             expect(radar.indicator).toEqual([
-              { name: 'Math' },
-              { name: 'Science' },
+              { name: 'Math', min: 0, max: 90 },
+              { name: 'Science', min: 0, max: 95 },
             ])
 
             const series = option.series as RadarSeriesOption[]
