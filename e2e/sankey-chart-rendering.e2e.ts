@@ -88,8 +88,12 @@ test.describe('sankey chart rendering', () => {
     const cycleNotice = page.locator('.notice', { hasText: 'cycle' })
     await expect(cycleNotice).toBeVisible({ timeout: 60_000 })
 
+    // chart.clear() (the base view's empty-state path for a null
+    // getChartOption) resets ECharts to no series at all, not a sankey
+    // series with empty arrays -- assert on that directly rather than
+    // defaulting through optional chaining, which would pass even if
+    // `series` were missing for an unrelated reason.
     const option = await getChartOption(page) as SankeyOptionLike | null
-    expect(option?.series?.[0]?.links ?? []).toHaveLength(0)
-    expect(option?.series?.[0]?.data ?? []).toHaveLength(0)
+    expect(option?.series ?? []).toHaveLength(0)
   })
 })

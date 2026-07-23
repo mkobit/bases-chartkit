@@ -130,6 +130,28 @@ export function hasSankeyCycle(
   ).hasCycle
 }
 
+// A stable string identifying the current set of (post-self-loop-filter)
+// links -- lets a caller that reacts to hasSankeyCycle (e.g. showing a
+// Notice) tell "still the same cycle, re-rendered" apart from "the data
+// changed to a different cycle" without re-deriving buildLinks' extraction
+// logic itself.
+export function sankeyLinkSignature(
+  data: BasesData,
+  sourceProp: string,
+  targetProp: string,
+): string {
+  return R.pipe(
+    buildLinks(
+      data,
+      sourceProp,
+      targetProp,
+    ),
+    R.map(l => `${l.source}->${l.target}`),
+    R.sortBy(x => x),
+    x => x.join('|'),
+  )
+}
+
 export function createSankeyChartOption(
   data: BasesData,
   sourceProp: string,
