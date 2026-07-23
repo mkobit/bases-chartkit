@@ -1,0 +1,14 @@
+properties:
+  note.FunnelStage:
+    displayName: Funnel Stage
+  note.Population:
+    displayName: Population
+views:
+  - type: funnel-chart
+    name: User journey funnel
+    xAxisProp: note.FunnelStage
+    yAxisProp: note.Population
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "funnel/notes"

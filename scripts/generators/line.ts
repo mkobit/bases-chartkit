@@ -1,6 +1,11 @@
 import * as fc from 'fast-check'
 import { Temporal } from 'temporal-polyfill'
 
+// Fixed rather than Temporal.Now.plainDateISO() -- a wall-clock anchor made
+// this arbitrary non-deterministic across days despite the seeded sampling,
+// defeating the whole point of `getDeterministicSample`.
+const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-31')
+
 /**
  * Arbitrary for a basic Line chart dataset.
  * Simulates a random walk trend (e.g., stock price or temperature).
@@ -8,7 +13,7 @@ import { Temporal } from 'temporal-polyfill'
 export const lineChartArbitrary = fc.record({
   startValue: fc.integer({ min: 50,
     max: 100 }),
-  days: fc.integer({ min: 14,
+  days: fc.integer({ min: 20,
     max: 30 }),
   trend: fc.constantFrom(
     -2,
@@ -25,7 +30,7 @@ export const lineChartArbitrary = fc.record({
     { minLength: config.days,
       maxLength: config.days },
   ).map((deltas) => {
-    const today = Temporal.Now.plainDateISO()
+    const today = ANCHOR_DATE
 
     const data = deltas.reduce<Array<{ date: string
       value: number }>>(

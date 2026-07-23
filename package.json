@@ -17,6 +17,7 @@
 		"typecheck": "tsc --noEmit",
 		"vault:dev": "bun scripts/vault-dev.ts",
 		"vault:eval": "bun scripts/vault-eval.ts",
+		"vault:generate": "bun scripts/generate-example-vault.ts",
 		"vault:install": "bun scripts/vault-install.ts",
 		"vault:reload": "bun scripts/vault-reload.ts",
 		"vault:screenshot": "bun scripts/vault-screenshot.ts"

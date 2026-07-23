@@ -1,0 +1,13 @@
+properties:
+  note.Product:
+    displayName: Product
+  note.Sales:
+    displayName: Sales
+views:
+  - type: pareto-chart
+    name: Product sales (pareto)
+    xAxisProp: note.Product
+    yAxisProp: note.Sales
+    filters:
+      and:
+        - file.folder == "pareto/notes"

@@ -61,8 +61,25 @@ const kebabSlug = (value: string): string =>
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replaceAll(/^-+|-+$/g, '')
 
+// Drops any middle path segment(s) -- for a multi-variant chart type,
+// baseFile looks like "effect-scatter/sized-by-population/Sized-By-
+// Population.base": the middle "sized-by-population" directory is always
+// just the file stem lowercased (see scripts/vault-gen/spec.ts's
+// variantRelativePath), so keeping it would kebab-slug to a redundant
+// "effect-scatter-sized-by-population-sized-by-population". Single-variant
+// chart types have no middle segment, so first === last and this is a no-op.
+const baseFileSlug = (baseFile: string): string => {
+  const parts = baseFile.replace(/\.base$/, '').split('/')
+  const first = parts[0]
+  if (first === undefined) {
+    return kebabSlug(baseFile)
+  }
+  const last = parts[parts.length - 1] ?? first
+  return kebabSlug(first === last ? first : `${first}-${last}`)
+}
+
 const screenshotFileName = (entry: ChartViewEntry): string => {
-  const baseSlug = kebabSlug(entry.baseFile.replace(/\.base$/, ''))
+  const baseSlug = baseFileSlug(entry.baseFile)
   const viewSlug = kebabSlug(entry.viewName)
   return `${baseSlug}--${viewSlug}.png`
 }

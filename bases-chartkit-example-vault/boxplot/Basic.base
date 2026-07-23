@@ -1,0 +1,14 @@
+properties:
+  note.Product:
+    displayName: Product
+  note.Score:
+    displayName: Score
+views:
+  - type: boxplot-chart
+    name: Product score distribution
+    xAxisProp: note.Product
+    yAxisProp: note.Score
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "boxplot/notes"

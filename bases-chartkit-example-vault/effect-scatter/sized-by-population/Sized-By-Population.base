@@ -1,0 +1,17 @@
+properties:
+  note.GDP:
+    displayName: GDP
+  note.LifeExpectancy:
+    displayName: Life Expectancy
+  note.Population:
+    displayName: Population
+views:
+  - type: effect-scatter-chart
+    name: GDP vs life expectancy sized by population
+    xAxisProp: note.GDP
+    yAxisProp: note.LifeExpectancy
+    sizeProp: note.Population
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "effect-scatter/notes"

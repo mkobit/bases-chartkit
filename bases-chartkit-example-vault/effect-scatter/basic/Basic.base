@@ -1,0 +1,17 @@
+properties:
+  note.Continent:
+    displayName: Continent
+  note.GDP:
+    displayName: GDP
+  note.LifeExpectancy:
+    displayName: Life Expectancy
+views:
+  - type: effect-scatter-chart
+    name: GDP vs life expectancy (effect scatter)
+    xAxisProp: note.GDP
+    yAxisProp: note.LifeExpectancy
+    seriesProp: note.Continent
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "effect-scatter/notes"

@@ -1,9 +1,20 @@
 import * as fc from 'fast-check'
 import { Temporal } from 'temporal-polyfill'
 
+// Fixed rather than Temporal.Now.plainDateISO() -- a wall-clock anchor made
+// this arbitrary non-deterministic across days despite the seeded sampling,
+// defeating the whole point of `getDeterministicSample` (same class of bug
+// already fixed in line.ts's ANCHOR_DATE).
+const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-31')
+
 /**
  * Arbitrary for Candlestick chart dataset.
  * Simulates stock price movement.
+ * `noNaN: true` on every fc.float() call below: fast-check's float arbitrary
+ * can still draw NaN even with min/max bounds set (confirmed empirically in
+ * scatter.ts) -- without this, a deterministic sample could produce a candle
+ * with `low: NaN` or `high: NaN`, which would silently corrupt generated
+ * frontmatter and break rendering for that point.
  */
 export const candlestickChartArbitrary = fc.record({
   startValue: fc.integer({ min: 100,
@@ -18,14 +29,16 @@ export const candlestickChartArbitrary = fc.record({
       delta: fc.integer({ min: -config.volatility,
         max: config.volatility }),
       lowDrop: fc.float({ min: 0,
-        max: config.volatility / 2 }),
+        max: config.volatility / 2,
+        noNaN: true }),
       highRise: fc.float({ min: 0,
-        max: config.volatility / 2 }),
+        max: config.volatility / 2,
+        noNaN: true }),
     }),
     { minLength: config.days,
       maxLength: config.days },
   ).map((moves) => {
-    const today = Temporal.Now.plainDateISO()
+    const today = ANCHOR_DATE
 
     interface Candle {
       readonly date: string

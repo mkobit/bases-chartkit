@@ -1,0 +1,14 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: area-chart
+    name: Sales area chart
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "area/notes"

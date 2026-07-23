@@ -2,6 +2,24 @@ import { describe, it, expect } from 'bun:test'
 import { createBulletChartOption } from '../../../src/charts/transformers/bullet'
 import type { BarSeriesOption, ScatterSeriesOption, DatasetComponentOption } from 'echarts'
 
+const isBarSeriesOption = (value: unknown): value is BarSeriesOption =>
+  typeof value === 'object' && value !== null && 'type' in value && value.type === 'bar'
+
+const isScatterSeriesOption = (value: unknown): value is ScatterSeriesOption =>
+  typeof value === 'object' && value !== null && 'type' in value && value.type === 'scatter'
+
+const isDatasetComponentOption = (value: unknown): value is DatasetComponentOption =>
+  typeof value === 'object' && value !== null && 'source' in value
+
+interface BulletDatasetRow {
+  readonly r1: number
+  readonly r2: number
+  readonly r3: number
+}
+
+const isBulletDatasetRow = (value: unknown): value is BulletDatasetRow =>
+  typeof value === 'object' && value !== null && 'r1' in value && 'r2' in value && 'r3' in value
+
 describe(
   'createBulletChartOption',
   () => {
@@ -35,20 +53,24 @@ describe(
           { targetProp: 'target' },
         )
 
-        expect(option.series).toHaveLength(2)
-        const [barSeries,
-          scatterSeries] = option.series as [BarSeriesOption, ScatterSeriesOption]
+        const series = Array.isArray(option.series) ? option.series : []
+        expect(series).toHaveLength(2)
 
-        expect(barSeries.type).toBe('bar')
-        expect(barSeries.encode).toEqual({ x: 'x',
+        const barSeries = series.find(isBarSeriesOption)
+        const scatterSeries = series.find(isScatterSeriesOption)
+        expect(barSeries).toBeDefined()
+        expect(scatterSeries).toBeDefined()
+
+        expect(barSeries?.type).toBe('bar')
+        expect(barSeries?.encode).toEqual({ x: 'x',
           y: 'y' })
-        expect(barSeries.barWidth).toBe('60%')
+        expect(barSeries?.barWidth).toBe('60%')
 
-        expect(scatterSeries.type).toBe('scatter')
-        expect(scatterSeries.encode).toEqual({ x: 'x',
+        expect(scatterSeries?.type).toBe('scatter')
+        expect(scatterSeries?.encode).toEqual({ x: 'x',
           y: 't' })
-        expect(scatterSeries.symbol).toBe('rect')
-        expect(scatterSeries.symbolSize).toEqual([40,
+        expect(scatterSeries?.symbol).toBe('rect')
+        expect(scatterSeries?.symbolSize).toEqual([40,
           4]) // Default vertical bar, horizontal marker
       },
     )
@@ -68,50 +90,40 @@ describe(
           },
         )
 
-        expect(option.series).toHaveLength(5) // 3 ranges + 1 measure + 1 target
-        const series = option.series as BarSeriesOption[]
+        const series = Array.isArray(option.series) ? option.series : []
+        expect(series).toHaveLength(5) // 3 ranges + 1 measure + 1 target
 
-        const range1 = series[0]
-        const range2 = series[1]
-        const range3 = series[2]
-        const measure = series[3]
+        // Construction order in bullet.ts is [...rangeSeries, barSeries, ...] --
+        // range1, range2, range3, then the measure bar.
+        const bars = series.filter(isBarSeriesOption)
+        expect(bars).toHaveLength(4)
+        const [range1, range2, range3, measure] = bars
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range1.stack).toBe('range')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range1.z).toBe(0)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range1.itemStyle?.color).toBe('#e0e0e0')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range1.encode).toEqual({ x: 'x',
+        expect(range1).toBeDefined()
+        expect(range1?.stack).toBe('range')
+        expect(range1?.z).toBe(0)
+        expect(range1?.itemStyle?.color).toBe('#e0e0e0')
+        expect(range1?.encode).toEqual({ x: 'x',
           y: 'r1' })
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range2.stack).toBe('range')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range2.z).toBe(0)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range2.itemStyle?.color).toBe('#bdbdbd')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range2.encode).toEqual({ x: 'x',
+        expect(range2).toBeDefined()
+        expect(range2?.stack).toBe('range')
+        expect(range2?.z).toBe(0)
+        expect(range2?.itemStyle?.color).toBe('#bdbdbd')
+        expect(range2?.encode).toEqual({ x: 'x',
           y: 'r2' })
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range3.stack).toBe('range')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range3.z).toBe(0)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range3.itemStyle?.color).toBe('#9e9e9e')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(range3.encode).toEqual({ x: 'x',
+        expect(range3).toBeDefined()
+        expect(range3?.stack).toBe('range')
+        expect(range3?.z).toBe(0)
+        expect(range3?.itemStyle?.color).toBe('#9e9e9e')
+        expect(range3?.encode).toEqual({ x: 'x',
           y: 'r3' })
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(measure.z).toBe(2)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(measure.barGap).toBe('-100%')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(measure.barWidth).toBe('40%')
+        expect(measure).toBeDefined()
+        expect(measure?.z).toBe(2)
+        expect(measure?.barGap).toBe('-100%')
+        expect(measure?.barWidth).toBe('40%')
       },
     )
 
@@ -129,12 +141,18 @@ describe(
           },
         )
 
-        const dataset = option.dataset as DatasetComponentOption[]
-        const source = (dataset[0] as DatasetComponentOption).source as any[]
+        const datasets = Array.isArray(option.dataset) ? option.dataset : []
+        const firstDataset = datasets.find(isDatasetComponentOption)
+        expect(firstDataset).toBeDefined()
+
+        const source = firstDataset?.source
+        const rows = Array.isArray(source) ? source.filter(isBulletDatasetRow) : []
+        const rowA = rows[0]
+        expect(rowA).toBeDefined()
 
         // A: low=5, mid=15, high=20
         // r1=5, r2=10 (15-5), r3=5 (20-15)
-        expect(source[0]).toEqual(expect.objectContaining({
+        expect(rowA).toEqual(expect.objectContaining({
           r1: 5,
           r2: 10,
           r3: 5,
@@ -157,10 +175,10 @@ describe(
           { yAxisLabel: 'Value' },
         )
 
-        const series = option.series as BarSeriesOption[]
-        const measure = series[0]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(measure.name).toBe('Value')
+        const series = Array.isArray(option.series) ? option.series : []
+        const measure = series.find(isBarSeriesOption)
+        expect(measure).toBeDefined()
+        expect(measure?.name).toBe('Value')
       },
     )
 
@@ -173,10 +191,50 @@ describe(
           'value',
         )
 
-        const series = option.series as BarSeriesOption[]
-        const measure = series[0]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(measure.name).toBe('value')
+        const series = Array.isArray(option.series) ? option.series : []
+        const measure = series.find(isBarSeriesOption)
+        expect(measure).toBeDefined()
+        expect(measure?.name).toBe('value')
+      },
+    )
+
+    it(
+      'should use targetLabel as the target series name instead of the raw prop key',
+      () => {
+        // Same class of bug as the yAxisLabel regression above, but for the
+        // target marker series: bullet-chart-view.ts previously passed
+        // targetProp straight through as the series `name` with no display
+        // -name resolution, so tooltips showed the raw property path (e.g.
+        // 'note.Target') instead of a friendly label.
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          { targetProp: 'target', targetLabel: 'Target' },
+        )
+
+        const series = Array.isArray(option.series) ? option.series : []
+        const target = series.find(isScatterSeriesOption)
+        expect(target).toBeDefined()
+        expect(target?.name).toBe('Target')
+      },
+    )
+
+    it(
+      'should fall back to a literal "Target" when targetLabel is not provided',
+      () => {
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          { targetProp: 'target' },
+        )
+
+        const series = Array.isArray(option.series) ? option.series : []
+        const target = series.find(isScatterSeriesOption)
+        expect(target).toBeDefined()
+        expect(target?.name).toBe('Target')
+        expect(target?.name).not.toBe('target')
       },
     )
 
@@ -194,19 +252,26 @@ describe(
           },
         )
 
-        // Series: r1, r2, r3 (created even if undefined props, just empty), measure, target
-        // Actually code checks hasRanges = rangeLow || rangeMid || rangeHigh.
-        // So 3 range series created.
+        // hasRanges = Boolean(rangeLowProp || rangeMidProp || rangeHighProp),
+        // so rangeLowProp alone still creates all 3 range series (empty deltas
+        // for the unset mid/high thresholds) + 1 measure + 1 target.
+        const series = Array.isArray(option.series) ? option.series : []
+        expect(series).toHaveLength(5)
 
-        expect(option.series).toHaveLength(5)
-        const [r1, , , measure,
-          target] = option.series as [BarSeriesOption, BarSeriesOption, BarSeriesOption, BarSeriesOption, ScatterSeriesOption]
+        const bars = series.filter(isBarSeriesOption)
+        const [r1, , , measure] = bars
+        const target = series.find(isScatterSeriesOption)
 
-        expect(r1.encode).toEqual({ x: 'r1',
+        expect(r1).toBeDefined()
+        expect(r1?.encode).toEqual({ x: 'r1',
           y: 'x' })
-        expect(measure.encode).toEqual({ x: 'y',
+
+        expect(measure).toBeDefined()
+        expect(measure?.encode).toEqual({ x: 'y',
           y: 'x' })
-        expect(target.symbolSize).toEqual([4,
+
+        expect(target).toBeDefined()
+        expect(target?.symbolSize).toEqual([4,
           30]) // Horizontal bar, vertical marker
       },
     )

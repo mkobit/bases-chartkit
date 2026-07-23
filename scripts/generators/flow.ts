@@ -79,8 +79,11 @@ export const graphChartArbitrary = fc.record({
         ? (rawTargetIndex + 1) % config.nodeCount
         : rawTargetIndex
 
-      const safeSource = nodes[sourceIndex % nodes.length]
-      const safeTarget = nodes[targetIndex % nodes.length]
+      // `nodes.length` guarantees these indices are always in range, but
+      // noUncheckedIndexedAccess can't prove that statically for a
+      // computed index -- the fallback never actually triggers.
+      const safeSource = nodes[sourceIndex % nodes.length] ?? 'Router'
+      const safeTarget = nodes[targetIndex % nodes.length] ?? 'Router'
 
       return {
         source: safeSource,
@@ -100,6 +103,14 @@ export const graphChartArbitrary = fc.record({
 /**
  * Arbitrary for Lines chart data.
  * Generates coordinate pairs.
+ * Uses fc.integer (scaled) rather than fc.float -- fc.float's default
+ * generator is heavily biased toward 0/boundary values under
+ * getDeterministicSample's numRuns:1 sampling (confirmed empirically: at
+ * the vault's actual seed, 6 of 7 generated lines collapsed to a degenerate
+ * (0,0)->(0,0) point), which produced lines clustered in one corner instead
+ * of spread across the coordinate space. fc.integer doesn't share that bias
+ * (matches the identical fix already applied to histogramChartArbitrary in
+ * distribution.ts).
  */
 export const linesChartArbitrary = fc.record({
   count: fc.integer({ min: 5,
@@ -107,14 +118,14 @@ export const linesChartArbitrary = fc.record({
 }).chain((config) => {
   return fc.array(
     fc.record({
-      x1: fc.float({ min: 0,
-        max: 100 }),
-      y1: fc.float({ min: 0,
-        max: 100 }),
-      x2: fc.float({ min: 0,
-        max: 100 }),
-      y2: fc.float({ min: 0,
-        max: 100 }),
+      x1: fc.integer({ min: 0,
+        max: 1000 }),
+      y1: fc.integer({ min: 0,
+        max: 1000 }),
+      x2: fc.integer({ min: 0,
+        max: 1000 }),
+      y2: fc.integer({ min: 0,
+        max: 1000 }),
     }),
     { minLength: config.count,
       maxLength: config.count },
@@ -122,10 +133,10 @@ export const linesChartArbitrary = fc.record({
     return {
       type: 'lines',
       data: lines.map(l => ({
-        start_x: parseFloat(l.x1.toFixed(1)),
-        start_y: parseFloat(l.y1.toFixed(1)),
-        end_x: parseFloat(l.x2.toFixed(1)),
-        end_y: parseFloat(l.y2.toFixed(1)),
+        start_x: l.x1 / 10,
+        start_y: l.y1 / 10,
+        end_x: l.x2 / 10,
+        end_y: l.y2 / 10,
       })),
     }
   })

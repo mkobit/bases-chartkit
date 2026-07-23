@@ -1,0 +1,14 @@
+properties:
+  note.Frequency:
+    displayName: Frequency
+  note.Word:
+    displayName: Word
+views:
+  - type: word-cloud-chart
+    name: Keyword frequency (word cloud)
+    xAxisProp: note.Word
+    yAxisProp: note.Frequency
+    shape: "circle"
+    filters:
+      and:
+        - file.folder == "word-cloud/notes"

@@ -1,0 +1,17 @@
+properties:
+  note.Amount:
+    displayName: Amount
+  note.Source:
+    displayName: Source
+  note.Target:
+    displayName: Target
+views:
+  - type: graph-chart
+    name: Network topology (graph)
+    sourceProp: note.Source
+    targetProp: note.Target
+    valueProp: note.Amount
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "graph/notes"

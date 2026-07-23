@@ -30,22 +30,25 @@ test.describe('map chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'Map-Chart.base', viewName: 'Chicago landmarks by event count' })
+    }, { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' })
 
     // registerMap (asset load) and Bases' query (note data) resolve on
     // separate async paths, so item values stay null until both settle.
+    // 60s rather than this repo's usual 30s: a cold Obsidian profile now
+    // indexes the whole (much larger, post-reorg) example vault before Bases
+    // queries resolve, and that alone can take longer than 30s.
     await expect.poll(
       async () => {
         const state = await getMapSeriesState(page, { seriesIndex: 0 })
         return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
       },
-      { timeout: 30_000 },
+      { timeout: 60_000 },
     ).toBe(5)
 
     const state = await getMapSeriesState(page, { seriesIndex: 0 })
 
     expect(state?.subType).toBe('map')
-    expect(state?.mapName).toBe('Assets/chicago-landmarks.geo.json')
+    expect(state?.mapName).toBe('map/assets/chicago-landmarks.geo.json')
 
     // The full set of features actually present in the registered GeoJSON --
     // proves the real asset (not a stub) parsed successfully, in file order.
@@ -53,19 +56,19 @@ test.describe('map chart rendering', () => {
 
     // Each landmark note's Landmark value must resolve to one of those real
     // features -- a typo here would silently leave the region unhighlighted.
+    // EventCount itself comes from a seeded fast-check arbitrary (see
+    // scripts/generators/map.ts) rather than fixed sample data, so this
+    // checks every real landmark resolved with a positive count rather than
+    // asserting exact numbers.
     const landmarkValuesByName = R.pipe(
       state?.items ?? [],
       R.filter(isResolvedLandmark),
       R.mapToObj(item => [item.name, item.value]),
     )
-    expect(landmarkValuesByName).toEqual({
-      'Millennium Park': 18,
-      'Navy Pier': 9,
-      'Wrigley Field': 6,
-      'Grant Park': 22,
-      'Lincoln Park': 27,
-    })
-    for (const name of R.keys(landmarkValuesByName)) {
+    const EXPECTED_LANDMARK_NAMES = ['Millennium Park', 'Navy Pier', 'Wrigley Field', 'Grant Park', 'Lincoln Park']
+    expect(R.sortBy(R.keys(landmarkValuesByName), x => x)).toEqual(R.sortBy(EXPECTED_LANDMARK_NAMES, x => x))
+    for (const name of EXPECTED_LANDMARK_NAMES) {
+      expect(landmarkValuesByName[name]).toBeGreaterThan(0)
       expect(state?.regionNames).toContain(name)
     }
   })

@@ -1,0 +1,16 @@
+properties:
+  note.EventCount:
+    displayName: Event Count
+  note.Landmark:
+    displayName: Landmark
+views:
+  - type: map-chart
+    name: Chicago landmarks by event count
+    regionProp: note.Landmark
+    valueProp: note.EventCount
+    mapFile: "map/assets/chicago-landmarks.geo.json"
+    xAxisLabel: "Chicago landmarks"
+    filters:
+      and:
+        - file.folder == "map/notes"
+        - note.Landmark != null

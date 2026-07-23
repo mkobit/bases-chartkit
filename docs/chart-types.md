@@ -3,7 +3,7 @@
 This document provides a reference for every chart type supported by the plugin, along with a minimal sample `.base` configuration for each.
 
 ## area
-![area example](images/chart-types/sales-dashboard--sales-area-chart.png)
+![area example](images/chart-types/area-basic--sales-area-chart.png)
 Displays quantitative data over an interval, similar to a line chart but with the area beneath the line filled in to emphasize magnitude.
 ```yaml
 properties:
@@ -19,7 +19,7 @@ views:
 ```
 
 ## bar
-![bar example](images/chart-types/sales-dashboard--sales-bar-chart.png)
+![bar example](images/chart-types/bar-basic--department-spend.png)
 Displays categorical data with rectangular bars with heights or lengths proportional to the values that they represent.
 ```yaml
 properties:
@@ -35,7 +35,7 @@ views:
 ```
 
 ## boxplot
-![boxplot example](images/chart-types/academic--exam-score-distribution.png)
+![boxplot example](images/chart-types/boxplot-basic--product-score-distribution.png)
 Displays a statistical summary of numerical data through their quartiles, highlighting the median, upper and lower quartiles, and outliers.
 ```yaml
 properties:
@@ -51,7 +51,7 @@ views:
 ```
 
 ## bubble
-![bubble example](images/chart-types/demographics--demographics-bubble-chart.png)
+![bubble example](images/chart-types/bubble-basic--weighted-point-cloud-bubble.png)
 Displays three dimensions of data, where each entity with its triplet (v1, v2, v3) is plotted as a disk that expresses two of the values through the disk's xy location and the third through its size.
 ```yaml
 properties:
@@ -70,7 +70,7 @@ views:
 ```
 
 ## bullet
-![bullet example](images/chart-types/bullet-chart--kpi-bullet-chart.png)
+![bullet example](images/chart-types/bullet-basic--kpi-bullet-chart.png)
 Displays performance data in a rich horizontal bar, often comparing a primary measure to one or more other measures to enrich its meaning.
 ```yaml
 properties:
@@ -86,7 +86,7 @@ views:
 ```
 
 ## calendar
-![calendar example](images/chart-types/personal--mood-calendar.png)
+![calendar example](images/chart-types/calendar-basic--mood-calendar.png)
 Displays data activity or events over the course of a calendar year or month, using color intensity to represent values.
 ```yaml
 properties:
@@ -102,7 +102,7 @@ views:
 ```
 
 ## candlestick
-![candlestick example](images/chart-types/finance--aapl-stock-analysis.png)
+![candlestick example](images/chart-types/candlestick-basic--aapl-stock-analysis.png)
 Displays the high, low, open, and close prices of a security or derivative over a specific period, commonly used in financial analysis.
 ```yaml
 properties:
@@ -127,7 +127,7 @@ views:
 ```
 
 ## effectScatter
-![effectScatter example](images/chart-types/effect-scatter--gdp-vs-life-expectancy-effect-scatter.png)
+![effectScatter example](images/chart-types/effect-scatter-basic--gdp-vs-life-expectancy-effect-scatter.png)
 Displays a scatter plot with a ripple effect animation on the data points, useful for drawing attention to specific map coordinates or values.
 ```yaml
 properties:
@@ -143,7 +143,7 @@ views:
 ```
 
 ## funnel
-![funnel example](images/chart-types/demographics--user-journey-funnel.png)
+![funnel example](images/chart-types/funnel-basic--user-journey-funnel.png)
 Displays the progressive reduction of data as it passes from one phase to another, resembling a funnel shape.
 ```yaml
 properties:
@@ -159,7 +159,7 @@ views:
 ```
 
 ## gantt
-![gantt example](images/chart-types/gantt-chart--project-gantt-chart.png)
+![gantt example](images/chart-types/gantt-basic--project-gantt-chart.png)
 Displays a project schedule, showing the start and finish dates of various elements or tasks within a project.
 ```yaml
 properties:
@@ -178,7 +178,7 @@ views:
 ```
 
 ## gauge
-![gauge example](images/chart-types/it-metrics--server-load-gauge-average.png)
+![gauge example](images/chart-types/gauge-basic--server-load-gauge-average.png)
 Displays a single value within a given quantitative context, resembling a speedometer or dial.
 ```yaml
 properties:
@@ -191,7 +191,7 @@ views:
 ```
 
 ## graph
-![graph example](images/chart-types/relationships--material-flow-graph.png)
+![graph example](images/chart-types/graph-basic--network-topology-graph.png)
 Displays relationships or connections between different entities using nodes and edges.
 ```yaml
 properties:
@@ -207,7 +207,7 @@ views:
 ```
 
 ## heatmap
-![heatmap example](images/chart-types/it-metrics--server-load-heatmap.png)
+![heatmap example](images/chart-types/heatmap-basic--server-load-heatmap.png)
 Displays data values represented as colors in a two-dimensional grid or matrix.
 ```yaml
 properties:
@@ -226,7 +226,7 @@ views:
 ```
 
 ## histogram
-![histogram example](images/chart-types/histogram--score-distribution.png)
+![histogram example](images/chart-types/histogram-basic--score-distribution.png)
 Displays the frequency distribution of continuous data by dividing the data into bins and counting the number of observations in each bin.
 ```yaml
 properties:
@@ -239,7 +239,7 @@ views:
 ```
 
 ## line
-![line example](images/chart-types/sales-dashboard--sales-line-chart.png)
+![line example](images/chart-types/line-basic--revenue-trend.png)
 Displays information as a series of data points connected by straight line segments, ideal for showing trends over time.
 ```yaml
 properties:
@@ -255,7 +255,7 @@ views:
 ```
 
 ## lines
-![lines example](images/chart-types/lines-chart--route-lines.png)
+![lines example](images/chart-types/lines-basic--route-lines.png)
 Displays multiple lines mapping paths, routes, or connections between geographical or abstract coordinates.
 ```yaml
 properties:
@@ -277,7 +277,7 @@ views:
 ```
 
 ## map
-![map example](images/chart-types/map-chart--chicago-landmarks-by-event-count.png)
+![map example](images/chart-types/map-basic--chicago-landmarks-by-event-count.png)
 Displays data points or regions on a geographic map, often using colors or markers to represent values.
 ```yaml
 properties:
@@ -294,7 +294,7 @@ views:
 ```
 
 ## parallel
-![parallel example](images/chart-types/parallel-coordinates--character-stats-parallel.png)
+![parallel example](images/chart-types/parallel-basic--character-stats-parallel.png)
 Displays multivariate data by drawing multiple parallel axes and representing each data point as a line passing through the axes.
 ```yaml
 properties:
@@ -311,7 +311,7 @@ views:
 ```
 
 ## pareto
-![pareto example](images/chart-types/pareto-chart--department-spend-pareto.png)
+![pareto example](images/chart-types/pareto-basic--product-sales-pareto.png)
 Displays both individual values represented by bars in descending order, and the cumulative total represented by a line.
 ```yaml
 properties:
@@ -327,7 +327,7 @@ views:
 ```
 
 ## pictorialBar
-![pictorialBar example](images/chart-types/pictorial-bar--department-spend-pictorial-bar.png)
+![pictorialBar example](images/chart-types/pictorial-bar-basic--department-spend-pictorial-bar.png)
 Displays a bar chart where the bars are composed of customized icons or images rather than simple rectangles.
 ```yaml
 properties:
@@ -343,7 +343,7 @@ views:
 ```
 
 ## pie
-![pie example](images/chart-types/sales-dashboard--sales-by-region-pie.png)
+![pie example](images/chart-types/pie-basic--sales-by-region-pie.png)
 Displays data as a circular graphic divided into slices to illustrate numerical proportion.
 ```yaml
 properties:
@@ -359,7 +359,7 @@ views:
 ```
 
 ## polarLine
-![polarLine example](images/chart-types/polar-line--server-load-polar-line.png)
+![polarLine example](images/chart-types/polar-line-basic--server-load-polar-line.png)
 Displays a line chart plotted on a polar coordinate system, connecting data points around a central hub.
 ```yaml
 properties:
@@ -375,7 +375,7 @@ views:
 ```
 
 ## polarScatter
-![polarScatter example](images/chart-types/polar-scatter--gdp-vs-life-expectancy-polar-scatter.png)
+![polarScatter example](images/chart-types/polar-scatter-basic--gdp-vs-life-expectancy-polar-scatter.png)
 Displays a scatter plot mapped onto a polar coordinate system.
 ```yaml
 properties:
@@ -391,7 +391,7 @@ views:
 ```
 
 ## radar
-![radar example](images/chart-types/rpg-stats--character-stats-radar.png)
+![radar example](images/chart-types/radar-basic--character-stats-radar.png)
 Displays multivariate data in the form of a two-dimensional chart of three or more quantitative variables represented on axes starting from the same point.
 ```yaml
 properties:
@@ -409,7 +409,7 @@ views:
 ```
 
 ## radialBar
-![radialBar example](images/chart-types/radial-bar--department-spend-radial-bar.png)
+![radialBar example](images/chart-types/radial-bar-basic--department-spend-radial-bar.png)
 Displays a bar chart in a circular form, with bars extending outward from the center, functioning similarly to a standard bar chart but in a polar system.
 ```yaml
 properties:
@@ -425,7 +425,7 @@ views:
 ```
 
 ## rose
-![rose example](images/chart-types/rose-chart--department-spend-rose.png)
+![rose example](images/chart-types/rose-basic--department-spend-rose.png)
 Displays data using a Nightingale rose chart (or polar area chart), where each category is represented by a sector with a radius proportional to the value.
 ```yaml
 properties:
@@ -441,7 +441,7 @@ views:
 ```
 
 ## sankey
-![sankey example](images/chart-types/relationships--material-flow-sankey.png)
+![sankey example](images/chart-types/sankey-basic--user-funnel-flow-sankey.png)
 Displays flow quantities proportionally, showing transfers or distribution between different nodes or stages.
 ```yaml
 properties:
@@ -460,7 +460,7 @@ views:
 ```
 
 ## scatter
-![scatter example](images/chart-types/demographics--gdp-vs-life-expectancy.png)
+![scatter example](images/chart-types/scatter-basic--gdp-vs-life-expectancy.png)
 Displays values for typically two variables for a set of data as a collection of points, revealing correlations or clusters.
 ```yaml
 properties:
@@ -476,7 +476,7 @@ views:
 ```
 
 ## stackedBar
-![stackedBar example](images/chart-types/sales-dashboard--sales-by-quarter-stacked.png)
+![stackedBar example](images/chart-types/stacked-bar-basic--revenue-by-quarter-stacked.png)
 Displays categorical data as stacked segments within each bar, useful for comparing totals and part-to-whole relationships across series.
 ```yaml
 properties:
@@ -495,7 +495,7 @@ views:
 ```
 
 ## sunburst
-![sunburst example](images/chart-types/project-management--project-tasks-sunburst.png)
+![sunburst example](images/chart-types/sunburst-basic--project-tasks-sunburst.png)
 Displays hierarchical data as a series of concentric rings, where each ring corresponds to a level in the hierarchy.
 ```yaml
 properties:
@@ -511,7 +511,7 @@ views:
 ```
 
 ## themeRiver
-![themeRiver example](images/chart-types/trends--news-topics-river.png)
+![themeRiver example](images/chart-types/theme-river-basic--news-topics-river.png)
 Displays changes in different categories over time as a flowing river of varying widths, also known as a streamgraph.
 ```yaml
 properties:
@@ -530,7 +530,7 @@ views:
 ```
 
 ## tree
-![tree example](images/chart-types/project-management--project-tasks-tree.png)
+![tree example](images/chart-types/tree-basic--project-tasks-tree.png)
 Displays hierarchical data in a standard node-link tree structure, illustrating parent-child relationships.
 ```yaml
 properties:
@@ -543,7 +543,7 @@ views:
 ```
 
 ## treemap
-![treemap example](images/chart-types/project-management--project-tasks-treemap.png)
+![treemap example](images/chart-types/treemap-basic--project-tasks-treemap.png)
 Displays hierarchical data as a set of nested rectangles, where the area of each rectangle is proportional to its value.
 ```yaml
 properties:
@@ -559,7 +559,7 @@ views:
 ```
 
 ## waterfall
-![waterfall example](images/chart-types/waterfall-chart--budget-waterfall.png)
+![waterfall example](images/chart-types/waterfall-basic--budget-waterfall.png)
 Displays how an initial value is affected by a series of intermediate positive or negative values, useful for financial analysis.
 ```yaml
 properties:
@@ -575,7 +575,7 @@ views:
 ```
 
 ## wordCloud
-![wordCloud example](images/chart-types/word-cloud--keyword-frequency-word-cloud.png)
+![wordCloud example](images/chart-types/word-cloud-basic--keyword-frequency-word-cloud.png)
 Displays a collection of text data where the size of each word indicates its frequency or importance.
 ```yaml
 properties:

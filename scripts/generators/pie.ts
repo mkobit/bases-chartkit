@@ -1,4 +1,5 @@
 import * as fc from 'fast-check'
+import * as R from 'remeda'
 import { TRAFFIC_SOURCES, themeSubset } from './themes'
 
 /**
@@ -22,8 +23,12 @@ export const pieChartArbitrary = themeSubset(
   })
   .map(data => ({
     type: 'pie',
-    data: data.names.map((name, i) => ({
-      name: name,
-      value: data.values[i],
+    // R.zip pairs each name with its value -- avoids positional
+    // `data.values[i]` indexing, which would type as `number | undefined`
+    // under this repo's noUncheckedIndexedAccess (same fix as bar.ts's
+    // stackedBarChartArbitrary and heatmap.ts's heatmapChartArbitrary).
+    data: R.zip(data.names, data.values).map(([name, value]) => ({
+      name,
+      value,
     })),
   }))

@@ -1,0 +1,20 @@
+properties:
+  note.Continent:
+    displayName: Continent
+  note.GDP:
+    displayName: GDP
+  note.LifeExpectancy:
+    displayName: Life Expectancy
+  note.Population:
+    displayName: Population
+views:
+  - type: polar-scatter-chart
+    name: GDP vs life expectancy (polar scatter)
+    xAxisProp: note.GDP
+    yAxisProp: note.LifeExpectancy
+    seriesProp: note.Continent
+    sizeProp: note.Population
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "polar-scatter/notes"

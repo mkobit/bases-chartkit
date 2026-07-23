@@ -1,0 +1,14 @@
+properties:
+  note.Path:
+    displayName: Path
+  note.Value:
+    displayName: Value
+views:
+  - type: sunburst-chart
+    name: Project tasks sunburst
+    xAxisProp: note.Path
+    valueProp: note.Value
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "sunburst/notes"
