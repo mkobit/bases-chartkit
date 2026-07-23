@@ -18,7 +18,7 @@ test.describe('radar chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'RPG_Stats.base', viewName: 'Character stats radar' })
+    }, { path: 'radar/Basic.base', viewName: 'Character stats radar' })
 
     // Wait for the radar's indicator axes to be populated before asserting.
     // ECharts' getOption() always returns 'radar' as an array (it supports
@@ -36,7 +36,7 @@ test.describe('radar chart rendering', () => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- verified with `tsc --noEmit` directly: removing this produces TS2532 'Object is possibly undefined' under noUncheckedIndexedAccess. The lint rule's own type analysis disagrees with tsc here.
     const indicatorNames = option.radar[0]!.indicator.map(indicator => indicator.name)
 
-    // RPG_Stats.base declares display names ("Strength", "Intelligence",
+    // radar/Basic.base declares display names ("Strength", "Intelligence",
     // "Agility") for the underlying note.Strength/note.Intelligence/note.Agility
     // properties. Buggy code shows the raw 'note.X' paths instead.
     expect(indicatorNames).toEqual(['Strength', 'Intelligence', 'Agility'])

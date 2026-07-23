@@ -1,5 +1,4 @@
 import * as fc from 'fast-check'
-import { PRODUCT_NAMES, themeSubset } from './themes'
 
 const hierarchyData = [
   { path: 'Company/CEO/VP Sales',
@@ -34,24 +33,14 @@ export const treeChartArbitrary = fc.constant({
 
 /**
  * Arbitrary for Treemap data.
- * Currently flat structure based on transformer implementation.
+ * treemap-chart's transformer (src/charts/transformers/treemap.ts) calls the
+ * same buildHierarchy(data, pathProp, valueProp) as sunburst -- it expects
+ * slash-delimited hierarchical paths, not a flat name/value list. Reuses the
+ * same hierarchyData as sunburst/tree above (also matches the ground-truth
+ * Project_Management.base, which bound all three views to the identical
+ * note.Path/note.Value props) instead of a separate flat theme-based shape.
  */
-export const treemapChartArbitrary = themeSubset(PRODUCT_NAMES, 4)
-  .chain((names) => {
-    return fc.record({
-      names: fc.constant(names),
-      values: fc.array(
-        fc.integer({ min: 10,
-          max: 100 }),
-        { minLength: names.length,
-          maxLength: names.length },
-      ),
-    })
-  })
-  .map(data => ({
-    type: 'treemap',
-    data: data.names.map((name, i) => ({
-      name: name,
-      value: data.values[i],
-    })),
-  }))
+export const treemapChartArbitrary = fc.constant({
+  type: 'treemap',
+  data: hierarchyData,
+})

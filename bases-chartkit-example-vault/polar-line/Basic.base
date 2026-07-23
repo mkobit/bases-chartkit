@@ -1,0 +1,17 @@
+properties:
+  note.Load:
+    displayName: Load
+  note.Server:
+    displayName: Server
+  note.Time:
+    displayName: Time
+views:
+  - type: polar-line-chart
+    name: Server load (polar line)
+    xAxisProp: note.Time
+    valueProp: note.Load
+    seriesProp: note.Server
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "polar-line/notes"

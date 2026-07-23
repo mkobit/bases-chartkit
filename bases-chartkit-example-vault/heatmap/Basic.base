@@ -1,0 +1,17 @@
+properties:
+  note.Load:
+    displayName: Load
+  note.Server:
+    displayName: Server
+  note.Time:
+    displayName: Time
+views:
+  - type: heatmap-chart
+    name: Server load heatmap
+    xAxisProp: note.Time
+    yAxisProp: note.Server
+    valueProp: note.Load
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "heatmap/notes"

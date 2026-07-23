@@ -1,0 +1,23 @@
+properties:
+  note.Close:
+    displayName: Close
+  note.Date:
+    displayName: Date
+  note.High:
+    displayName: High
+  note.Low:
+    displayName: Low
+  note.Open:
+    displayName: Open
+views:
+  - type: candlestick-chart
+    name: AAPL stock analysis
+    xAxisProp: note.Date
+    openProp: note.Open
+    closeProp: note.Close
+    highProp: note.High
+    lowProp: note.Low
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "candlestick/notes"

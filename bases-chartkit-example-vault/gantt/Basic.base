@@ -1,0 +1,20 @@
+properties:
+  note.End:
+    displayName: End
+  note.Project:
+    displayName: Project
+  note.Start:
+    displayName: Start
+  note.Task:
+    displayName: Task
+views:
+  - type: gantt-chart
+    name: Project Gantt chart
+    taskProp: note.Task
+    startProp: note.Start
+    endProp: note.End
+    seriesProp: note.Project
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "gantt/notes"

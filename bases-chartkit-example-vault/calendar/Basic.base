@@ -1,0 +1,14 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Mood:
+    displayName: Mood
+views:
+  - type: calendar-chart
+    name: Mood calendar
+    xAxisProp: note.Date
+    valueProp: note.Mood
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "calendar/notes"

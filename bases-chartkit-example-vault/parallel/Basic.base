@@ -1,0 +1,19 @@
+properties:
+  note.Agility:
+    displayName: Agility
+  note.Class:
+    displayName: Class
+  note.Intelligence:
+    displayName: Intelligence
+  note.Strength:
+    displayName: Strength
+views:
+  - type: parallel-chart
+    name: Character stats (parallel)
+    xProp: note.Strength, note.Intelligence, note.Agility
+    seriesProp: note.Class
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "parallel/notes"
+        - note.Class != null

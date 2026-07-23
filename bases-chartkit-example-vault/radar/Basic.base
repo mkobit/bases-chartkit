@@ -1,0 +1,21 @@
+properties:
+  note.Agility:
+    displayName: Agility
+  note.Class:
+    displayName: Class
+  note.Intelligence:
+    displayName: Intelligence
+  note.Name:
+    displayName: Name
+  note.Strength:
+    displayName: Strength
+views:
+  - type: radar-chart
+    name: Character stats radar
+    xAxisProp: note.Name
+    metricProps: note.Strength, note.Intelligence, note.Agility
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "radar/notes"
+        - note.Class != null

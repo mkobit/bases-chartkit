@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+// Usage: bun run vault:dev [-- --theme <light|dark>]  (defaults to dark)
+// `--theme` presets Obsidian's base color scheme before launch, so a manual
+// visual pass doesn't have to navigate Settings -> Appearance by hand.
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
@@ -18,9 +21,40 @@ const HOT_RELOAD_VERSION = '0.3.1'
 const WINDOW_WIDTH = 2560
 const WINDOW_HEIGHT = 1440
 
+// Obsidian's own appearance.json vocabulary for the two built-in base
+// themes -- "obsidian" is the dark scheme, "moonstone" is the light scheme.
+const OBSIDIAN_THEME_BY_MODE = { dark: 'obsidian', light: 'moonstone' } as const
+type ViewMode = keyof typeof OBSIDIAN_THEME_BY_MODE
+
 interface CdpPage {
   readonly type: string
   readonly webSocketDebuggerUrl: string
+}
+
+const DEFAULT_VIEW_MODE: ViewMode = 'dark'
+
+function parseThemeArg(argv: readonly string[]): ViewMode {
+  const flagIndex = argv.indexOf('--theme')
+  if (flagIndex === -1) {
+    return DEFAULT_VIEW_MODE
+  }
+  const value = argv[flagIndex + 1]
+  if (value !== 'light' && value !== 'dark') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`--theme must be "light" or "dark", got: ${String(value)}`)
+  }
+  return value
+}
+
+async function applyViewMode(vaultPath: string, mode: ViewMode): Promise<void> {
+  const appearancePath = path.join(vaultPath, '.obsidian', 'appearance.json')
+  const existingRaw = await fs.readFile(appearancePath, 'utf8').catch(() => '{}')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appearance.json is Obsidian-internal and trusted here; only the `theme` key below is written deliberately.
+  const existing = JSON.parse(existingRaw)
+  await fs.writeFile(
+    appearancePath,
+    JSON.stringify({ ...existing, theme: OBSIDIAN_THEME_BY_MODE[mode] }),
+  )
 }
 
 async function findObsidianPage(): Promise<CdpPage | undefined> {
@@ -68,20 +102,29 @@ async function resizeWindowWhenReady(attemptsRemaining = 20): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  const viewMode = parseThemeArg(process.argv.slice(2))
   const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
+
+  // Copied to a tmpdir so interactive poking never dirties the git-tracked
+  // example vault (Obsidian rewrites .base YAML and workspace state on
+  // every view interaction). Done as its own setupVault() call (rather than
+  // via launch()'s copy:true) so there's a copied-but-not-yet-launched vault
+  // to write the --theme preset into before Obsidian ever reads it.
+  const copiedVault = await launcher.setupVault({
+    vault: VAULT_PATH,
+    copy: true,
+    plugins: [ROOT_DIR, { id: 'hot-reload', version: HOT_RELOAD_VERSION }],
+  })
+
+  await applyViewMode(copiedVault, viewMode)
 
   const { proc, configDir, vault } = await launcher.launch({
     appVersion: 'latest',
     installerVersion: 'latest',
-    vault: VAULT_PATH,
-    // Copied to a tmpdir so interactive poking never dirties the
-    // git-tracked example vault (Obsidian rewrites .base YAML and
-    // workspace state on every view interaction). Neither this copy nor
-    // `configDir` below is cleaned up by obsidian-launcher itself -- both
-    // are plain tmpdirs left for the caller to remove, which is what the
-    // `proc.on('close', ...)` cleanup does.
-    copy: true,
-    plugins: [ROOT_DIR, { id: 'hot-reload', version: HOT_RELOAD_VERSION }],
+    vault: copiedVault,
+    // Already copied and had plugins installed above -- copy:false here
+    // avoids a redundant second copy of the vault.
+    copy: false,
     args: [
       '--disable-gpu',
       `--remote-debugging-port=${CDP_PORT}`,

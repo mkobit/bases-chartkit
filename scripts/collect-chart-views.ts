@@ -24,6 +24,12 @@ export interface ChartViewEntry {
   readonly chartType: string
 }
 
+// fs.readdirSync's recursive:true overload types its result as
+// `string[] | NonSharedBuffer[]` (the Buffer branch only actually occurs
+// when `encoding: 'buffer'` is passed, which it isn't here) -- this guard
+// proves the string branch without a cast.
+const isEntryName = (entry: string | Buffer): entry is string => typeof entry === 'string'
+
 const isBaseView = (value: unknown): value is BaseView => {
   if (value === null || typeof value !== 'object') {
     return false
@@ -41,10 +47,18 @@ const getViews = (parsed: unknown): ReadonlyArray<unknown> => {
   return parsed.views
 }
 
+// Directory.base is a plain Bases "table" view (see scripts/vault-gen/
+// directory.ts) with no ECharts canvas -- the survey's readiness check
+// (waiting for a `.bases-echarts canvas`) can never succeed for it, and it
+// isn't a chart type to document in docs/chart-types.md anyway.
+const isDocumentableBaseFile = (name: string): boolean => name !== 'Directory.base'
+
 function collectChartViews(): ReadonlyArray<ChartViewEntry> {
   const baseFiles = R.pipe(
-    fs.readdirSync(VAULT_DIR),
+    fs.readdirSync(VAULT_DIR, { recursive: true }),
+    R.filter(isEntryName),
     R.filter(name => name.endsWith('.base')),
+    R.filter(isDocumentableBaseFile),
     R.sort((a, b) => a.localeCompare(b)),
   )
 

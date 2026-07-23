@@ -1,0 +1,13 @@
+properties:
+  note.Load:
+    displayName: Load
+views:
+  - type: gauge-chart
+    name: Server load gauge (average)
+    yAxisProp: note.Load
+    aggregation: "avg"
+    minVal: 0
+    maxVal: 100
+    filters:
+      and:
+        - file.folder == "gauge/notes"

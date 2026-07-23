@@ -1,0 +1,17 @@
+properties:
+  note.PointX:
+    displayName: Point X
+  note.PointY:
+    displayName: Point Y
+  note.Weight:
+    displayName: Weight
+views:
+  - type: bubble-chart
+    name: Weighted point cloud (bubble)
+    xAxisProp: note.PointX
+    yAxisProp: note.PointY
+    sizeProp: note.Weight
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "bubble/notes"

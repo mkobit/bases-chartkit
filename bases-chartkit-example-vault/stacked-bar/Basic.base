@@ -1,0 +1,17 @@
+properties:
+  note.Quarter:
+    displayName: Quarter
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: stacked-bar-chart
+    name: Revenue by quarter (stacked)
+    xAxisProp: note.Quarter
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "stacked-bar/notes"

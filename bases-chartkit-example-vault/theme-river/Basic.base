@@ -1,0 +1,17 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Mentions:
+    displayName: Mentions
+  note.Topic:
+    displayName: Topic
+views:
+  - type: theme-river-chart
+    name: News topics river
+    xAxisProp: note.Date
+    valueProp: note.Mentions
+    seriesProp: note.Topic
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "theme-river/notes"

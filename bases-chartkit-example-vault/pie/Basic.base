@@ -1,0 +1,14 @@
+properties:
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: pie-chart
+    name: Sales by region (pie)
+    xAxisProp: note.Region
+    yAxisProp: note.Revenue
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "pie/notes"

@@ -1,0 +1,17 @@
+properties:
+  note.Amount:
+    displayName: Amount
+  note.Source:
+    displayName: Source
+  note.Target:
+    displayName: Target
+views:
+  - type: sankey-chart
+    name: User funnel flow (sankey)
+    xAxisProp: note.Source
+    yAxisProp: note.Target
+    valueProp: note.Amount
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "sankey/notes"

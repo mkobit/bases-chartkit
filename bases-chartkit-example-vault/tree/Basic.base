@@ -1,0 +1,11 @@
+properties:
+  note.Path:
+    displayName: Path
+views:
+  - type: tree-chart
+    name: Project tasks tree
+    xAxisProp: note.Path
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "tree/notes"

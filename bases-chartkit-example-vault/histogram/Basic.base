@@ -1,0 +1,10 @@
+properties:
+  note.Score:
+    displayName: Score
+views:
+  - type: histogram-chart
+    name: Score distribution
+    valueProp: note.Score
+    filters:
+      and:
+        - file.folder == "histogram/notes"

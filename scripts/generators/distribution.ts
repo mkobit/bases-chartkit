@@ -1,4 +1,5 @@
 import * as fc from 'fast-check'
+import * as R from 'remeda'
 import { PRODUCT_NAMES, themeSubset } from './themes'
 
 /**
@@ -34,16 +35,23 @@ export const boxplotChartArbitrary = themeSubset(PRODUCT_NAMES, 2)
 
 /**
  * Arbitrary for Histogram data.
- * Generates a list of numeric values.
+ * Generates a list of numeric values, 2 decimal places.
+ * Uses fc.integer (scaled) rather than fc.float -- fc.float's default
+ * generator is heavily biased toward 0/boundary values under
+ * getDeterministicSample's numRuns:1 sampling (confirmed empirically across
+ * several seeds: 80-96% of values landed under 5), which produced a
+ * degenerate single-bar histogram instead of a real distribution. fc.integer
+ * doesn't share that bias (matches boxplot/pareto/waterfall's arbitraries
+ * above, which all already use fc.integer for the same reason).
  */
 export const histogramChartArbitrary = fc.array(
-  fc.float({ min: 0,
-    max: 100 }),
+  fc.integer({ min: 0,
+    max: 10_000 }),
   { minLength: 50,
     maxLength: 200 },
 ).map(values => ({
   type: 'histogram',
-  data: values.map(v => ({ value: parseFloat(v.toFixed(2)) })),
+  data: values.map(v => ({ value: parseFloat((v / 100).toFixed(2)) })),
 }))
 
 /**
@@ -64,9 +72,9 @@ export const paretoChartArbitrary = themeSubset(PRODUCT_NAMES, 4)
   })
   .map(data => ({
     type: 'pareto',
-    data: data.names.map((name, i) => ({
-      name: name,
-      value: data.values[i],
+    data: R.zip(data.names, data.values).map(([name, value]) => ({
+      name,
+      value,
     })),
   }))
 

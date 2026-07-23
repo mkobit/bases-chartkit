@@ -1,0 +1,13 @@
+properties:
+  note.Change:
+    displayName: Change
+  note.Step:
+    displayName: Step
+views:
+  - type: waterfall-chart
+    name: Budget waterfall
+    xAxisProp: note.Step
+    yAxisProp: note.Change
+    filters:
+      and:
+        - file.folder == "waterfall/notes"

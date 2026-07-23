@@ -1,0 +1,14 @@
+properties:
+  note.Path:
+    displayName: Path
+  note.Value:
+    displayName: Value
+views:
+  - type: treemap-chart
+    name: Project tasks treemap
+    xAxisProp: note.Path
+    valueProp: note.Value
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "treemap/notes"

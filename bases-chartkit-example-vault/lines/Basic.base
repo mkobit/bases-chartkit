@@ -1,0 +1,23 @@
+properties:
+  note.EndX:
+    displayName: End X
+  note.EndY:
+    displayName: End Y
+  note.RouteType:
+    displayName: Route Type
+  note.StartX:
+    displayName: Start X
+  note.StartY:
+    displayName: Start Y
+views:
+  - type: lines-chart
+    name: Route lines
+    xAxisProp: note.StartX
+    yAxisProp: note.StartY
+    end_x_prop: note.EndX
+    end_y_prop: note.EndY
+    seriesProp: note.RouteType
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "lines/notes"
