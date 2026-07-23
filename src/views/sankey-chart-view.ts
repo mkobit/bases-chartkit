@@ -1,13 +1,20 @@
 import type { ViewOption, TextOption } from 'obsidian'
+import { Notice } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { ChartType } from '../charts/transformer'
 import { transformDataToChartOption } from '../charts/transformer'
+import { hasSankeyCycle, sankeyLinkSignature } from '../charts/transformers/sankey'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
 import { t } from '../lang/text'
 
 export class SankeyChartView extends BaseChartView {
   readonly type = 'sankey'
+  // Tracks which cyclic link set the Notice was last shown for, rather than
+  // a plain boolean latch -- a boolean would suppress the Notice forever
+  // once shown, even if the data later changes to a *different* cycle
+  // without ever passing through a valid, acyclic render in between.
+  private lastCycleNoticeSignature: string | null = null
 
   getChartType(): ChartType {
     return 'sankey'
@@ -21,6 +28,16 @@ export class SankeyChartView extends BaseChartView {
     if (!xProp || !yProp) {
       return null
     }
+
+    if (hasSankeyCycle(data, xProp, yProp)) {
+      const signature = sankeyLinkSignature(data, xProp, yProp)
+      if (this.lastCycleNoticeSignature !== signature) {
+        new Notice(t('views.sankey.cycle_error'))
+        this.lastCycleNoticeSignature = signature
+      }
+      return null
+    }
+    this.lastCycleNoticeSignature = null
 
     return transformDataToChartOption(
       data,

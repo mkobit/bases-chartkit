@@ -7,15 +7,19 @@ export interface SankeyTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
 }
 
-export function createSankeyChartOption(
+interface SankeyLink {
+  readonly source: string
+  readonly target: string
+  readonly value: number
+}
+
+function buildLinks(
   data: BasesData,
   sourceProp: string,
   targetProp: string,
-  options?: SankeyTransformerOptions,
-): EChartsOption {
-  const valueProp = options?.valueProp
-
-  const links = R.pipe(
+  valueProp?: string,
+): readonly SankeyLink[] {
+  return R.pipe(
     data,
     R.map((item) => {
       const sourceRaw = getNestedValue(
@@ -46,9 +50,119 @@ export function createSankeyChartOption(
           })()
         : null
     }),
-    R.filter((x): x is Readonly<{ source: string
-      target: string
-      value: number }> => x !== null),
+    R.filter((x): x is SankeyLink => x !== null),
+    // ECharts' sankey series throws ("Self link is not allowed") on any
+    // source === target row -- drop those rather than crashing the render.
+    R.filter(link => link.source !== link.target),
+  )
+}
+
+interface CycleVisitState {
+  readonly visiting: ReadonlySet<string>
+  readonly visited: ReadonlySet<string>
+}
+
+interface CycleSearchResult {
+  readonly hasCycle: boolean
+  readonly state: CycleVisitState
+}
+
+function detectCycleFrom(
+  node: string,
+  adjacency: Record<string, readonly string[]>,
+  state: CycleVisitState,
+): CycleSearchResult {
+  return state.visited.has(node)
+    ? { hasCycle: false, state }
+    : state.visiting.has(node)
+      ? { hasCycle: true, state }
+      : (() => {
+          const nextState: CycleVisitState = {
+            visiting: new Set([...state.visiting, node]),
+            visited: state.visited,
+          }
+          const neighbors = adjacency[node] ?? []
+
+          const result = neighbors.reduce<CycleSearchResult>(
+            (acc, neighbor) => (acc.hasCycle ? acc : detectCycleFrom(neighbor, adjacency, acc.state)),
+            { hasCycle: false, state: nextState },
+          )
+
+          return result.hasCycle
+            ? result
+            : {
+                hasCycle: false,
+                state: { visiting: state.visiting, visited: new Set([...result.state.visited, node]) },
+              }
+        })()
+}
+
+// ECharts' sankey series requires a DAG and throws ("sankey is a directed
+// acyclic graph") at render time otherwise -- callers must check this before
+// handing links to ECharts, since a cycle can't be filtered row-by-row the
+// way a self-loop can.
+export function hasSankeyCycle(
+  data: BasesData,
+  sourceProp: string,
+  targetProp: string,
+): boolean {
+  const links = buildLinks(
+    data,
+    sourceProp,
+    targetProp,
+  )
+
+  const adjacency = R.pipe(
+    links,
+    R.groupBy(l => l.source),
+    R.mapValues(group => group.map(l => l.target)),
+  )
+
+  const nodeNames = R.pipe(
+    links,
+    R.flatMap(l => [l.source, l.target]),
+    R.unique(),
+  )
+
+  return nodeNames.reduce<CycleSearchResult>(
+    (acc, name) => (acc.hasCycle ? acc : detectCycleFrom(name, adjacency, acc.state)),
+    { hasCycle: false, state: { visiting: new Set<string>(), visited: new Set<string>() } },
+  ).hasCycle
+}
+
+// A stable string identifying the current set of (post-self-loop-filter)
+// links -- lets a caller that reacts to hasSankeyCycle (e.g. showing a
+// Notice) tell "still the same cycle, re-rendered" apart from "the data
+// changed to a different cycle" without re-deriving buildLinks' extraction
+// logic itself.
+export function sankeyLinkSignature(
+  data: BasesData,
+  sourceProp: string,
+  targetProp: string,
+): string {
+  return R.pipe(
+    buildLinks(
+      data,
+      sourceProp,
+      targetProp,
+    ),
+    R.map(l => `${l.source}->${l.target}`),
+    R.sortBy(x => x),
+    x => x.join('|'),
+  )
+}
+
+export function createSankeyChartOption(
+  data: BasesData,
+  sourceProp: string,
+  targetProp: string,
+  options?: SankeyTransformerOptions,
+): EChartsOption {
+  const links = buildLinks(
+    data,
+    sourceProp,
+    targetProp,
+    options?.valueProp,
   )
 
   const nodes = R.pipe(
@@ -62,7 +176,7 @@ export function createSankeyChartOption(
   const seriesItem: SankeySeriesOption = {
     type: 'sankey',
     data: nodes,
-    links: links,
+    links: [...links],
     emphasis: {
       focus: 'adjacency',
     },
