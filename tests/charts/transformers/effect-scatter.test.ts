@@ -48,7 +48,7 @@ describe(
     )
 
     it(
-      'should handle size property',
+      'should normalize size property through a visualMap instead of using it as raw pixel size',
       () => {
         const option = createEffectScatterChartOption(
           data,
@@ -59,19 +59,21 @@ describe(
           },
         )
 
+        const visualMap = option.visualMap as { min?: number, max?: number, inRange?: { symbolSize?: readonly number[] } }
+        expect(visualMap).toBeDefined()
+        // data's `size` values range 5-20 -- asserting these are carried
+        // through confirms the mapping is data-driven, not a hardcoded range.
+        expect(visualMap.min).toBe(5)
+        expect(visualMap.max).toBe(20)
+        expect(visualMap.inRange?.symbolSize).toEqual([10,
+          50])
+
+        // With a visualMap in place, symbolSize is resolved by ECharts from
+        // the visualMap, not by a per-series callback echoing the raw value
+        // straight through as pixel size (the bug this test used to pin).
         const series = option.series as readonly EffectScatterSeriesOption[]
         // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbolSize).toBeDefined()
-
-        // Check symbolSize function
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const symbolSizeFn = series[0].symbolSize as (val: unknown) => number
-        // Mock data point passed to symbolSize
-        const point = { x: 'A',
-          y: 10,
-          s: 'S1',
-          size: 30 }
-        expect(symbolSizeFn(point)).toBe(30)
+        expect(series[0].symbolSize).toBeUndefined()
       },
     )
 
