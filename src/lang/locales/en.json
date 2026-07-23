@@ -277,7 +277,8 @@
 			"range_mid_prop": "Range mid property",
 			"range_mid_placeholder": "Select range mid property",
 			"range_high_prop": "Range high property",
-			"range_high_placeholder": "Select range high property"
+			"range_high_placeholder": "Select range high property",
+			"target_series_name": "Target"
 		},
 		"radial_bar": {
 			"name": "Radial bar chart",

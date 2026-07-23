@@ -5,6 +5,7 @@ import * as R from 'remeda'
 
 export interface BulletTransformerOptions extends BaseTransformerOptions {
   readonly targetProp?: string
+  readonly targetLabel?: string
   readonly rangeLowProp?: string
   readonly rangeMidProp?: string
   readonly rangeHighProp?: string
@@ -155,7 +156,7 @@ export function createBulletChartOption(
   }
 
   const scatterSeries: ScatterSeriesOption = {
-    name: targetProp ?? 'Target',
+    name: options?.targetLabel ?? 'Target',
     type: 'scatter',
     encode: flipAxis
       ? { x: 't',
