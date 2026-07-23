@@ -188,7 +188,8 @@
 		"sankey": {
 			"name": "Sankey chart",
 			"value_prop": "Value property",
-			"value_placeholder": "Property to use for link value"
+			"value_placeholder": "Property to use for link value",
+			"cycle_error": "Sankey chart: source/target data contains a cycle (e.g. A leads to B leads to A), which isn't supported. Fix the underlying rows so links form a directed acyclic graph."
 		},
 		"graph": {
 			"name": "Graph chart",

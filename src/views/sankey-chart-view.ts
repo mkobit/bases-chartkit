@@ -1,13 +1,16 @@
 import type { ViewOption, TextOption } from 'obsidian'
+import { Notice } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { ChartType } from '../charts/transformer'
 import { transformDataToChartOption } from '../charts/transformer'
+import { hasSankeyCycle } from '../charts/transformers/sankey'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
 import { t } from '../lang/text'
 
 export class SankeyChartView extends BaseChartView {
   readonly type = 'sankey'
+  private hasShownCycleNotice = false
 
   getChartType(): ChartType {
     return 'sankey'
@@ -21,6 +24,15 @@ export class SankeyChartView extends BaseChartView {
     if (!xProp || !yProp) {
       return null
     }
+
+    if (hasSankeyCycle(data, xProp, yProp)) {
+      if (!this.hasShownCycleNotice) {
+        new Notice(t('views.sankey.cycle_error'))
+        this.hasShownCycleNotice = true
+      }
+      return null
+    }
+    this.hasShownCycleNotice = false
 
     return transformDataToChartOption(
       data,
