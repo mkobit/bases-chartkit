@@ -73,6 +73,9 @@ function createWideFormatRadarOption(
   })
 
   const radarIndicators = metricProps.map((prop, index) => {
+    // `d.value` is built from this same `metricProps` array above, so it's
+    // always exactly as long -- `?? 0` only satisfies noUncheckedIndexedAccess,
+    // it's not covering a real out-of-range case.
     const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
     return { name: options?.metricLabels?.[prop] ?? prop, min, max }
   })
@@ -180,6 +183,8 @@ function createLongFormatRadarOption(
 
   // 4. Construct Option
   const radarIndicators = indicatorsList.map((name, index) => {
+    // Same as the wide-format builder above: `d.value` is always as long as
+    // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.
     const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
     return { name, min, max }
   })
