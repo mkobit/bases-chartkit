@@ -9,7 +9,7 @@ import * as path from 'node:path'
 import * as R from 'remeda'
 import type { Page } from '@playwright/test'
 import { test, expect } from '../fixtures/obsidian'
-import { evaluateObsidian } from '../helpers/evaluate'
+import { evaluateObsidian, waitForChartFinished } from '../helpers/evaluate'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const CHART_VIEWS_PATH = path.join(ROOT_DIR, '.test-output', 'chart-views.json')
@@ -131,6 +131,12 @@ async function captureView(page: Page, entry: ChartViewEntry): Promise<CaptureRe
           async () => page.locator('.bases-echarts canvas').count(),
           { timeout: 30_000 },
         ).toBeGreaterThan(0)
+
+        // Without this, the screenshot can land mid entrance-animation --
+        // the same deterministically-seeded data still renders a different
+        // frame depending on capture timing, producing spurious pixel diffs
+        // between runs (see waitForChartFinished's doc comment).
+        await waitForChartFinished(page)
 
         const canvas = page.locator('.bases-echarts canvas').first()
         await canvas.screenshot({ path: path.join(OUTPUT_DIR, fileName) })
