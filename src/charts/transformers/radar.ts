@@ -9,6 +9,22 @@ export interface RadarTransformerOptions extends BaseTransformerOptions {
   readonly metricLabels?: Readonly<Record<string, string>>
 }
 
+interface IndicatorRange {
+  readonly min: number
+  readonly max: number
+}
+
+// ECharts scales each radar axis independently, defaulting an unspecified
+// max to the largest value ECharts happens to see for that axis -- so two
+// metrics with very different natural ranges (e.g. a 0-20 metric next to a
+// 0-10000 metric) end up implying false parity on the polygon. Auto-compute
+// a real per-indicator range from the data instead of leaving it unscaled.
+function computeIndicatorRange(values: readonly number[]): IndicatorRange {
+  const rawMax = values.length > 0 ? Math.max(...values) : 10
+  const rawMin = Math.min(0, values.length > 0 ? Math.min(...values) : 0)
+  return { min: rawMin, max: rawMax > rawMin ? rawMax : rawMin + 10 }
+}
+
 export function createRadarChartOption(
   data: BasesData,
   indicatorProp: string,
@@ -39,8 +55,6 @@ function createWideFormatRadarOption(
   metricProps: readonly string[],
   options?: RadarTransformerOptions,
 ): EChartsOption {
-  const radarIndicators = metricProps.map(prop => ({ name: options?.metricLabels?.[prop] ?? prop }))
-
   const seriesData = data.map((item) => {
     const nameRaw = getNestedValue(
       item,
@@ -56,6 +70,14 @@ function createWideFormatRadarOption(
     })
     return { value: values,
       name }
+  })
+
+  const radarIndicators = metricProps.map((prop, index) => {
+    // `d.value` is built from this same `metricProps` array above, so it's
+    // always exactly as long -- `?? 0` only satisfies noUncheckedIndexedAccess,
+    // it's not covering a real out-of-range case.
+    const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
+    return { name: options?.metricLabels?.[prop] ?? prop, min, max }
   })
 
   const seriesItem: RadarSeriesOption = {
@@ -160,10 +182,12 @@ function createLongFormatRadarOption(
   })
 
   // 4. Construct Option
-  const radarIndicators = R.map(
-    indicatorsList,
-    name => ({ name }),
-  )
+  const radarIndicators = indicatorsList.map((name, index) => {
+    // Same as the wide-format builder above: `d.value` is always as long as
+    // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.
+    const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
+    return { name, min, max }
+  })
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
