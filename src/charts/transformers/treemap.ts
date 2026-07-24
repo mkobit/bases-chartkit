@@ -32,8 +32,15 @@ export function createTreemapChartOption(
       show: true,
       formatter: '{b}',
     },
+    // ECharts' treemap defaultOption hardcodes itemStyle.borderColor to an
+    // opaque white design token with no dark-theme override (unlike
+    // sunburst, whose bundled dark theme swaps borderColor to match the
+    // chart background). borderWidth defaults to 0, so this line was never
+    // a visible divider so much as a canvas hairline-stroke artifact at
+    // zero width -- an explicit transparent stroke removes that artifact
+    // in both themes instead of picking one theme's background color.
     itemStyle: {
-      borderColor: '#fff',
+      borderColor: 'transparent',
     },
   }
 

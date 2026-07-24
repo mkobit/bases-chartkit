@@ -73,6 +73,29 @@ describe(
     )
 
     it(
+      'should use a transparent border instead of ECharts\' hardcoded white default',
+      () => {
+        const data = [{ path: 'A/B',
+          val: 10 }]
+
+        const option = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          {},
+        )
+
+        const series = option.series as readonly TreemapSeriesOption[]
+        // Regression: ECharts' treemap default itemStyle.borderColor is an
+        // opaque white with no dark-theme override, so an explicit
+        // transparent border is required to avoid a hardcoded-white
+        // artifact on dark backgrounds.
+        expect(series[0]?.itemStyle).toEqual({ borderColor: 'transparent' })
+      },
+    )
+
+    it(
       'should handle missing values gracefully',
       () => {
         const data = [
