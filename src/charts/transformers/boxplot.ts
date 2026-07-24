@@ -98,16 +98,27 @@ export function createBoxplotChartOption(
 
       const result: unknown = prepareBoxplotData(rawData)
 
+      // ECharts' boxplot defaultOption hardcodes itemStyle.color to an
+      // opaque white design token (no dark-theme override exists), while
+      // leaving borderColor unset so it still resolves per-series from the
+      // active color palette. An explicit transparent fill keeps that
+      // palette-colored outline as the only visible box style, which reads
+      // correctly in both light and dark themes without duplicating the
+      // white block on a near-black background.
+      const itemStyle = { color: 'transparent' }
+
       return !isBoxplotResult(result)
         ? {
             name: sName,
             type: 'boxplot' as const,
             data: [],
+            itemStyle,
           }
         : {
             name: sName,
             type: 'boxplot' as const,
             data: result.boxData,
+            itemStyle,
           }
     }),
   )
