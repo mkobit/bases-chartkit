@@ -164,6 +164,11 @@ export abstract class BaseChartView extends BasesView {
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
       upColor: this.plugin.settings.upColor,
       downColor: this.plugin.settings.downColor,
+      // Tied to getTheme()'s actual resolved theme (not the raw OS-level
+      // isDarkMode() signal) so a selected custom theme -- which getTheme()
+      // prioritizes over the OS dark-mode fallback -- isn't overridden by an
+      // unrelated dark/light mismatch here.
+      isDarkMode: this.getTheme() === 'dark',
     }
 
     if (this.isFullScreenGeneration) {

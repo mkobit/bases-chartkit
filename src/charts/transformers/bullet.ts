@@ -101,9 +101,14 @@ export function createBulletChartOption(
 
   // Range Series (Background)
   const hasRanges = Boolean(rangeLowProp || rangeMidProp || rangeHighProp)
-  const rangeColors = ['#e0e0e0',
-    '#bdbdbd',
-    '#9e9e9e'] as const
+  const isDarkMode = options?.isDarkMode ?? false
+  // Light-mode bands run light-to-mid-gray against a light/transparent chart
+  // background; dark-mode bands run dark-to-mid-gray against ECharts' dark
+  // theme background (~#040810) so they stay visible without turning into a
+  // stark light-gray box on near-black.
+  const rangeColors = isDarkMode
+    ? ['#404040', '#595959', '#737373'] as const
+    : ['#e0e0e0', '#bdbdbd', '#9e9e9e'] as const
 
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
@@ -171,7 +176,7 @@ export function createBulletChartOption(
           4],
     z: 3,
     itemStyle: {
-      color: '#000',
+      color: isDarkMode ? '#fff' : '#000',
     },
   }
 

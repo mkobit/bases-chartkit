@@ -24,4 +24,5 @@ export interface BaseTransformerOptions extends VisualMapOptions {
   readonly containerWidth?: number
   readonly upColor?: string
   readonly downColor?: string
+  readonly isDarkMode?: boolean
 }
