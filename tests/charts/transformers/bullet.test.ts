@@ -239,6 +239,64 @@ describe(
     )
 
     it(
+      'should use light-mode range colors and a black target marker by default',
+      () => {
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          {
+            targetProp: 'target',
+            rangeLowProp: 'low',
+            rangeMidProp: 'mid',
+            rangeHighProp: 'high',
+          },
+        )
+
+        const series = Array.isArray(option.series) ? option.series : []
+        const bars = series.filter(isBarSeriesOption)
+        const [range1, range2, range3] = bars
+        expect(range1?.itemStyle?.color).toBe('#e0e0e0')
+        expect(range2?.itemStyle?.color).toBe('#bdbdbd')
+        expect(range3?.itemStyle?.color).toBe('#9e9e9e')
+
+        const target = series.find(isScatterSeriesOption)
+        expect(target?.itemStyle?.color).toBe('#000')
+      },
+    )
+
+    it(
+      'should use dark-mode range colors and a white target marker when isDarkMode is true',
+      () => {
+        // Regression (bck-gz6.1): hardcoded light-gray bands and a black
+        // target marker rendered as a stark light box on a near-black
+        // background in dark mode.
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          {
+            targetProp: 'target',
+            rangeLowProp: 'low',
+            rangeMidProp: 'mid',
+            rangeHighProp: 'high',
+            isDarkMode: true,
+          },
+        )
+
+        const series = Array.isArray(option.series) ? option.series : []
+        const bars = series.filter(isBarSeriesOption)
+        const [range1, range2, range3] = bars
+        expect(range1?.itemStyle?.color).toBe('#404040')
+        expect(range2?.itemStyle?.color).toBe('#595959')
+        expect(range3?.itemStyle?.color).toBe('#737373')
+
+        const target = series.find(isScatterSeriesOption)
+        expect(target?.itemStyle?.color).toBe('#fff')
+      },
+    )
+
+    it(
       'should handle flipped axis with ranges',
       () => {
         const option = createBulletChartOption(

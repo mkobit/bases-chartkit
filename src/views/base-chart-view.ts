@@ -164,6 +164,7 @@ export abstract class BaseChartView extends BasesView {
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
       upColor: this.plugin.settings.upColor,
       downColor: this.plugin.settings.downColor,
+      isDarkMode: this.isDarkMode(),
     }
 
     if (this.isFullScreenGeneration) {
