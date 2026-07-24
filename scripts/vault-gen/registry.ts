@@ -113,8 +113,7 @@ const roseSpec = defineChartExampleSpec<BarSample>({
       },
       // legendPosition/legendOrient regression coverage (bck-bjg): rose
       // dropped these until it started spreading getCommonTransformerOptions().
-      literalOptions: { showLegend: true,
-        legendPosition: 'right' },
+      literalOptions: { showLegend: true, legendPosition: 'right' },
     },
   ],
 })
