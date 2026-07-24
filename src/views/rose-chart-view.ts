@@ -10,7 +10,6 @@ export class RoseChartView extends BaseChartView {
     // Rose chart uses X-Axis as Category and Y-Axis as Value, similar to Pie
     const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY)
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
-    const showLegend = this.config.get(BaseChartView.LEGEND_KEY) as boolean
 
     if (typeof xProp !== 'string' || typeof yProp !== 'string') {
       return null
@@ -22,7 +21,7 @@ export class RoseChartView extends BaseChartView {
       yProp,
       'rose',
       {
-        legend: showLegend,
+        ...this.getCommonTransformerOptions(),
       },
     )
   }
