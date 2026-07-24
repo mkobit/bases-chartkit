@@ -65,6 +65,11 @@ describe(
         expect(option.xAxis.name).toBe('cat')
         // @ts-ignore
         expect(option.yAxis.name).toBe('val')
+
+        // Regression: ECharts' boxplot default fill is an opaque white with
+        // no dark-theme override, so an explicit transparent fill is
+        // required to avoid a solid white block on dark backgrounds.
+        expect(series.itemStyle).toEqual({ color: 'transparent' })
       },
     )
 
