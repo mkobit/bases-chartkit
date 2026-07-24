@@ -9,6 +9,7 @@ views:
     xAxisProp: note.Department
     yAxisProp: note.Spend
     showLegend: true
+    legendPosition: "right"
     filters:
       and:
         - file.folder == "rose/notes"
