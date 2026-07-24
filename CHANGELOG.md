@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.2.0](https://github.com/mkobit/bases-chartkit/compare/0.1.0...0.2.0) (2026-07-24)
+
+
+### Features
+
+* **example-vault:** restructure example vault to directory-per-chart-type ([#342](https://github.com/mkobit/bases-chartkit/issues/342)) ([5984900](https://github.com/mkobit/bases-chartkit/commit/598490093c2085301061575cf4556de20ca98fa5))
+
+
+### Bug fixes
+
+* **boxplot-chart:** stop white fill from hardcoding a solid block in dark theme ([#349](https://github.com/mkobit/bases-chartkit/issues/349)) ([8160a1b](https://github.com/mkobit/bases-chartkit/commit/8160a1b945e6a1a608136e1e699c6a54e6c1d248))
+* **bullet-chart:** adapt range bands and target marker to dark theme ([#348](https://github.com/mkobit/bases-chartkit/issues/348)) ([b378bb3](https://github.com/mkobit/bases-chartkit/commit/b378bb31b5772cafab27f8eb14ccb37a70c2823a))
+* **ci:** keep release draft until assets attach, avoid immutable-release 422 ([#341](https://github.com/mkobit/bases-chartkit/issues/341)) ([d91b27d](https://github.com/mkobit/bases-chartkit/commit/d91b27d3bfe5e95b10fca3df8f9381ee7535c43b))
+* **ci:** match release.yml tag trigger to real tag format, make release-please manual ([#335](https://github.com/mkobit/bases-chartkit/issues/335)) ([09db272](https://github.com/mkobit/bases-chartkit/commit/09db2723ed5c20ef959691220b726e609d608ce0))
+* **ci:** revert release-please to auto-run on push to main ([#336](https://github.com/mkobit/bases-chartkit/issues/336)) ([526bb97](https://github.com/mkobit/bases-chartkit/commit/526bb978df0c80c54cb4c65701fc31d3de6ed9da))
+* **e2e:** clean up Obsidian child + tmpdirs on SIGTERM/SIGINT to the worker ([#339](https://github.com/mkobit/bases-chartkit/issues/339)) ([201d8da](https://github.com/mkobit/bases-chartkit/commit/201d8da0352c16a3214c94f2857b7ebebd6e5b76))
+* **e2e:** wait for ECharts 'finished' before capturing docs screenshots ([#343](https://github.com/mkobit/bases-chartkit/issues/343)) ([a13f33c](https://github.com/mkobit/bases-chartkit/commit/a13f33cca6828fb13de1dd2db44e61d9d2696419))
+* **effect-scatter-chart:** normalize sizeProp through a visualMap instead of raw pixel size ([#345](https://github.com/mkobit/bases-chartkit/issues/345)) ([895e494](https://github.com/mkobit/bases-chartkit/commit/895e494dca61ac2f69c6145dc34b7145e90ab038))
+* **lint:** require a reason on every eslint-disable comment ([#344](https://github.com/mkobit/bases-chartkit/issues/344)) ([95223c9](https://github.com/mkobit/bases-chartkit/commit/95223c9a1ad78927d4e65cef407e7c8fefd6471a))
+* **radar-chart:** auto-compute per-indicator min/max instead of leaving axes unscaled ([#347](https://github.com/mkobit/bases-chartkit/issues/347)) ([1dd2285](https://github.com/mkobit/bases-chartkit/commit/1dd2285bfe34f324f582f01b3ab38d52b7f53dc0))
+* **rose-chart:** thread legendPosition/legendOrient through to the transformer ([#350](https://github.com/mkobit/bases-chartkit/issues/350)) ([a70278a](https://github.com/mkobit/bases-chartkit/commit/a70278a66014194591f7d9f14b0f536d71c3ad8f))
+* **sankey-chart:** drop self-loops and detect cycles before rendering ([#346](https://github.com/mkobit/bases-chartkit/issues/346)) ([a123a3c](https://github.com/mkobit/bases-chartkit/commit/a123a3c66917d0e035d01ba9bcd847b20b816de2))
+
+
+### Documentation
+
+* chart-type screenshots and dependency cleanup ([#338](https://github.com/mkobit/bases-chartkit/issues/338)) ([6bf6067](https://github.com/mkobit/bases-chartkit/commit/6bf6067a171bc19062153a1505a611f6cb4eaa10))
+
 ## [0.1.0](https://github.com/mkobit/bases-chartkit/compare/bases-chartkit-0.0.1...bases-chartkit-0.1.0) (2026-07-20)
 
 
