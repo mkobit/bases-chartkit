@@ -33,12 +33,16 @@ export function createTreemapChartOption(
       formatter: '{b}',
     },
     // ECharts' treemap defaultOption hardcodes itemStyle.borderColor to an
-    // opaque white design token with no dark-theme override (unlike
-    // sunburst, whose bundled dark theme swaps borderColor to match the
-    // chart background). borderWidth defaults to 0, so this line was never
-    // a visible divider so much as a canvas hairline-stroke artifact at
-    // zero width -- an explicit transparent stroke removes that artifact
-    // in both themes instead of picking one theme's background color.
+    // opaque white design token with no dark-theme override (dark.js's
+    // treemap entry only restyles the breadcrumb, unlike sunburst's, which
+    // swaps borderColor to match the chart background). Treemap renders
+    // each tile as two composited rects -- a full-size one filled with
+    // borderColor, and a borderWidth-inset one filled with the real color
+    // on top -- so at the default borderWidth: 0 this was never a visible
+    // divider so much as a sub-pixel sliver of the background rect peeking
+    // through at squarify-layout rounding edges. An explicit transparent
+    // background rect removes that artifact in both themes instead of
+    // picking one theme's background color to hardcode instead.
     itemStyle: {
       borderColor: 'transparent',
     },
