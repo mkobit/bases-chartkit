@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('chart rendering', () => {
   test('opens a .base file and mounts an echarts canvas', async ({ obsidianPage: { page } }) => {
@@ -23,10 +23,14 @@ test.describe('chart rendering', () => {
 
     // Canvas presence in the DOM is the regression signal: it proves the chart
     // view's onload() ran cleanly (addAction-style bugs would throw and skip
-    // the mount) and renderChart reached the ECharts init.
+    // the mount) and renderChart reached the ECharts init. bar/ sorts
+    // alphabetically before the large chart-type directories (calendar,
+    // heatmap, theme-river) so this is low-risk today, but a cold Obsidian
+    // profile's vault indexing time is shared across every test, so this uses
+    // the same generous timeout as the rest of the suite.
     await expect.poll(
       async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: 30_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
   })
 
@@ -51,7 +55,7 @@ test.describe('chart rendering', () => {
         const opt = await getChartOption(page) as { readonly series?: ReadonlyArray<{ readonly type: string }> } | null
         return opt?.series?.length ?? 0
       },
-      { timeout: 30_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     // Verify the options.

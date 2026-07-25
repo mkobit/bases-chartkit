@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian } from './helpers/evaluate'
+import { evaluateObsidian, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('tree chart async data update', () => {
   // Regression test for obsidian-bases-charts-fs4.3: Bases resolves its query
@@ -68,6 +68,9 @@ test.describe('tree chart async data update', () => {
       const chartView = findChartView(activeLeafView, 0, [])
       const option = chartView?.chart.getOption()
       return option?.series?.[0]?.data?.length ?? 0
-    }), { timeout: 15_000 }).toBeGreaterThan(0)
+    // tree/ sorts alphabetically after all three large-volume chart-type
+    // directories (calendar, heatmap, theme-river) -- the highest cold-start
+    // indexing risk in the suite.
+    }), { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS }).toBeGreaterThan(0)
   })
 })

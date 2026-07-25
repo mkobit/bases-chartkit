@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface LegendOptionLike {
   readonly orient?: string
@@ -30,12 +30,15 @@ test.describe('rose chart rendering', () => {
       })
     }, { path: 'rose/Basic.base', viewName: 'Department spend (rose)' })
 
+    // rose/ sorts alphabetically after calendar/ and heatmap/ (both
+    // large-volume directories), so it carries the same cold-start indexing
+    // risk as radar/ and map/.
     await expect.poll(
       async () => {
         const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
         return option?.series?.length ?? 0
       },
-      { timeout: 30_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     const option = await getChartOption(page) as { readonly legend?: LegendOptionLike | readonly LegendOptionLike[] }

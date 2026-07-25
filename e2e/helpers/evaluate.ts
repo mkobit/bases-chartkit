@@ -1,6 +1,25 @@
 import type { App } from 'obsidian'
 import type { Page } from '@playwright/test'
 
+/**
+ * A cold Obsidian profile (fresh configDir, no persisted metadata cache --
+ * true of every e2e Playwright launch) can take longer than 30s to finish
+ * indexing/caching frontmatter for the whole example vault before Bases
+ * queries resolve, now that the vault contains several large-volume
+ * chart-type directories (calendar: 365 notes, heatmap: 168, theme-river:
+ * 150). Use this for any expect.poll() that depends on Bases query results
+ * resolving (series/indicator/visual data), not just canvas presence.
+ *
+ * 100s rather than a round 60s or 90s: a clean single run of the
+ * sankey-chart rendering test still exceeded a 60_000ms budget on its first
+ * attempt (only passed on Playwright's automatic retry), and a full
+ * back-to-back run of the whole indexing-sensitive suite produced one more
+ * marginal case at 90_000ms -- indexing time is load-sensitive, not a fixed
+ * cost. 100s leaves headroom under playwright.config.ts's 120_000ms
+ * per-test timeout for the rest of each test's setup/assertions.
+ */
+export const VAULT_INDEXED_POLL_TIMEOUT_MS = 100_000
+
 // Unified runner: evaluates `fn` inside the Obsidian renderer. When `args` is
 // omitted the function receives only `app`. Args must be JSON-serializable
 // since they're shipped over CDP.

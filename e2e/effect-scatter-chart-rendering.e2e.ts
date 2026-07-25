@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getSeriesVisualValues } from './helpers/evaluate'
+import { evaluateObsidian, getSeriesVisualValues, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('effect-scatter chart rendering', () => {
   // Regression test: sizeProp must be normalized into a bounded pixel range
@@ -24,10 +24,12 @@ test.describe('effect-scatter chart rendering', () => {
 
     // Wait for the effect-scatter series to have resolved item visuals --
     // Bases resolves its query asynchronously, so population data (and the
-    // symbolSize it drives) arrives after the first paint.
+    // symbolSize it drives) arrives after the first paint. effect-scatter/
+    // sorts alphabetically after calendar/ (365 notes), so it's at risk of
+    // the same cold-start indexing delay as radar/ and map/.
     await expect.poll(
       async () => (await getSeriesVisualValues(page, { seriesIndex: 0, visualKey: 'symbolSize' })).length,
-      { timeout: 30_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     // These are the *actually rendered* pixel sizes ECharts computed for each
