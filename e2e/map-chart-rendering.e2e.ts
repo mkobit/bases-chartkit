@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getMapSeriesState } from './helpers/evaluate'
+import { evaluateObsidian, getMapSeriesState, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import type { MapSeriesState } from './helpers/evaluate'
 import * as R from 'remeda'
 
@@ -34,15 +34,12 @@ test.describe('map chart rendering', () => {
 
     // registerMap (asset load) and Bases' query (note data) resolve on
     // separate async paths, so item values stay null until both settle.
-    // 60s rather than this repo's usual 30s: a cold Obsidian profile now
-    // indexes the whole (much larger, post-reorg) example vault before Bases
-    // queries resolve, and that alone can take longer than 30s.
     await expect.poll(
       async () => {
         const state = await getMapSeriesState(page, { seriesIndex: 0 })
         return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
       },
-      { timeout: 60_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBe(5)
 
     const state = await getMapSeriesState(page, { seriesIndex: 0 })

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('radar chart rendering', () => {
   // Regression test for obsidian-bases-charts-769: wide-format (metricProps)
@@ -23,13 +23,15 @@ test.describe('radar chart rendering', () => {
     // Wait for the radar's indicator axes to be populated before asserting.
     // ECharts' getOption() always returns 'radar' as an array (it supports
     // multiple radar coordinate systems per chart), even though this view
-    // only configures one.
+    // only configures one. radar/ sorts alphabetically after every
+    // large-volume chart-type directory (calendar, heatmap, theme-river), so
+    // this test is at the highest risk of a cold-start indexing timeout.
     await expect.poll(
       async () => {
         const option = await getChartOption(page) as { readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> } | null
         return option?.radar?.[0]?.indicator?.length ?? 0
       },
-      { timeout: 30_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     const option = await getChartOption(page) as { readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }
