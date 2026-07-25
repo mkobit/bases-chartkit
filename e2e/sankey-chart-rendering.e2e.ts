@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import type { SankeySeriesOption } from 'echarts'
 
 interface SankeyOptionLike {
@@ -27,7 +27,7 @@ test.describe('sankey chart rendering', () => {
         const opt = await getChartOption(page) as SankeyOptionLike | null
         return opt?.series?.[0]?.links?.length ?? 0
       },
-      { timeout: 60_000 },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     const option = await getChartOption(page) as SankeyOptionLike | null
@@ -86,7 +86,7 @@ test.describe('sankey chart rendering', () => {
     })
 
     const cycleNotice = page.locator('.notice', { hasText: 'cycle' })
-    await expect(cycleNotice).toBeVisible({ timeout: 60_000 })
+    await expect(cycleNotice).toBeVisible({ timeout: VAULT_INDEXED_POLL_TIMEOUT_MS })
 
     // chart.clear() (the base view's empty-state path for a null
     // getChartOption) resets ECharts to no series at all, not a sankey

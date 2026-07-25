@@ -23,9 +23,9 @@ test.describe('radar chart rendering', () => {
     // Wait for the radar's indicator axes to be populated before asserting.
     // ECharts' getOption() always returns 'radar' as an array (it supports
     // multiple radar coordinate systems per chart), even though this view
-    // only configures one. radar/ sorts alphabetically after every
-    // large-volume chart-type directory (calendar, heatmap, theme-river), so
-    // this test is at the highest risk of a cold-start indexing timeout.
+    // only configures one. radar/ sorts alphabetically after calendar/ and
+    // heatmap/ (both large-volume directories), so this test is at risk of a
+    // cold-start indexing timeout, same as rose/ and effect-scatter/.
     await expect.poll(
       async () => {
         const option = await getChartOption(page) as { readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> } | null
