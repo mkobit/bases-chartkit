@@ -5,8 +5,8 @@
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
-import { applyViewMode } from '../e2e/vault/appearance'
-import type { ViewMode } from '../e2e/vault/appearance'
+import { applyViewMode } from '../e2e/vault'
+import type { ViewMode } from '../e2e/vault'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
