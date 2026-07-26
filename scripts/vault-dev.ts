@@ -5,6 +5,8 @@
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
+import { applyViewMode } from '../e2e/vault'
+import type { ViewMode } from '../e2e/vault'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
@@ -20,11 +22,6 @@ const HOT_RELOAD_VERSION = '0.3.1'
 // BrowserWindow) is what actually works.
 const WINDOW_WIDTH = 2560
 const WINDOW_HEIGHT = 1440
-
-// Obsidian's own appearance.json vocabulary for the two built-in base
-// themes -- "obsidian" is the dark scheme, "moonstone" is the light scheme.
-const OBSIDIAN_THEME_BY_MODE = { dark: 'obsidian', light: 'moonstone' } as const
-type ViewMode = keyof typeof OBSIDIAN_THEME_BY_MODE
 
 interface CdpPage {
   readonly type: string
@@ -44,17 +41,6 @@ function parseThemeArg(argv: readonly string[]): ViewMode {
     throw new Error(`--theme must be "light" or "dark", got: ${String(value)}`)
   }
   return value
-}
-
-async function applyViewMode(vaultPath: string, mode: ViewMode): Promise<void> {
-  const appearancePath = path.join(vaultPath, '.obsidian', 'appearance.json')
-  const existingRaw = await fs.readFile(appearancePath, 'utf8').catch(() => '{}')
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- appearance.json is Obsidian-internal and trusted here; only the `theme` key below is written deliberately.
-  const existing = JSON.parse(existingRaw)
-  await fs.writeFile(
-    appearancePath,
-    JSON.stringify({ ...existing, theme: OBSIDIAN_THEME_BY_MODE[mode] }),
-  )
 }
 
 async function findObsidianPage(): Promise<CdpPage | undefined> {

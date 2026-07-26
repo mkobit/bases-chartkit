@@ -5,6 +5,8 @@ import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
 import * as fs from 'node:fs/promises'
+import { applyViewMode } from '../vault'
+import type { ViewMode } from '../vault'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
@@ -76,7 +78,14 @@ export type ObsidianPage = {
   readonly page: Page
 }
 
-type ObsidianFixtures = {
+type ObsidianOptions = {
+  // Presets Obsidian's color scheme before launch via test.use({ theme: ... }).
+  // Undefined (the default) leaves the committed example vault's own
+  // appearance.json untouched, matching every existing test's behavior.
+  readonly theme: ViewMode | undefined
+}
+
+type ObsidianFixtures = ObsidianOptions & {
   readonly obsidianPage: ObsidianPage
 }
 
@@ -102,16 +111,32 @@ function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string 
 }
 
 export const test = base.extend<ObsidianFixtures>({
-  obsidianPage: async ({}, use) => {
+  theme: [undefined, { option: true }],
+  obsidianPage: async ({ theme }, use) => {
     const port = await findFreePort()
     const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
+
+    // Copied via setupVault (rather than launch()'s own copy:true) so
+    // there's a copied-but-not-yet-launched vault to preset appearance.json
+    // into before Obsidian ever reads it -- writing after launch() races
+    // Obsidian actually reading the file. Matches scripts/vault-dev.ts's
+    // validated --theme technique.
+    const copiedVault = await launcher.setupVault({
+      vault: VAULT_PATH,
+      copy: true,
+      plugins: [ROOT_DIR],
+    })
+    if (theme) {
+      await applyViewMode(copiedVault, theme)
+    }
 
     const { proc, configDir, vault } = await launcher.launch({
       appVersion: OBSIDIAN_APP_VERSION,
       installerVersion: OBSIDIAN_INSTALLER_VERSION,
-      vault: VAULT_PATH,
-      copy: true,
-      plugins: [ROOT_DIR],
+      vault: copiedVault,
+      // Already copied (and, if requested, theme-preset) above -- copy:false
+      // here avoids a redundant second copy of the vault.
+      copy: false,
       args: [`--remote-debugging-port=${port}`],
       spawnOptions: { stdio: 'pipe' },
     })
