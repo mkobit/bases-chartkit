@@ -28,7 +28,11 @@ const CHART_VIEWS_PATH = path.join(ROOT_DIR, '.test-output', 'chart-views.json')
 // scheme (via the theme fixture option) and the output directory -- set by
 // the docs:screenshots:dark(:headless) npm scripts, unset (light) by the
 // plain docs:screenshots(:headless) ones.
-const SURVEY_THEME = process.env.SURVEY_THEME === 'dark' ? 'dark' : undefined
+const rawSurveyTheme = process.env.SURVEY_THEME
+if (rawSurveyTheme !== undefined && rawSurveyTheme !== 'dark') {
+  process.stderr.write(`[chart-types.survey] SURVEY_THEME=${rawSurveyTheme} is not "dark"; falling back to light mode\n`)
+}
+const SURVEY_THEME = rawSurveyTheme === 'dark' ? 'dark' : undefined
 const OUTPUT_DIR = SURVEY_THEME === 'dark'
   ? path.join(ROOT_DIR, '.test-output', 'chart-types-dark')
   : path.join(ROOT_DIR, 'docs', 'images', 'chart-types')
