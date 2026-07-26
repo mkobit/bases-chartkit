@@ -26,7 +26,7 @@ export function createTreemapChartOption(
     data: asTreemapData(hierarchyData),
     roam: false, // Zoom/pan
     breadcrumb: {
-      show: false,
+      show: true,
     },
     label: {
       show: true,
