@@ -3,7 +3,17 @@
 // instance, sweeps every chart view across every `.base` file in the example
 // vault, and screenshots each one for use in docs/chart-types.md.
 //
-// Run via `bun run docs:screenshots` / `bun run docs:screenshots:headless`.
+// Run via `bun run docs:screenshots` / `bun run docs:screenshots:headless`
+// for the light-mode set docs/chart-types.md embeds, or
+// `bun run docs:screenshots:dark` / `:dark:headless` for a dark-mode pass.
+// BaseChartView picks its ECharts theme from Obsidian's own dark/light mode
+// (src/views/base-chart-view.ts's isDarkMode()/getTheme()), so chart
+// appearance is genuinely theme-dependent, not just a CSS pass-through --
+// the dark pass is a real, separate rendering of every chart type, not a
+// filter over the same screenshots. Written to .test-output/ rather than
+// docs/images/ since docs/chart-types.md currently embeds only one image per
+// chart type (light) -- these are for manual visual review, not doc
+// embedding, until/unless that changes.
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as R from 'remeda'
@@ -13,7 +23,15 @@ import { evaluateObsidian, waitForChartFinished } from '../helpers/evaluate'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const CHART_VIEWS_PATH = path.join(ROOT_DIR, '.test-output', 'chart-views.json')
-const OUTPUT_DIR = path.join(ROOT_DIR, 'docs', 'images', 'chart-types')
+
+// SURVEY_THEME=dark switches both the launched Obsidian instance's color
+// scheme (via the theme fixture option) and the output directory -- set by
+// the docs:screenshots:dark(:headless) npm scripts, unset (light) by the
+// plain docs:screenshots(:headless) ones.
+const SURVEY_THEME = process.env.SURVEY_THEME === 'dark' ? 'dark' : undefined
+const OUTPUT_DIR = SURVEY_THEME === 'dark'
+  ? path.join(ROOT_DIR, '.test-output', 'chart-types-dark')
+  : path.join(ROOT_DIR, 'docs', 'images', 'chart-types')
 
 interface ChartViewEntry {
   readonly baseFile: string
@@ -154,7 +172,9 @@ async function captureView(page: Page, entry: ChartViewEntry): Promise<CaptureRe
   }
 }
 
-test('capture chart-type screenshots', async ({ obsidianPage: { page } }) => {
+test.use({ theme: SURVEY_THEME })
+
+test(`capture chart-type screenshots (${SURVEY_THEME ?? 'light'})`, async ({ obsidianPage: { page } }) => {
   const entries = readChartViews()
   fs.mkdirSync(OUTPUT_DIR, { recursive: true })
 

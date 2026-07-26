@@ -8,6 +8,8 @@
 		"build": "bun esbuild.config.mjs production",
 		"dev": "bun esbuild.config.mjs",
 		"docs:screenshots": "bun scripts/collect-chart-views.ts && bun x playwright test --config=playwright.survey.config.ts",
+		"docs:screenshots:dark": "bun scripts/collect-chart-views.ts && SURVEY_THEME=dark bun x playwright test --config=playwright.survey.config.ts",
+		"docs:screenshots:dark:headless": "bun scripts/collect-chart-views.ts && SURVEY_THEME=dark xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' bun x playwright test --config=playwright.survey.config.ts",
 		"docs:screenshots:headless": "bun scripts/collect-chart-views.ts && xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' bun x playwright test --config=playwright.survey.config.ts",
 		"lint": "eslint .",
 		"test": "bun test ./tests",
