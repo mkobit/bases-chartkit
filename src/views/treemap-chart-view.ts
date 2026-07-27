@@ -51,7 +51,7 @@ export class TreemapChartView extends BaseChartView {
       pathProp,
       valueProp,
       'treemap',
-      {},
+      this.getCommonTransformerOptions(),
     )
   }
 }
