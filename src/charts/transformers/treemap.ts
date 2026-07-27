@@ -13,6 +13,13 @@ export function createTreemapChartOption(
   data: BasesData,
   pathProp: string,
   valueProp: string,
+  // Common transformer options (legend, etc.) are accepted for parity with
+  // every other chart type but deliberately unused: ECharts' TreemapSeries
+  // has no legendVisualProvider (unlike PieSeries), so a legend component
+  // would only ever show one entry for the single unnamed series, not one
+  // per node. A per-node legend would need real engineering (explicit
+  // legend.data + matching itemStyle.color per root branch) beyond what
+  // this shared options plumbing provides.
   _options?: TreemapTransformerOptions,
 ): EChartsOption {
   const hierarchyData = buildHierarchy(
