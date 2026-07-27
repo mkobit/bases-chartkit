@@ -54,7 +54,7 @@ describe(
     )
 
     it(
-      'should disable the built-in breadcrumb so it does not duplicate the top-level label',
+      'should enable the built-in breadcrumb so a zoomed-in node can be navigated back out',
       () => {
         const data = [{ path: 'A/B',
           val: 10 }]
@@ -68,7 +68,7 @@ describe(
         )
 
         const series = option.series as readonly TreemapSeriesOption[]
-        expect(series[0]?.breadcrumb?.show).toBe(false)
+        expect(series[0]?.breadcrumb?.show).toBe(true)
       },
     )
 
