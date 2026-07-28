@@ -1,8 +1,9 @@
 import type { ViewOption } from 'obsidian'
 import { Notice } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
-import * as echarts from 'echarts'
+import type * as echarts from 'echarts'
 import { transformDataToChartOption } from '../charts/transformer'
+import { acquireMap } from '../charts/map-registry'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
 import { z } from 'zod'
@@ -17,6 +18,7 @@ export class MapChartView extends BaseChartView {
 
   public static readonly MAP_FILE_KEY = 'mapFile'
   public static readonly REGION_PROP_KEY = 'regionProp'
+
   protected renderChart(): void {
     const mapFile = this.config.get(MapChartView.MAP_FILE_KEY) as string
 
@@ -32,23 +34,28 @@ export class MapChartView extends BaseChartView {
       return
     }
 
-    // Load map asynchronously
+    // Load map asynchronously. acquireMap only reads/parses the vault file
+    // when `mapFile` isn't already registered globally (e.g. by another open
+    // map-chart view, or this view's own earlier session) -- switching back
+    // to a previously-seen map skips straight to reuse instead of forcing a
+    // redundant vault read + re-registration.
     void (async () => {
       try {
-        const adapter = this.plugin.app.vault.adapter
-        if (!(await adapter.exists(mapFile))) {
-          new Notice(`Map file not found: ${mapFile}`)
-          return
-        }
-
-        const content = await adapter.read(mapFile)
-        const geoJson = geoJsonSchema.parse(content)
-
-        echarts.registerMap(
+        await acquireMap(
           mapFile,
-          // eslint-disable-next-line no-restricted-syntax -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
-          (geoJson as unknown) as Parameters<typeof echarts.registerMap>[1],
+          async () => {
+            const adapter = this.plugin.app.vault.adapter
+            if (!(await adapter.exists(mapFile))) {
+              // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+              throw new Error(`Map file not found: ${mapFile}`)
+            }
+            const content = await adapter.read(mapFile)
+            const geoJson = geoJsonSchema.parse(content)
+            // eslint-disable-next-line no-restricted-syntax -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
+            return (geoJson as unknown) as Parameters<typeof echarts.registerMap>[1]
+          },
         )
+
         this.registeredMapName = mapFile
         this.executeRender()
       }
