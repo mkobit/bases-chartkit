@@ -69,6 +69,41 @@ describe(
     )
 
     it(
+      'should drop rows whose date property is not actually a parseable date, instead of handing ECharts a garbage time-axis value',
+      () => {
+        // Reproduces the bug: safeToString(dateRaw) happily turned any
+        // truthy non-date string into a "date" for the time axis (e.g.
+        // "not-a-date"), which ECharts can't parse and which broke the
+        // chart with no diagnostic. Temporal-based parsing correctly
+        // rejects it instead.
+        const option = createThemeRiverChartOption(
+          [...data, { date: 'not-a-date', mentions: 1, topic: 'Tech' }],
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic' },
+        )
+
+        const series = option.series as ThemeRiverSeriesOption[]
+        expect(series[0]?.data).toHaveLength(3)
+      },
+    )
+
+    it(
+      'should accept an ISO instant string, not just a plain date, for the date property',
+      () => {
+        const option = createThemeRiverChartOption(
+          [{ date: '2023-01-01T12:00:00Z', mentions: 1, topic: 'Tech' }],
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic' },
+        )
+
+        const series = option.series as ThemeRiverSeriesOption[]
+        expect((series[0]?.data as any)[0][0]).toBe('2023-01-01')
+      },
+    )
+
+    it(
       'should fall back to the value field\'s label, not a hardcoded \'Series 1\', when themeProp is unset',
       () => {
         const option = createThemeRiverChartOption(

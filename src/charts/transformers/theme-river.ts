@@ -1,6 +1,7 @@
 import type { EChartsOption, ThemeRiverSeriesOption } from 'echarts'
+import { Temporal } from 'temporal-polyfill'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, parseDateToEpochMs } from './utils'
 import * as R from 'remeda'
 
 export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {
@@ -28,11 +29,16 @@ export function createThemeRiverChartOption(
         item,
         dateProp,
       )
-      const dateVal = safeToString(dateRaw)
+      // Parsed via Temporal (AGENTS.md) rather than handed to ECharts'
+      // time axis as whatever string safeToString happens to produce --
+      // that let non-date values through silently and broke the axis with
+      // no diagnostic. Unparseable dates are dropped here instead.
+      const epochMs = parseDateToEpochMs(dateRaw)
 
-      return !dateVal
+      return epochMs === null
         ? null
         : (() => {
+            const dateVal = Temporal.Instant.fromEpochMilliseconds(epochMs).toZonedDateTimeISO('UTC').toPlainDate().toString()
             const valNum = valueProp
               ? Number(getNestedValue(
                   item,
