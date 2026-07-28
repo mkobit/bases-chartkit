@@ -1,5 +1,6 @@
 import type { App } from 'obsidian'
 import type { Page } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 /**
  * A cold Obsidian profile (fresh configDir, no persisted metadata cache --
@@ -375,4 +376,237 @@ export async function getMapSeriesState(
       items,
     }
   }, args)
+}
+
+export interface ScreenPosition {
+  readonly pageX: number
+  readonly pageY: number
+}
+
+/**
+ * Finds the on-screen center of a rendered data point's shape (bar, point,
+ * slice, node, etc.) via ECharts' internal `getItemGraphicEl` -- the same
+ * bounding-box primitive ECharts' own TooltipView uses to position a
+ * manually-triggered tooltip. Returns null until that series/dataIndex's
+ * graphic element has actually rendered, which can lag behind canvas
+ * presence -- poll with `expect.poll` (see `hoverChartDataPointAndGetTooltip`)
+ * rather than assuming a single call right after the chart mounts succeeds.
+ *
+ * Verified reliable for discrete-shape series (bar, scatter/effect-scatter,
+ * pie-family) where each dataIndex is one drawable shape. NOT yet confirmed
+ * for series where one dataIndex renders as a zrender Group spanning several
+ * visual sub-elements with no fill (radar, and likely parallel) -- the
+ * smallest-leaf-shape heuristic below was built to handle that case but the
+ * hover still didn't reliably land on a live shape in manual testing. Chart
+ * types using this pattern need their hover coordinates spot-checked (a
+ * failing/flaky `hoverChartDataPointAndGetTooltip` call is the symptom)
+ * before trusting a passing test.
+ */
+export async function getSeriesItemScreenPosition(
+  page: Page,
+  args: { readonly seriesIndex: number, readonly dataIndex: number },
+): Promise<ScreenPosition | null> {
+  return evaluateObsidian(page, (app, a) => {
+    interface BoundingRect { readonly x: number, readonly y: number, readonly width: number, readonly height: number }
+    interface GraphicElLike {
+      readonly type?: string
+      readonly getBoundingRect?: () => BoundingRect
+      // zrender's Transformable#updateTransform composes each element's local
+      // matrix with its parent's during render, so by the time an element is
+      // actually on-screen this 6-value affine matrix ([a,b,c,d,e,f], applied
+      // as x'=a*x+c*y+e, y'=b*x+d*y+f) is already the full local-to-global
+      // transform -- not just this element's own local one. Required for
+      // anything nested inside a rotated/translated group (polar coordinate
+      // systems: radar, rose, polar-line/scatter, radial-bar, sunburst), where
+      // the raw bounding rect alone (cartesian bars' common case) is off.
+      readonly transform?: readonly [number, number, number, number, number, number]
+      // Present on zrender Group elements (e.g. radar/parallel: one whole
+      // multi-vertex shape per dataIndex, grouping its outline path plus a
+      // sub-group of small per-vertex symbol dots).
+      readonly childCount?: () => number
+      readonly childAt?: (idx: number) => GraphicElLike | undefined
+    }
+
+    interface LeafShape extends GraphicElLike {
+      readonly getBoundingRect: () => BoundingRect
+    }
+
+    function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
+      return typeof candidate.getBoundingRect === 'function'
+    }
+
+    // getItemGraphicEl can return a zrender Group rather than a single drawable
+    // shape (true for radar/parallel, where one dataIndex is a whole
+    // multi-point shape, not a discrete per-point mark). A group's own
+    // aggregate bounding-rect center is frequently empty space -- e.g. a
+    // radar polygon with no areaStyle is hollow, so its visual center hits
+    // nothing. Recurse to the actual leaf shapes and hover the smallest one:
+    // small leaves are the individual point/symbol marks; large ones (the
+    // connecting polyline/polygon outline) span the whole shape and are much
+    // more likely to have an empty center.
+    function collectLeafShapes(candidate: GraphicElLike): readonly LeafShape[] {
+      const count = candidate.childCount ? candidate.childCount() : 0
+      if (count === 0) {
+        return hasBoundingRect(candidate) ? [candidate] : []
+      }
+      return Array.from({ length: count }, (_, i) => candidate.childAt?.(i))
+        .filter((child): child is GraphicElLike => child !== undefined)
+        .flatMap(collectLeafShapes)
+    }
+
+    function smallestLeafShape(candidate: GraphicElLike): GraphicElLike {
+      const leafShapes = collectLeafShapes(candidate)
+      return leafShapes.length === 0
+        ? candidate
+        : leafShapes.reduce((smallest, next) => {
+            const smallestRect = smallest.getBoundingRect()
+            const nextRect = next.getBoundingRect()
+            return (nextRect.width * nextRect.height) < (smallestRect.width * smallestRect.height) ? next : smallest
+          })
+    }
+    interface SeriesDataLike {
+      readonly getItemGraphicEl: (idx: number) => GraphicElLike | undefined
+    }
+    interface SeriesModelLike {
+      readonly getData: () => SeriesDataLike
+    }
+    interface EChartsModelLike {
+      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+    }
+    interface ChartLike {
+      readonly chart: {
+        readonly getModel: () => EChartsModelLike
+        readonly getDom: () => HTMLElement
+      } | null
+    }
+
+    const isChartView = (obj: unknown): obj is ChartLike => {
+      if (obj === null || typeof obj !== 'object') {
+        return false
+      }
+      if (!('getChartOption' in obj) || !('chart' in obj)) {
+        return false
+      }
+      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+    }
+
+    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
+      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+        return undefined
+      }
+      if (depth > 8 || visited.includes(obj)) {
+        return undefined
+      }
+      if (isChartView(obj)) {
+        return obj
+      }
+      const nextVisited = [...visited, obj]
+      const values: readonly unknown[] = Object.values(obj)
+      return values
+        .map(value => findChartView(value, depth + 1, nextVisited))
+        .find((found): found is ChartLike => found !== undefined)
+    }
+
+    const leaves = [
+      app.workspace.getLeaf(false),
+      ...app.workspace.getLeavesOfType('bases'),
+    ]
+
+    const chartView = leaves
+      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
+      .find((view): view is ChartLike => view !== undefined)
+
+    const chart = chartView?.chart
+    if (!chart) {
+      return null
+    }
+
+    const el = chart.getModel().getSeriesByIndex(a.seriesIndex)?.getData().getItemGraphicEl(a.dataIndex)
+    if (!el || !hasBoundingRect(el)) {
+      return null
+    }
+    const target = smallestLeafShape(el)
+    if (!hasBoundingRect(target)) {
+      return null
+    }
+
+    const rect = target.getBoundingRect()
+    const localCenterX = rect.x + rect.width / 2
+    const localCenterY = rect.y + rect.height / 2
+
+    const [m0, m1, m2, m3, m4, m5] = target.transform ?? [1, 0, 0, 1, 0, 0]
+    const globalX = m0 * localCenterX + m2 * localCenterY + m4
+    const globalY = m1 * localCenterX + m3 * localCenterY + m5
+
+    const domRect = chart.getDom().getBoundingClientRect()
+    return {
+      pageX: domRect.left + globalX,
+      pageY: domRect.top + globalY,
+    }
+  }, args)
+}
+
+/**
+ * Reads ECharts' tooltip DOM node's rendered text content, if currently
+ * visible. ECharts appends the tooltip element inside the chart's own root
+ * container (`api.getDom()`), not `document.body`, and gives it no default
+ * className -- it's identifiable only via a `domBelongToZr` JS property set
+ * by TooltipHTMLContent. Returns null while hidden/empty.
+ */
+export async function getTooltipText(page: Page): Promise<string | null> {
+  return evaluateObsidian(page, () => {
+    const isZrOwnedDiv = (el: Element): el is Element & { readonly domBelongToZr: boolean } =>
+      'domBelongToZr' in el && el.domBelongToZr === true
+
+    const chartRoot = document.querySelector('.bases-echarts')
+    if (!chartRoot) {
+      return null
+    }
+    const tooltipEl = Array.from(chartRoot.querySelectorAll('div')).find(isZrOwnedDiv)
+    const text = tooltipEl?.textContent
+    return text && text.length > 0 ? text : null
+  })
+}
+
+/**
+ * Moves the real (OS-level) mouse over a specific data point's rendered
+ * shape and returns the tooltip text that appears.
+ *
+ * Uses a genuine `page.mouse.move` rather than
+ * `chart.dispatchAction({type: 'showTip', seriesIndex, dataIndex})` --
+ * confirmed empirically that the dispatchAction path silently no-ops for
+ * axis-triggered tooltips (bar/line/area) whenever the chart doesn't
+ * explicitly configure an `axisPointer` component, since ECharts'
+ * `_manuallyAxisShowTip` requires `ecModel.getComponent('axisPointer')` to
+ * already exist. A real mouse hover exercises the exact same hit-testing
+ * code path a user's pointer does, regardless of trigger/axisPointer config,
+ * so it works uniformly across every chart type.
+ */
+export async function hoverChartDataPointAndGetTooltip(
+  page: Page,
+  args: { readonly seriesIndex: number, readonly dataIndex: number },
+): Promise<string> {
+  await expect.poll(
+    () => getSeriesItemScreenPosition(page, args),
+    { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+  ).not.toBeNull()
+
+  const target = await getSeriesItemScreenPosition(page, args)
+  if (!target) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`no rendered graphic element for seriesIndex=${args.seriesIndex} dataIndex=${args.dataIndex} even after polling succeeded`)
+  }
+  await page.mouse.move(target.pageX, target.pageY)
+
+  await expect.poll(
+    () => getTooltipText(page),
+    { timeout: 5000 },
+  ).not.toBeNull()
+
+  const text = await getTooltipText(page)
+  if (text === null) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('tooltip text was null immediately after a poll confirmed it was non-null')
+  }
+  return text
 }
