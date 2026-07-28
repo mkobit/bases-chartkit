@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
+import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
 import type { DatasetComponentOption } from 'echarts'
 
 interface HeatmapSourceItem {
@@ -157,6 +158,31 @@ describe(
         expect(visualMap.min).toBe(10)
 
         expect(visualMap.max).toBe(100)
+      },
+    )
+
+    it(
+      'should abbreviate visualMap handle labels to avoid overlap on large-value axes',
+      () => {
+        const data = [
+          { x: 'A',
+            y: '1',
+            val: 10 },
+          { x: 'B',
+            y: '2',
+            val: 100 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const visualMap = option.visualMap as any
+
+        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
     )
   },

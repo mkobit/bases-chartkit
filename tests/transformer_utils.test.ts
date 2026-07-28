@@ -5,6 +5,8 @@ import {
   isRecord,
   getNestedValue,
   getLegendOption,
+  formatCompactVisualMapLabel,
+  parseDateToEpochMs,
 } from '../src/charts/transformers/utils'
 import type { BaseTransformerOptions } from '../src/charts/transformers/base'
 
@@ -253,6 +255,69 @@ describe('Transformer Utils', () => {
           expect(result.orient).toBe('horizontal')
         }
       })
+    })
+  })
+
+  describe('formatCompactVisualMapLabel', () => {
+    it('should abbreviate large numbers so visualMap handle labels stay short', () => {
+      // Reproduces the GDP-scale visualMap overlap bug: raw figures like
+      // 6994402 and 61092080 rendered next to each other and against the
+      // axis labels below, illegibly. Abbreviating keeps them short.
+      expect(formatCompactVisualMapLabel(6_994_402)).toBe('7M')
+      expect(formatCompactVisualMapLabel(61_092_080)).toBe('61.1M')
+    })
+
+    it('should pass through small numbers without unnecessary abbreviation', () => {
+      expect(formatCompactVisualMapLabel(42)).toBe('42')
+      expect(formatCompactVisualMapLabel(0)).toBe('0')
+    })
+
+    it('should stringify non-number values rather than throwing', () => {
+      expect(formatCompactVisualMapLabel('High')).toBe('High')
+    })
+  })
+
+  describe('parseDateToEpochMs', () => {
+    it('should pass numbers through as already-epoch milliseconds', () => {
+      expect(parseDateToEpochMs(1_672_531_200_000)).toBe(1_672_531_200_000)
+    })
+
+    it('should read epoch milliseconds off a Date-like object via getTime()', () => {
+      // Duck-typed rather than a real `Date` -- AGENTS.md bans the `Date`
+      // global in favor of Temporal, and parseDateToEpochMs itself only
+      // duck-types on `getTime()`, so this is what it actually receives
+      // whenever a Bases property does happen to surface a native Date.
+      const dateLike = { getTime: () => 1_672_531_200_000 }
+      expect(parseDateToEpochMs(dateLike)).toBe(1_672_531_200_000)
+    })
+
+    it('should parse an ISO instant string via Temporal.Instant', () => {
+      expect(parseDateToEpochMs('2023-01-01T00:00:00Z'))
+        .toBe(Temporal.Instant.from('2023-01-01T00:00:00Z').epochMilliseconds)
+    })
+
+    it('should fall back to Temporal.PlainDate for a bare calendar date string', () => {
+      expect(parseDateToEpochMs('2023-01-01'))
+        .toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
+    })
+
+    it('should unwrap an Obsidian Value-wrapper date property', () => {
+      // Mimics BasesNote#get()'s Value wrapper for date properties (see
+      // safeToString's own doc comment) -- not a string or native Date.
+      const wrapped = {
+        icon: 'lucide-calendar',
+        time: false,
+        renderTo: () => undefined,
+        toString: () => '2023-01-01',
+      }
+      expect(parseDateToEpochMs(wrapped))
+        .toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
+    })
+
+    it('should return null for a value that is not a real, parseable date', () => {
+      expect(parseDateToEpochMs('not-a-date')).toBeNull()
+      expect(parseDateToEpochMs(null)).toBeNull()
+      expect(parseDateToEpochMs(undefined)).toBeNull()
     })
   })
 })

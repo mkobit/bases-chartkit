@@ -2,6 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { createMapChartOption } from '../src/charts/transformers/map'
 import type { MapTransformerOptions } from '../src/charts/transformers/map'
 import type { BasesData } from '../src/charts/transformers/base'
+import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
 import type { MapSeriesOption, VisualMapComponentOption } from 'echarts'
 
 describe(
@@ -110,6 +111,26 @@ describe(
         // Min should be min value (38), Max should be max value (330)
         expect(visualMap.min).toBe(38)
         expect(visualMap.max).toBe(330)
+      },
+    )
+
+    it(
+      'should abbreviate visualMap handle labels to avoid overlap on large-value axes',
+      () => {
+        const options: MapTransformerOptions = {
+          mapName: mapName,
+          regionProp: 'Country',
+          valueProp: 'Population',
+        }
+
+        const result = createMapChartOption(
+          data,
+          mapName,
+          options,
+        )
+
+        const visualMap = result.visualMap as VisualMapComponentOption
+        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
     )
 

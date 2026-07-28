@@ -2,7 +2,7 @@ import type { EChartsOption, CalendarComponentOption, HeatmapSeriesOption, Visua
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue } from './utils'
+import { safeToString, getNestedValue, formatCompactVisualMapLabel } from './utils'
 
 export interface CalendarTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
@@ -132,6 +132,7 @@ export function createCalendarChartOption(
           left: options?.visualMapLeft ?? 'center',
           top: options?.visualMapTop ?? 65,
           type: options?.visualMapType ?? 'continuous',
+          formatter: formatCompactVisualMapLabel,
           ...(options?.visualMapColor ? { inRange: { color: options.visualMapColor } } : {}),
         }
 

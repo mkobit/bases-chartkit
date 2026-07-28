@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createEffectScatterChartOption } from '../../../src/charts/transformers/effect-scatter'
+import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
 import type { EffectScatterSeriesOption } from 'echarts'
 
 describe(
@@ -59,7 +60,7 @@ describe(
           },
         )
 
-        const visualMap = option.visualMap as { min?: number, max?: number, inRange?: { symbolSize?: readonly number[] } }
+        const visualMap = option.visualMap as { min?: number, max?: number, inRange?: { symbolSize?: readonly number[] }, formatter?: unknown }
         expect(visualMap).toBeDefined()
         // data's `size` values range 5-20 -- asserting these are carried
         // through confirms the mapping is data-driven, not a hardcoded range.
@@ -67,6 +68,7 @@ describe(
         expect(visualMap.max).toBe(20)
         expect(visualMap.inRange?.symbolSize).toEqual([10,
           50])
+        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
 
         // With a visualMap in place, symbolSize is resolved by ECharts from
         // the visualMap, not by a per-series callback echoing the raw value
