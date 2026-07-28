@@ -2,7 +2,7 @@ import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getLegendOption, getNestedValue, isRecord, safeToString } from './utils'
+import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString } from './utils'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
   readonly taskProp: string
@@ -29,36 +29,6 @@ export interface GanttTooltipParam {
     readonly start: number
     readonly end: number
   }
-}
-
-function normalizeDate(val: unknown): number | null {
-  return typeof val === 'number'
-    ? val
-
-    : (val && typeof val === 'object' && 'getTime' in val && typeof (val).getTime === 'function')
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- already narrowed via the 'getTime' in val + typeof check above
-        ? (val as { getTime: () => number }).getTime()
-        // Bases' Value wrapper for date properties isn't a string or a
-        // native Date — unwrap it via safeToString (-> ISO date string)
-        // before parsing, or Temporal.Instant/PlainDate always throw.
-        : (() => {
-            const str = typeof val === 'string' ? val : isRecord(val) ? safeToString(val) : null
-            return str === null
-              ? null
-              : (() => {
-                  try {
-                    return Temporal.Instant.from(str).epochMilliseconds
-                  }
-                  catch {
-                    try {
-                      return Temporal.PlainDate.from(str).toZonedDateTime('UTC').epochMilliseconds
-                    }
-                    catch {
-                      return null
-                    }
-                  }
-                })()
-          })()
 }
 
 function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>): string {
@@ -115,8 +85,8 @@ export function createGanttChartOption(
           ))
         : 'Task'
 
-      const start = normalizeDate(startRaw)
-      const end = normalizeDate(endRaw)
+      const start = parseDateToEpochMs(startRaw)
+      const end = parseDateToEpochMs(endRaw)
 
       const point: GanttDataPoint | null = (!task || start === null || end === null || end < start)
         ? null
@@ -213,9 +183,23 @@ export function createGanttChartOption(
           data: durationSeriesData,
           label: {
             show: true,
-            position: 'inside',
+            // 'inside' centers the label within the bar's own width -- for a
+            // narrow or near-zero-duration bar (common for milestone-style
+            // tasks) that forces the text to spill out both sides, straight
+            // into the y-axis category label at the row's start. 'right'
+            // anchors it just past the bar's end instead, so it grows into
+            // open timeline space rather than back over the axis.
+            position: 'right',
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts label formatter callback param is untyped; narrow to the shape this series actually receives
             formatter: (p: unknown) => (p as GanttTooltipParam).seriesName === 'Task' ? '' : (p as GanttTooltipParam).seriesName,
+          },
+          // Narrow bars/tightly-packed rows can't always fit their task-name
+          // label without it bleeding into a neighboring row -- hide whichever
+          // label would collide instead of rendering illegible overlapping
+          // text (same pattern used for point labels in scatter.ts,
+          // effect-scatter.ts, polar-scatter.ts and graph.ts).
+          labelLayout: {
+            hideOverlap: true,
           },
         },
       ]
@@ -238,7 +222,12 @@ export function createGanttChartOption(
     grid: {
       containLabel: true,
       left: '3%',
-      right: '4%',
+      // Wider than other charts' right margin: task-name labels now render
+      // with position: 'right' (just past the bar's end, see the series
+      // label above), so a task ending near the timeline's right edge needs
+      // room for its label past the plot area, or it gets clipped by the
+      // canvas boundary.
+      right: '18%',
       bottom: '3%',
     },
     xAxis: {

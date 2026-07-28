@@ -251,6 +251,26 @@ describe(
     )
 
     it(
+      'should hide overlapping task-bar labels instead of letting them collide with an adjacent row',
+      () => {
+        const option = createGanttChartOption(
+          data,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+          },
+        )
+
+        const series = option.series as BarSeriesOption[]
+        const durationSeries = series[1]
+
+        // @ts-expect-error - suppress strictNullChecks/type errors
+        expect(durationSeries.labelLayout?.hideOverlap).toBe(true)
+      },
+    )
+
+    it(
       'should filter invalid data',
       () => {
         const option = createGanttChartOption(
