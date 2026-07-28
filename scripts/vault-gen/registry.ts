@@ -728,7 +728,12 @@ const gaugeSpec = defineChartExampleSpec<GaugeSample>({
       propBindings: {
         yAxisProp: 'note.Load',
       },
-      literalOptions: { aggregation: 'avg', minVal: 0, maxVal: 100 },
+      literalOptions: {
+        aggregation: 'avg',
+        minVal: 0,
+        maxVal: 100,
+        colorBands: '30:#67e0e3,70:#37a2da,100:#fd666d',
+      },
     },
   ],
 })
