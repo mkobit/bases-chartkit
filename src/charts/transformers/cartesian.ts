@@ -1,6 +1,6 @@
 import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
 import * as R from 'remeda'
 
 export interface CartesianTransformerOptions extends BaseTransformerOptions {
@@ -35,9 +35,6 @@ export function createCartesianChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  // Smart axis rotation: if compact and not specified, rotate 45 degrees
-  const xAxisRotate = options?.xAxisLabelRotate ?? (isCompact && !flipAxis ? 45 : 0)
-
   // 1. Normalize Data for Dataset
   // Structure: { x, y, s }
   const normalizedData: ReadonlyArray<CartesianDataPoint> = R.map(
@@ -71,6 +68,15 @@ export function createCartesianChartOption(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
+  )
+
+  // Smart axis label overlap avoidance: rotate/thin once compact mode or
+  // category count makes rendering every label at 0deg unreadable.
+  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+    xAxisData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    flipAxis,
   )
 
   // 3. Identify Series
@@ -172,7 +178,7 @@ export function createCartesianChartOption(
           name: xAxisLabel,
           axisLabel: {
             rotate: xAxisRotate,
-            interval: isCompact ? 'auto' : 0, // Auto-hide labels if they overlap in compact mode
+            interval: xAxisInterval,
           },
         },
     yAxis: flipAxis

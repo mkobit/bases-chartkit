@@ -1,6 +1,6 @@
 import type { EChartsOption, EffectScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord } from './utils'
+import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel } from './utils'
 import * as R from 'remeda'
 
 export interface EffectScatterTransformerOptions extends BaseTransformerOptions {
@@ -126,6 +126,7 @@ export function createEffectScatterChartOption(
           bottom: options?.visualMapTop !== undefined ? undefined : '0%', // Default bottom if top not set
           top: options?.visualMapTop,
           type: options?.visualMapType ?? 'continuous',
+          formatter: formatCompactVisualMapLabel,
           dimension: sizeProp ? getDimension('size') : undefined,
           inRange: {
             ...(options?.visualMapColor ? { color: [...options.visualMapColor] } : {}),

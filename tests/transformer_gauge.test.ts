@@ -276,5 +276,90 @@ describe(
         )
       },
     )
+
+    describe(
+      'colorBands option',
+      () => {
+        it(
+          'should convert absolute thresholds into axisLine fractions of the min-max range',
+          () => {
+            const option = transformDataToChartOption(
+              [{ val: 50 }],
+              '',
+              'val',
+              'gauge',
+              {
+                colorBands: [
+                  { threshold: 30, color: '#67e0e3' },
+                  { threshold: 70, color: '#37a2da' },
+                  { threshold: 100, color: '#fd666d' },
+                ],
+              },
+            )
+
+            const series = (option.series as GaugeSeriesOption[])[0]
+            expect(series?.axisLine?.lineStyle?.color).toEqual([
+              [0.3, '#67e0e3'],
+              [0.7, '#37a2da'],
+              [1, '#fd666d'],
+            ])
+          },
+        )
+
+        it(
+          'should sort bands by threshold regardless of input order',
+          () => {
+            const option = transformDataToChartOption(
+              [{ val: 50 }],
+              '',
+              'val',
+              'gauge',
+              {
+                colorBands: [
+                  { threshold: 100, color: '#fd666d' },
+                  { threshold: 30, color: '#67e0e3' },
+                ],
+              },
+            )
+
+            const series = (option.series as GaugeSeriesOption[])[0]
+            expect(series?.axisLine?.lineStyle?.color).toEqual([
+              [0.3, '#67e0e3'],
+              [1, '#fd666d'],
+            ])
+          },
+        )
+
+        it(
+          'should convert thresholds relative to a custom min/max range, not always 0-100',
+          () => {
+            const option = transformDataToChartOption(
+              [{ val: 50 }],
+              '',
+              'val',
+              'gauge',
+              {
+                min: -100,
+                max: 200,
+                colorBands: [{ threshold: 50, color: '#37a2da' }],
+              },
+            )
+
+            const series = (option.series as GaugeSeriesOption[])[0]
+            // (50 - -100) / (200 - -100) = 0.5
+            expect(series?.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
+          },
+        )
+
+        it(
+          'should leave axisLine unset when no color bands are configured',
+          () => {
+            const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge')
+            const series = (option.series as GaugeSeriesOption[])[0]
+            expect(series?.axisLine).toBeUndefined()
+          },
+        )
+      },
+    )
   },
 )

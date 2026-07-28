@@ -158,7 +158,9 @@
 				"last": "Last value"
 			},
 			"min_value": "Min value",
-			"max_value": "Max value"
+			"max_value": "Max value",
+			"color_bands": "Color bands",
+			"color_bands_placeholder": "threshold:color pairs (e.g. 30:#67e0e3,70:#37a2da,100:#fd666d)"
 		},
 		"heatmap": {
 			"name": "Heatmap",
@@ -324,6 +326,12 @@
 				"min_font_size_placeholder": "Min font size (default: 12)",
 				"max_font_size": "Max font size",
 				"max_font_size_placeholder": "Max font size (default: 60)",
+				"rotation_range_min": "Min rotation",
+				"rotation_range_min_placeholder": "Min rotation in degrees (default: -90)",
+				"rotation_range_max": "Max rotation",
+				"rotation_range_max_placeholder": "Max rotation in degrees (default: 90)",
+				"rotation_step": "Rotation step",
+				"rotation_step_placeholder": "Rotation step in degrees (default: 45)",
 				"shapes": {
 					"circle": "Circle",
 					"cardioid": "Cardioid",

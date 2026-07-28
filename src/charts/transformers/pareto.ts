@@ -117,6 +117,8 @@ export function createParetoChartOption(
     xAxis: {
       type: 'category',
       name: xAxisLabel,
+      nameLocation: 'middle',
+      nameGap: 30,
       axisLabel: {
         interval: 0,
         rotate: xAxisRotate,

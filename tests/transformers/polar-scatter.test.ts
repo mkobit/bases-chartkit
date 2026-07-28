@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { createPolarScatterChartOption } from '../../src/charts/transformers/polar-scatter'
 import type { BasesData } from '../../src/charts/transformers/base'
+import { formatCompactVisualMapLabel } from '../../src/charts/transformers/utils'
 import type { ScatterSeriesOption } from 'echarts'
 
 describe(
@@ -90,6 +91,9 @@ describe(
 
         const series = (option.series as any)[0] as ScatterSeriesOption
         expect(series.encode?.tooltip).toContain('size')
+
+        const visualMap = option.visualMap as { formatter?: unknown }
+        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
     )
 

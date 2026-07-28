@@ -1,6 +1,6 @@
 import type { EChartsOption, MapSeriesOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel } from './utils'
 import * as R from 'remeda'
 
 export interface MapTransformerOptions extends BaseTransformerOptions {
@@ -64,6 +64,7 @@ export function createMapChartOption(
     text: ['High',
       'Low'],
     type: options?.visualMapType ?? 'continuous',
+    formatter: formatCompactVisualMapLabel,
     inRange: options?.visualMapColor ? { color: options.visualMapColor } : undefined,
   }
 

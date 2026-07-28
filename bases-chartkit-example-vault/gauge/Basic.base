@@ -8,6 +8,7 @@ views:
     aggregation: "avg"
     minVal: 0
     maxVal: 100
+    colorBands: "30:#67e0e3,70:#37a2da,100:#fd666d"
     filters:
       and:
         - file.folder == "gauge/notes"

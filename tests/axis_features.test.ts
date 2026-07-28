@@ -11,6 +11,12 @@ describe(
         value: 20,
         group: 'G1' },
     ]
+    const manyCategoriesData = Array.from(
+      { length: 30 },
+      (_, i) => ({ category: `Day ${i}`,
+        value: i,
+        group: 'G1' }),
+    )
     describe(
       'Cartesian Chart (Bar/Line)',
       () => {
@@ -53,6 +59,49 @@ describe(
             )
             const xAxis = Array.isArray(options.xAxis) ? options.xAxis[0] : options.xAxis
             expect(xAxis?.axisLabel?.rotate).toBe(45)
+          },
+        )
+        it(
+          'should render every x-axis label (interval: 0) for a short category list',
+          () => {
+            const options = createCartesianChartOption(
+              mockData,
+              'category',
+              'value',
+              'line',
+            )
+            const xAxis = Array.isArray(options.xAxis) ? options.xAxis[0] : options.xAxis
+            expect(xAxis?.axisLabel?.interval).toBe(0)
+            expect(xAxis?.axisLabel?.rotate).toBe(0)
+          },
+        )
+        it(
+          'should auto-thin and rotate x-axis labels once the category count would overlap at interval: 0',
+          () => {
+            const options = createCartesianChartOption(
+              manyCategoriesData,
+              'category',
+              'value',
+              'line',
+            )
+            const xAxis = Array.isArray(options.xAxis) ? options.xAxis[0] : options.xAxis
+            expect(xAxis?.axisLabel?.interval).toBe('auto')
+            expect(xAxis?.axisLabel?.rotate).toBe(45)
+          },
+        )
+        it(
+          'should let an explicit xAxisLabelRotate override the many-category default even when auto-thinning',
+          () => {
+            const options = createCartesianChartOption(
+              manyCategoriesData,
+              'category',
+              'value',
+              'line',
+              { xAxisLabelRotate: 90 },
+            )
+            const xAxis = Array.isArray(options.xAxis) ? options.xAxis[0] : options.xAxis
+            expect(xAxis?.axisLabel?.interval).toBe('auto')
+            expect(xAxis?.axisLabel?.rotate).toBe(90)
           },
         )
         it(

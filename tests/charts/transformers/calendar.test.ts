@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
+import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
 import type { CalendarComponentOption, VisualMapComponentOption } from 'echarts'
 
 describe(
@@ -131,6 +132,30 @@ describe(
 
         expect(visualMap.min).toBe(10)
         expect(visualMap.max).toBe(100)
+      },
+    )
+
+    it(
+      'should abbreviate visualMap handle labels to avoid overlap on large-value axes',
+      () => {
+        const data = [
+          { date: '2023-01-01',
+            val: 10 },
+          { date: '2023-01-02',
+            val: 100 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'date',
+          '',
+          'calendar',
+          { valueProp: 'val' },
+        )
+
+        const visualMap = option.visualMap as VisualMapComponentOption
+
+        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
     )
 

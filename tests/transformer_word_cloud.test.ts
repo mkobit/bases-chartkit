@@ -44,5 +44,32 @@ describe(
         expect(itemHello.value).toBe(10)
       },
     )
+
+    it(
+      'should apply rotation options when provided',
+      () => {
+        const data = [
+          { word: 'Hello',
+            count: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'word',
+          'count',
+          'wordCloud',
+          {
+            rotationRangeMin: -45,
+            rotationRangeMax: 45,
+            rotationStep: 15,
+          },
+        )
+
+        const series = option.series as any[]
+        expect(series[0].rotationRange).toEqual([-45,
+          45])
+        expect(series[0].rotationStep).toBe(15)
+      },
+    )
   },
 )

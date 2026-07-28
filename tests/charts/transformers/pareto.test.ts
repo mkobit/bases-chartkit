@@ -152,6 +152,20 @@ describe(
     )
 
     it(
+      'should center the x-axis title so it does not collide with the right y-axis label',
+      () => {
+        const option = createParetoChartOption(
+          data,
+          'category',
+          'value',
+        )
+        const xAxis = option.xAxis as XAXisComponentOption
+
+        expect(xAxis.nameLocation).toBe('middle')
+      },
+    )
+
+    it(
       'should filter out invalid values',
       () => {
         const dirtyData = [

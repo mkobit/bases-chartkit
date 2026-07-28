@@ -12,8 +12,36 @@ function isAggregation(value: unknown): value is Aggregation {
   return typeof value === 'string' && (AGGREGATIONS as readonly string[]).includes(value)
 }
 
+interface GaugeColorBand {
+  readonly threshold: number
+  readonly color: string
+}
+
+// Parses the comma-separated "threshold:color" list (e.g.
+// "30:#67e0e3,70:#37a2da,100:#fd666d") into color-band definitions, mirroring
+// the comma-separated list convention BaseChartView already uses for
+// visualMapColor. Invalid pairs (non-numeric threshold, missing color) are
+// dropped rather than breaking the whole list.
+function parseColorBands(raw: unknown): ReadonlyArray<GaugeColorBand> | undefined {
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return undefined
+  }
+
+  const bands = raw
+    .split(',')
+    .map((pair): GaugeColorBand | null => {
+      const [thresholdStr, color] = pair.split(':').map(s => s.trim())
+      const threshold = Number(thresholdStr)
+      return (color && !Number.isNaN(threshold)) ? { threshold, color } : null
+    })
+    .filter((band): band is GaugeColorBand => band !== null)
+
+  return bands.length > 0 ? bands : undefined
+}
+
 export class GaugeChartView extends BaseChartView {
   public static readonly AGGREGATION_KEY = 'aggregation'
+  public static readonly COLOR_BANDS_KEY = 'colorBands'
 
   readonly type = 'gauge-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
@@ -22,6 +50,7 @@ export class GaugeChartView extends BaseChartView {
     const minVal = Number(this.config.get(BaseChartView.MIN_VALUE_KEY))
     const maxVal = Number(this.config.get(BaseChartView.MAX_VALUE_KEY))
     const aggregationRaw = this.config.get(GaugeChartView.AGGREGATION_KEY)
+    const colorBandsRaw = this.config.get(GaugeChartView.COLOR_BANDS_KEY)
 
     if (typeof yProp !== 'string') {
       return null
@@ -37,6 +66,7 @@ export class GaugeChartView extends BaseChartView {
         max: isNaN(maxVal) ? 100 : maxVal,
         aggregation: isAggregation(aggregationRaw) ? aggregationRaw : 'sum',
         yAxisLabel: this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY) ?? yProp,
+        colorBands: parseColorBands(colorBandsRaw),
       },
     )
   }
@@ -73,6 +103,12 @@ export class GaugeChartView extends BaseChartView {
         type: 'text',
         key: BaseChartView.MAX_VALUE_KEY,
         placeholder: '100',
+      },
+      {
+        displayName: t('views.gauge.color_bands'),
+        type: 'text',
+        key: GaugeChartView.COLOR_BANDS_KEY,
+        placeholder: t('views.gauge.color_bands_placeholder'),
       },
     ]
   }
