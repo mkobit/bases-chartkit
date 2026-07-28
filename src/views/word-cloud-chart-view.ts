@@ -25,6 +25,9 @@ export class WordCloudChartView extends BaseChartView {
       gridSize: Number(this.config.get('gridSize') || 2),
       sizeRangeMin: Number(this.config.get('sizeRangeMin') || 12),
       sizeRangeMax: Number(this.config.get('sizeRangeMax') || 60),
+      rotationRangeMin: Number(this.config.get('rotationRangeMin') || -90),
+      rotationRangeMax: Number(this.config.get('rotationRangeMax') || 90),
+      rotationStep: Number(this.config.get('rotationStep') || 45),
     }
 
     return transformDataToChartOption(
@@ -70,6 +73,24 @@ export class WordCloudChartView extends BaseChartView {
         type: 'text',
         key: 'sizeRangeMax',
         placeholder: t('views.word_cloud.options.max_font_size_placeholder'),
+      },
+      {
+        displayName: t('views.word_cloud.options.rotation_range_min'),
+        type: 'text',
+        key: 'rotationRangeMin',
+        placeholder: t('views.word_cloud.options.rotation_range_min_placeholder'),
+      },
+      {
+        displayName: t('views.word_cloud.options.rotation_range_max'),
+        type: 'text',
+        key: 'rotationRangeMax',
+        placeholder: t('views.word_cloud.options.rotation_range_max_placeholder'),
+      },
+      {
+        displayName: t('views.word_cloud.options.rotation_step'),
+        type: 'text',
+        key: 'rotationStep',
+        placeholder: t('views.word_cloud.options.rotation_step_placeholder'),
       },
     ]
   }
