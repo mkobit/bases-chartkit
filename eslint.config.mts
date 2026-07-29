@@ -337,6 +337,7 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
       'obsidianmd/rule-custom-message': 'off', // same new Function() usage trips obsidianmd's no-new-func message too
+      'obsidianmd/prefer-window-timers': 'off', // e2e fixtures run in the Playwright/Node worker process, not Obsidian's renderer -- `window` doesn't exist there
     },
   },
   // Legacy Transformers (Pending Refactor)
