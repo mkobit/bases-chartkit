@@ -1,6 +1,6 @@
-# E2E Testing (Playwright)
+# E2E testing (Playwright)
 
-## Core Strategy
+## Core strategy
 **Avoid UI Scraping**: Use `evaluateObsidian` to interact with the internal Obsidian API for robust state verification.
 
 ```typescript
@@ -10,7 +10,7 @@ const exists = await evaluateObsidian(page, (app) => {
 });
 ```
 
-## Context Isolation
+## Context isolation
 Variables from the test scope are **not** available inside `evaluateObsidian` — the function is serialized via `.toString()` and re-evaluated in the renderer. Pass everything explicitly as the third argument.
 
 ```typescript

@@ -79,9 +79,7 @@ export interface AxisLabelOverlapOptions {
   readonly rotate: number
 }
 
-// Shared by any cartesian-style transformer (line/area/bar today; pareto and
-// pictorial-bar hardcode the same interval:0 pattern and can adopt this too)
-// that renders one label per category and wants to avoid overlap on
+// For a cartesian axis that renders one label per category: avoid overlap on
 // many-point series without regressing the "show every label" behavior for
 // short ones.
 export function getAxisLabelOverlapOptions(
@@ -105,12 +103,10 @@ const compactNumberFormatter = new Intl.NumberFormat(
 
 // Abbreviates large numeric visualMap min/max handle labels (e.g. GDP
 // figures like 6994402 -> "7M") so they stay short enough not to overlap
-// each other or the axis labels below -- shared by every transformer that
-// builds a continuous visualMap (calendar/heatmap/map/effect-scatter/
-// polar-scatter/scatter) instead of duplicating the formatter six times.
-// ECharts calls this with a single raw handle value (see
-// VisualMapModel#formatValueText), typed OptionDataValue rather than plain
-// number, hence the runtime narrow instead of a `number` parameter.
+// each other or the axis labels below. ECharts calls this with a single raw
+// handle value (see VisualMapModel#formatValueText), typed OptionDataValue
+// rather than plain number, hence the runtime narrow instead of a `number`
+// parameter.
 export function formatCompactVisualMapLabel(value: unknown): string {
   return typeof value === 'number' ? compactNumberFormatter.format(value) : String(value)
 }
@@ -119,9 +115,7 @@ export function formatCompactVisualMapLabel(value: unknown): string {
 // date/instant string) into epoch milliseconds via the Temporal API per
 // AGENTS.md, returning null for anything that isn't a real, parseable date --
 // callers filter those rows out instead of handing ECharts an unparseable
-// value with no diagnostic. Shared by every transformer that feeds a
-// date/time axis (gantt, theme-river) instead of duplicating the same
-// unwrap-then-parse logic.
+// value with no diagnostic.
 export function parseDateToEpochMs(val: unknown): number | null {
   if (typeof val === 'number') {
     return val
@@ -153,18 +147,10 @@ export function parseDateToEpochMs(val: unknown): number | null {
 export function getLegendOption(options?: BaseTransformerOptions): Readonly<LegendComponentOption> | undefined {
   const showLegend = options?.legend ?? false
 
-  // Smart Default Position
   const isCompact = (options?.isMobile ?? false) || (options?.containerWidth !== undefined && options.containerWidth < 600)
   const defaultPosition = isCompact ? 'bottom' : 'top'
-
-  // Use user-specified position, or fall back to smart default
-  // Note: We check if options.legendPosition is truthy/defined.
-  // If undefined, we use defaultPosition.
   const position = options?.legendPosition || defaultPosition
 
-  // Default orient based on position if not set
-  // Left/Right -> Vertical
-  // Top/Bottom -> Horizontal
   const defaultOrient = (position === 'left' || position === 'right') ? 'vertical' : 'horizontal'
   const orient = options?.legendOrient ?? defaultOrient
 

@@ -114,7 +114,6 @@ function createLongFormatRadarOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
 
-  // 1. Identify Indicators (Axes)
   const indicatorsList = R.pipe(
     data,
     R.map((item) => {
@@ -127,8 +126,6 @@ function createLongFormatRadarOption(
     R.unique(),
   )
 
-  // 2. Group data by Series
-  // Explicitly type to help TS
   const groupedData: Record<string, BasesData> = R.groupBy(
     data,
     (item) => {
@@ -140,17 +137,17 @@ function createLongFormatRadarOption(
             )
             return valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
           })()
-        : valueProp // Use value prop name as default series name if no grouping
+        // No grouping prop configured -- fall back to the value prop's own
+        // name so every row lands in one series instead of an empty key.
+        : valueProp
     },
   )
 
   const uniqueSeries = R.keys(groupedData)
 
-  // 3. Build Data
   const seriesData = uniqueSeries.map((sName) => {
     const items = groupedData[sName] || []
 
-    // Map items to indicator map
     const valueMap = R.pipe(
       items,
       R.map((item) => {
@@ -169,7 +166,6 @@ function createLongFormatRadarOption(
       R.indexBy(x => x.indVal),
     )
 
-    // Create array matching indicatorsList order
     const values = indicatorsList.map((ind) => {
       const found = valueMap[ind]
       return found && !Number.isNaN(found.val) ? found.val : 0
@@ -181,7 +177,6 @@ function createLongFormatRadarOption(
     }
   })
 
-  // 4. Construct Option
   const radarIndicators = indicatorsList.map((name, index) => {
     // Same as the wide-format builder above: `d.value` is always as long as
     // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.

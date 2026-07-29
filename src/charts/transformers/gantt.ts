@@ -195,9 +195,7 @@ export function createGanttChartOption(
           },
           // Narrow bars/tightly-packed rows can't always fit their task-name
           // label without it bleeding into a neighboring row -- hide whichever
-          // label would collide instead of rendering illegible overlapping
-          // text (same pattern used for point labels in scatter.ts,
-          // effect-scatter.ts, polar-scatter.ts and graph.ts).
+          // label would collide instead of rendering illegible overlapping text.
           labelLayout: {
             hideOverlap: true,
           },

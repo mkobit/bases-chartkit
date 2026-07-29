@@ -2,7 +2,7 @@
 
 This repository contains a bare-bones Obsidian plugin built with strict TypeScript enforcement and automated CI. It serves as the foundation for a future visualization-heavy plugin using **Apache ECharts** and the Obsidian Bases API.
 
-## Code Style & Protocols
+## Code style and protocols
 The project enforces strict Functional Programming principles via `eslint`.
 -   **No Mutation / Loops**: Use `const` exclusively. Use declarative transforms (e.g., `map`, `filter`).
 -   **Data Transformation**: Prefer **[Remeda](https://remedajs.com/)** (`remeda`) for complex data pipelines.
@@ -19,7 +19,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 | `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `bases-chartkit-example-vault/` (requires `bun run build` first). |
 | `bun run vault:install` | Install the built plugin into the in-repo example vault without launching. |
 
-## Dependency Installation Handling
+## Dependency installation handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
 If `bun install` fails to find a package, do not try to alter the package manager or bypass the configuration.
 Instead, identify and install an older, stable version of the package.
