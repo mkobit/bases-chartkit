@@ -23,7 +23,6 @@ export abstract class BaseChartView extends BasesView {
   private isFullScreenGeneration = false
   private resizeTimeout: number | null = null
 
-  // Common Config Keys
   public static readonly X_AXIS_PROP_KEY = 'xAxisProp'
   public static readonly Y_AXIS_PROP_KEY = 'yAxisProp'
   public static readonly SERIES_PROP_KEY = 'seriesProp'
@@ -33,19 +32,16 @@ export abstract class BaseChartView extends BasesView {
   public static readonly HEIGHT_KEY = 'height'
   public static readonly THEME_KEY = 'theme'
 
-  // New Config Keys (Made public for easier access in subclasses without casting)
   public static readonly SIZE_PROP_KEY = 'sizeProp'
   public static readonly MIN_VALUE_KEY = 'minVal'
   public static readonly MAX_VALUE_KEY = 'maxVal'
   public static readonly VALUE_PROP_KEY = 'valueProp'
 
-  // Axis Config Keys
   public static readonly X_AXIS_LABEL_KEY = 'xAxisLabel'
   public static readonly Y_AXIS_LABEL_KEY = 'yAxisLabel'
   public static readonly X_AXIS_LABEL_ROTATE_KEY = 'xAxisLabelRotate'
   public static readonly FLIP_AXIS_KEY = 'flipAxis'
 
-  // Visual Map Config Keys
   public static readonly VISUAL_MAP_MIN_KEY = 'visualMapMin'
   public static readonly VISUAL_MAP_MAX_KEY = 'visualMapMax'
   public static readonly VISUAL_MAP_COLOR_KEY = 'visualMapColor'
@@ -71,12 +67,6 @@ export abstract class BaseChartView extends BasesView {
       this.triggerResize()
     })
     this.resizeObserver.observe(this.containerEl)
-
-    // NOTE: `(this as unknown as ItemView).addAction(...)` used to register a
-    // "Full Screen" toolbar button here. That cast was a lie — `BasesView`
-    // (our actual parent) does not extend ItemView, so `addAction` was
-    // undefined at runtime and threw on first view load. Re-add a fullscreen
-    // affordance via the proper Bases API (or a command) in a follow-up.
   }
 
   onunload() {
@@ -116,21 +106,17 @@ export abstract class BaseChartView extends BasesView {
     return typeof val === 'string' ? val : undefined
   }
 
-  // Resolves a property-picker option (e.g. X_AXIS_PROP_KEY) to the
-  // user-facing name Bases shows for that property — either the `displayName`
-  // configured in the .base file's `properties:` block, or Obsidian's own
-  // default naming (property-type prefix stripped). Falls back to undefined
-  // (not the raw property path) so callers can chain further fallbacks.
+  // Falls back to undefined (not the raw property path) so callers can chain
+  // further fallbacks.
   protected getPropDisplayName(key: string): string | undefined {
     const propertyId = this.config.getAsPropertyId(key)
     return propertyId ? this.config.getDisplayName(propertyId) : undefined
   }
 
-  // Like getPropDisplayName, but for options where the user types one or more
-  // raw property paths directly (e.g. a comma-separated dimensions list)
-  // rather than picking a single property through a `type: 'property'` view
-  // option. The path is already in Bases' `type.name` id format (as typed in
-  // the .base file, e.g. 'note.Strength'), so it can be resolved directly.
+  // For options where the user types raw property paths directly (e.g. a
+  // comma-separated dimensions list) rather than through a `type: 'property'`
+  // picker. The path is already in Bases' `type.name` id format, so it can be
+  // resolved directly without going through getAsPropertyId first.
   protected getDisplayNameForPropertyPath(propertyPath: string): string {
     return this.config.getDisplayName(propertyPath as BasesPropertyId)
   }
@@ -377,7 +363,7 @@ export abstract class BaseChartView extends BasesView {
       },
       {
         displayName: t('views.visual_map.orient'),
-        type: 'text', // Ideally a dropdown, but ViewOption only supports basic types? Or use text with validation.
+        type: 'text',
         key: BaseChartView.VISUAL_MAP_ORIENT_KEY,
         placeholder: t('views.visual_map.orient_placeholder'),
       },
