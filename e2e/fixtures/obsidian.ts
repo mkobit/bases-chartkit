@@ -5,6 +5,7 @@ import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
 import * as fs from 'node:fs/promises'
+import { Temporal } from 'temporal-polyfill'
 import { applyViewMode } from '../vault'
 import type { ViewMode } from '../vault'
 
@@ -44,6 +45,19 @@ async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   }).toPass({ intervals: [1000], timeout: 30_000 })
 }
 
+// Grace period between SIGTERM and a SIGKILL escalation in stopObsidian.
+// Confirmed necessary for bck-0ic via two separate live reproductions
+// (2026-07-28): a genuinely orphaned process never exited on its own, and
+// -- more surprisingly -- a normal, successful, non-orphaned test run also
+// needed this escalation every time in this environment. Testing 5s vs 15s
+// made no difference to the outcome (only to how long the test waited
+// first), so Electron appears to simply never respond to SIGTERM once it
+// hits the "GPU process isn't usable" FATAL state seen in this environment,
+// rather than just being slow to shut down -- kept short since waiting
+// longer buys nothing. Root cause of that FATAL state itself is untracked;
+// this only guarantees the process actually exits either way.
+const SIGTERM_GRACE_PERIOD = Temporal.Duration.from({ seconds: 5 })
+
 // obsidian-launcher doesn't clean up the configDir/vault-copy tmpdirs it
 // creates per launch -- without this, every test run leaks a fresh configDir
 // (~26MB) and vault copy into the OS tmpdir forever. Called from `finally`
@@ -57,7 +71,25 @@ async function stopObsidian(proc: ChildProcess, configDir: string, vault: string
   const exited = proc.exitCode !== null || proc.signalCode !== null
     ? Promise.resolve()
     : new Promise<void>((resolve) => { proc.once('exit', () => resolve()) })
-  proc.kill()
+
+  // Signal the whole process group (negative pid), not just Electron's
+  // top-level PID -- launch() spawns with detached:true specifically so
+  // this targets the GPU/renderer children too, not only the main process
+  // that a bare proc.kill() would reach.
+  if (proc.pid !== undefined) {
+    process.kill(-proc.pid, 'SIGTERM')
+  }
+
+  const outcome = await Promise.race([
+    exited.then(() => 'exited' as const),
+    new Promise<'timed-out'>((resolve) => { setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD.total('milliseconds')) }),
+  ])
+
+  if (outcome === 'timed-out' && proc.pid !== undefined) {
+    process.stderr.write('obsidian did not exit within the SIGTERM grace period, escalating to SIGKILL\n')
+    process.kill(-proc.pid, 'SIGKILL')
+  }
+
   // `kill()` only sends the signal -- Electron still needs a moment to
   // release its file locks on configDir, so cleanup must wait for the
   // process to actually exit rather than racing it.
@@ -137,8 +169,19 @@ export const test = base.extend<ObsidianFixtures>({
       // Already copied (and, if requested, theme-preset) above -- copy:false
       // here avoids a redundant second copy of the vault.
       copy: false,
+      // Deliberately NOT passing --disable-gpu here (unlike
+      // scripts/vault-dev.ts): tried it for bck-0ic to remove the
+      // GPU-process-init crash loop that feeds WSL2's crash-dump capture.
+      // Inconclusive either way -- a "GPU process isn't usable" FATAL log
+      // showed up in this environment with the flag both present and
+      // absent, so it doesn't appear to be the deciding factor. Left out
+      // to match the original minimal-args design (see commit ce578ac)
+      // rather than add an unproven flag.
       args: [`--remote-debugging-port=${port}`],
-      spawnOptions: { stdio: 'pipe' },
+      // detached:true makes this process its own group leader so
+      // stopObsidian can SIGTERM/SIGKILL the whole group (including GPU
+      // children), not just the top-level PID.
+      spawnOptions: { stdio: 'pipe', detached: true },
     })
 
     if (proc.stderr) {
