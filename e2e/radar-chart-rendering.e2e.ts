@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('radar chart rendering', () => {
   // Regression test for obsidian-bases-charts-769: wide-format (metricProps)
@@ -42,5 +42,45 @@ test.describe('radar chart rendering', () => {
     // "Agility") for the underlying note.Strength/note.Intelligence/note.Agility
     // properties. Buggy code shows the raw 'note.X' paths instead.
     expect(indicatorNames).toEqual(['Strength', 'Intelligence', 'Agility'])
+  })
+
+  // Regression coverage for bck-0zd/bck-44j: radar is the exemplar for
+  // zrender-Group-based series (one dataIndex = a polyline + an unfilled,
+  // non-hit-testable polygon + a group of small per-vertex symbol dots, not
+  // one discrete shape like a bar). Confirms hoverChartDataPointAndGetTooltip's
+  // leaf-shape traversal lands on an actual hoverable vertex symbol.
+  test('hovering a character\'s radar shape shows its name and stat values in the tooltip', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'radar/Basic.base', viewName: 'Character stats radar' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> } | null
+        return option?.radar?.[0]?.indicator?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    // Character-0.md (the vault's deterministically-generated first note for
+    // this chart type) is { Name: "Conan", Strength: 15, Intelligence: 18,
+    // Agility: 16 }.
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+
+    expect(tooltipText).toContain('Conan')
+    expect(tooltipText).toContain('Strength')
+    expect(tooltipText).toContain('15')
+    expect(tooltipText).toContain('Intelligence')
+    expect(tooltipText).toContain('18')
+    expect(tooltipText).toContain('Agility')
+    expect(tooltipText).toContain('16')
   })
 })

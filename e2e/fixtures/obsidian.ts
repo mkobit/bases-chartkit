@@ -169,15 +169,23 @@ export const test = base.extend<ObsidianFixtures>({
       // Already copied (and, if requested, theme-preset) above -- copy:false
       // here avoids a redundant second copy of the vault.
       copy: false,
-      // Deliberately NOT passing --disable-gpu here (unlike
-      // scripts/vault-dev.ts): tried it for bck-0ic to remove the
-      // GPU-process-init crash loop that feeds WSL2's crash-dump capture.
-      // Inconclusive either way -- a "GPU process isn't usable" FATAL log
-      // showed up in this environment with the flag both present and
-      // absent, so it doesn't appear to be the deciding factor. Left out
-      // to match the original minimal-args design (see commit ce578ac)
-      // rather than add an unproven flag.
-      args: [`--remote-debugging-port=${port}`],
+      // Avoids the "GPU process isn't usable" FATAL abort seen repeatedly in
+      // this WSL2/Xvfb environment under sustained CDP+canvas activity (see
+      // bck-to4): bare --disable-gpu alone still spawns a GPU process for
+      // OOP rasterization via SwiftShader, which can hit Chromium's
+      // GPU-process crash-retry ceiling just as fast or faster than with no
+      // flag at all. These four keep Chromium off that GPU-process path
+      // entirely for canvas compositing instead. Confirmed via 3 consecutive
+      // clean e2e trials (zero FATAL) with this combination -- a workaround
+      // for the crash-retry ceiling, not a fix for the underlying WSL2/Xvfb
+      // GL-context failure itself.
+      args: [
+        `--remote-debugging-port=${port}`,
+        '--disable-gpu',
+        '--disable-gpu-compositing',
+        '--disable-software-rasterizer',
+        '--disable-gpu-sandbox',
+      ],
       // detached:true makes this process its own group leader so
       // stopObsidian can SIGTERM/SIGKILL the whole group (including GPU
       // children), not just the top-level PID.
