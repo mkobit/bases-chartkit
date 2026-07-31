@@ -378,6 +378,54 @@ export async function getMapSeriesState(
   }, args)
 }
 
+/**
+ * Waits until Obsidian's MetadataCache has finished resolving every markdown
+ * file in the vault -- the same underlying signal a cold e2e launch's
+ * "Indexing complete." toast reacts to, and (transitively, via Bases' own
+ * listeners) the thing that stops `chart.setOption` from being called again.
+ * Position-stability alone isn't a sufficient gate for the hover+tooltip
+ * step that follows: an indexing-driven re-render can land at any point,
+ * including right as indexing finishes, and resets the tooltip DOM
+ * independent of whether a data point's screen position has stopped moving.
+ *
+ * MetadataCache exposes no synchronous "already resolved" flag, so awaiting
+ * the `resolved` event alone can hang: it only fires again for *later* file
+ * changes, not for the initial load if that already finished before this
+ * function's listener attached. Registering the listener and running the
+ * `getCache`-based synchronous check in the same tick (no `await` between
+ * them) closes that race -- no event can land in the gap.
+ */
+export async function waitForVaultIndexed(page: Page, timeoutMs = VAULT_INDEXED_POLL_TIMEOUT_MS): Promise<void> {
+  return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
+    const isFullyResolved = () =>
+      app.vault.getMarkdownFiles().every(file => app.metadataCache.getCache(file.path) !== null)
+
+    return new Promise<void>((resolve) => {
+      let settled = false
+      const finish = () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        app.metadataCache.off('resolved', onResolved)
+        clearTimeout(timeoutHandle)
+        resolve()
+      }
+      const onResolved = () => {
+        if (isFullyResolved()) {
+          finish()
+        }
+      }
+
+      app.metadataCache.on('resolved', onResolved)
+      const timeoutHandle = setTimeout(finish, a.timeoutMs)
+      if (isFullyResolved()) {
+        finish()
+      }
+    })
+  }, { timeoutMs })
+}
+
 export interface ScreenPosition {
   readonly pageX: number
   readonly pageY: number
@@ -393,14 +441,11 @@ export interface ScreenPosition {
  * rather than assuming a single call right after the chart mounts succeeds.
  *
  * Verified reliable for discrete-shape series (bar, scatter/effect-scatter,
- * pie-family) where each dataIndex is one drawable shape. NOT yet confirmed
- * for series where one dataIndex renders as a zrender Group spanning several
- * visual sub-elements with no fill (radar, and likely parallel) -- the
- * smallest-leaf-shape heuristic below was built to handle that case but the
- * hover still didn't reliably land on a live shape in manual testing. Chart
- * types using this pattern need their hover coordinates spot-checked (a
- * failing/flaky `hoverChartDataPointAndGetTooltip` call is the symptom)
- * before trusting a passing test.
+ * pie-family) where each dataIndex is one drawable shape, and (as of the
+ * ignore/invisible filtering below, plus the vault-indexed wait and
+ * position-stability poll in `hoverChartDataPointAndGetTooltip`) for
+ * zrender-Group-based series where one dataIndex renders as several
+ * sub-elements, confirmed via radar.
  */
 export async function getSeriesItemScreenPosition(
   page: Page,
@@ -425,6 +470,15 @@ export async function getSeriesItemScreenPosition(
       // sub-group of small per-vertex symbol dots).
       readonly childCount?: () => number
       readonly childAt?: (idx: number) => GraphicElLike | undefined
+      // zrender's own raycast (Displayable#contain) skips an element (and
+      // everything under it) when either is set -- e.g. radar's polygon has
+      // `ignore = true` whenever no areaStyle is configured, since an unfilled
+      // polygon has nothing to paint. A bounding-rect center inside an
+      // ignored/invisible shape will never register a real mouse hit, so it
+      // must be excluded rather than left to lose the smallest-area tie-break
+      // by coincidence.
+      readonly ignore?: boolean
+      readonly invisible?: boolean
     }
 
     interface LeafShape extends GraphicElLike {
@@ -435,16 +489,23 @@ export async function getSeriesItemScreenPosition(
       return typeof candidate.getBoundingRect === 'function'
     }
 
+    function isHitTestable(candidate: GraphicElLike): boolean {
+      return candidate.ignore !== true && candidate.invisible !== true
+    }
+
     // getItemGraphicEl can return a zrender Group rather than a single drawable
     // shape (true for radar/parallel, where one dataIndex is a whole
     // multi-point shape, not a discrete per-point mark). A group's own
     // aggregate bounding-rect center is frequently empty space -- e.g. a
     // radar polygon with no areaStyle is hollow, so its visual center hits
-    // nothing. Recurse to the actual leaf shapes and hover the smallest one:
-    // small leaves are the individual point/symbol marks; large ones (the
-    // connecting polyline/polygon outline) span the whole shape and are much
-    // more likely to have an empty center.
+    // nothing. Recurse to the actual hit-testable leaf shapes and hover the
+    // smallest one: small leaves are the individual point/symbol marks; large
+    // ones (the connecting polyline/polygon outline) span the whole shape and
+    // are much more likely to have an empty center.
     function collectLeafShapes(candidate: GraphicElLike): readonly LeafShape[] {
+      if (!isHitTestable(candidate)) {
+        return []
+      }
       const count = candidate.childCount ? candidate.childCount() : 0
       if (count === 0) {
         return hasBoundingRect(candidate) ? [candidate] : []
@@ -581,15 +642,54 @@ export async function getTooltipText(page: Page): Promise<string | null> {
  * already exist. A real mouse hover exercises the exact same hit-testing
  * code path a user's pointer does, regardless of trigger/axisPointer config,
  * so it works uniformly across every chart type.
+ *
+ * Waits for the target position to stabilize before hovering, not just for
+ * the graphic element to exist: `data.setItemGraphicEl` runs -- making
+ * `getSeriesItemScreenPosition` resolve -- as soon as ECharts starts
+ * rendering a data item, before its entrance animation completes. Bases can
+ * also call `chart.setOption` more than once as vault indexing catches up
+ * (an early render of incomplete/empty data, then a later one with the real
+ * data), and each `setOption` restarts the affected items' entrance
+ * animation -- so even waiting for one `chart.on('finished', ...)` event
+ * isn't reliable, since it may fire after an earlier, irrelevant render. For
+ * a bar chart's grow-upward animation an in-flight sample is harmless -- a
+ * point sampled mid-animation still ends up inside the taller final bar. For
+ * radar it isn't: every point starts collapsed at the polar center and
+ * animates outward, so an early sample lands nowhere near the settled vertex
+ * symbol. Sampling the position repeatedly and waiting for it to stop moving
+ * is correct regardless of how many render/animation passes happen.
  */
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
   args: { readonly seriesIndex: number, readonly dataIndex: number },
 ): Promise<string> {
+  // Wait out indexing-driven re-renders before measuring anything: once the
+  // vault is fully resolved, Bases has no further reason to call
+  // `chart.setOption` on its own, so the position-stability and tooltip
+  // polls below are no longer racing against a re-render that could land at
+  // any moment.
+  await waitForVaultIndexed(page)
+
   await expect.poll(
     () => getSeriesItemScreenPosition(page, args),
     { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
   ).not.toBeNull()
+
+  let previous: ScreenPosition | null = null
+  await expect.poll(async () => {
+    const current = await getSeriesItemScreenPosition(page, args)
+    const stable = current !== null && previous !== null
+      && Math.abs(current.pageX - previous.pageX) < 0.5
+      && Math.abs(current.pageY - previous.pageY) < 0.5
+    previous = current
+    return stable
+  // Same VAULT_INDEXED_POLL_TIMEOUT_MS budget as the existence poll above,
+  // not a short fixed window -- confirmed via a live failure screenshot that
+  // Obsidian's "Indexing vault..." banner was still active when a 5000ms
+  // budget ran out, meaning Bases can still be restarting entrance
+  // animations via repeated setOption calls well past 5s in a loaded
+  // environment.
+  }, { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS, intervals: [100] }).toBe(true)
 
   const target = await getSeriesItemScreenPosition(page, args)
   if (!target) {
