@@ -1,6 +1,6 @@
 import type { EChartsOption, PictorialBarSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
 import * as R from 'remeda'
 
 export interface PictorialBarTransformerOptions extends BaseTransformerOptions {
@@ -21,8 +21,10 @@ export function createPictorialBarChartOption(
   const seriesProp = options?.seriesProp
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
-  const xAxisRotate = options?.xAxisLabelRotate ?? 0
   const flipAxis = options?.flipAxis ?? false
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
 
   // 1. Normalize Data for Dataset
   // Structure: { x, y, s }
@@ -57,6 +59,15 @@ export function createPictorialBarChartOption(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
+  )
+
+  // Smart axis label overlap avoidance: rotate/thin once compact mode or
+  // category count makes rendering every label at 0deg unreadable.
+  const { interval: categoryAxisInterval, rotate: categoryAxisRotate } = getAxisLabelOverlapOptions(
+    xAxisData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    flipAxis,
   )
 
   // 3. Identify Series
@@ -136,8 +147,8 @@ export function createPictorialBarChartOption(
           data: xAxisData,
           name: xAxisLabel,
           axisLabel: {
-            rotate: xAxisRotate,
-            interval: 0,
+            rotate: categoryAxisRotate,
+            interval: categoryAxisInterval,
           },
           splitLine: { show: false },
         },
@@ -147,8 +158,8 @@ export function createPictorialBarChartOption(
           data: xAxisData,
           name: xAxisLabel,
           axisLabel: {
-            rotate: xAxisRotate,
-            interval: 0,
+            rotate: categoryAxisRotate,
+            interval: categoryAxisInterval,
           },
           splitLine: { show: false },
         }

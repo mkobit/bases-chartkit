@@ -1,6 +1,6 @@
 import type { EChartsOption, BarSeriesOption, LineSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
 import * as R from 'remeda'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- named alias kept for API consistency with other transformer options types, even though pareto adds no fields today
@@ -14,7 +14,9 @@ export function createParetoChartOption(
 ): EChartsOption {
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
-  const xAxisRotate = options?.xAxisLabelRotate ?? 0
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
 
   // 1. Normalize and Sort Data
   const normalizedData = R.pipe(
@@ -77,6 +79,16 @@ export function createParetoChartOption(
     x => x.result,
   )
 
+  // Smart axis label overlap avoidance: rotate/thin once compact mode or
+  // category count makes rendering every label at 0deg unreadable. Pareto's
+  // x-axis is always categories (never flippable), so flipAxis is always false.
+  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+    finalData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    false,
+  )
+
   const barSeries: BarSeriesOption = {
     name: yAxisLabel,
     type: 'bar',
@@ -120,7 +132,7 @@ export function createParetoChartOption(
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        interval: 0,
+        interval: xAxisInterval,
         rotate: xAxisRotate,
       },
     },
