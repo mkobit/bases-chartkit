@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getMapSeriesState, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { evaluateObsidian, getMapSeriesState, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import type { MapSeriesState } from './helpers/evaluate'
 import * as R from 'remeda'
 
@@ -68,5 +68,49 @@ test.describe('map chart rendering', () => {
       expect(landmarkValuesByName[name]).toBeGreaterThan(0)
       expect(state?.regionNames).toContain(name)
     }
+  })
+
+  // Regression coverage for bck-44j: map regions are NOT managed through a
+  // scatter-like per-point model -- component/helper/MapDraw.js builds one
+  // zrender Group per region (`regionsGroupByName`, containing a CompoundPath
+  // of the GeoJSON feature's Polygon/MultiPolygon subpaths) and calls
+  // `data.setItemGraphicEl(dataIdx, regionGroup)` on the series' own data
+  // (`dataIdx = data.indexOfName(regionName)`). That confirms
+  // getItemGraphicEl -- not just getData(), which getMapSeriesState above
+  // already proves resolves names/values -- returns a real, hit-testable
+  // Group for a named region, directly compatible with the existing
+  // Group-traversal heuristic proven for radar.
+  test('hovering a landmark region shows its name and event count in the tooltip', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => {
+          resolve()
+        })
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' })
+
+    await expect.poll(
+      async () => {
+        const state = await getMapSeriesState(page, { seriesIndex: 0 })
+        return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBe(5)
+
+    // Chicago-Landmark-0.md ({ Landmark: "Millennium Park", EventCount: 24 })
+    // is the vault's first landmark note, resolving to mapData[0] --
+    // transformers/map.ts maps rows 1:1 into `data` with no
+    // grouping/reordering, so this index is safe to hardcode (matching the
+    // existing region-state test's use of the same note above).
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+
+    expect(tooltipText).toContain('Millennium Park')
+    expect(tooltipText).toContain('24')
   })
 })

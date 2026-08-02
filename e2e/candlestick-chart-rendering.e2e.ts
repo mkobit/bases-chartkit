@@ -1,0 +1,99 @@
+import { test, expect } from './fixtures/obsidian'
+import { evaluateObsidian, getChartOption, getSeriesDataCount, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+
+interface CandlestickRow {
+  readonly x: string
+  readonly open: number
+  readonly close: number
+  readonly low: number
+  readonly high: number
+}
+
+interface DatasetLike {
+  readonly source?: readonly CandlestickRow[]
+}
+
+test.describe('candlestick chart rendering', () => {
+  // Regression coverage for bck-44j: createCandlestickChartOption does NOT
+  // sort its normalizedData, so Bases' alphabetical-by-filename row order
+  // survives into `dataset[0].source` order unchanged.
+  //
+  // dataIndex 25 (the raw/original last-row index) is deliberately NOT used
+  // here, though a live run first assumed it would be: the transformer
+  // configures dataZoom with `start: 50, end: 100` and ECharts' default
+  // filterMode: 'filter' doesn't just hide out-of-window rows, it rebuilds
+  // the series' SeriesData with a FRESH 0..count-1 index space covering only
+  // the visible rows (confirmed via node_modules/echarts/lib/data/
+  // DataStore.js's selectRange) -- so `getItemGraphicEl`/
+  // getSeriesItemScreenPosition address that smaller, re-numbered filtered
+  // index space, not the original 26-row order. getSeriesDataCount reads the
+  // live, already-filtered count; its last index (count - 1) is the visible
+  // window's most-recent candle, which is always AAPL-Day-25 regardless of
+  // the exact 50%/100% rounding, since `end: 100` always includes the
+  // maximum-value row. Read that row's own Date/OHLC values live off
+  // dataset[0].source (unaffected by the series-level filtering) rather than
+  // hardcoding them, so this doesn't silently drift if the fixture changes.
+  // FIXME (bck-44x): live runs consistently truncate the tooltip to
+  // "2024-01-30111" (date + one value only, missing Open/Low). Ruled out:
+  // getTooltipText concatenating multiple domBelongToZr divs made no
+  // difference -- the crosshair-label-pollution theory was wrong. See bck-44x
+  // for the full diagnostic writeup and next steps.
+  test.fixme('hovering the last candle shows its date and OHLC values in the tooltip', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'candlestick/Basic.base', viewName: 'AAPL stock analysis' })
+
+    // series[0] uses datasetIndex rather than an inline `data` array, so
+    // dataset readiness (not series[0].data) is the real signal here.
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    // Bases can still be re-rendering (a later setOption call landing as
+    // indexing catches up) even after the poll above finds a non-empty
+    // dataset -- wait for full indexing first so this read, the filtered
+    // count below, and hoverChartDataPointAndGetTooltip's own internal wait
+    // all observe the same, final state.
+    await waitForVaultIndexed(page)
+
+    const option = await getChartOption(page) as { readonly dataset: readonly DatasetLike[] }
+    const sourceRows = option.dataset[0]?.source ?? []
+    const lastRow = sourceRows.at(-1)
+    if (!lastRow) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected at least one candlestick dataset row')
+    }
+
+    const filteredCount = await getSeriesDataCount(page, { seriesIndex: 0 })
+    if (filteredCount === 0) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected at least one candlestick row inside the dataZoom window')
+    }
+
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: filteredCount - 1 })
+
+    // tooltip.trigger: 'axis' shows the hovered category (the Date) as the
+    // tooltip's header, ahead of the series' own formatted blocks (see
+    // TooltipView.js's `_showAxisTooltip` -> axisPointerViewHelper.getValueLabel).
+    expect(tooltipText).toContain(lastRow.x)
+    // Candlestick has no custom formatter, so ECharts' default per-series
+    // formatter is used, built from CandlestickSeriesModel's
+    // defaultValueDimensions (open/close/lowest/highest).
+    expect(tooltipText).toContain(String(lastRow.open))
+    expect(tooltipText).toContain(String(lastRow.close))
+    expect(tooltipText).toContain(String(lastRow.low))
+    expect(tooltipText).toContain(String(lastRow.high))
+  })
+})
