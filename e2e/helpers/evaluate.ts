@@ -177,6 +177,78 @@ export async function getSeriesVisualValues(
 }
 
 /**
+ * Retrieves the live item count of one series' internal SeriesData model.
+ *
+ * A dataZoom component with `filterMode: 'filter'` (the default) rebuilds a
+ * series' SeriesData with a new, re-numbered index space covering only the
+ * in-window rows -- `getItemGraphicEl`/`getSeriesItemScreenPosition` address
+ * that filtered index space, not the original row order a static read of
+ * `dataset[0].source` would suggest. This count is the reliable way to find
+ * a dataIndex that's guaranteed to exist post-filtering (e.g. `count - 1`
+ * for the last visible item), confirmed via
+ * node_modules/echarts/lib/data/DataStore.js's selectRange, which allocates
+ * a fresh 0..count-1 indices array for the selected rows.
+ */
+export async function getSeriesDataCount(
+  page: Page,
+  args: { readonly seriesIndex: number },
+): Promise<number> {
+  return evaluateObsidian(page, (app, a) => {
+    interface SeriesDataLike {
+      readonly count: () => number
+    }
+    interface SeriesModelLike {
+      readonly getData: () => SeriesDataLike
+    }
+    interface EChartsModelLike {
+      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+    }
+    interface ChartLike {
+      readonly chart: { readonly getModel: () => EChartsModelLike } | null
+    }
+
+    const isChartView = (obj: unknown): obj is ChartLike => {
+      if (obj === null || typeof obj !== 'object') {
+        return false
+      }
+      if (!('getChartOption' in obj) || !('chart' in obj)) {
+        return false
+      }
+      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+    }
+
+    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
+      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+        return undefined
+      }
+      if (depth > 8 || visited.includes(obj)) {
+        return undefined
+      }
+      if (isChartView(obj)) {
+        return obj
+      }
+      const nextVisited = [...visited, obj]
+      const values: readonly unknown[] = Object.values(obj)
+      return values
+        .map(value => findChartView(value, depth + 1, nextVisited))
+        .find((found): found is ChartLike => found !== undefined)
+    }
+
+    const leaves = [
+      app.workspace.getLeaf(false),
+      ...app.workspace.getLeavesOfType('bases'),
+    ]
+
+    const chartView = leaves
+      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
+      .find((view): view is ChartLike => view !== undefined)
+
+    const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
+    return seriesData?.count() ?? 0
+  }, args)
+}
+
+/**
  * Waits for the active chart view's ECharts instance to fire its 'finished'
  * event -- ECharts' own signal that the current option has fully rendered,
  * including entrance/update animations. Screenshotting before this fires
@@ -613,6 +685,14 @@ export async function getSeriesItemScreenPosition(
  * container (`api.getDom()`), not `document.body`, and gives it no default
  * className -- it's identifiable only via a `domBelongToZr` JS property set
  * by TooltipHTMLContent. Returns null while hidden/empty.
+ *
+ * Concatenates every matching div rather than taking the first: a chart with
+ * `axisPointer: { type: 'cross' }` (e.g. candlestick) renders a separate
+ * small crosshair-value label alongside the main tooltip box, both marked
+ * `domBelongToZr` -- taking only the first one risks reading just the
+ * crosshair label instead of (or as well as) the actual tooltip content,
+ * confirmed via a live run truncating candlestick's OHLC tooltip down to a
+ * single axis value.
  */
 export async function getTooltipText(page: Page): Promise<string | null> {
   return evaluateObsidian(page, () => {
@@ -623,9 +703,11 @@ export async function getTooltipText(page: Page): Promise<string | null> {
     if (!chartRoot) {
       return null
     }
-    const tooltipEl = Array.from(chartRoot.querySelectorAll('div')).find(isZrOwnedDiv)
-    const text = tooltipEl?.textContent
-    return text && text.length > 0 ? text : null
+    const text = Array.from(chartRoot.querySelectorAll('div'))
+      .filter(isZrOwnedDiv)
+      .map(el => el.textContent ?? '')
+      .join(' ')
+    return text.length > 0 ? text : null
   })
 }
 

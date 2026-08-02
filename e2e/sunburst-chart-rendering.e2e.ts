@@ -9,14 +9,15 @@ interface HierarchyLeaf {
 }
 
 /**
- * Walks the live ECharts 'tree' series' internal Tree model (the same
- * structure TreeSeriesModel#formatTooltip reads via `getData().tree`) to
- * find a real leaf node -- one with no children of its own -- and its actual
- * dataIndex. buildHierarchy (src/charts/transformers/hierarchy.ts) groups
- * notes by slash-delimited Path segments and sums values for any notes
- * sharing an exact leaf path, so no dataIndex/value pair is safely
- * predictable from a single note's raw frontmatter; reading it back off the
- * already-built model sidesteps hand-simulating that grouping.
+ * Walks the live ECharts 'sunburst' series' internal Tree model (sunburst
+ * shares src/data/Tree.js and its virtual-root wrapping with tree/treemap --
+ * see SunburstSeriesModel#getInitialData) to find a real leaf node -- one
+ * with no children of its own -- and its actual dataIndex. buildHierarchy
+ * (src/charts/transformers/hierarchy.ts) groups notes by slash-delimited
+ * Path segments and sums values for any notes sharing an exact leaf path, so
+ * no dataIndex/value pair is safely predictable from a single note's raw
+ * frontmatter; reading it back off the already-built model sidesteps
+ * hand-simulating that grouping.
  */
 async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<HierarchyLeaf | null> {
   return evaluateObsidian(page, (app, a: { seriesIndex: number }) => {
@@ -96,92 +97,22 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
   }, { seriesIndex })
 }
 
-test.describe('tree chart async data update', () => {
-  // Regression test for obsidian-bases-charts-fs4.3: Bases resolves its query
-  // asynchronously, so the tree-chart view's first render often mounts before
-  // any rows arrive. ECharts' `tree` series throws internally
-  // ("Cannot read properties of null (reading '0')") when a later `setOption`
-  // transitions away from that empty first render, because it tries to
-  // reconcile expand/collapse view-state against a previous render that had
-  // no root node -- silently freezing the chart on a blank/empty state
-  // forever. TreeChartView.executeRender() now clears the chart before every
-  // render to avoid the stale diffing state.
-  test('renders the full hierarchy once Bases data resolves, not just the empty first paint', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
-        })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'tree/Basic.base', viewName: 'Project tasks tree' })
-
-    await expect.poll(async () => evaluateObsidian(page, (app) => {
-      // The tree-chart view is nested inside Bases' own container view, at a
-      // depth that isn't part of any public API. Walk the object graph
-      // looking for the instance with a `getChartOption` method (our
-      // BaseChartView subclass) rather than hardcoding child indices.
-      interface ChartLike {
-        chart: { getOption: () => { series?: readonly { data?: readonly unknown[] }[] } }
-      }
-
-      function isChartView(obj: unknown): obj is ChartLike {
-        if (obj === null || typeof obj !== 'object') {
-          return false
-        }
-        const candidate = obj as Record<string, unknown>
-        const chart = candidate.chart as Record<string, unknown> | undefined
-        return typeof candidate.getChartOption === 'function' && typeof chart?.getOption === 'function'
-      }
-
-      function findChartView(obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined {
-        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-          return undefined
-        }
-        if (depth > 8 || visited.includes(obj)) {
-          return undefined
-        }
-        if (isChartView(obj)) {
-          return obj
-        }
-        const nextVisited = [...visited, obj]
-        for (const value of Object.values(obj as Record<string, unknown>)) {
-          const found = findChartView(value, depth + 1, nextVisited)
-          if (found) {
-            return found
-          }
-        }
-        return undefined
-      }
-
-      const activeLeafView = app.workspace.getLeaf(false).view
-      const chartView = findChartView(activeLeafView, 0, [])
-      const option = chartView?.chart.getOption()
-      return option?.series?.[0]?.data?.length ?? 0
-    // tree/ sorts alphabetically after all three large-volume chart-type
-    // directories (calendar, heatmap, theme-river) -- the highest cold-start
-    // indexing risk in the suite.
-    }), { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS }).toBeGreaterThan(0)
-  })
-})
-
-test.describe('tree chart rendering', () => {
+test.describe('sunburst chart rendering', () => {
   // Regression coverage for bck-44j: extends the bar/radar hover-tooltip
-  // pattern to tree's 'tree' series. Nodes render as discrete emptyCircle
-  // symbols (the transformer's `symbol: 'emptyCircle'`), so this doesn't need
-  // radar's leaf-shape traversal for a zrender-Group -- only a real dataIndex,
-  // which findHierarchyLeaf derives dynamically (see its doc comment above).
-  // FIXME (bck-44x): the stability poll above (wait for 2 consecutive
-  // findHierarchyLeaf reads to agree) never converges within the 100s
-  // budget on live runs -- the tree structure appears to keep changing
-  // longer than expected, or there's a bug in the poll's own comparison
-  // logic. Needs diagnostic logging to see what's actually varying between
-  // iterations. See bck-44x for next steps.
+  // pattern to sunburst's 'sunburst' series. Each hierarchy level renders as
+  // a ring of arc/sector shapes (a discrete shape per dataIndex, not a
+  // zrender-Group like radar), so this only needs a real dataIndex, which
+  // findHierarchyLeaf derives dynamically (see its doc comment above).
+  // Sunburst's transformer sets no custom tooltip.formatter, so ECharts'
+  // default 'nameValue' markup applies: the leaf's own name and value, no
+  // ancestor breadcrumb (unlike tree's formatTooltip override).
+  // FIXME (bck-44x): live runs consistently return a leaf node ("CEO",
+  // value 22) that does not match what's actually hovered/rendered ("VP
+  // Sales", value 10) -- same wrong pair both before and after adding a
+  // stability poll on findHierarchyLeaf, so this is not (only) a timing
+  // race. Suspect findHierarchyLeaf's dataIndex resolution is structurally
+  // wrong for sunburst specifically -- treemap, sharing the same helper,
+  // passes reliably. See bck-44x for next steps.
   test.fixme('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
@@ -193,7 +124,7 @@ test.describe('tree chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'tree/Basic.base', viewName: 'Project tasks tree' })
+    }, { path: 'sunburst/Basic.base', viewName: 'Project tasks sunburst' })
 
     await waitForVaultIndexed(page)
 
@@ -224,7 +155,7 @@ test.describe('tree chart rendering', () => {
     const leafNode = await findHierarchyLeaf(page)
     if (leafNode === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-      throw new Error('no leaf node found in the tree series after polling succeeded')
+      throw new Error('no leaf node found in the sunburst series after polling succeeded')
     }
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: leafNode.dataIndex })

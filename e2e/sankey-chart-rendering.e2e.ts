@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import type { SankeySeriesOption } from 'echarts'
 
 interface SankeyOptionLike {
@@ -95,5 +95,55 @@ test.describe('sankey chart rendering', () => {
     // `series` were missing for an unrelated reason.
     const option = await getChartOption(page) as SankeyOptionLike | null
     expect(option?.series ?? []).toHaveLength(0)
+  })
+
+  // Regression coverage for bck-44j: SankeyView.js renders one discrete
+  // graphic.Rect per NODE dataIndex via `nodeData.setItemGraphicEl(node.dataIndex,
+  // rect)`, where nodeData is `seriesModel.getData()` -- the series' main
+  // `data` array (unique node names), not its `links`. Links/ribbons are a
+  // *separate* 'edge' data model (`seriesModel.getData('edge')`) that
+  // getSeriesItemScreenPosition's dataIndex-based lookup (against the main
+  // data) can't address -- a node is the only tractable hover target here.
+  test('hovering a sankey node shows its name and total flow value in the tooltip', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'sankey/Basic.base', viewName: 'User funnel flow (sankey)' })
+
+    await expect.poll(
+      async () => {
+        const opt = await getChartOption(page) as SankeyOptionLike | null
+        return opt?.series?.[0]?.data?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    // sankey.ts's `nodes` array is built via flatMap(source, target) +
+    // R.unique() over every link row, in Funnel-Step-0..7.md's alphabetical
+    // read order -- 'Homepage' (Funnel-Step-0's Source) is the very first
+    // name encountered, so it lands at dataIndex 0. Confirmed live rather
+    // than trusted by hand-derivation, since dedup order is exactly the
+    // kind of detail a transformer change could silently reorder.
+    const option = await getChartOption(page) as SankeyOptionLike | null
+    const nodeNames = option?.series?.[0]?.data?.map(node => node.name) ?? []
+    const dataIndex = nodeNames.indexOf('Homepage')
+    expect(dataIndex).toBeGreaterThanOrEqual(0)
+
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex })
+
+    expect(tooltipText).toContain('Homepage')
+    // 'Homepage' only appears as a link Source (Funnel-Step-0.md ->
+    // "Product Page": 5000, Funnel-Step-1.md -> "Blog": 2000), so
+    // SankeySeriesModel.formatTooltip's node value (the graph layout's
+    // summed flow) is 5000 + 2000 = 7000, comma-formatted by ECharts'
+    // default tooltip value formatter (see util/format.js's addCommas).
+    expect(tooltipText).toContain('7,000')
   })
 })
