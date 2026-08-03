@@ -551,10 +551,33 @@ export async function getSeriesItemScreenPosition(
       // by coincidence.
       readonly ignore?: boolean
       readonly invisible?: boolean
+      // zrender Sector shapes (sunburst's per-node piece extends
+      // graphic.Sector, confirmed in
+      // node_modules/echarts/lib/chart/sunburst/SunburstPiece.js) expose
+      // their own local geometry here. A bounding-rect center is wrong for
+      // these: a sector's rectangular bbox is the bounding box of the whole
+      // annular wedge, and for a wide-angle wedge that center point commonly
+      // falls inside a DIFFERENT, smaller-radius ring's sector instead of
+      // the wedge it's meant to identify -- confirmed via bck-44x hovering
+      // sunburst's widest top-level child consistently landed on its own
+      // parent ring. The angle/radius midpoint of the sector itself is
+      // always inside the wedge regardless of its angular width.
+      readonly shape?: {
+        readonly cx: number
+        readonly cy: number
+        readonly r0: number
+        readonly r: number
+        readonly startAngle: number
+        readonly endAngle: number
+      }
     }
 
     interface LeafShape extends GraphicElLike {
       readonly getBoundingRect: () => BoundingRect
+    }
+
+    function isSector(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: NonNullable<GraphicElLike['shape']> } {
+      return candidate.type === 'sector' && candidate.shape !== undefined
     }
 
     function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
@@ -659,6 +682,23 @@ export async function getSeriesItemScreenPosition(
       return null
     }
     const target = smallestLeafShape(el)
+    if (isSector(target)) {
+      const { cx, cy, r0, r, startAngle, endAngle } = target.shape
+      const midAngle = (startAngle + endAngle) / 2
+      const midRadius = (r0 + r) / 2
+      const localCenterX = cx + midRadius * Math.cos(midAngle)
+      const localCenterY = cy + midRadius * Math.sin(midAngle)
+
+      const [m0, m1, m2, m3, m4, m5] = target.transform ?? [1, 0, 0, 1, 0, 0]
+      const globalX = m0 * localCenterX + m2 * localCenterY + m4
+      const globalY = m1 * localCenterX + m3 * localCenterY + m5
+
+      const domRect = chart.getDom().getBoundingClientRect()
+      return {
+        pageX: domRect.left + globalX,
+        pageY: domRect.top + globalY,
+      }
+    }
     if (!hasBoundingRect(target)) {
       return null
     }

@@ -106,14 +106,19 @@ test.describe('sunburst chart rendering', () => {
   // Sunburst's transformer sets no custom tooltip.formatter, so ECharts'
   // default 'nameValue' markup applies: the leaf's own name and value, no
   // ancestor breadcrumb (unlike tree's formatTooltip override).
-  // FIXME (bck-44x): live runs consistently return a leaf node ("CEO",
-  // value 22) that does not match what's actually hovered/rendered ("VP
-  // Sales", value 10) -- same wrong pair both before and after adding a
-  // stability poll on findHierarchyLeaf, so this is not (only) a timing
-  // race. Suspect findHierarchyLeaf's dataIndex resolution is structurally
-  // wrong for sunburst specifically -- treemap, sharing the same helper,
-  // passes reliably. See bck-44x for next steps.
-  test.fixme('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x: live runs consistently found the CORRECT leaf via
+  // findHierarchyLeaf (dataIndex resolution itself was never wrong -- a
+  // live diagnostic confirmed node.dataIndex and getData()'s own indexing
+  // agreed perfectly at every index), but hovering that dataIndex's computed
+  // screen position landed on an ANCESTOR ring instead. Root cause was in
+  // getSeriesItemScreenPosition, not this file: sunburst's per-node graphic
+  // element is a zrender Sector (an annular wedge), and a wide-angle wedge's
+  // rectangular bounding-box center commonly falls inside a different,
+  // smaller-radius ring's sector rather than the wedge itself -- worse the
+  // wider the wedge, so the single largest-value top-level child was hit
+  // every time. Fixed by computing sector positions from the shape's own
+  // angle/radius midpoint instead of its bounding-rect center.
+  test('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())
