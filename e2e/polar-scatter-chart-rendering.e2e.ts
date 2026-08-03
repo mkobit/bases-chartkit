@@ -44,16 +44,20 @@ test.describe('polar-scatter chart rendering', () => {
   // leaf-shape traversal quirk here, and the existing
   // getSeriesItemScreenPosition/hoverChartDataPointAndGetTooltip helpers work
   // unmodified.
-  // FIXME (bck-44x): live runs consistently show a resolved series[0].name
-  // ("North America") that does NOT match what's actually rendered/hovered
-  // at (seriesIndex:0, dataIndex:0) ("Africa") -- confirmed NOT a timing
-  // race: reading it after the hover fully settles gives the same wrong
-  // value. chart.getOption()'s declarative series array may disagree with
-  // chart.getModel().getSeriesByIndex(0) (what hover actually targets) for
-  // this chart type specifically -- structurally identical scatter/
-  // stacked-bar tests pass reliably. See bck-44x for next steps (a
-  // model-level read helper instead of getChartOption()).
-  test.fixme('hovering the first point shows its continent, coordinates, and size in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x: live runs intermittently read back a resolved
+  // series[0].name that didn't match what was actually hovered. Root cause
+  // was a fixture bug, not an ECharts option/model disagreement: this
+  // chart's angle axis is `type: 'category'` on `x`, and
+  // scripts/generators/scatter.ts's fast-check arbitrary disproportionately
+  // re-sampled boundary values (`x`'s own `min: 10`), so several rows across
+  // DIFFERENT continents shared the exact same `x` category -- landing on
+  // the identical angle. Their symbols could then visually overlap even at
+  // different radii once sizeProp-driven symbol sizing was applied, so a
+  // real mouse hover could land on whichever series' symbol was on top, not
+  // necessarily seriesIndex 0's own point. Fixed by deduplicating the
+  // generated data by `x` alone (see scatter.ts), which every consumer of
+  // that arbitrary (scatter/effect-scatter/polar-scatter) shares.
+  test('hovering the first point shows its continent, coordinates, and size in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())

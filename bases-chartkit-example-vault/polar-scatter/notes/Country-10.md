@@ -1,6 +1,6 @@
 ---
-GDP: 100
-LifeExpectancy: 121.4
+GDP: 24.5
+LifeExpectancy: 63.7
 Continent: "Europe"
 Population: 1116
 ---

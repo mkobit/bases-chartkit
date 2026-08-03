@@ -10,6 +10,24 @@ import { CONTINENTS, themeItem } from './themes'
  * without this, a deterministic sample at a real registry seed produced a
  * point with `y: NaN`, which would silently corrupt generated frontmatter
  * and break rendering for that point).
+ *
+ * Deduplicates by `x` alone (after rounding), not just the (x, y) pair:
+ * fast-check's float arbitrary disproportionately re-samples boundary/corner
+ * values (e.g. `x`'s own `min: 10`), so a fixed-seed run can land several
+ * rows on the exact same rounded `x` even with different `y`. Every consumer
+ * of this arbitrary (scatter/effect-scatter/polar-scatter) renders `x` on a
+ * `type: 'category'` axis, so two rows sharing an `x` category share the
+ * exact same category tick -- on a polar chart that's the same angle, so
+ * their symbols can still visually overlap (and intercept each other's
+ * hover hit-test) even at different radii once a `sizeProp`-driven symbol
+ * size is applied. `demographicScatterArbitrary` below groups rows into one
+ * series per continent, so a category collision often means two different
+ * continents' symbols overlap on screen (confirmed via bck-44x:
+ * effect-scatter's and polar-scatter's hover tests intermittently read back
+ * a different continent's name than the one whose point was geometrically
+ * targeted). Deduping by `x` alone removes the ambiguity at the source for
+ * every chart type that shares this arbitrary, without touching the
+ * realistic slope/noise ranges themselves.
  */
 export const scatterChartArbitrary = fc.record({
   count: fc.integer({ min: 20,
@@ -32,10 +50,11 @@ export const scatterChartArbitrary = fc.record({
     { minLength: config.count,
       maxLength: config.count },
   ).map((points) => {
-    const data = points.map(p => ({
+    const rawData = points.map(p => ({
       x: parseFloat(p.x.toFixed(1)),
       y: parseFloat((p.x * config.slope + config.intercept + p.noise).toFixed(1)),
     }))
+    const data = R.uniqueBy(rawData, d => d.x)
     return {
       type: 'scatter',
       data,
