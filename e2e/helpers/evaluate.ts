@@ -744,6 +744,17 @@ export async function getTooltipText(page: Page): Promise<string | null> {
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
   args: { readonly seriesIndex: number, readonly dataIndex: number },
+  // Playwright's page.mouse.move sends a single instantaneous mousemove by
+  // default (no intermediate events). That's sufficient to trigger every
+  // trigger:'item' and cartesian trigger:'axis' tooltip in this codebase,
+  // but polar-line's trigger:'axis' + coordinateSystem:'polar' combination
+  // (the only one of its kind here) never showed a tooltip at all from a
+  // single jump in live runs, and reliably did once the move was broken into
+  // multiple intermediate mousemove events -- polar's axis-pointer angle
+  // resolution appears to need a real, gradual pointer path rather than a
+  // teleport. Defaults to a single move (unchanged behavior for every other
+  // caller); pass a higher value only for chart types that need it.
+  moveSteps = 1,
 ): Promise<string> {
   // Wait out indexing-driven re-renders before measuring anything: once the
   // vault is fully resolved, Bases has no further reason to call
@@ -778,7 +789,7 @@ export async function hoverChartDataPointAndGetTooltip(
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
     throw new Error(`no rendered graphic element for seriesIndex=${args.seriesIndex} dataIndex=${args.dataIndex} even after polling succeeded`)
   }
-  await page.mouse.move(target.pageX, target.pageY)
+  await page.mouse.move(target.pageX, target.pageY, { steps: moveSteps })
 
   await expect.poll(
     () => getTooltipText(page),
