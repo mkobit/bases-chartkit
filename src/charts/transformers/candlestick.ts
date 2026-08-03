@@ -96,6 +96,21 @@ export function createCandlestickChartOption(
         'close',
         'low',
         'high'],
+      // Without this, ECharts' dimension inference locks in `name` from
+      // this dataset's own object-row keys (open/close/low/high) before
+      // WhiskerBoxCommonMixin's defaultTooltip:true template dims
+      // ('open'/'close'/'lowest'/'highest') get a chance to apply -- since
+      // that template only fills in defaultTooltip when a dim's name is
+      // still unset, none of the 4 OHLC values end up flagged, and ECharts
+      // falls back to showing just one value (see
+      // node_modules/echarts/lib/data/helper/createDimensions.js's
+      // `resultItem.name == null` gate and dimensionHelper.js's
+      // defaultedLabel/defaultedTooltip fallback). Declaring the tooltip
+      // dims explicitly bypasses that whole detection path.
+      tooltip: ['open',
+        'close',
+        'low',
+        'high'],
     },
     itemStyle: {
       color: options?.upColor ?? '#14b143',
