@@ -521,7 +521,7 @@ export interface ScreenPosition {
  */
 export async function getSeriesItemScreenPosition(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number },
+  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
 ): Promise<ScreenPosition | null> {
   return evaluateObsidian(page, (app, a) => {
     interface BoundingRect { readonly x: number, readonly y: number, readonly width: number, readonly height: number }
@@ -569,6 +569,17 @@ export async function getSeriesItemScreenPosition(
         readonly r: number
         readonly startAngle: number
         readonly endAngle: number
+      } | {
+        // zrender Polyline shapes (parallel's per-row line, confirmed in
+        // node_modules/echarts/lib/chart/parallel/ParallelView.js's addEl:
+        // one flat graphic.Polyline per dataIndex, one point per axis
+        // crossing, no per-vertex children). A bounding-rect center is wrong
+        // here too, for the same reason as sunburst's Sector: the polyline
+        // zigzags across every parallel axis, so its bbox center generally
+        // lands in empty space between axes rather than on the line itself.
+        // The exact vertex ECharts computed for one axis crossing is already
+        // sitting in this array -- no coordinate-system math needed.
+        readonly points: ReadonlyArray<readonly [number, number]>
       }
     }
 
@@ -576,8 +587,12 @@ export async function getSeriesItemScreenPosition(
       readonly getBoundingRect: () => BoundingRect
     }
 
-    function isSector(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: NonNullable<GraphicElLike['shape']> } {
-      return candidate.type === 'sector' && candidate.shape !== undefined
+    function isSector(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly cx: number, readonly cy: number, readonly r0: number, readonly r: number, readonly startAngle: number, readonly endAngle: number } } {
+      return candidate.type === 'sector' && candidate.shape !== undefined && 'cx' in candidate.shape
+    }
+
+    function isPolyline(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly points: ReadonlyArray<readonly [number, number]> } } {
+      return candidate.type === 'polyline' && candidate.shape !== undefined && 'points' in candidate.shape
     }
 
     function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
@@ -677,6 +692,17 @@ export async function getSeriesItemScreenPosition(
       return null
     }
 
+    const chartDomRect = chart.getDom().getBoundingClientRect()
+    function toScreenPosition(localX: number, localY: number, transform: GraphicElLike['transform']): ScreenPosition {
+      const [m0, m1, m2, m3, m4, m5] = transform ?? [1, 0, 0, 1, 0, 0]
+      const globalX = m0 * localX + m2 * localY + m4
+      const globalY = m1 * localX + m3 * localY + m5
+      return {
+        pageX: chartDomRect.left + globalX,
+        pageY: chartDomRect.top + globalY,
+      }
+    }
+
     const el = chart.getModel().getSeriesByIndex(a.seriesIndex)?.getData().getItemGraphicEl(a.dataIndex)
     if (!el || !hasBoundingRect(el)) {
       return null
@@ -686,36 +712,22 @@ export async function getSeriesItemScreenPosition(
       const { cx, cy, r0, r, startAngle, endAngle } = target.shape
       const midAngle = (startAngle + endAngle) / 2
       const midRadius = (r0 + r) / 2
-      const localCenterX = cx + midRadius * Math.cos(midAngle)
-      const localCenterY = cy + midRadius * Math.sin(midAngle)
-
-      const [m0, m1, m2, m3, m4, m5] = target.transform ?? [1, 0, 0, 1, 0, 0]
-      const globalX = m0 * localCenterX + m2 * localCenterY + m4
-      const globalY = m1 * localCenterX + m3 * localCenterY + m5
-
-      const domRect = chart.getDom().getBoundingClientRect()
-      return {
-        pageX: domRect.left + globalX,
-        pageY: domRect.top + globalY,
-      }
+      return toScreenPosition(
+        cx + midRadius * Math.cos(midAngle),
+        cy + midRadius * Math.sin(midAngle),
+        target.transform,
+      )
+    }
+    if (isPolyline(target)) {
+      const point = target.shape.points[a.vertexIndex ?? 0]
+      return point ? toScreenPosition(point[0], point[1], target.transform) : null
     }
     if (!hasBoundingRect(target)) {
       return null
     }
 
     const rect = target.getBoundingRect()
-    const localCenterX = rect.x + rect.width / 2
-    const localCenterY = rect.y + rect.height / 2
-
-    const [m0, m1, m2, m3, m4, m5] = target.transform ?? [1, 0, 0, 1, 0, 0]
-    const globalX = m0 * localCenterX + m2 * localCenterY + m4
-    const globalY = m1 * localCenterX + m3 * localCenterY + m5
-
-    const domRect = chart.getDom().getBoundingClientRect()
-    return {
-      pageX: domRect.left + globalX,
-      pageY: domRect.top + globalY,
-    }
+    return toScreenPosition(rect.x + rect.width / 2, rect.y + rect.height / 2, target.transform)
   }, args)
 }
 
@@ -783,7 +795,7 @@ export async function getTooltipText(page: Page): Promise<string | null> {
  */
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number },
+  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
   // Playwright's page.mouse.move sends a single instantaneous mousemove by
   // default (no intermediate events). That's sufficient to trigger every
   // trigger:'item' and cartesian trigger:'axis' tooltip in this codebase,
