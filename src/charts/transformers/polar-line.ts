@@ -22,8 +22,6 @@ export function createPolarLineChartOption(
   const hasAreaStyle = options?.areaStyle
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  // 1. Normalize Data for Dataset
-  // Structure: { x, y, s }
   const normalizedData = R.map(
     data,
     (item) => {
@@ -50,24 +48,20 @@ export function createPolarLineChartOption(
     },
   )
 
-  // 2. Get unique X values (categories) for the angle axis
   const angleAxisData = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  // 3. Identify Series
   const seriesNames = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = { source: normalizedData }
 
-  // If we have a seriesProp, we create filtered datasets for each series
   const filterDatasets: DatasetComponentOption[] = seriesProp
     ? seriesNames.map(name => ({
         transform: {
@@ -81,7 +75,6 @@ export function createPolarLineChartOption(
   const datasets: DatasetComponentOption[] = [sourceDataset,
     ...filterDatasets]
 
-  // 5. Build Series Options
   const seriesOptions: LineSeriesOption[] = seriesNames.map((name, idx) => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 

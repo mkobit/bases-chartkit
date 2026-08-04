@@ -32,7 +32,6 @@ export function createLinesChartOption(
   return (!x2Prop || !y2Prop)
     ? {}
     : (() => {
-        // 1. Normalize Data
         const normalizedData = R.pipe(
           data,
           R.map((item) => {
@@ -87,14 +86,12 @@ export function createLinesChartOption(
           : { min: Math.min(...allY),
               max: Math.max(...allY) }
 
-        // 2. Group by Series
         const groupedData = R.groupBy(
           normalizedData,
           d => d.series,
         )
         const seriesNames = Object.keys(groupedData)
 
-        // 3. Build Series
         const seriesOptions: LinesSeriesOption[] = seriesNames.map((name) => {
           const seriesData = (groupedData[name] ?? []).map(d => ({
             coords: d.coords,

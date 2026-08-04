@@ -8,7 +8,6 @@ import { t } from '../lang/text'
 export class HistogramChartView extends BaseChartView {
   type = 'histogram'
 
-  // Specific keys for Histogram
   public static readonly BIN_COUNT_KEY = 'binCount'
 
   protected getChartOption(data: BasesData): EChartsOption | null {
@@ -22,8 +21,7 @@ export class HistogramChartView extends BaseChartView {
     }
 
     const binCountStr = this.config.get(HistogramChartView.BIN_COUNT_KEY) as string
-    // Validate binCount: must be a valid positive integer.
-    // If invalid or empty, pass undefined to let transformer use Sturges.
+    // Invalid or empty stays undefined so the transformer falls back to Sturges.
     const parsedBinCount = binCountStr
       ? parseInt(
           binCountStr,
@@ -37,7 +35,6 @@ export class HistogramChartView extends BaseChartView {
     const options = {
       ...this.getCommonTransformerOptions(),
       binCount,
-      // Map common labels if needed
       yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? 'Frequency',
       xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? valueProp,
     }

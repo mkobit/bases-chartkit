@@ -22,8 +22,6 @@ export function createCandlestickChartOption(
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  // 1. Normalize Data for Dataset
-  // Structure: { x, open, close, low, high }
   const normalizedData = R.pipe(
     data,
     R.map((item) => {
@@ -49,7 +47,6 @@ export function createCandlestickChartOption(
         highProp,
       )
 
-      // Validation
       const rawValuesValid = openRaw !== null && openRaw !== undefined
         && closeRaw !== null && closeRaw !== undefined
         && lowRaw !== null && lowRaw !== undefined
@@ -83,10 +80,8 @@ export function createCandlestickChartOption(
       high: number }> => x !== null),
   )
 
-  // 2. Get X Axis Data
   const xAxisData = normalizedData.map(d => d.x)
 
-  // 3. Build Series
   const seriesItem: CandlestickSeriesOption = {
     type: 'candlestick',
     datasetIndex: 0,

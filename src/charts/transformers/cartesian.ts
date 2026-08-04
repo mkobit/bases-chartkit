@@ -30,13 +30,10 @@ export function createCartesianChartOption(
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  // Responsive logic
   const isMobile = options?.isMobile ?? false
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  // 1. Normalize Data for Dataset
-  // Structure: { x, y, s }
   const normalizedData: ReadonlyArray<CartesianDataPoint> = R.map(
     data,
     (item): CartesianDataPoint => {
@@ -63,7 +60,6 @@ export function createCartesianChartOption(
     },
   )
 
-  // 2. Get unique X values (categories) for the axis
   const xAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
@@ -79,14 +75,12 @@ export function createCartesianChartOption(
     flipAxis,
   )
 
-  // 3. Identify Series
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
     source: normalizedData as unknown as Record<string, unknown>[],
@@ -105,7 +99,6 @@ export function createCartesianChartOption(
   const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  // 5. Build Series Options
   const seriesOptions: ReadonlyArray<SeriesOption> = seriesNames.map((name, idx): SeriesOption => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
@@ -147,8 +140,6 @@ export function createCartesianChartOption(
         })()
   })
 
-  // DataZoom for compact mode (only if not flipped, for X-axis scrolling)
-  // We use both slider (visible) and inside (touch/mouse wheel)
   const dataZoomOptions: ReadonlyArray<DataZoomComponentOption> = (isCompact && !flipAxis)
     ? [
         {

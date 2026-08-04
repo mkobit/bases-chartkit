@@ -46,7 +46,6 @@ export class GaugeChartView extends BaseChartView {
   readonly type = 'gauge-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
-    // Cast BaseChartView to any to access new props
     const minVal = Number(this.config.get(BaseChartView.MIN_VALUE_KEY))
     const maxVal = Number(this.config.get(BaseChartView.MAX_VALUE_KEY))
     const aggregationRaw = this.config.get(GaugeChartView.AGGREGATION_KEY)

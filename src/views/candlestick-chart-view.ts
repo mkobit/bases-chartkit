@@ -8,7 +8,6 @@ import type { BasesData } from '../charts/transformers/base'
 import { t } from '../lang/text'
 
 export class CandlestickChartView extends BaseChartView {
-  // Unique keys for Candlestick
   public static readonly OPEN_PROP_KEY = 'openProp'
   public static readonly CLOSE_PROP_KEY = 'closeProp'
   public static readonly LOW_PROP_KEY = 'lowProp'

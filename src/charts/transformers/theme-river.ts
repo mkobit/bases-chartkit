@@ -9,7 +9,6 @@ export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {
   readonly themeProp?: string
 }
 
-// Define the tuple type explicitly to match usage
 // ECharts ThemeRiver expects [date, value, id]
 type ThemeRiverItem = [string, number, string]
 
@@ -21,7 +20,6 @@ export function createThemeRiverChartOption(
   const valueProp = options?.valueProp
   const themeProp = options?.themeProp
 
-  // Data format: [date, value, themeName]
   const riverData = R.pipe(
     data,
     R.map((item) => {
@@ -55,7 +53,6 @@ export function createThemeRiverChartOption(
               : undefined
             const theme = (tRaw !== undefined && tRaw !== null) ? safeToString(tRaw) : (valueProp ?? 'Value')
 
-            // Explicitly type the tuple
             const res: ThemeRiverItem = [dateVal,
               val,
               theme]
@@ -68,7 +65,6 @@ export function createThemeRiverChartOption(
 
   const seriesItem: ThemeRiverSeriesOption = {
     type: 'themeRiver',
-    // Pass the properly typed data
     data: riverData,
     emphasis: {
       itemStyle: {

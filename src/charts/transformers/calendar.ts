@@ -49,7 +49,6 @@ export function createCalendarChartOption(
 
   return calendarData.length === 0
     ? (() => {
-        // Return default empty state
         const minDate = Temporal.Now.plainDateISO().toString()
         return {
           calendar: { range: [minDate,
@@ -58,7 +57,6 @@ export function createCalendarChartOption(
         }
       })()
     : (() => {
-        // Sort data by date for range calculation and predictable order
         const sortedData = R.sortBy(
           calendarData,
           d => d.date,
@@ -68,7 +66,6 @@ export function createCalendarChartOption(
         // @ts-expect-error - suppress strictNullChecks/type errors
         const maxDate = sortedData[sortedData.length - 1].date
 
-        // Calculate min/max values in one pass using reduce
         const range = sortedData.reduce(
           (acc, d) => ({
             min: Math.min(

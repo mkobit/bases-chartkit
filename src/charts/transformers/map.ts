@@ -16,10 +16,8 @@ export function createMapChartOption(
 ): EChartsOption {
   const regionProp = options?.regionProp
   const valueProp = options?.valueProp
-  const title = options?.xAxisLabel // Re-use title prop if needed, or just standard title
+  const title = options?.xAxisLabel
 
-  // 1. Map Data
-  // Structure: { name: Region, value: Number }
   const mapData = R.pipe(
     data,
     R.map((item) => {
@@ -45,7 +43,6 @@ export function createMapChartOption(
     R.filter(item => item.name !== ''),
   )
 
-  // 2. Calculate Min/Max for VisualMap
   const values = R.map(
     mapData,
     d => d.value,

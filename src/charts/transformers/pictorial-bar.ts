@@ -26,8 +26,6 @@ export function createPictorialBarChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  // 1. Normalize Data for Dataset
-  // Structure: { x, y, s }
   const normalizedData = R.map(
     data,
     (item) => {
@@ -54,7 +52,6 @@ export function createPictorialBarChartOption(
     },
   )
 
-  // 2. Get unique X values (categories) for the axis
   const xAxisData = R.pipe(
     normalizedData,
     R.map(d => d.x),
@@ -70,14 +67,12 @@ export function createPictorialBarChartOption(
     flipAxis,
   )
 
-  // 3. Identify Series
   const seriesNames = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = { source: normalizedData }
 
   const filterDatasets: DatasetComponentOption[] = seriesProp
@@ -93,7 +88,6 @@ export function createPictorialBarChartOption(
   const datasets: DatasetComponentOption[] = [sourceDataset,
     ...filterDatasets]
 
-  // 5. Build Series Options
   const seriesOptions: PictorialBarSeriesOption[] = seriesNames.map((name, idx) => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
@@ -114,7 +108,6 @@ export function createPictorialBarChartOption(
       name: name,
       type: 'pictorialBar',
       datasetIndex: datasetIndex,
-      // Encode: Map dimensions to axes
       // If flipped: X-Axis is Value (y data), Y-Axis is Category (x data)
       encode: flipAxis
         ? { x: 'y',

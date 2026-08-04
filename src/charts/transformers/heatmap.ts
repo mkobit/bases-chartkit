@@ -30,8 +30,6 @@ export function createHeatmapChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  // 1. Normalize Data
-  // Structure: { x, y, value }
   const normalizedData = R.map(
     data,
     (item) => {
@@ -58,7 +56,6 @@ export function createHeatmapChartOption(
     },
   )
 
-  // 2. Identify Categories for Axes
   const xAxisData = R.pipe(
     normalizedData,
     R.map(d => d.x),
@@ -75,7 +72,6 @@ export function createHeatmapChartOption(
     d => d.value,
   )
 
-  // Determine Min/Max
   const dataMin = values.length > 0 ? Math.min(...values) : 0
   const dataMax = values.length > 0 ? Math.max(...values) : 10
 
@@ -112,7 +108,7 @@ export function createHeatmapChartOption(
     calculable: true,
     orient: options?.visualMapOrient ?? 'horizontal',
     left: options?.visualMapLeft ?? 'center',
-    bottom: options?.visualMapTop !== undefined ? undefined : '0%', // Default bottom if top not set
+    bottom: options?.visualMapTop !== undefined ? undefined : '0%',
     top: options?.visualMapTop,
     type: options?.visualMapType ?? 'continuous',
     formatter: formatCompactVisualMapLabel,

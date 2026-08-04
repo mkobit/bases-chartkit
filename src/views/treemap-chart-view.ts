@@ -18,7 +18,7 @@ export class TreemapChartView extends BaseChartView {
   }
 
   getIcon(): string {
-    return 'layout-grid' // Use an icon that looks like a treemap
+    return 'layout-grid'
   }
 
   static getViewOptions(): ViewOption[] {

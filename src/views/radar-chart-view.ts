@@ -10,10 +10,6 @@ export class RadarChartView extends BaseChartView {
 
   readonly type = 'radar-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
-    // For Radar:
-    // X-Axis Prop -> Indicator (Category), or Name when Metric Properties is set
-    // Y-Axis Prop -> Value (ignored when Metric Properties is set)
-    // Series Prop -> Series Name (ignored when Metric Properties is set)
     const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY)
     const metricPropsRaw = this.config.get(RadarChartView.METRIC_PROPS_KEY)
 

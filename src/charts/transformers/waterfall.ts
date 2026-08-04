@@ -28,7 +28,6 @@ export function createWaterfallChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  // 1. Extract and Validate Data
   const validData: readonly WaterfallDataPoint[] = R.pipe(
     data,
     items => items.map((item) => {
@@ -60,7 +59,6 @@ export function createWaterfallChartOption(
     R.filter((x): x is WaterfallDataPoint => x !== null),
   )
 
-  // 2. Calculate Waterfall Steps
   interface Accumulator {
     readonly baseData: (number | string)[]
     readonly riseData: (number | string)[]
@@ -103,7 +101,6 @@ export function createWaterfallChartOption(
 
   const { baseData, riseData, fallData, xData } = result
 
-  // 3. Construct Series
   const series: BarSeriesOption[] = [
     {
       name: '_base',

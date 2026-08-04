@@ -32,14 +32,12 @@ function asTreeData(data: readonly HierarchyNode[]): TreeSeriesOption['data'] {
 
 /**
  * Helper to build a tree structure from slash-separated paths.
- * Refactored to be functional using recursion instead of mutation loops.
  */
 export function buildHierarchy(
   data: BasesData,
   pathProp: string,
   valueProp?: string,
 ): readonly HierarchyNode[] {
-  // 1. Transform data into paths and values
   const paths = R.pipe(
     data,
     R.map((item) => {
@@ -64,8 +62,6 @@ export function buildHierarchy(
                         valueProp,
                       ))
                     : Number.NaN
-                  // Explicitly use undefined if NaN, so it matches optional type better?
-                  // Actually, type { value?: number } allows undefined.
                   const value = Number.isNaN(valNum) ? undefined : valNum
 
                   return { parts,
@@ -76,15 +72,13 @@ export function buildHierarchy(
     R.filter((x): x is PathItem => x !== null),
   )
 
-  // 2. Recursive builder
   const buildLevel = (items: readonly PathItem[]): readonly HierarchyNode[] => {
     return R.pipe(
       items,
-      R.groupBy(item => item.parts[0]), // Group by current level name
+      R.groupBy(item => item.parts[0]),
       R.entries(),
       R.map(([name,
         group]) => {
-        // Check if any item in this group is a leaf at this level (length 1)
         const leafItems = group.filter(item => item.parts.length === 1)
         const leafValue = leafItems.length > 0
           ? R.sumBy(
@@ -93,7 +87,6 @@ export function buildHierarchy(
             )
           : undefined
 
-        // Get children items (length > 1), slicing off the first part
         const childrenItems = group
           .filter(item => item.parts.length > 1)
           .map(item => ({ parts: item.parts.slice(1),
@@ -101,7 +94,6 @@ export function buildHierarchy(
 
         const children = childrenItems.length > 0 ? buildLevel(childrenItems) : undefined
 
-        // Construct node without mutation
         const node: HierarchyNode = { name }
 
         const nodeWithValue = (leafValue !== undefined && leafValue > 0)

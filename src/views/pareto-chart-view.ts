@@ -32,7 +32,6 @@ export class ParetoChartView extends BaseChartView {
     // Remove seriesProp as Pareto doesn't support grouping by series
     const options = common.filter(o => 'key' in o && o.key !== BaseChartView.SERIES_PROP_KEY)
 
-    // Customize display names
     const xOption = options.find(o => 'key' in o && o.key === BaseChartView.X_AXIS_PROP_KEY)
     if (xOption) {
       xOption.displayName = t('views.pareto.category_prop')

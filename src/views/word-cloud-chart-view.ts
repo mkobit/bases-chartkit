@@ -10,8 +10,6 @@ import { t } from '../lang/text'
 export class WordCloudChartView extends BaseChartView {
   readonly type = 'word-cloud-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
-    // X-Axis Prop -> Word
-    // Y-Axis Prop -> Frequency/Value
     const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY)
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
 
