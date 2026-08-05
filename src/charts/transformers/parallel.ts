@@ -128,6 +128,22 @@ export function createParallelChartOption(
                 width: 2, // make lines visible
               },
               data: sData,
+              // Without this, ECharts' default dimension inference flags only
+              // the LAST axis column as `defaultedTooltip` (confirmed live:
+              // hovering any point along a 3-axis row's line showed only the
+              // 3rd axis's value, same defaultedTooltip fallback bug fixed
+              // for candlestick's OHLC dims -- see candlestick.ts). Must use
+              // raw numeric column indices, not the 'dim0'/'dim1'/... names
+              // ECharts assigns for display -- those names don't exist yet
+              // when encode is resolved (no `dimensions:` array is declared
+              // on this series), so `dataDimNameMap.get('dim0')` in
+              // createDimensions.js's encodeDefMap loop returns undefined
+              // and the string form silently resolves to nothing (confirmed
+              // live: string form left every dim's otherDims empty, same as
+              // having no encode.tooltip at all).
+              encode: {
+                tooltip: dims.map((_, index) => index),
+              },
             }
           }),
         )
@@ -146,6 +162,9 @@ export function createParallelChartOption(
           },
           parallelAxis: asParallelAxis(parallelAxis),
           series: series,
+          tooltip: {
+            trigger: 'item',
+          },
           ...(getLegendOption(options)
             ? {
                 legend: {

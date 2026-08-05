@@ -22,13 +22,23 @@ const TIME_SERVER_COMBINATIONS = TIME_BUCKETS.flatMap(time =>
 /**
  * Arbitrary for Polar Line chart data.
  * Generates load values for a Time-bucket x Server cross-product.
+ *
+ * `load`'s min is 1, not 0: `load` encodes the radius in polar-line.ts's
+ * `radiusAxis`, and a radius of exactly 0 sits at the polar chart's literal
+ * center -- geometrically the same pixel regardless of which angle
+ * (time-of-day category) it belongs to. A hover-based e2e test that targets
+ * a specific (time, server) point can't disambiguate which category ECharts'
+ * axis-pointer resolves a center hit to (confirmed via bck-44x: hovering
+ * TIME_SERVER_COMBINATIONS[0]'s point, generated with load 0, consistently
+ * showed the tooltip for a different time bucket entirely). Keeping every
+ * point off the exact center removes the ambiguity at the source.
  */
 export const polarLineChartArbitrary = fc.record({
   maxVal: fc.integer({ min: 50,
     max: 100 }),
 }).chain((config) => {
   return fc.array(
-    fc.integer({ min: 0,
+    fc.integer({ min: 1,
       max: config.maxVal }),
     { minLength: TIME_SERVER_COMBINATIONS.length,
       maxLength: TIME_SERVER_COMBINATIONS.length },

@@ -130,6 +130,10 @@ describe(
               y: ['open',
                 'close',
                 'low',
+                'high'],
+              tooltip: ['open',
+                'close',
+                'low',
                 'high'] })
           },
         )

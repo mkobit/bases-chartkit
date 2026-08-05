@@ -1,5 +1,5 @@
 ---
-GDP: 10
-LifeExpectancy: 52
+GDP: 64.5
+LifeExpectancy: 69.2
 Continent: "South America"
 ---

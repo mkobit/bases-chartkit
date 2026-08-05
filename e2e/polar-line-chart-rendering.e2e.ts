@@ -46,13 +46,20 @@ test.describe('polar-line chart rendering', () => {
   // they describe the exact same render the tooltip came from. seriesIndex 0
   // and dataIndex 0 are fixed/known ahead of time, so this doesn't need the
   // resolved name/row to start the hover.
-  // FIXME (bck-44x): live runs show hover finds a real screen position (the
-  // position-stability poll succeeds), but getTooltipText never returns
-  // non-null within its 5s window -- the tooltip doesn't appear at all,
-  // unlike the content-mismatch failures seen elsewhere. See bck-44x for
-  // next steps (investigate whether polar coordinateSystem + trigger:'item'
-  // reliably fires ECharts' tooltip show logic for a 'line' series).
-  test.fixme('hovering the first point of the first server series shows its server, time, and load in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x, two separate bugs:
+  // 1. A single-jump mouse move (hoverChartDataPointAndGetTooltip's default)
+  // never fired ECharts' polar axis-pointer at all -- polar's angle
+  // resolution needs a real, multi-step pointer path, unlike every other
+  // trigger:'item'/cartesian trigger:'axis' chart in this codebase. Pass
+  // moveSteps to break the final move into several mousemove events.
+  // 2. Even with a stepped move, hovering dataIndex 0 read back the wrong
+  // time bucket: TIME_SERVER_COMBINATIONS[0] (Server-1 @ 08:00) sampled
+  // load: 0, and a radius of exactly 0 sits at the polar chart's literal
+  // center -- the same pixel regardless of angle/time-bucket, so ECharts'
+  // axis-pointer had no way to resolve which category was actually meant.
+  // Fixed at the source in scripts/generators/polar.ts (load's min is now 1,
+  // never 0).
+  test('hovering the first point of the first server series shows its server, time, and load in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())
@@ -82,7 +89,7 @@ test.describe('polar-line chart rendering', () => {
     // wait observe the same, final state.
     await waitForVaultIndexed(page)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 }, 10)
 
     const option = await getChartOption(page) as {
       readonly series: readonly PolarLineSeriesLike[]

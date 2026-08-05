@@ -33,12 +33,17 @@ test.describe('candlestick chart rendering', () => {
   // maximum-value row. Read that row's own Date/OHLC values live off
   // dataset[0].source (unaffected by the series-level filtering) rather than
   // hardcoding them, so this doesn't silently drift if the fixture changes.
-  // FIXME (bck-44x): live runs consistently truncate the tooltip to
-  // "2024-01-30111" (date + one value only, missing Open/Low). Ruled out:
-  // getTooltipText concatenating multiple domBelongToZr divs made no
-  // difference -- the crosshair-label-pollution theory was wrong. See bck-44x
-  // for the full diagnostic writeup and next steps.
-  test.fixme('hovering the last candle shows its date and OHLC values in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x: the tooltip consistently truncated to "2024-01-30111"
+  // (date + one value only, missing Open/Low) because ECharts' dimension
+  // inference locks in each value dim's `name` from this dataset's own
+  // object-row keys (open/close/low/high) before WhiskerBoxCommonMixin's
+  // defaultTooltip:true template dims ('open'/'close'/'lowest'/'highest') get
+  // a chance to apply -- that template only fills in defaultTooltip when a
+  // dim's name is still unset, so none of the 4 OHLC values were flagged and
+  // ECharts fell back to showing just one. Fixed by declaring `encode.
+  // tooltip` explicitly on the series (see candlestick.ts), bypassing that
+  // detection path entirely.
+  test('hovering the last candle shows its date and OHLC values in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())

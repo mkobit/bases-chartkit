@@ -521,7 +521,7 @@ export interface ScreenPosition {
  */
 export async function getSeriesItemScreenPosition(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number },
+  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
 ): Promise<ScreenPosition | null> {
   return evaluateObsidian(page, (app, a) => {
     interface BoundingRect { readonly x: number, readonly y: number, readonly width: number, readonly height: number }
@@ -551,10 +551,48 @@ export async function getSeriesItemScreenPosition(
       // by coincidence.
       readonly ignore?: boolean
       readonly invisible?: boolean
+      // zrender Sector shapes (sunburst's per-node piece extends
+      // graphic.Sector, confirmed in
+      // node_modules/echarts/lib/chart/sunburst/SunburstPiece.js) expose
+      // their own local geometry here. A bounding-rect center is wrong for
+      // these: a sector's rectangular bbox is the bounding box of the whole
+      // annular wedge, and for a wide-angle wedge that center point commonly
+      // falls inside a DIFFERENT, smaller-radius ring's sector instead of
+      // the wedge it's meant to identify -- confirmed via bck-44x hovering
+      // sunburst's widest top-level child consistently landed on its own
+      // parent ring. The angle/radius midpoint of the sector itself is
+      // always inside the wedge regardless of its angular width.
+      readonly shape?: {
+        readonly cx: number
+        readonly cy: number
+        readonly r0: number
+        readonly r: number
+        readonly startAngle: number
+        readonly endAngle: number
+      } | {
+        // zrender Polyline shapes (parallel's per-row line, confirmed in
+        // node_modules/echarts/lib/chart/parallel/ParallelView.js's addEl:
+        // one flat graphic.Polyline per dataIndex, one point per axis
+        // crossing, no per-vertex children). A bounding-rect center is wrong
+        // here too, for the same reason as sunburst's Sector: the polyline
+        // zigzags across every parallel axis, so its bbox center generally
+        // lands in empty space between axes rather than on the line itself.
+        // The exact vertex ECharts computed for one axis crossing is already
+        // sitting in this array -- no coordinate-system math needed.
+        readonly points: ReadonlyArray<readonly [number, number]>
+      }
     }
 
     interface LeafShape extends GraphicElLike {
       readonly getBoundingRect: () => BoundingRect
+    }
+
+    function isSector(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly cx: number, readonly cy: number, readonly r0: number, readonly r: number, readonly startAngle: number, readonly endAngle: number } } {
+      return candidate.type === 'sector' && candidate.shape !== undefined && 'cx' in candidate.shape
+    }
+
+    function isPolyline(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly points: ReadonlyArray<readonly [number, number]> } } {
+      return candidate.type === 'polyline' && candidate.shape !== undefined && 'points' in candidate.shape
     }
 
     function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
@@ -654,28 +692,42 @@ export async function getSeriesItemScreenPosition(
       return null
     }
 
+    const chartDomRect = chart.getDom().getBoundingClientRect()
+    function toScreenPosition(localX: number, localY: number, transform: GraphicElLike['transform']): ScreenPosition {
+      const [m0, m1, m2, m3, m4, m5] = transform ?? [1, 0, 0, 1, 0, 0]
+      const globalX = m0 * localX + m2 * localY + m4
+      const globalY = m1 * localX + m3 * localY + m5
+      return {
+        pageX: chartDomRect.left + globalX,
+        pageY: chartDomRect.top + globalY,
+      }
+    }
+
     const el = chart.getModel().getSeriesByIndex(a.seriesIndex)?.getData().getItemGraphicEl(a.dataIndex)
     if (!el || !hasBoundingRect(el)) {
       return null
     }
     const target = smallestLeafShape(el)
+    if (isSector(target)) {
+      const { cx, cy, r0, r, startAngle, endAngle } = target.shape
+      const midAngle = (startAngle + endAngle) / 2
+      const midRadius = (r0 + r) / 2
+      return toScreenPosition(
+        cx + midRadius * Math.cos(midAngle),
+        cy + midRadius * Math.sin(midAngle),
+        target.transform,
+      )
+    }
+    if (isPolyline(target)) {
+      const point = target.shape.points[a.vertexIndex ?? 0]
+      return point ? toScreenPosition(point[0], point[1], target.transform) : null
+    }
     if (!hasBoundingRect(target)) {
       return null
     }
 
     const rect = target.getBoundingRect()
-    const localCenterX = rect.x + rect.width / 2
-    const localCenterY = rect.y + rect.height / 2
-
-    const [m0, m1, m2, m3, m4, m5] = target.transform ?? [1, 0, 0, 1, 0, 0]
-    const globalX = m0 * localCenterX + m2 * localCenterY + m4
-    const globalY = m1 * localCenterX + m3 * localCenterY + m5
-
-    const domRect = chart.getDom().getBoundingClientRect()
-    return {
-      pageX: domRect.left + globalX,
-      pageY: domRect.top + globalY,
-    }
+    return toScreenPosition(rect.x + rect.width / 2, rect.y + rect.height / 2, target.transform)
   }, args)
 }
 
@@ -743,7 +795,18 @@ export async function getTooltipText(page: Page): Promise<string | null> {
  */
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number },
+  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
+  // Playwright's page.mouse.move sends a single instantaneous mousemove by
+  // default (no intermediate events). That's sufficient to trigger every
+  // trigger:'item' and cartesian trigger:'axis' tooltip in this codebase,
+  // but polar-line's trigger:'axis' + coordinateSystem:'polar' combination
+  // (the only one of its kind here) never showed a tooltip at all from a
+  // single jump in live runs, and reliably did once the move was broken into
+  // multiple intermediate mousemove events -- polar's axis-pointer angle
+  // resolution appears to need a real, gradual pointer path rather than a
+  // teleport. Defaults to a single move (unchanged behavior for every other
+  // caller); pass a higher value only for chart types that need it.
+  moveSteps = 1,
 ): Promise<string> {
   // Wait out indexing-driven re-renders before measuring anything: once the
   // vault is fully resolved, Bases has no further reason to call
@@ -778,7 +841,7 @@ export async function hoverChartDataPointAndGetTooltip(
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
     throw new Error(`no rendered graphic element for seriesIndex=${args.seriesIndex} dataIndex=${args.dataIndex} even after polling succeeded`)
   }
-  await page.mouse.move(target.pageX, target.pageY)
+  await page.mouse.move(target.pageX, target.pageY, { steps: moveSteps })
 
   await expect.poll(
     () => getTooltipText(page),

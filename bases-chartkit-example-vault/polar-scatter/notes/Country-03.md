@@ -1,6 +1,6 @@
 ---
-GDP: 80.6
-LifeExpectancy: 106.6
+GDP: 14.1
+LifeExpectancy: 55.8
 Continent: "Oceania"
 Population: 7
 ---

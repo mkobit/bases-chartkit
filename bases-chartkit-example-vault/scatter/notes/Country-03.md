@@ -1,5 +1,5 @@
 ---
-GDP: 100
-LifeExpectancy: 97
+GDP: 10
+LifeExpectancy: 52
 Continent: "Oceania"
 ---
