@@ -360,6 +360,9 @@ export default tseslint.config(
     files: [
       'src/charts/transformer.ts',
       'src/charts/transformers/base.ts',
+      'src/charts/transformers/boxplot.ts',
+      'src/charts/transformers/bullet.ts',
+      'src/charts/transformers/calendar.ts',
       'src/charts/transformers/cartesian.ts',
       'src/charts/transformers/gantt.ts',
       'src/charts/transformers/pie.ts',
