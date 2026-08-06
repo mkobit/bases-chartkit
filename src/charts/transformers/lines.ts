@@ -9,12 +9,13 @@ export interface LinesTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
 }
 
-type LineSegment = [[number, number], [number, number]]
-
-function asCoords(coords: readonly (readonly number[])[]): LineSegment {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- caller guarantees exactly two [x, y] pairs; bridge past the general numeric-array type.
-  return coords as unknown as LineSegment
-}
+type NormalizedSegment = Readonly<{
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  series: string
+}>
 
 export function createLinesChartOption(
   data: BasesData,
@@ -33,9 +34,9 @@ export function createLinesChartOption(
     ? {}
     : (() => {
         // 1. Normalize Data
-        const normalizedData = R.pipe(
+        const normalizedData: ReadonlyArray<NormalizedSegment> = R.pipe(
           data,
-          R.map((item) => {
+          R.map((item): NormalizedSegment | null => {
             const x1 = Number(getNestedValue(
               item,
               xProp,
@@ -61,14 +62,13 @@ export function createLinesChartOption(
 
             return (Number.isNaN(x1) || Number.isNaN(y1) || Number.isNaN(x2) || Number.isNaN(y2))
               ? null
-              : { coords: asCoords([[x1,
-                  y1],
-                [x2,
-                  y2]]),
-                series }
+              : { x1,
+                  y1,
+                  x2,
+                  y2,
+                  series }
           }),
-          R.filter((d): d is Readonly<{ coords: LineSegment
-            series: string }> => d !== null),
+          R.filter((d): d is NormalizedSegment => d !== null),
         )
 
         // 'lines' series data only exposes a scalar `value` dimension to
@@ -76,8 +76,8 @@ export function createLinesChartOption(
         // value-axis auto-scaling. With no other series present, both axes
         // silently default to [0, 1], clipping most segments off-canvas.
         // Pin min/max to the real coordinate range explicitly.
-        const allX = normalizedData.flatMap(d => [d.coords[0][0], d.coords[1][0]])
-        const allY = normalizedData.flatMap(d => [d.coords[0][1], d.coords[1][1]])
+        const allX: readonly number[] = normalizedData.flatMap((d): readonly number[] => [d.x1, d.x2])
+        const allY: readonly number[] = normalizedData.flatMap((d): readonly number[] => [d.y1, d.y2])
         const axisRangeX = allX.length === 0
           ? undefined
           : { min: Math.min(...allX),
@@ -92,19 +92,21 @@ export function createLinesChartOption(
           normalizedData,
           d => d.series,
         )
-        const seriesNames = Object.keys(groupedData)
+        const seriesNames: readonly string[] = Object.keys(groupedData)
 
         // 3. Build Series
-        const seriesOptions: LinesSeriesOption[] = seriesNames.map((name) => {
-          const seriesData = (groupedData[name] ?? []).map(d => ({
-            coords: d.coords,
+        const seriesOptions: ReadonlyArray<LinesSeriesOption> = seriesNames.map((name): LinesSeriesOption => {
+          // ECharts' `lines` data wants a fresh, mutable `number[][]` per segment
+          // (LinesCoords); build it here at the option boundary.
+          const seriesData: ReadonlyArray<{ readonly coords: number[][] }> = (groupedData[name] ?? []).map(d => ({
+            coords: [[d.x1, d.y1], [d.x2, d.y2]],
           }))
 
           return {
             type: 'lines',
             name: name,
             coordinateSystem: 'cartesian2d',
-            data: seriesData,
+            data: [...seriesData],
             lineStyle: {
               width: 2,
               opacity: 0.6,
@@ -128,7 +130,7 @@ export function createLinesChartOption(
             splitLine: { show: false },
             ...axisRangeY,
           },
-          series: seriesOptions,
+          series: [...seriesOptions],
           ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
         }
       })()
