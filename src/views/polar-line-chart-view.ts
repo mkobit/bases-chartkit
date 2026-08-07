@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { EChartsOption } from 'echarts'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -31,7 +31,7 @@ export class PolarLineChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         key: BaseChartView.X_AXIS_PROP_KEY,

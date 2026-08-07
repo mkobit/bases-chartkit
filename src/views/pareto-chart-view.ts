@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { BasesData } from '../charts/transformers/base'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -26,7 +26,7 @@ export class ParetoChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     const common = BaseChartView.getCommonViewOptions()
 
     // Remove seriesProp as Pareto doesn't support grouping by series

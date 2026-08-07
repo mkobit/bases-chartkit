@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -25,7 +25,7 @@ export class FunnelChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     // Funnel doesn't really use "Series Prop" in the same way (usually single series),
     // but we can keep common options or strip Series Prop.
     // Let's strip Series Prop to avoid confusion as our transformer doesn't support multi-funnel yet.
