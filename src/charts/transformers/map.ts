@@ -9,6 +9,11 @@ export interface MapTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string // Value property (e.g. "GDP")
 }
 
+type MapRegionValue = Readonly<{
+  name: string
+  value: number
+}>
+
 export function createMapChartOption(
   data: BasesData,
   mapName: string,
@@ -20,9 +25,9 @@ export function createMapChartOption(
 
   // 1. Map Data
   // Structure: { name: Region, value: Number }
-  const mapData = R.pipe(
+  const mapData: ReadonlyArray<MapRegionValue> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item): MapRegionValue => {
       const nameRaw = regionProp
         ? getNestedValue(
             item,
@@ -46,7 +51,7 @@ export function createMapChartOption(
   )
 
   // 2. Calculate Min/Max for VisualMap
-  const values = R.map(
+  const values: readonly number[] = R.map(
     mapData,
     d => d.value,
   )
@@ -72,7 +77,7 @@ export function createMapChartOption(
     type: 'map',
     map: mapName,
     roam: true,
-    data: mapData,
+    data: [...mapData],
     label: {
       show: false,
     },

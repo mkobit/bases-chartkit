@@ -31,7 +31,7 @@ export function createWaterfallChartOption(
   // 1. Extract and Validate Data
   const validData: readonly WaterfallDataPoint[] = R.pipe(
     data,
-    items => items.map((item) => {
+    R.map((item) => {
       const xVal = getNestedValue(
         item,
         xProp,
@@ -46,7 +46,7 @@ export function createWaterfallChartOption(
         : { xVal,
             yVal }
     }),
-    items => items.map((item) => {
+    R.map((item) => {
       if (item === null) {
         return null
       }
@@ -62,10 +62,10 @@ export function createWaterfallChartOption(
 
   // 2. Calculate Waterfall Steps
   interface Accumulator {
-    readonly baseData: (number | string)[]
-    readonly riseData: (number | string)[]
-    readonly fallData: (number | string)[]
-    readonly xData: string[]
+    readonly baseData: readonly (number | string)[]
+    readonly riseData: readonly (number | string)[]
+    readonly fallData: readonly (number | string)[]
+    readonly xData: readonly string[]
     readonly currentSum: number
   }
 
@@ -104,7 +104,7 @@ export function createWaterfallChartOption(
   const { baseData, riseData, fallData, xData } = result
 
   // 3. Construct Series
-  const series: BarSeriesOption[] = [
+  const series: readonly BarSeriesOption[] = [
     {
       name: '_base',
       type: 'bar',
@@ -119,7 +119,7 @@ export function createWaterfallChartOption(
           color: 'transparent',
         },
       },
-      data: baseData,
+      data: [...baseData],
       tooltip: { show: false },
       silent: true,
     },
@@ -131,7 +131,7 @@ export function createWaterfallChartOption(
         show: true,
         position: 'inside',
       },
-      data: riseData,
+      data: [...riseData],
       itemStyle: {
         color: options?.upColor ?? '#14b143',
       },
@@ -144,7 +144,7 @@ export function createWaterfallChartOption(
         show: true,
         position: 'inside',
       },
-      data: fallData,
+      data: [...fallData],
       itemStyle: {
         color: options?.downColor ?? '#ef232a',
       },
@@ -162,7 +162,7 @@ export function createWaterfallChartOption(
           return ''
         }
         // Array.isArray narrows to any[]; annotate (not assert) to recover the concrete element type ECharts actually passes.
-        const pList: TooltipParam[] = params
+        const pList: readonly TooltipParam[] = params
 
         const firstParam = pList[0]
         if (!firstParam) {
@@ -196,7 +196,7 @@ export function createWaterfallChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xData,
+      data: [...xData],
       name: xAxisLabel,
       axisLabel: {
         rotate: xAxisRotate,
@@ -207,6 +207,6 @@ export function createWaterfallChartOption(
       type: 'value',
       name: yAxisLabel,
     },
-    series: series,
+    series: [...series],
   }
 }

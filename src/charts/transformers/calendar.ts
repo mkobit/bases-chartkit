@@ -8,6 +8,18 @@ export interface CalendarTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
 }
 
+interface CalendarPoint {
+  readonly date: string
+  readonly value: number
+}
+
+// ECharts heatmap data values are `[date, value]` pairs and must stay mutable
+// arrays (echarts' HeatmapDataValue = OptionDataValue[]). The `Mutable` prefix
+// opts this out of `type-declaration-immutability`; the `Option` suffix opts it
+// out of `prefer-immutable-types` (which exempts echarts option types via
+// `ignoreTypePattern`).
+type MutableCalendarHeatmapValueOption = (string | number)[]
+
 function asCalendarTooltipParams(params: unknown): Readonly<{ value: readonly (number | string)[] }> {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts tooltip formatter callback params are typed as a wide union; bridge to the shape this chart's tooltip actually receives.
   return params as Readonly<{ value: readonly (number | string)[] }>
@@ -20,7 +32,7 @@ export function createCalendarChartOption(
 ): EChartsOption {
   const valueProp = options?.valueProp
 
-  const calendarData = R.pipe(
+  const calendarData: ReadonlyArray<CalendarPoint> = R.pipe(
     data,
     R.map((item) => {
       const dateRaw = getNestedValue(
@@ -43,8 +55,7 @@ export function createCalendarChartOption(
               value: finalVal }
           })()
     }),
-    R.filter((d): d is Readonly<{ date: string
-      value: number }> => d !== null),
+    R.filter((d): d is CalendarPoint => d !== null),
   )
 
   return calendarData.length === 0
@@ -59,7 +70,7 @@ export function createCalendarChartOption(
       })()
     : (() => {
         // Sort data by date for range calculation and predictable order
-        const sortedData = R.sortBy(
+        const sortedData: ReadonlyArray<CalendarPoint> = R.sortBy(
           calendarData,
           d => d.date,
         )
@@ -90,10 +101,10 @@ export function createCalendarChartOption(
         const minVal = options?.visualMapMin !== undefined ? options.visualMapMin : dataMin
         const maxVal = options?.visualMapMax !== undefined ? options.visualMapMax : dataMax
 
-        // ECharts expects [date, value] array
-        const seriesData = R.map(
+        // ECharts expects [date, value] pairs.
+        const seriesData: ReadonlyArray<MutableCalendarHeatmapValueOption> = R.map(
           sortedData,
-          d => [d.date,
+          (d): MutableCalendarHeatmapValueOption => [d.date,
             d.value],
         )
 
@@ -121,7 +132,7 @@ export function createCalendarChartOption(
         const seriesItem: HeatmapSeriesOption = {
           type: 'heatmap',
           coordinateSystem: 'calendar',
-          data: seriesData,
+          data: [...seriesData],
         }
 
         const visualMapOption: VisualMapComponentOption = {

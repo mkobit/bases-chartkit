@@ -8,6 +8,35 @@ export interface GraphTransformerOptions extends BaseTransformerOptions {
   readonly categoryProp?: string // For node category
 }
 
+type GraphLinkRow = Readonly<{
+  source: string
+  target: string
+  value: number | undefined
+  category: string | undefined
+}>
+
+type GraphLink = Readonly<{
+  source: string
+  target: string
+  value: number | undefined
+}>
+
+type GraphNodeRef = Readonly<{
+  name: string
+  category: string | undefined
+}>
+
+type GraphNode = Readonly<{
+  name: string
+  category: string | undefined
+  symbolSize: number
+  draggable: boolean
+}>
+
+type GraphCategory = Readonly<{
+  name: string
+}>
+
 export function createGraphChartOption(
   data: BasesData,
   sourceProp: string,
@@ -18,9 +47,9 @@ export function createGraphChartOption(
   const categoryProp = options?.categoryProp
 
   // 1. Process data to get raw links and node info
-  const processedData = R.pipe(
+  const processedData: ReadonlyArray<GraphLinkRow> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item): GraphLinkRow | null => {
       const sourceRaw = getNestedValue(
         item,
         sourceProp,
@@ -63,35 +92,35 @@ export function createGraphChartOption(
     R.filter((x): x is NonNullable<typeof x> => x !== null),
   )
 
-  const links = R.map(
+  const links: ReadonlyArray<GraphLink> = R.map(
     processedData,
-    ({ source, target, value }) => ({ source,
+    ({ source, target, value }): GraphLink => ({ source,
       target,
       value }),
   )
 
   // 2. Extract Nodes and Categories
   // Collect all nodes from sources and targets
-  const sources = R.map(
+  const sources: ReadonlyArray<GraphNodeRef> = R.map(
     processedData,
-    x => ({ name: x.source,
+    (x): GraphNodeRef => ({ name: x.source,
       category: x.category }),
   )
-  const targets = R.map(
+  const targets: ReadonlyArray<GraphNodeRef> = R.map(
     processedData,
-    x => ({ name: x.target,
+    (x): GraphNodeRef => ({ name: x.target,
       category: undefined }),
   ) // Target categories unknown from this link unless it appears as source elsewhere
 
   // Merge nodes by name, preferring the one with category
-  const nodesData = R.pipe(
+  const nodesData: ReadonlyArray<GraphNode> = R.pipe(
     [...sources,
       ...targets],
     R.groupBy(x => x.name),
-    R.mapValues((group) => {
+    R.mapValues((group: ReadonlyArray<GraphNodeRef>, name: string): GraphNode => {
       const withCat = group.find(x => x.category !== undefined)
       return {
-        name: group[0].name,
+        name,
         category: withCat?.category,
         symbolSize: 20,
         draggable: true,
@@ -100,7 +129,7 @@ export function createGraphChartOption(
     R.values(),
   )
 
-  const categoriesList = R.pipe(
+  const categoriesList: readonly string[] = R.pipe(
     nodesData,
     R.map(x => x.category),
     R.filter((x): x is string => x !== undefined),
@@ -108,17 +137,17 @@ export function createGraphChartOption(
     R.sortBy(x => x),
   )
 
-  const categoriesData = R.map(
+  const categoriesData: ReadonlyArray<GraphCategory> = R.map(
     categoriesList,
-    name => ({ name }),
+    (name): GraphCategory => ({ name }),
   )
 
   const seriesItem: GraphSeriesOption = {
     type: 'graph',
     layout: 'force',
-    data: nodesData,
-    links: links,
-    categories: categoriesData,
+    data: [...nodesData],
+    links: [...links],
+    categories: [...categoriesData],
     roam: true,
     label: {
       show: true,
@@ -153,7 +182,7 @@ export function createGraphChartOption(
     ...(getLegendOption(options)
       ? {
           legend: {
-            data: categoriesList,
+            data: [...categoriesList],
             ...getLegendOption(options),
           },
         }

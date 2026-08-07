@@ -115,12 +115,12 @@ export function hasSankeyCycle(
   const adjacency = R.pipe(
     links,
     R.groupBy(l => l.source),
-    R.mapValues(group => group.map(l => l.target)),
+    R.mapValues((group: readonly SankeyLink[]): readonly string[] => group.map(l => l.target)),
   )
 
-  const nodeNames = R.pipe(
+  const nodeNames: readonly string[] = R.pipe(
     links,
-    R.flatMap(l => [l.source, l.target]),
+    R.flatMap((l): readonly string[] => [l.source, l.target]),
     R.unique(),
   )
 
@@ -148,7 +148,7 @@ export function sankeyLinkSignature(
     ),
     R.map(l => `${l.source}->${l.target}`),
     R.sortBy(x => x),
-    x => x.join('|'),
+    (x: readonly string[]) => x.join('|'),
   )
 }
 
@@ -165,9 +165,9 @@ export function createSankeyChartOption(
     options?.valueProp,
   )
 
-  const nodes = R.pipe(
+  const nodes: ReadonlyArray<{ readonly name: string }> = R.pipe(
     links,
-    R.flatMap(l => [l.source,
+    R.flatMap((l): readonly string[] => [l.source,
       l.target]),
     R.unique(),
     R.map(name => ({ name })),
@@ -175,7 +175,7 @@ export function createSankeyChartOption(
 
   const seriesItem: SankeySeriesOption = {
     type: 'sankey',
-    data: nodes,
+    data: [...nodes],
     links: [...links],
     emphasis: {
       focus: 'adjacency',

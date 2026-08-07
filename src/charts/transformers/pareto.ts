@@ -19,7 +19,8 @@ export function createParetoChartOption(
   const isCompact = isMobile || containerWidth < 600
 
   // 1. Normalize and Sort Data
-  const normalizedData = R.pipe(
+  const normalizedData: ReadonlyArray<{ readonly name: string
+    readonly value: number }> = R.pipe(
     data,
     R.map(item => ({
       name: safeToString(getNestedValue(

@@ -39,9 +39,9 @@ export function createEffectScatterChartOption(
 
   // 1. Normalize Data for Dataset
   // Structure: { x, y, s (series), size? }
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
-    (item) => {
+    (item): ScatterDataPoint => {
       const xRaw = getNestedValue(
         item,
         xProp,
@@ -73,23 +73,26 @@ export function createEffectScatterChartOption(
   )
 
   // 2. Get unique X values (categories)
-  const xAxisData = R.pipe(
+  const xAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
   // 3. Get unique Series
-  const seriesNames = R.pipe(
+  const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
   // 4. Create Datasets
-  const sourceDataset: DatasetComponentOption = { source: normalizedData }
+  const sourceDataset: DatasetComponentOption = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+    source: normalizedData as unknown as Record<string, unknown>[],
+  }
 
-  const filterDatasets: DatasetComponentOption[] = seriesNames.map(name => ({
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesNames.map((name): DatasetComponentOption => ({
     transform: {
       type: 'filter',
       config: { dimension: 's',
@@ -97,13 +100,13 @@ export function createEffectScatterChartOption(
     },
   }))
 
-  const datasets: DatasetComponentOption[] = [sourceDataset,
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
   // Calculate Min/Max for VisualMap if needed
   const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
     ? undefined
-    : ((): Readonly<VisualMapComponentOption> => {
+    : ((): VisualMapComponentOption => {
         const sizes: readonly number[] = sizeProp
           ? R.pipe(
               normalizedData,
@@ -139,7 +142,7 @@ export function createEffectScatterChartOption(
       })()
 
   // 5. Build Series Options
-  const seriesOptions: EffectScatterSeriesOption[] = seriesNames.map((name, idx) => {
+  const seriesOptions: ReadonlyArray<EffectScatterSeriesOption> = seriesNames.map((name, idx): EffectScatterSeriesOption => {
     const datasetIndex = idx + 1
 
     return {
@@ -174,10 +177,10 @@ export function createEffectScatterChartOption(
   })
 
   const opt: EChartsOption = {
-    dataset: datasets,
+    dataset: [...datasets],
     xAxis: {
       type: 'category', // Consistent with bar/line
-      data: xAxisData,
+      data: [...xAxisData],
       name: xAxisLabel,
       splitLine: { show: true },
       axisLabel: {
@@ -190,7 +193,7 @@ export function createEffectScatterChartOption(
       name: yAxisLabel,
       splitLine: { show: true },
     },
-    series: seriesOptions,
+    series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
     },

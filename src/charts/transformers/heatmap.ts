@@ -7,6 +7,12 @@ export interface HeatmapTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
 }
 
+type HeatmapCell = Readonly<{
+  x: string
+  y: string
+  value: number
+}>
+
 // ECharts doesn't derive a default cell label from our dataset + encode series
 // (only from raw [x, y, value] tuples), so `label.formatter` is required or
 // every cell renders as '-'. Isolate the loosely-typed callback param.
@@ -32,9 +38,9 @@ export function createHeatmapChartOption(
 
   // 1. Normalize Data
   // Structure: { x, y, value }
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<HeatmapCell> = R.map(
     data,
-    (item) => {
+    (item): HeatmapCell => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -59,18 +65,18 @@ export function createHeatmapChartOption(
   )
 
   // 2. Identify Categories for Axes
-  const xAxisData = R.pipe(
+  const xAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
-  const yAxisData = R.pipe(
+  const yAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.y),
     R.unique(),
   )
 
-  const values = R.map(
+  const values: readonly number[] = R.map(
     normalizedData,
     d => d.value,
   )
@@ -130,14 +136,14 @@ export function createHeatmapChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xAxisData, // Keeping explicit categories for order control
+      data: [...xAxisData], // Keeping explicit categories for order control
       name: xAxisLabel,
       splitArea: { show: true },
       axisLabel: { rotate: xAxisRotate },
     },
     yAxis: {
       type: 'category',
-      data: yAxisData,
+      data: [...yAxisData],
       name: yAxisLabel,
       splitArea: { show: true },
     },

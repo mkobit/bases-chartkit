@@ -10,6 +10,14 @@ export interface CandlestickTransformerOptions extends BaseTransformerOptions {
   readonly highProp?: string
 }
 
+type CandlestickRow = Readonly<{
+  x: string
+  open: number
+  close: number
+  low: number
+  high: number
+}>
+
 export function createCandlestickChartOption(
   data: BasesData,
   xProp: string,
@@ -24,7 +32,7 @@ export function createCandlestickChartOption(
 
   // 1. Normalize Data for Dataset
   // Structure: { x, open, close, low, high }
-  const normalizedData = R.pipe(
+  const normalizedData: ReadonlyArray<CandlestickRow> = R.pipe(
     data,
     R.map((item) => {
       const xValRaw = getNestedValue(
@@ -76,15 +84,11 @@ export function createCandlestickChartOption(
           })()
         : null
     }),
-    R.filter((x): x is Readonly<{ x: string
-      open: number
-      close: number
-      low: number
-      high: number }> => x !== null),
+    R.filter((x): x is CandlestickRow => x !== null),
   )
 
   // 2. Get X Axis Data
-  const xAxisData = normalizedData.map(d => d.x)
+  const xAxisData: readonly string[] = normalizedData.map(d => d.x)
 
   // 3. Build Series
   const seriesItem: CandlestickSeriesOption = {
@@ -121,7 +125,10 @@ export function createCandlestickChartOption(
   }
 
   const opt: EChartsOption = {
-    dataset: [{ source: normalizedData }],
+    dataset: [{
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+      source: normalizedData as unknown as Record<string, unknown>[],
+    }],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -130,7 +137,7 @@ export function createCandlestickChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xAxisData,
+      data: [...xAxisData],
       name: xAxisLabel,
       boundaryGap: false,
       axisLine: { onZero: false },
