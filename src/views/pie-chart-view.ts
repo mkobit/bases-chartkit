@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -26,7 +26,7 @@ export class PieChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     // Pie charts don't necessarily need 'Series Property' in the same way stacked bars do,
     // but we can reuse common options.
     // Actually, usually Pie chart is Name vs Value.

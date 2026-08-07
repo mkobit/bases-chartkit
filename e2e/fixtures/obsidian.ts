@@ -14,8 +14,8 @@ const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
 // Pinned rather than 'latest' so test runs are reproducible across time; bump deliberately.
-const OBSIDIAN_APP_VERSION = '1.12.7'
-const OBSIDIAN_INSTALLER_VERSION = '1.12.7'
+const OBSIDIAN_APP_VERSION = '1.13.4'
+const OBSIDIAN_INSTALLER_VERSION = '1.13.4'
 
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {

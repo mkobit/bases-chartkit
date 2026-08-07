@@ -1,5 +1,5 @@
 import type {
-  ViewOption,
+  BasesOptions,
 } from 'obsidian'
 import type { EChartsOption } from 'echarts'
 import { BaseChartView } from './base-chart-view'
@@ -29,7 +29,7 @@ export class BoxplotChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.boxplot.x_axis_prop'),

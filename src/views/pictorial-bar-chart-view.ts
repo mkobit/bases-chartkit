@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { ChartType, BasesData } from '../charts/transformers/base'
 import type { PictorialBarTransformerOptions } from '../charts/transformers/pictorial-bar'
@@ -30,7 +30,7 @@ export class PictorialBarChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       ...BaseChartView.getCommonViewOptions(),
       ...BaseChartView.getAxisViewOptions(),
