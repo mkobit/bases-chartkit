@@ -119,7 +119,7 @@ export function createWaterfallChartOption(
           color: 'transparent',
         },
       },
-      data: baseData,
+      data: [...baseData],
       tooltip: { show: false },
       silent: true,
     },
@@ -131,7 +131,7 @@ export function createWaterfallChartOption(
         show: true,
         position: 'inside',
       },
-      data: riseData,
+      data: [...riseData],
       itemStyle: {
         color: options?.upColor ?? '#14b143',
       },
@@ -144,7 +144,7 @@ export function createWaterfallChartOption(
         show: true,
         position: 'inside',
       },
-      data: fallData,
+      data: [...fallData],
       itemStyle: {
         color: options?.downColor ?? '#ef232a',
       },
@@ -196,7 +196,7 @@ export function createWaterfallChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xData,
+      data: [...xData],
       name: xAxisLabel,
       axisLabel: {
         rotate: xAxisRotate,

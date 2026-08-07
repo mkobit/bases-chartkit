@@ -17,13 +17,14 @@ export interface GaugeTransformerOptions extends BaseTransformerOptions {
   readonly colorBands?: ReadonlyArray<GaugeColorBand>
 }
 
-// ECharts gauge axisLine.lineStyle.color takes mutable `[fraction, color]`
-// stop tuples. The `Mutable` prefix opts this out of
-// type-declaration-immutability; the `Option` suffix opts it out of
-// prefer-immutable-types (which exempts echarts option types via
-// ignoreTypePattern). A plain `readonly [number, string]` can't be used here:
-// this plugin version reports readonly tuples as `Mutable`.
-type MutableGaugeColorStopOption = (number | string)[]
+// ECharts' GaugeColorStop is the fixed 2-tuple `[number, ColorString]`; a
+// plain `(number | string)[]` isn't assignable since it lacks a known length.
+// The `Mutable` prefix opts this out of type-declaration-immutability; the
+// `Option` suffix opts it out of prefer-immutable-types (which exempts
+// echarts option types via ignoreTypePattern). A plain `readonly [number,
+// string]` can't be used here: this plugin version reports readonly tuples
+// as `Mutable`.
+type MutableGaugeColorStopOption = [number, string]
 
 function aggregateValues(values: readonly number[], aggregation: GaugeAggregation): number {
   if (values.length === 0) {

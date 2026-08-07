@@ -117,10 +117,10 @@ export function createGraphChartOption(
     [...sources,
       ...targets],
     R.groupBy(x => x.name),
-    R.mapValues((group: ReadonlyArray<GraphNodeRef>): GraphNode => {
+    R.mapValues((group: ReadonlyArray<GraphNodeRef>, name: string): GraphNode => {
       const withCat = group.find(x => x.category !== undefined)
       return {
-        name: group[0].name,
+        name,
         category: withCat?.category,
         symbolSize: 20,
         draggable: true,
