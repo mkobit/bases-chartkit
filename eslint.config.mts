@@ -366,6 +366,7 @@ export default tseslint.config(
       'src/charts/transformers/candlestick.ts',
       'src/charts/transformers/cartesian.ts',
       'src/charts/transformers/effect-scatter.ts',
+      'src/charts/transformers/extensions/word-cloud.ts',
       'src/charts/transformers/funnel.ts',
       'src/charts/transformers/gauge.ts',
       'src/charts/transformers/graph.ts',
