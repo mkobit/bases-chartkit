@@ -385,7 +385,10 @@ export default tseslint.config(
       'src/charts/transformers/radial-bar.ts',
       'src/charts/transformers/sankey.ts',
       'src/charts/transformers/scatter.ts',
+      'src/charts/transformers/theme-river.ts',
+      'src/charts/transformers/treemap.ts',
       'src/charts/transformers/utils.ts',
+      'src/charts/transformers/waterfall.ts',
     ],
     rules: {
       'functional/prefer-immutable-types': ['error', {
