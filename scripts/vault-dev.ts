@@ -11,6 +11,11 @@ import type { ViewMode } from '../e2e/vault'
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
+// Only used for the window-resize workaround below -- scripts/vault-eval.ts,
+// vault-screenshot.ts, and vault-reload.ts talk to the running instance via
+// Obsidian's official CLI instead (over its own Unix domain socket, no CDP
+// involved). The CLI has no window-sizing command, so resizing still goes
+// through raw CDP.
 const CDP_PORT = 9222
 // Pinned rather than left at 'latest', matching this file's Obsidian
 // app/installer version pins -- keeps `vault:dev` launches reproducible and
@@ -119,7 +124,7 @@ async function main(): Promise<void> {
     spawnOptions: { stdio: 'inherit' },
   })
 
-  console.log(`\nCDP: http://localhost:${CDP_PORT} — connect with \`bun scripts/vault-eval.ts '<js>'\` or chromium devtools\n`)
+  console.log(`\nObsidian CLI: \`bun scripts/vault-eval.ts '<js>'\`, \`vault:screenshot\`, \`vault:reload\` | CDP (devtools/resize only): http://localhost:${CDP_PORT}\n`)
 
   void resizeWindowWhenReady()
 
