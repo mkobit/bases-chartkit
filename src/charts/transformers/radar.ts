@@ -14,6 +14,17 @@ interface IndicatorRange {
   readonly max: number
 }
 
+interface RadarSeriesDatum {
+  readonly name: string
+  readonly value: readonly number[]
+}
+
+interface RadarIndicator {
+  readonly name: string
+  readonly min: number
+  readonly max: number
+}
+
 // ECharts scales each radar axis independently, defaulting an unspecified
 // max to the largest value ECharts happens to see for that axis -- so two
 // metrics with very different natural ranges (e.g. a 0-20 metric next to a
@@ -55,13 +66,13 @@ function createWideFormatRadarOption(
   metricProps: readonly string[],
   options?: RadarTransformerOptions,
 ): EChartsOption {
-  const seriesData = data.map((item) => {
+  const seriesData: readonly RadarSeriesDatum[] = data.map((item): RadarSeriesDatum => {
     const nameRaw = getNestedValue(
       item,
       nameProp,
     )
     const name = nameRaw === undefined || nameRaw === null ? 'Unknown' : safeToString(nameRaw)
-    const values = metricProps.map((prop) => {
+    const values: readonly number[] = metricProps.map((prop) => {
       const val = Number(getNestedValue(
         item,
         prop,
@@ -72,7 +83,7 @@ function createWideFormatRadarOption(
       name }
   })
 
-  const radarIndicators = metricProps.map((prop, index) => {
+  const radarIndicators: readonly RadarIndicator[] = metricProps.map((prop, index): RadarIndicator => {
     // `d.value` is built from this same `metricProps` array above, so it's
     // always exactly as long -- `?? 0` only satisfies noUncheckedIndexedAccess,
     // it's not covering a real out-of-range case.
@@ -82,12 +93,13 @@ function createWideFormatRadarOption(
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
-    data: seriesData,
+    data: seriesData.map(d => ({ name: d.name,
+      value: [...d.value] })),
   }
 
   return {
     radar: {
-      indicator: radarIndicators,
+      indicator: [...radarIndicators],
     },
     series: [seriesItem],
     tooltip: {
@@ -114,7 +126,7 @@ function createLongFormatRadarOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
 
-  const indicatorsList = R.pipe(
+  const indicatorsList: readonly string[] = R.pipe(
     data,
     R.map((item) => {
       const valRaw = getNestedValue(
@@ -143,9 +155,9 @@ function createLongFormatRadarOption(
     },
   )
 
-  const uniqueSeries = R.keys(groupedData)
+  const uniqueSeries: readonly string[] = R.keys(groupedData)
 
-  const seriesData = uniqueSeries.map((sName) => {
+  const seriesData: readonly RadarSeriesDatum[] = uniqueSeries.map((sName): RadarSeriesDatum => {
     const items = groupedData[sName] || []
 
     const valueMap = R.pipe(
@@ -166,7 +178,7 @@ function createLongFormatRadarOption(
       R.indexBy(x => x.indVal),
     )
 
-    const values = indicatorsList.map((ind) => {
+    const values: readonly number[] = indicatorsList.map((ind) => {
       const found = valueMap[ind]
       return found && !Number.isNaN(found.val) ? found.val : 0
     })
@@ -177,7 +189,7 @@ function createLongFormatRadarOption(
     }
   })
 
-  const radarIndicators = indicatorsList.map((name, index) => {
+  const radarIndicators: readonly RadarIndicator[] = indicatorsList.map((name, index): RadarIndicator => {
     // Same as the wide-format builder above: `d.value` is always as long as
     // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.
     const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
@@ -186,12 +198,13 @@ function createLongFormatRadarOption(
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
-    data: seriesData,
+    data: seriesData.map(d => ({ name: d.name,
+      value: [...d.value] })),
   }
 
   const opt: EChartsOption = {
     radar: {
-      indicator: radarIndicators,
+      indicator: [...radarIndicators],
     },
     series: [seriesItem],
     tooltip: {

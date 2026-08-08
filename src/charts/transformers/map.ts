@@ -9,6 +9,11 @@ export interface MapTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string // Value property (e.g. "GDP")
 }
 
+type MapRegionValue = Readonly<{
+  name: string
+  value: number
+}>
+
 export function createMapChartOption(
   data: BasesData,
   mapName: string,
@@ -18,9 +23,9 @@ export function createMapChartOption(
   const valueProp = options?.valueProp
   const title = options?.xAxisLabel
 
-  const mapData = R.pipe(
+  const mapData: ReadonlyArray<MapRegionValue> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item): MapRegionValue => {
       const nameRaw = regionProp
         ? getNestedValue(
             item,
@@ -43,7 +48,7 @@ export function createMapChartOption(
     R.filter(item => item.name !== ''),
   )
 
-  const values = R.map(
+  const values: readonly number[] = R.map(
     mapData,
     d => d.value,
   )
@@ -69,7 +74,7 @@ export function createMapChartOption(
     type: 'map',
     map: mapName,
     roam: true,
-    data: mapData,
+    data: [...mapData],
     label: {
       show: false,
     },

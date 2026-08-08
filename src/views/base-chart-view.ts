@@ -1,7 +1,7 @@
 import type {
   BasesPropertyId,
   QueryController,
-  ViewOption } from 'obsidian'
+  BasesOptions } from 'obsidian'
 import {
   BasesView,
   Platform,
@@ -243,7 +243,7 @@ export abstract class BaseChartView extends BasesView {
     return activeDocument.body.classList.contains('theme-dark')
   }
 
-  static getCommonViewOptions(plugin?: BarePlugin): ViewOption[] {
+  static getCommonViewOptions(plugin?: BarePlugin): BasesOptions[] {
     const themeOptions: Record<string, string> = {
       default: t('views.common.theme_default'),
     }
@@ -313,7 +313,7 @@ export abstract class BaseChartView extends BasesView {
     ]
   }
 
-  static getAxisViewOptions(): ViewOption[] {
+  static getAxisViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.axis.x_label'),
@@ -341,7 +341,7 @@ export abstract class BaseChartView extends BasesView {
     ]
   }
 
-  static getVisualMapViewOptions(): ViewOption[] {
+  static getVisualMapViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.visual_map.min'),

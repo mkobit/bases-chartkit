@@ -4,7 +4,7 @@ import { evaluateObsidian, hoverChartDataPointAndGetTooltip, waitForVaultIndexed
 
 interface HierarchyLeaf {
   readonly name: string
-  readonly value: number
+  readonly fullPath: string
   readonly dataIndex: number
 }
 
@@ -14,9 +14,23 @@ interface HierarchyLeaf {
  * find a real leaf node -- one with no children of its own -- and its actual
  * dataIndex. buildHierarchy (src/charts/transformers/hierarchy.ts) groups
  * notes by slash-delimited Path segments and sums values for any notes
- * sharing an exact leaf path, so no dataIndex/value pair is safely
- * predictable from a single note's raw frontmatter; reading it back off the
- * already-built model sidesteps hand-simulating that grouping.
+ * sharing an exact leaf path, so no dataIndex is safely predictable from a
+ * single note's raw frontmatter; reading it back off the already-built model
+ * sidesteps hand-simulating that grouping.
+ *
+ * Does not read node.getValue(): unlike sunburst/treemap, TreeSeriesModel
+ * sets up no 'value' dimension at all (tree's orthogonal layout is purely
+ * structural, not value-sized), so getValue() always returns null here --
+ * confirmed via a live diagnostic dumping every node's value. The original
+ * findLeaf required a finite numeric value before accepting a node as a
+ * leaf, which no tree node could ever satisfy, so it always returned
+ * undefined -- not a timing/stability bug in the poll below, an always-false
+ * predicate that could never converge within any budget.
+ *
+ * fullPath mirrors TreeSeriesModel.prototype.formatTooltip's own ancestor-
+ * breadcrumb construction (dot-joined names from the tree's real root down
+ * to this leaf) exactly, since that -- not a bare name -- is what the
+ * tooltip actually renders for a 'tree' series with tooltip.trigger:'item'.
  */
 async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<HierarchyLeaf | null> {
   return evaluateObsidian(page, (app, a: { seriesIndex: number }) => {
@@ -24,7 +38,7 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
       readonly name: string
       readonly children: readonly TreeNodeLike[]
       readonly dataIndex: number
-      readonly getValue: () => unknown
+      readonly parentNode: TreeNodeLike | null
     }
     interface SeriesDataLike {
       readonly tree?: { readonly root: TreeNodeLike }
@@ -81,18 +95,31 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
     }
 
     // Depth-first, first-child-first: return the first node with no
-    // children of its own and a finite numeric value.
-    const findLeaf = (node: TreeNodeLike): HierarchyLeaf | undefined => {
+    // children of its own.
+    const findLeaf = (node: TreeNodeLike): TreeNodeLike | undefined => {
       if (node.children.length === 0) {
-        const value = node.getValue()
-        return typeof value === 'number' && Number.isFinite(value)
-          ? { name: node.name, value, dataIndex: node.dataIndex }
-          : undefined
+        return node
       }
-      return node.children.map(findLeaf).find((found): found is HierarchyLeaf => found !== undefined)
+      return node.children.map(findLeaf).find((found): found is TreeNodeLike => found !== undefined)
     }
 
-    return findLeaf(root) ?? null
+    const leafNode = findLeaf(root)
+    if (!leafNode) {
+      return null
+    }
+
+    // Mirrors TreeSeriesModel.prototype.formatTooltip exactly: dot-join
+    // names from the real root (the virtual root's own single child) down
+    // to this leaf.
+    const realRoot = root.children[0] ?? null
+    let name = leafNode.name
+    let cursor: TreeNodeLike | null = leafNode
+    while (cursor && cursor !== realRoot && cursor.parentNode) {
+      name = `${cursor.parentNode.name}.${name}`
+      cursor = cursor.parentNode
+    }
+
+    return { name: leafNode.name, fullPath: name, dataIndex: leafNode.dataIndex }
   }, { seriesIndex })
 }
 
@@ -176,13 +203,18 @@ test.describe('tree chart rendering', () => {
   // symbols (the transformer's `symbol: 'emptyCircle'`), so this doesn't need
   // radar's leaf-shape traversal for a zrender-Group -- only a real dataIndex,
   // which findHierarchyLeaf derives dynamically (see its doc comment above).
-  // FIXME (bck-44x): the stability poll above (wait for 2 consecutive
-  // findHierarchyLeaf reads to agree) never converges within the 100s
-  // budget on live runs -- the tree structure appears to keep changing
-  // longer than expected, or there's a bug in the poll's own comparison
-  // logic. Needs diagnostic logging to see what's actually varying between
-  // iterations. See bck-44x for next steps.
-  test.fixme('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x: the stability poll below never converged within the
+  // 100s budget -- not because the tree structure kept changing (a live
+  // diagnostic sampling it every 500ms found it byte-for-byte identical from
+  // the first read onward), but because findHierarchyLeaf's old predicate
+  // required a finite numeric node.getValue() before accepting a leaf.
+  // TreeSeriesModel sets up no 'value' dimension at all (unlike sunburst/
+  // treemap), so getValue() always returned null and the predicate could
+  // never be satisfied -- the poll was waiting on something that could never
+  // happen, not racing a genuinely unstable render. findHierarchyLeaf now
+  // accepts any childless node and separately computes the dot-joined
+  // ancestor path formatTooltip actually renders (see its doc comment).
+  test('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())
@@ -204,15 +236,16 @@ test.describe('tree chart rendering', () => {
     // hoverChartDataPointAndGetTooltip's own position-stability poll, but
     // applied to the tree structure itself -- keep re-deriving the leaf
     // until two consecutive reads agree on the exact same node (dataIndex,
-    // name, and value all matching), which is the earliest point a captured
-    // dataIndex is guaranteed to still be valid by the time hover uses it.
+    // name, and fullPath all matching), which is the earliest point a
+    // captured dataIndex is guaranteed to still be valid by the time hover
+    // uses it.
     let previousLeaf: Awaited<ReturnType<typeof findHierarchyLeaf>> = null
     await expect.poll(async () => {
       const leaf = await findHierarchyLeaf(page)
       const stable = leaf !== null && previousLeaf !== null
         && leaf.dataIndex === previousLeaf.dataIndex
         && leaf.name === previousLeaf.name
-        && leaf.value === previousLeaf.value
+        && leaf.fullPath === previousLeaf.fullPath
       previousLeaf = leaf
       return stable
     }, { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS, intervals: [100] }).toBe(true)
@@ -229,7 +262,9 @@ test.describe('tree chart rendering', () => {
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: leafNode.dataIndex })
 
-    expect(tooltipText).toContain(leafNode.name)
-    expect(tooltipText).toContain(String(leafNode.value))
+    // TreeSeriesModel.prototype.formatTooltip renders the dot-joined
+    // ancestor path as the name, with noValue:true since this series has no
+    // 'value' dimension -- there's no separate numeric value to assert on.
+    expect(tooltipText).toContain(leafNode.fullPath)
   })
 })

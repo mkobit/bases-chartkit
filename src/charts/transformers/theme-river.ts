@@ -9,8 +9,27 @@ export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {
   readonly themeProp?: string
 }
 
-// ECharts ThemeRiver expects [date, value, id]
-type ThemeRiverItem = [string, number, string]
+// Named-field record for the internal pipeline. ECharts' ThemeRiver wants
+// [date, value, id] tuples, but this eslint-plugin version reports readonly
+// tuples as Mutable, so model the point with readonly fields here and build
+// the tuples at the ECharts assignment boundary below.
+interface ThemeRiverItem {
+  readonly date: string
+  readonly value: number
+  readonly theme: string
+}
+
+// Build the [date, value, id] tuples ECharts' ThemeRiver expects at the
+// series-data boundary, keeping the mutable tuple shape out of the typed
+// pipeline above.
+function asThemeRiverData(items: readonly ThemeRiverItem[]): ThemeRiverSeriesOption['data'] {
+  // ECharts' ThemerRiverDataItem is a mutable [date, value, name] tuple, so
+  // this is a genuine mutable boundary -- prefer-immutable-types is masked for
+  // src/**/*.ts and can't be satisfied without gaming the tuple's typing.
+  return items.map(d => [d.date,
+    d.value,
+    d.theme])
+}
 
 export function createThemeRiverChartOption(
   data: BasesData,
@@ -20,7 +39,7 @@ export function createThemeRiverChartOption(
   const valueProp = options?.valueProp
   const themeProp = options?.themeProp
 
-  const riverData = R.pipe(
+  const riverData: readonly ThemeRiverItem[] = R.pipe(
     data,
     R.map((item) => {
       const dateRaw = getNestedValue(
@@ -53,19 +72,19 @@ export function createThemeRiverChartOption(
               : undefined
             const theme = (tRaw !== undefined && tRaw !== null) ? safeToString(tRaw) : (valueProp ?? 'Value')
 
-            const res: ThemeRiverItem = [dateVal,
-              val,
-              theme]
+            const res: ThemeRiverItem = { date: dateVal,
+              value: val,
+              theme }
             return res
           })()
     }),
     R.filter((x): x is ThemeRiverItem => x !== null),
-    R.sortBy(x => x[0]),
+    R.sortBy(x => x.date),
   )
 
   const seriesItem: ThemeRiverSeriesOption = {
     type: 'themeRiver',
-    data: riverData,
+    data: asThemeRiverData(riverData),
     emphasis: {
       itemStyle: {
         shadowBlur: 20,

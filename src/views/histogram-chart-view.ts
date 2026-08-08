@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import type { EChartsOption } from 'echarts'
 import { BaseChartView } from './base-chart-view'
 import type { BasesData } from '../charts/transformers/base'
@@ -46,7 +46,7 @@ export class HistogramChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.histogram.value_prop'),

@@ -18,7 +18,8 @@ export function createParetoChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  const normalizedData = R.pipe(
+  const normalizedData: ReadonlyArray<{ readonly name: string
+    readonly value: number }> = R.pipe(
     data,
     R.map(item => ({
       name: safeToString(getNestedValue(

@@ -37,16 +37,19 @@ test.describe('effect-scatter chart rendering', () => {
   // centered on the same data point, so hoverChartDataPointAndGetTooltip's
   // smallest-leaf heuristic lands on a screen position that's correct either
   // way -- no radar-style vertex-picking risk here.
-  // FIXME (bck-44x): live runs consistently show a resolved series[0].name
-  // ("North America") that does NOT match what's actually rendered/hovered
-  // at (seriesIndex:0, dataIndex:0) ("Asia") -- confirmed NOT a timing race:
-  // reading it after the hover fully settles gives the same wrong value.
-  // chart.getOption()'s declarative series array may disagree with
-  // chart.getModel().getSeriesByIndex(0) (what hover actually targets) for
-  // this chart type specifically -- structurally identical scatter/
-  // stacked-bar tests pass reliably. See bck-44x for next steps (a
-  // model-level read helper instead of getChartOption()).
-  test.fixme('hovering the first point shows its continent and coordinates in the tooltip', async ({ obsidianPage: { page } }) => {
+  // Fixed for bck-44x: live runs intermittently read back a resolved
+  // series[0].name that didn't match what was actually hovered -- turned out
+  // to be a fixture bug, not an ECharts option/model disagreement.
+  // effect-scatter's x-axis is `type: 'category'`, and
+  // scripts/generators/scatter.ts's fast-check arbitrary disproportionately
+  // re-sampled boundary values (`x`'s own `min: 10`), so several rows across
+  // DIFFERENT continents landed on the exact same `x` category. Their
+  // symbols then painted on/near the same screen position, and a real mouse
+  // hover could land on whichever series' symbol was on top -- not
+  // necessarily seriesIndex 0's own point. Fixed by deduplicating the
+  // generated data by `x` alone (see scatter.ts), which every consumer of
+  // that arbitrary (scatter/effect-scatter/polar-scatter) shares.
+  test('hovering the first point shows its continent and coordinates in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())

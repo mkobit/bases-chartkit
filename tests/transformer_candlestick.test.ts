@@ -78,6 +78,10 @@ describe(
             'close',
             'low',
             'high'],
+          tooltip: ['open',
+            'close',
+            'low',
+            'high'],
         })
 
         // Axis Verification

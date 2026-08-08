@@ -1,6 +1,6 @@
 ---
-GDP: 100
-LifeExpectancy: 99.4
+GDP: 44.3
+LifeExpectancy: 70.8
 Continent: "Africa"
 Population: 44
 ---

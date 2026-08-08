@@ -34,9 +34,9 @@ export function createPolarScatterChartOption(
   const sizeProp = options?.sizeProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
-    (item) => {
+    (item): ScatterDataPoint => {
       const xRaw = getNestedValue(
         item,
         xProp,
@@ -67,21 +67,24 @@ export function createPolarScatterChartOption(
     },
   )
 
-  const angleAxisData = R.pipe(
+  const angleAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  const seriesNames = R.pipe(
+  const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  const sourceDataset: DatasetComponentOption = { source: normalizedData }
+  const sourceDataset: DatasetComponentOption = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+    source: normalizedData as unknown as Record<string, unknown>[],
+  }
 
-  const filterDatasets: DatasetComponentOption[] = seriesNames.map(name => ({
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesNames.map((name): DatasetComponentOption => ({
     transform: {
       type: 'filter',
       config: { dimension: 's',
@@ -89,13 +92,13 @@ export function createPolarScatterChartOption(
     },
   }))
 
-  const datasets: DatasetComponentOption[] = [sourceDataset,
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  const visualMapOption: VisualMapComponentOption | undefined = (!sizeProp && !options?.visualMapType)
+  const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
     ? undefined
-    : (() => {
-        const sizes = sizeProp
+    : ((): VisualMapComponentOption => {
+        const sizes: readonly number[] = sizeProp
           ? R.pipe(
               normalizedData,
               R.map(d => d.size),
@@ -120,7 +123,7 @@ export function createPolarScatterChartOption(
           formatter: formatCompactVisualMapLabel,
           dimension: sizeProp ? getDimension('size') : undefined,
           inRange: {
-            ...(options?.visualMapColor ? { color: options.visualMapColor } : {}),
+            ...(options?.visualMapColor ? { color: [...options.visualMapColor] } : {}),
             ...(sizeProp
               ? { symbolSize: [10,
                   50] }
@@ -129,7 +132,7 @@ export function createPolarScatterChartOption(
         }
       })()
 
-  const seriesOptions: ScatterSeriesOption[] = seriesNames.map((name, idx) => {
+  const seriesOptions: ReadonlyArray<ScatterSeriesOption> = seriesNames.map((name, idx): ScatterSeriesOption => {
     const datasetIndex = idx + 1
 
     return {
@@ -165,11 +168,11 @@ export function createPolarScatterChartOption(
   })
 
   const opt: EChartsOption = {
-    dataset: datasets,
+    dataset: [...datasets],
     polar: {},
     angleAxis: {
       type: 'category',
-      data: angleAxisData,
+      data: [...angleAxisData],
       startAngle: 90,
       splitLine: { show: true },
       axisLabel: {
@@ -180,7 +183,7 @@ export function createPolarScatterChartOption(
       type: 'value',
       splitLine: { show: true },
     },
-    series: seriesOptions,
+    series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
     },

@@ -5,11 +5,17 @@ import * as R from 'remeda'
 
 export interface PictorialBarTransformerOptions extends BaseTransformerOptions {
   readonly symbol?: string
-  // ViewOption dropdowns hand back their raw string key ('true'/'false'), not a boolean.
+  // BasesOptions dropdowns hand back their raw string key ('true'/'false'), not a boolean.
   readonly symbolRepeat?: boolean | 'fixed' | 'true' | 'false'
   readonly symbolClip?: boolean
   readonly symbolSize?: number | string
   readonly seriesProp?: string
+}
+
+interface PictorialBarDataPoint {
+  readonly x: string
+  readonly y: number | null
+  readonly s: string
 }
 
 export function createPictorialBarChartOption(
@@ -26,9 +32,9 @@ export function createPictorialBarChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<PictorialBarDataPoint> = R.map(
     data,
-    (item) => {
+    (item): PictorialBarDataPoint => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -52,7 +58,7 @@ export function createPictorialBarChartOption(
     },
   )
 
-  const xAxisData = R.pipe(
+  const xAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
@@ -67,16 +73,19 @@ export function createPictorialBarChartOption(
     flipAxis,
   )
 
-  const seriesNames = R.pipe(
+  const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  const sourceDataset: DatasetComponentOption = { source: normalizedData }
+  const sourceDataset: DatasetComponentOption = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+    source: normalizedData as unknown as Record<string, unknown>[],
+  }
 
-  const filterDatasets: DatasetComponentOption[] = seriesProp
-    ? seriesNames.map(name => ({
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesProp
+    ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
           config: { dimension: 's',
@@ -85,13 +94,13 @@ export function createPictorialBarChartOption(
       }))
     : []
 
-  const datasets: DatasetComponentOption[] = [sourceDataset,
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  const seriesOptions: PictorialBarSeriesOption[] = seriesNames.map((name, idx) => {
+  const seriesOptions: ReadonlyArray<PictorialBarSeriesOption> = seriesNames.map((name, idx): PictorialBarSeriesOption => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
-    // Handle string booleans from ViewOption dropdowns. Default to a repeating
+    // Handle string booleans from BasesOptions dropdowns. Default to a repeating
     // pictogram when unset -- a single non-repeating symbol is stretched to
     // fill the entire bar's bounding box by ECharts, which for most symbols
     // (especially 'rect') is visually indistinguishable from a plain bar.
@@ -128,7 +137,7 @@ export function createPictorialBarChartOption(
   })
 
   const opt: EChartsOption = {
-    dataset: datasets,
+    dataset: [...datasets],
     xAxis: flipAxis
       ? {
           type: 'value',
@@ -137,7 +146,7 @@ export function createPictorialBarChartOption(
         }
       : {
           type: 'category',
-          data: xAxisData,
+          data: [...xAxisData],
           name: xAxisLabel,
           axisLabel: {
             rotate: categoryAxisRotate,
@@ -148,7 +157,7 @@ export function createPictorialBarChartOption(
     yAxis: flipAxis
       ? {
           type: 'category',
-          data: xAxisData,
+          data: [...xAxisData],
           name: xAxisLabel,
           axisLabel: {
             rotate: categoryAxisRotate,
@@ -161,7 +170,7 @@ export function createPictorialBarChartOption(
           name: yAxisLabel,
           splitLine: { show: false },
         },
-    series: seriesOptions,
+    series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
     },

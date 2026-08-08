@@ -10,6 +10,14 @@ export interface CandlestickTransformerOptions extends BaseTransformerOptions {
   readonly highProp?: string
 }
 
+type CandlestickRow = Readonly<{
+  x: string
+  open: number
+  close: number
+  low: number
+  high: number
+}>
+
 export function createCandlestickChartOption(
   data: BasesData,
   xProp: string,
@@ -22,7 +30,7 @@ export function createCandlestickChartOption(
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  const normalizedData = R.pipe(
+  const normalizedData: ReadonlyArray<CandlestickRow> = R.pipe(
     data,
     R.map((item) => {
       const xValRaw = getNestedValue(
@@ -73,14 +81,10 @@ export function createCandlestickChartOption(
           })()
         : null
     }),
-    R.filter((x): x is Readonly<{ x: string
-      open: number
-      close: number
-      low: number
-      high: number }> => x !== null),
+    R.filter((x): x is CandlestickRow => x !== null),
   )
 
-  const xAxisData = normalizedData.map(d => d.x)
+  const xAxisData: readonly string[] = normalizedData.map(d => d.x)
 
   const seriesItem: CandlestickSeriesOption = {
     type: 'candlestick',
@@ -88,6 +92,21 @@ export function createCandlestickChartOption(
     encode: {
       x: 'x',
       y: ['open',
+        'close',
+        'low',
+        'high'],
+      // Without this, ECharts' dimension inference locks in `name` from
+      // this dataset's own object-row keys (open/close/low/high) before
+      // WhiskerBoxCommonMixin's defaultTooltip:true template dims
+      // ('open'/'close'/'lowest'/'highest') get a chance to apply -- since
+      // that template only fills in defaultTooltip when a dim's name is
+      // still unset, none of the 4 OHLC values end up flagged, and ECharts
+      // falls back to showing just one value (see
+      // node_modules/echarts/lib/data/helper/createDimensions.js's
+      // `resultItem.name == null` gate and dimensionHelper.js's
+      // defaultedLabel/defaultedTooltip fallback). Declaring the tooltip
+      // dims explicitly bypasses that whole detection path.
+      tooltip: ['open',
         'close',
         'low',
         'high'],
@@ -101,7 +120,10 @@ export function createCandlestickChartOption(
   }
 
   const opt: EChartsOption = {
-    dataset: [{ source: normalizedData }],
+    dataset: [{
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+      source: normalizedData as unknown as Record<string, unknown>[],
+    }],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -110,7 +132,7 @@ export function createCandlestickChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xAxisData,
+      data: [...xAxisData],
       name: xAxisLabel,
       boundaryGap: false,
       axisLine: { onZero: false },

@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { BasesData } from '../charts/transformers/base'
@@ -7,7 +7,7 @@ import { t } from '../lang/text'
 export class WaterfallChartView extends BaseChartView {
   type = 'waterfall-chart'
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     const common = BaseChartView.getCommonViewOptions()
 
     // Remove seriesProp as waterfall currently doesn't support grouping by series
@@ -37,6 +37,7 @@ export class WaterfallChartView extends BaseChartView {
       return null
     }
 
+    // We use 'waterfall' chart type
     return transformDataToChartOption(
       data,
       xProp,

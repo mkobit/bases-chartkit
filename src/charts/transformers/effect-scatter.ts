@@ -36,9 +36,9 @@ export function createEffectScatterChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
-    (item) => {
+    (item): ScatterDataPoint => {
       const xRaw = getNestedValue(
         item,
         xProp,
@@ -69,21 +69,24 @@ export function createEffectScatterChartOption(
     },
   )
 
-  const xAxisData = R.pipe(
+  const xAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  const seriesNames = R.pipe(
+  const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  const sourceDataset: DatasetComponentOption = { source: normalizedData }
+  const sourceDataset: DatasetComponentOption = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+    source: normalizedData as unknown as Record<string, unknown>[],
+  }
 
-  const filterDatasets: DatasetComponentOption[] = seriesNames.map(name => ({
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesNames.map((name): DatasetComponentOption => ({
     transform: {
       type: 'filter',
       config: { dimension: 's',
@@ -91,12 +94,12 @@ export function createEffectScatterChartOption(
     },
   }))
 
-  const datasets: DatasetComponentOption[] = [sourceDataset,
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
   const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
     ? undefined
-    : ((): Readonly<VisualMapComponentOption> => {
+    : ((): VisualMapComponentOption => {
         const sizes: readonly number[] = sizeProp
           ? R.pipe(
               normalizedData,
@@ -131,7 +134,7 @@ export function createEffectScatterChartOption(
         }
       })()
 
-  const seriesOptions: EffectScatterSeriesOption[] = seriesNames.map((name, idx) => {
+  const seriesOptions: ReadonlyArray<EffectScatterSeriesOption> = seriesNames.map((name, idx): EffectScatterSeriesOption => {
     const datasetIndex = idx + 1
 
     return {
@@ -166,10 +169,10 @@ export function createEffectScatterChartOption(
   })
 
   const opt: EChartsOption = {
-    dataset: datasets,
+    dataset: [...datasets],
     xAxis: {
       type: 'category', // Consistent with bar/line
-      data: xAxisData,
+      data: [...xAxisData],
       name: xAxisLabel,
       splitLine: { show: true },
       axisLabel: {
@@ -182,7 +185,7 @@ export function createEffectScatterChartOption(
       name: yAxisLabel,
       splitLine: { show: true },
     },
-    series: seriesOptions,
+    series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
     },

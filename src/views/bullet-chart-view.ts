@@ -1,7 +1,7 @@
 import { BaseChartView } from './base-chart-view'
 import type { BasesData } from '../charts/transformers/base'
 import { transformDataToChartOption } from '../charts/transformer'
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import type { EChartsOption } from 'echarts'
 import { t } from '../lang/text'
 
@@ -42,7 +42,7 @@ export class BulletChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.bullet.category_prop'),

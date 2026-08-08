@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { ParallelTransformerOptions } from '../charts/transformer'
@@ -9,7 +9,7 @@ import { t } from '../lang/text'
 export class ParallelChartView extends BaseChartView {
   readonly type = 'parallel'
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.parallel.dimensions'),

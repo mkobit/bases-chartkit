@@ -8,6 +8,11 @@ export interface HistogramTransformerOptions extends BaseTransformerOptions {
   readonly binWidth?: number
 }
 
+type HistogramBin = Readonly<{
+  label: string
+  count: number
+}>
+
 export function createHistogramChartOption(
   data: BasesData,
   valueProp: string,
@@ -18,7 +23,7 @@ export function createHistogramChartOption(
   // number — it does support numeric coercion via its own valueOf(), but
   // `typeof` on the wrapper itself is always 'object'. null/undefined are
   // filtered before coercion since Number(null) is 0, not NaN.
-  const values = R.pipe(
+  const values: readonly number[] = R.pipe(
     data,
     R.map(row => getNestedValue(
       row,
@@ -31,7 +36,7 @@ export function createHistogramChartOption(
 
   const n = values.length
 
-  const sortedValues = R.sortBy(
+  const sortedValues: readonly number[] = R.sortBy(
     values,
     v => v,
   )
@@ -59,12 +64,12 @@ export function createHistogramChartOption(
     ? (options?.binWidth ?? 1)
     : safeRange / defaultBinCount
 
-  const bins = R.pipe(
+  const bins: ReadonlyArray<HistogramBin> = R.pipe(
     R.range(
       0,
       binCountFromWidth,
     ),
-    R.map((i) => {
+    R.map((i): HistogramBin => {
       const binMin = min + (i * finalBinWidth)
       const binMax = min + ((i + 1) * finalBinWidth)
       const isLast = i === binCountFromWidth - 1
@@ -75,7 +80,7 @@ export function createHistogramChartOption(
           isLast
             ? (v >= binMin && v <= binMax)
             : (v >= binMin && v < binMax)),
-        vals => vals.length,
+        (vals: readonly number[]) => vals.length,
       )
 
       const label = `${binMin.toFixed(2)} - ${binMax.toFixed(2)}`
@@ -85,11 +90,11 @@ export function createHistogramChartOption(
     }),
   )
 
-  const xAxisData = R.map(
+  const xAxisData: readonly string[] = R.map(
     bins,
     b => b.label,
   )
-  const seriesData = R.map(
+  const seriesData: readonly number[] = R.map(
     bins,
     b => b.count,
   )
@@ -99,7 +104,7 @@ export function createHistogramChartOption(
     type: 'bar',
     barCategoryGap: 0,
     large: true,
-    data: seriesData,
+    data: [...seriesData],
     itemStyle: {
       color: '#5470c6',
     },
@@ -119,7 +124,7 @@ export function createHistogramChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xAxisData,
+      data: [...xAxisData],
       name: options?.xAxisLabel,
       axisLabel: {
         rotate: options?.xAxisLabelRotate ?? 0,

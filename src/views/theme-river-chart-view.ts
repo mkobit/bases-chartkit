@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -13,7 +13,7 @@ export class ThemeRiverChartView extends BaseChartView {
 
   getIcon(): string { return 'waves' }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.theme_river.date_prop'),

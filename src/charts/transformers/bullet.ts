@@ -11,6 +11,15 @@ export interface BulletTransformerOptions extends BaseTransformerOptions {
   readonly rangeHighProp?: string
 }
 
+type BulletDataPoint = {
+  readonly x: string
+  readonly y: number | null
+  readonly t: number | null
+  readonly r1: number
+  readonly r2: number
+  readonly r3: number
+}
+
 export function createBulletChartOption(
   data: BasesData,
   categoryProp: string,
@@ -25,9 +34,9 @@ export function createBulletChartOption(
   const yAxisLabel = options?.yAxisLabel ?? valueProp
   const flipAxis = options?.flipAxis ?? false
 
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<BulletDataPoint> = R.map(
     data,
-    (item) => {
+    (item): BulletDataPoint => {
       const catVal = getNestedValue(
         item,
         categoryProp,
@@ -88,14 +97,14 @@ export function createBulletChartOption(
     },
   )
 
-  const categories = R.pipe(
+  const categories: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
   const dataset: DatasetComponentOption = {
-    source: normalizedData,
+    source: [...normalizedData],
   }
 
   const hasRanges = Boolean(rangeLowProp || rangeMidProp || rangeHighProp)
@@ -104,9 +113,15 @@ export function createBulletChartOption(
   // background; dark-mode bands run dark-to-mid-gray against ECharts' dark
   // theme background (~#040810) so they stay visible without turning into a
   // stark light-gray box on near-black.
-  const rangeColors = isDarkMode
-    ? ['#404040', '#595959', '#737373'] as const
-    : ['#e0e0e0', '#bdbdbd', '#9e9e9e'] as const
+  const rangeColors: Readonly<{ low: string
+    mid: string
+    high: string }> = isDarkMode
+    ? { low: '#404040',
+        mid: '#595959',
+        high: '#737373' }
+    : { low: '#e0e0e0',
+        mid: '#bdbdbd',
+        high: '#9e9e9e' }
 
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
@@ -128,19 +143,19 @@ export function createBulletChartOption(
     animation: false,
   })
 
-  const rangeSeries: BarSeriesOption[] = hasRanges
+  const rangeSeries: ReadonlyArray<BarSeriesOption> = hasRanges
     ? [
         createRangeSeries(
           'r1',
-          rangeColors[0],
+          rangeColors.low,
         ),
         createRangeSeries(
           'r2',
-          rangeColors[1],
+          rangeColors.mid,
         ),
         createRangeSeries(
           'r3',
-          rangeColors[2],
+          rangeColors.high,
         ),
       ]
     : []
@@ -178,7 +193,7 @@ export function createBulletChartOption(
     },
   }
 
-  const series = [
+  const series: ReadonlyArray<BarSeriesOption | ScatterSeriesOption> = [
     ...rangeSeries,
     barSeries,
     ...(targetProp ? [scatterSeries] : []),
@@ -191,15 +206,15 @@ export function createBulletChartOption(
       ? { type: 'value',
           name: yAxisLabel }
       : { type: 'category',
-          data: categories,
+          data: [...categories],
           name: xAxisLabel },
     yAxis: flipAxis
       ? { type: 'category',
-          data: categories,
+          data: [...categories],
           name: xAxisLabel }
       : { type: 'value',
           name: yAxisLabel },
-    series: series,
+    series: [...series],
     grid: {
       containLabel: true,
     },

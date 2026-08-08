@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { BasesData } from '../charts/transformers/base'
 import type { EChartsOption } from 'echarts'
@@ -27,7 +27,7 @@ export class PolarScatterChartView extends BaseChartView {
     )
   }
 
-  public static getViewOptions(): ViewOption[] {
+  public static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.polar.angle_prop'),

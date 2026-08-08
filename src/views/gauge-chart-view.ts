@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -70,7 +70,7 @@ export class GaugeChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.gauge.value_prop'),

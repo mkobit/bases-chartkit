@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -7,7 +7,7 @@ import { t } from '../lang/text'
 
 export class RadialBarChartView extends BaseChartView {
   readonly type = 'radial-bar-chart'
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.radial_bar.category_prop'),

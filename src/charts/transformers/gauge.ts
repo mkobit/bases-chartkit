@@ -17,6 +17,15 @@ export interface GaugeTransformerOptions extends BaseTransformerOptions {
   readonly colorBands?: ReadonlyArray<GaugeColorBand>
 }
 
+// ECharts' GaugeColorStop is the fixed 2-tuple `[number, ColorString]`; a
+// plain `(number | string)[]` isn't assignable since it lacks a known length.
+// The `Mutable` prefix opts this out of type-declaration-immutability; the
+// `Option` suffix opts it out of prefer-immutable-types (which exempts
+// echarts option types via ignoreTypePattern). A plain `readonly [number,
+// string]` can't be used here: this plugin version reports readonly tuples
+// as `Mutable`.
+type MutableGaugeColorStopOption = [number, string]
+
 function aggregateValues(values: readonly number[], aggregation: GaugeAggregation): number {
   if (values.length === 0) {
     return 0
@@ -40,7 +49,7 @@ export function createGaugeChartOption(
   valueProp: string,
   options?: GaugeTransformerOptions,
 ): EChartsOption {
-  const values = R.pipe(
+  const values: readonly number[] = R.pipe(
     data,
     R.map(item => Number(getNestedValue(item, valueProp))),
     R.filter(val => !Number.isNaN(val)),
@@ -57,11 +66,11 @@ export function createGaugeChartOption(
   // (e.g. "70" on a 0-100 gauge), so convert here, sorting first since
   // ECharts requires ascending stops to render correctly.
   const colorBands = options?.colorBands
-  const axisLineColor = colorBands && colorBands.length > 0
+  const axisLineColor: ReadonlyArray<MutableGaugeColorStopOption> | undefined = colorBands && colorBands.length > 0
     ? R.pipe(
         colorBands,
         R.sortBy(band => band.threshold),
-        R.map((band): [number, string] => [
+        R.map((band): MutableGaugeColorStopOption => [
           Math.min(1, Math.max(0, (band.threshold - min) / (max - min))),
           band.color,
         ]),
@@ -73,7 +82,7 @@ export function createGaugeChartOption(
     min: min,
     max: max,
     ...(axisLineColor
-      ? { axisLine: { lineStyle: { color: axisLineColor } } }
+      ? { axisLine: { lineStyle: { color: [...axisLineColor] } } }
       : {}),
     progress: {
       show: true,

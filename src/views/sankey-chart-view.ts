@@ -1,4 +1,4 @@
-import type { ViewOption, TextOption } from 'obsidian'
+import type { BasesOptions, BasesTextOption } from 'obsidian'
 import { Notice } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type { ChartType } from '../charts/transformer'
@@ -51,8 +51,8 @@ export class SankeyChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
-    const valueOption: TextOption = {
+  static getViewOptions(): BasesOptions[] {
+    const valueOption: BasesTextOption = {
       displayName: t('views.sankey.value_prop'),
       key: BaseChartView.VALUE_PROP_KEY,
       type: 'text',

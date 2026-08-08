@@ -8,6 +8,15 @@ export interface ParallelTransformerOptions extends BaseTransformerOptions {
   readonly dimensionLabels?: Readonly<Record<string, string>>
 }
 
+type ParallelAxisSpec = Readonly<{
+  dim: number
+  name: string
+  type: 'value' | 'category'
+  data?: readonly string[]
+}>
+
+type ParallelRow = ReadonlyArray<number | string | null>
+
 function asParallelAxis(axis: unknown): EChartsOption['parallelAxis'] {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts parallelAxis type is a complex union; bridge to the shape we construct.
   return axis as EChartsOption['parallelAxis']
@@ -18,7 +27,7 @@ export function createParallelChartOption(
   dimensionsStr: string,
   options?: ParallelTransformerOptions,
 ): EChartsOption {
-  const dims = dimensionsStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
+  const dims: readonly string[] = dimensionsStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
 
   return dims.length === 0
     ? {
@@ -30,8 +39,8 @@ export function createParallelChartOption(
         const seriesProp = options?.seriesProp
 
         // Use standard map to avoid remeda type issues with indexed map in strict mode
-        const parallelAxis = dims.map((dim, index) => {
-          const values = R.map(
+        const parallelAxis: readonly ParallelAxisSpec[] = dims.map((dim, index): ParallelAxisSpec => {
+          const values: readonly unknown[] = R.map(
             data,
             item => getNestedValue(
               item,
@@ -39,7 +48,7 @@ export function createParallelChartOption(
             ),
           )
 
-          const nonNullValues = R.filter(
+          const nonNullValues: readonly unknown[] = R.filter(
             values,
             v => v !== null && v !== undefined && v !== '',
           )
@@ -54,7 +63,7 @@ export function createParallelChartOption(
                 type: 'value' as const,
               }
             : (() => {
-                const uniqueVals = R.pipe(
+                const uniqueVals: readonly string[] = R.pipe(
                   nonNullValues,
                   R.map(safeToString),
                   R.unique(),
@@ -81,13 +90,13 @@ export function createParallelChartOption(
                 })()
               : 'Series 1'
           }),
-          R.mapValues(items =>
+          R.mapValues((items: BasesData): ReadonlyArray<ParallelRow> =>
             R.map(
               items,
-              (item) => {
+              (item): ParallelRow => {
                 return R.map(
                   dims,
-                  (dim, index) => {
+                  (dim, index): number | string | null => {
                     const valRaw = getNestedValue(
                       item,
                       dim,
@@ -109,20 +118,37 @@ export function createParallelChartOption(
             )),
         )
 
-        const series: ParallelSeriesOption[] = R.pipe(
-          seriesDataMap,
-          R.entries(),
-          R.map(([name,
-            sData]) => {
+        const series: ReadonlyArray<ParallelSeriesOption> = R.map(
+          R.keys(seriesDataMap),
+          (name): ParallelSeriesOption => {
+            const sData = seriesDataMap[name] ?? []
             return {
               name: name,
               type: 'parallel' as const,
               lineStyle: {
                 width: 2,
               },
-              data: sData,
+              // ECharts wants a fresh mutable row array per line; build it here
+              // at the option boundary from the readonly pipeline rows.
+              data: sData.map(row => [...row]),
+              // Without this, ECharts' default dimension inference flags only
+              // the LAST axis column as `defaultedTooltip` (confirmed live:
+              // hovering any point along a 3-axis row's line showed only the
+              // 3rd axis's value, same defaultedTooltip fallback bug fixed
+              // for candlestick's OHLC dims -- see candlestick.ts). Must use
+              // raw numeric column indices, not the 'dim0'/'dim1'/... names
+              // ECharts assigns for display -- those names don't exist yet
+              // when encode is resolved (no `dimensions:` array is declared
+              // on this series), so `dataDimNameMap.get('dim0')` in
+              // createDimensions.js's encodeDefMap loop returns undefined
+              // and the string form silently resolves to nothing (confirmed
+              // live: string form left every dim's otherDims empty, same as
+              // having no encode.tooltip at all).
+              encode: {
+                tooltip: dims.map((_, index) => index),
+              },
             }
-          }),
+          },
         )
 
         const option: EChartsOption = {
@@ -138,7 +164,10 @@ export function createParallelChartOption(
             },
           },
           parallelAxis: asParallelAxis(parallelAxis),
-          series: series,
+          series: [...series],
+          tooltip: {
+            trigger: 'item',
+          },
           ...(getLegendOption(options)
             ? {
                 legend: {

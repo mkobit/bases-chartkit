@@ -8,6 +8,12 @@ export interface RadialBarTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
 }
 
+interface RadialBarDataPoint {
+  readonly x: string
+  readonly y: number | null
+  readonly s: string
+}
+
 export function createRadialBarChartOption(
   data: BasesData,
   xProp: string,
@@ -18,9 +24,9 @@ export function createRadialBarChartOption(
   const isStacked = options?.stack
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  const normalizedData = R.map(
+  const normalizedData: ReadonlyArray<RadialBarDataPoint> = R.map(
     data,
-    (item) => {
+    (item): RadialBarDataPoint => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -44,22 +50,25 @@ export function createRadialBarChartOption(
     },
   )
 
-  const angleAxisData = R.pipe(
+  const angleAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  const seriesNames = R.pipe(
+  const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  const sourceDataset: DatasetComponentOption = { source: normalizedData }
+  const sourceDataset: DatasetComponentOption = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+    source: normalizedData as unknown as Record<string, unknown>[],
+  }
 
-  const filterDatasets: DatasetComponentOption[] = seriesProp
-    ? seriesNames.map(name => ({
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesProp
+    ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
           config: { dimension: 's',
@@ -68,10 +77,10 @@ export function createRadialBarChartOption(
       }))
     : []
 
-  const datasets: DatasetComponentOption[] = [sourceDataset,
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  const seriesOptions: BarSeriesOption[] = seriesNames.map((name, idx) => {
+  const seriesOptions: ReadonlyArray<BarSeriesOption> = seriesNames.map((name, idx): BarSeriesOption => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
     return {
@@ -88,17 +97,17 @@ export function createRadialBarChartOption(
   })
 
   const opt: EChartsOption = {
-    dataset: datasets,
+    dataset: [...datasets],
     polar: {
     },
     angleAxis: {
       type: 'category',
-      data: angleAxisData,
+      data: [...angleAxisData],
       startAngle: 90,
     },
     radiusAxis: {
     },
-    series: seriesOptions,
+    series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
     },

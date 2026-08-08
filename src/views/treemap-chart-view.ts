@@ -1,5 +1,5 @@
 import type {
-  ViewOption,
+  BasesOptions,
 } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -21,7 +21,7 @@ export class TreemapChartView extends BaseChartView {
     return 'layout-grid'
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.treemap.path_prop'),

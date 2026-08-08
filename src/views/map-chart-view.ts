@@ -1,4 +1,4 @@
-import type { ViewOption } from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { Notice } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import type * as echarts from 'echarts'
@@ -88,7 +88,7 @@ export class MapChartView extends BaseChartView {
     )
   }
 
-  static getViewOptions(): ViewOption[] {
+  static getViewOptions(): BasesOptions[] {
     return [
       {
         displayName: t('views.map.map_file'),

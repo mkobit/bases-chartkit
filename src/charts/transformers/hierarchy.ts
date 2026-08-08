@@ -16,8 +16,8 @@ export interface HierarchyNode {
 }
 
 interface PathItem {
-  parts: string[]
-  value: number | undefined
+  readonly parts: readonly string[]
+  readonly value: number | undefined
 }
 
 function asSunburstData(data: readonly HierarchyNode[]): SunburstSeriesOption['data'] {
@@ -38,7 +38,7 @@ export function buildHierarchy(
   pathProp: string,
   valueProp?: string,
 ): readonly HierarchyNode[] {
-  const paths = R.pipe(
+  const paths: readonly PathItem[] = R.pipe(
     data,
     R.map((item) => {
       const pathRaw = getNestedValue(
@@ -52,7 +52,7 @@ export function buildHierarchy(
       return !pathStr
         ? null
         : (() => {
-            const parts = pathStr.split('/').filter(p => p.length > 0)
+            const parts: readonly string[] = pathStr.split('/').filter(p => p.length > 0)
             return parts.length === 0
               ? null
               : (() => {
@@ -73,13 +73,18 @@ export function buildHierarchy(
   )
 
   const buildLevel = (items: readonly PathItem[]): readonly HierarchyNode[] => {
-    return R.pipe(
+    // Group by current level name. Iterate over keys + index lookup rather than
+    // R.entries()' [key, group] tuples, which this eslint version reports as
+    // mutable.
+    const grouped = R.groupBy(
       items,
-      R.groupBy(item => item.parts[0]),
-      R.entries(),
-      R.map(([name,
-        group]) => {
-        const leafItems = group.filter(item => item.parts.length === 1)
+      item => item.parts[0],
+    )
+    return R.pipe(
+      R.keys(grouped),
+      R.map((name): HierarchyNode => {
+        const group: readonly PathItem[] = grouped[name] ?? []
+        const leafItems: readonly PathItem[] = group.filter(item => item.parts.length === 1)
         const leafValue = leafItems.length > 0
           ? R.sumBy(
               leafItems,
@@ -87,7 +92,7 @@ export function buildHierarchy(
             )
           : undefined
 
-        const childrenItems = group
+        const childrenItems: readonly PathItem[] = group
           .filter(item => item.parts.length > 1)
           .map(item => ({ parts: item.parts.slice(1),
             value: item.value }))

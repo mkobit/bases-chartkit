@@ -3,6 +3,11 @@ import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption } from './utils'
 import * as R from 'remeda'
 
+type FunnelDataPoint = Readonly<{
+  name: string
+  value: number
+}>
+
 export function createFunnelChartOption(
   data: BasesData,
   nameProp: string,
@@ -11,9 +16,9 @@ export function createFunnelChartOption(
 ): EChartsOption {
   // Aggregate rows that share a name so duplicate categories sum into a
   // single funnel stage instead of one segment per row.
-  const seriesData = R.pipe(
+  const grouped: Readonly<Record<string, ReadonlyArray<FunnelDataPoint>>> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item): FunnelDataPoint => {
       const valRaw = getNestedValue(
         item,
         nameProp,
@@ -30,10 +35,13 @@ export function createFunnelChartOption(
       }
     }),
     R.groupBy(d => d.name),
-    R.entries(),
-    R.map(([name, items]) => ({
+  )
+
+  const seriesData: ReadonlyArray<FunnelDataPoint> = R.pipe(
+    R.keys(grouped),
+    R.map((name): FunnelDataPoint => ({
       name,
-      value: R.sumBy(items, d => d.value),
+      value: R.sumBy(grouped[name] ?? [], d => d.value),
     })),
     R.sortBy([x => x.value,
       'desc']),
@@ -41,7 +49,7 @@ export function createFunnelChartOption(
 
   const seriesItem: FunnelSeriesOption = {
     type: 'funnel',
-    data: seriesData,
+    data: [...seriesData],
     label: {
       show: true,
       position: 'inside',

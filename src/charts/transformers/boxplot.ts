@@ -9,6 +9,8 @@ export interface BoxplotTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
 }
 
+type BoxplotRow = Readonly<Record<string, unknown>>
+
 interface BoxplotResult {
   boxData: number[][]
 }
@@ -31,7 +33,7 @@ export function createBoxplotChartOption(
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  const xAxisData = R.pipe(
+  const xAxisData: readonly string[] = R.pipe(
     data,
     R.map((item) => {
       const xValRaw = getNestedValue(
@@ -56,7 +58,7 @@ export function createBoxplotChartOption(
             return sRaw === undefined || sRaw === null ? 'Unknown' : safeToString(sRaw)
           })()
     }),
-    R.mapValues((items) => {
+    R.mapValues((items: readonly BoxplotRow[]) => {
       return R.pipe(
         items,
         R.groupBy((item) => {
@@ -66,7 +68,7 @@ export function createBoxplotChartOption(
           )
           return xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw)
         }),
-        R.mapValues((catItems) => {
+        R.mapValues((catItems: readonly BoxplotRow[]): readonly number[] => {
           return R.pipe(
             catItems,
             R.map(item => Number(getNestedValue(
@@ -80,12 +82,11 @@ export function createBoxplotChartOption(
     }),
   )
 
-  const seriesOptions: BoxplotSeriesOption[] = R.pipe(
-    seriesMap,
-    R.entries(),
-    R.map(([sName,
-      catMap]) => {
-      const rawData = xAxisData.map(xVal => catMap[xVal] || [])
+  const seriesOptions: ReadonlyArray<BoxplotSeriesOption> = R.pipe(
+    R.keys(seriesMap),
+    R.map((sName) => {
+      const catMap: Readonly<Record<string, readonly number[]>> = seriesMap[sName] ?? {}
+      const rawData: readonly (readonly number[])[] = xAxisData.map((xVal): readonly number[] => catMap[xVal] || [])
 
       const result: unknown = prepareBoxplotData(rawData)
 
@@ -123,7 +124,7 @@ export function createBoxplotChartOption(
     },
     xAxis: {
       type: 'category',
-      data: xAxisData,
+      data: [...xAxisData],
       name: xAxisLabel,
       boundaryGap: true,
       splitArea: {
@@ -140,7 +141,7 @@ export function createBoxplotChartOption(
         show: true,
       },
     },
-    series: seriesOptions,
+    series: [...seriesOptions],
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
   }
   return opt

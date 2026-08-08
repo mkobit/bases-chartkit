@@ -2,7 +2,7 @@
 	"id": "bases-chartkit",
 	"name": "Bases Chart Kit",
 	"version": "0.1.0",
-	"minAppVersion": "1.11.4",
+	"minAppVersion": "1.13.4",
 	"description": "Advanced visualization for Obsidian via the Bases API.",
 	"author": "mkobit",
 	"authorUrl": "https://github.com/mkobit",
