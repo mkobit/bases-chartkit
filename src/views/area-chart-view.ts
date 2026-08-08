@@ -12,11 +12,8 @@ export class AreaChartView extends BaseChartView {
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
     const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
 
-    // Options specific to Area chart logic (inherited from line options logic usually)
     const smooth = this.getBooleanOption('smooth')
     const showSymbol = this.getBooleanOption('showSymbol')
-    // We force areaStyle to true, or allow toggle if we want user control, but for "Area Chart" view it implies true.
-    // We can check if user explicitly turned it off if we add a toggle, but let's default to true.
     const areaStyle = true
 
     if (typeof xProp !== 'string' || typeof yProp !== 'string') {

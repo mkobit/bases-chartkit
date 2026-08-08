@@ -19,7 +19,6 @@ function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
   return isRecord(val) && 'x' in val && 'y' in val && 's' in val
 }
 
-// Isolate cast for dimension
 function getDimension(dimName: string): number {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- ECharts types claim dimension must be number (index), but string (name) works for object datasets. Isolate this lie.
   return dimName as unknown as number
@@ -35,11 +34,6 @@ export function createPolarScatterChartOption(
   const sizeProp = options?.sizeProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  // xProp maps to Angle Axis (Category)
-  // yProp maps to Radius Axis (Value)
-
-  // 1. Normalize Data for Dataset
-  // Structure: { x, y, s (series), size? }
   const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
     (item): ScatterDataPoint => {
@@ -73,21 +67,18 @@ export function createPolarScatterChartOption(
     },
   )
 
-  // 2. Get unique X values (categories) for Angle Axis
   const angleAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  // 3. Get unique Series
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
     source: normalizedData as unknown as Record<string, unknown>[],
@@ -104,7 +95,6 @@ export function createPolarScatterChartOption(
   const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  // Calculate Min/Max for VisualMap if needed
   const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
     ? undefined
     : ((): VisualMapComponentOption => {
@@ -127,7 +117,7 @@ export function createPolarScatterChartOption(
           calculable: true,
           orient: options?.visualMapOrient ?? 'horizontal',
           left: options?.visualMapLeft ?? 'center',
-          bottom: options?.visualMapTop !== undefined ? undefined : '0%', // Default bottom if top not set
+          bottom: options?.visualMapTop !== undefined ? undefined : '0%',
           top: options?.visualMapTop,
           type: options?.visualMapType ?? 'continuous',
           formatter: formatCompactVisualMapLabel,
@@ -142,7 +132,6 @@ export function createPolarScatterChartOption(
         }
       })()
 
-  // 5. Build Series Options
   const seriesOptions: ReadonlyArray<ScatterSeriesOption> = seriesNames.map((name, idx): ScatterSeriesOption => {
     const datasetIndex = idx + 1
 

@@ -15,7 +15,7 @@ export class GanttChartView extends BaseChartView {
     const taskProp = this.config.get(GanttChartView.TASK_PROP_KEY)
     const startProp = this.config.get(GanttChartView.START_PROP_KEY)
     const endProp = this.config.get(GanttChartView.END_PROP_KEY)
-    const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY) // Optional grouping
+    const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
 
     const showLegend = this.config.get(BaseChartView.LEGEND_KEY) as boolean
 

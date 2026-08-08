@@ -6,7 +6,6 @@ import type { EChartsOption } from 'echarts'
 import { t } from '../lang/text'
 
 export class BulletChartView extends BaseChartView {
-  // Config Keys
   public static readonly TARGET_PROP_KEY = 'targetProp'
   public static readonly RANGE_LOW_PROP_KEY = 'rangeLowProp'
   public static readonly RANGE_MID_PROP_KEY = 'rangeMidProp'
@@ -82,7 +81,6 @@ export class BulletChartView extends BaseChartView {
         placeholder: t('views.bullet.range_high_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((opt) => {
-        // Type narrowing or check if 'key' exists
         if ('key' in opt) {
           return opt.key !== BaseChartView.X_AXIS_PROP_KEY
             && opt.key !== BaseChartView.Y_AXIS_PROP_KEY

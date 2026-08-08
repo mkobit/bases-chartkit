@@ -46,7 +46,6 @@ export function createGraphChartOption(
   const valueProp = options?.valueProp
   const categoryProp = options?.categoryProp
 
-  // 1. Process data to get raw links and node info
   const processedData: ReadonlyArray<GraphLinkRow> = R.pipe(
     data,
     R.map((item): GraphLinkRow | null => {
@@ -64,7 +63,6 @@ export function createGraphChartOption(
             const source = safeToString(sourceRaw)
             const target = safeToString(targetRaw)
 
-            // Edge Value
             const valNum = valueProp
               ? Number(getNestedValue(
                   item,
@@ -73,7 +71,6 @@ export function createGraphChartOption(
               : Number.NaN
             const val = Number.isNaN(valNum) ? undefined : valNum
 
-            // Category (for source node)
             const cRaw = categoryProp
               ? getNestedValue(
                   item,
@@ -99,8 +96,6 @@ export function createGraphChartOption(
       value }),
   )
 
-  // 2. Extract Nodes and Categories
-  // Collect all nodes from sources and targets
   const sources: ReadonlyArray<GraphNodeRef> = R.map(
     processedData,
     (x): GraphNodeRef => ({ name: x.source,

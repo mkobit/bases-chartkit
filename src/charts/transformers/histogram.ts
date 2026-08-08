@@ -18,7 +18,6 @@ export function createHistogramChartOption(
   valueProp: string,
   options?: HistogramTransformerOptions,
 ): EChartsOption {
-  // 1. Extract and filter valid numeric values
   // Number(...) coercion is required: Bases' note.get() returns a wrapper
   // object (e.g. `{ icon, data: 60 }`) for numeric properties, not a raw
   // number — it does support numeric coercion via its own valueOf(), but
@@ -37,7 +36,6 @@ export function createHistogramChartOption(
 
   const n = values.length
 
-  // 2. Calculate Min/Max
   const sortedValues: readonly number[] = R.sortBy(
     values,
     v => v,
@@ -47,7 +45,6 @@ export function createHistogramChartOption(
   const rangeVal = max - min
   const safeRange = rangeVal === 0 ? 1 : rangeVal
 
-  // 3. Determine Bin Count/Width
   // Precedence: binWidth > binCount > Sturges
   const sturges = Math.ceil(Math.log2(n) + 1)
   const defaultBinCount = Math.max(
@@ -55,7 +52,6 @@ export function createHistogramChartOption(
     options?.binCount ?? sturges,
   )
 
-  // Use ternary instead of if block
   const hasBinWidth = (options?.binWidth ?? 0) > 0
   const binCountFromWidth = hasBinWidth
     ? Math.max(
@@ -68,7 +64,6 @@ export function createHistogramChartOption(
     ? (options?.binWidth ?? 1)
     : safeRange / defaultBinCount
 
-  // 5. Generate Bins and Count
   const bins: ReadonlyArray<HistogramBin> = R.pipe(
     R.range(
       0,
@@ -79,7 +74,6 @@ export function createHistogramChartOption(
       const binMax = min + ((i + 1) * finalBinWidth)
       const isLast = i === binCountFromWidth - 1
 
-      // Filter values in this bin
       const count = R.pipe(
         values,
         R.filter(v =>

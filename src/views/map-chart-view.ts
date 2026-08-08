@@ -23,13 +23,11 @@ export class MapChartView extends BaseChartView {
     const mapFile = this.config.get(MapChartView.MAP_FILE_KEY) as string
 
     if (!mapFile) {
-      // No map file selected, clear or show empty
       this.executeRender()
       return
     }
 
     if (this.registeredMapName === mapFile) {
-      // Map already registered
       this.executeRender()
       return
     }
@@ -71,13 +69,13 @@ export class MapChartView extends BaseChartView {
     const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
 
     if (!mapFile || this.registeredMapName !== mapFile) {
-      // If map isn't ready or doesn't match config, return null (wait for renderChart to load it)
+      // Map not loaded yet; renderChart loads it asynchronously, then re-renders.
       return null
     }
 
     return transformDataToChartOption(
       data,
-      'Map Chart', // Dummy xProp for title if needed, or we can adjust transformer signature
+      'Map Chart', // placeholder xProp; maps have no x axis
       valueProp,
       'map',
       {

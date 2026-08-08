@@ -18,7 +18,6 @@ export function createParetoChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  // 1. Normalize and Sort Data
   const normalizedData: ReadonlyArray<{ readonly name: string
     readonly value: number }> = R.pipe(
     data,
@@ -32,20 +31,16 @@ export function createParetoChartOption(
         yProp,
       )),
     })),
-    // Filter out invalid values
     R.filter(item => !Number.isNaN(item.value)),
-    // Sort descending by value
     R.sortBy([item => item.value,
       'desc']),
   )
 
-  // 2. Calculate Total for Cumulative Percentage
   const totalValue = R.sumBy(
     normalizedData,
     item => item.value,
   )
 
-  // 3. Calculate Cumulative Percentage
   interface ParetoAccumulator {
     readonly sum: number
     readonly result: ReadonlyArray<{
@@ -58,7 +53,6 @@ export function createParetoChartOption(
   const initialAcc: ParetoAccumulator = { sum: 0,
     result: [] }
 
-  // Using reduce to build the final dataset with cumulative values
   const finalData = R.pipe(
     normalizedData,
     R.reduce(
@@ -116,7 +110,6 @@ export function createParetoChartOption(
     },
   }
 
-  // 4. Construct ECharts Option
   const chartOption: EChartsOption = {
     tooltip: {
       trigger: 'axis',

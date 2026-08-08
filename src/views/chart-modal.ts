@@ -16,10 +16,8 @@ export class ChartModal extends Modal {
     const { contentEl } = this
     contentEl.empty()
 
-    // Add CSS class for layout
     contentEl.addClass('bases-chart-modal')
 
-    // Container for the chart
     const chartContainer = contentEl.createDiv({ cls: 'bases-echarts-container' })
     const chartEl = chartContainer.createDiv({ cls: 'bases-echarts' })
 

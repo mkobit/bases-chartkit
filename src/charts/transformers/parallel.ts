@@ -17,7 +17,6 @@ type ParallelAxisSpec = Readonly<{
 
 type ParallelRow = ReadonlyArray<number | string | null>
 
-// ECharts parallelAxis type is complex union
 function asParallelAxis(axis: unknown): EChartsOption['parallelAxis'] {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts parallelAxis type is a complex union; bridge to the shape we construct.
   return axis as EChartsOption['parallelAxis']
@@ -28,7 +27,6 @@ export function createParallelChartOption(
   dimensionsStr: string,
   options?: ParallelTransformerOptions,
 ): EChartsOption {
-  // 1. Parse dimensions
   const dims: readonly string[] = dimensionsStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
 
   return dims.length === 0
@@ -40,10 +38,8 @@ export function createParallelChartOption(
     : (() => {
         const seriesProp = options?.seriesProp
 
-        // 2. Prepare Parallel Axis
         // Use standard map to avoid remeda type issues with indexed map in strict mode
         const parallelAxis: readonly ParallelAxisSpec[] = dims.map((dim, index): ParallelAxisSpec => {
-          // Collect all values for this dimension to infer type
           const values: readonly unknown[] = R.map(
             data,
             item => getNestedValue(
@@ -52,7 +48,6 @@ export function createParallelChartOption(
             ),
           )
 
-          // Check if all non-null values are numeric
           const nonNullValues: readonly unknown[] = R.filter(
             values,
             v => v !== null && v !== undefined && v !== '',
@@ -82,8 +77,6 @@ export function createParallelChartOption(
               })()
         })
 
-        // 3. Prepare Data
-        // Group by series first
         const seriesDataMap = R.pipe(
           data,
           R.groupBy((item) => {
@@ -133,7 +126,7 @@ export function createParallelChartOption(
               name: name,
               type: 'parallel' as const,
               lineStyle: {
-                width: 2, // make lines visible
+                width: 2,
               },
               // ECharts wants a fresh mutable row array per line; build it here
               // at the option boundary from the readonly pipeline rows.

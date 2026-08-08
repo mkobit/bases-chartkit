@@ -58,7 +58,7 @@ export class ThemeRiverChartView extends BaseChartView {
       {
         ...this.getCommonTransformerOptions(),
         valueProp: valueProp,
-        themeProp: themeProp, // Ensure this property is added to ChartTransformerOptions
+        themeProp: themeProp,
       },
     )
   }

@@ -33,8 +33,6 @@ export class RadialBarChartView extends BaseChartView {
         key: 'stack',
       },
       ...BaseChartView.getCommonViewOptions().filter(opt =>
-      // Filter out options that are not applicable to Radial Bar or are already added
-      // We keep Legend and Height
         (opt as { key?: string }).key === BaseChartView.LEGEND_KEY
         || (opt as { key?: string }).key === BaseChartView.HEIGHT_KEY
         || (opt as { key?: string }).key === BaseChartView.LEGEND_POSITION_KEY

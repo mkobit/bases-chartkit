@@ -18,9 +18,8 @@ export function createPieChartOption(
   valueProp: string,
   options?: PieTransformerOptions,
 ): EChartsOption {
-  // 1. Normalize Data for Dataset, aggregating rows that share a name
-  // so duplicate categories sum into a single slice instead of one per row.
-  // Structure: { name, value }
+  // Aggregate rows that share a name so duplicate categories sum into a
+  // single slice instead of one per row.
   const normalizedData: ReadonlyArray<PieDataPoint> = R.pipe(
     data,
     R.map((item): PieDataPoint => {

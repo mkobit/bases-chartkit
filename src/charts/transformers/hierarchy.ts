@@ -32,14 +32,12 @@ function asTreeData(data: readonly HierarchyNode[]): TreeSeriesOption['data'] {
 
 /**
  * Helper to build a tree structure from slash-separated paths.
- * Refactored to be functional using recursion instead of mutation loops.
  */
 export function buildHierarchy(
   data: BasesData,
   pathProp: string,
   valueProp?: string,
 ): readonly HierarchyNode[] {
-  // 1. Transform data into paths and values
   const paths: readonly PathItem[] = R.pipe(
     data,
     R.map((item) => {
@@ -64,8 +62,6 @@ export function buildHierarchy(
                         valueProp,
                       ))
                     : Number.NaN
-                  // Explicitly use undefined if NaN, so it matches optional type better?
-                  // Actually, type { value?: number } allows undefined.
                   const value = Number.isNaN(valNum) ? undefined : valNum
 
                   return { parts,
@@ -76,7 +72,6 @@ export function buildHierarchy(
     R.filter((x): x is PathItem => x !== null),
   )
 
-  // 2. Recursive builder
   const buildLevel = (items: readonly PathItem[]): readonly HierarchyNode[] => {
     // Group by current level name. Iterate over keys + index lookup rather than
     // R.entries()' [key, group] tuples, which this eslint version reports as
@@ -89,7 +84,6 @@ export function buildHierarchy(
       R.keys(grouped),
       R.map((name): HierarchyNode => {
         const group: readonly PathItem[] = grouped[name] ?? []
-        // Check if any item in this group is a leaf at this level (length 1)
         const leafItems: readonly PathItem[] = group.filter(item => item.parts.length === 1)
         const leafValue = leafItems.length > 0
           ? R.sumBy(
@@ -98,7 +92,6 @@ export function buildHierarchy(
             )
           : undefined
 
-        // Get children items (length > 1), slicing off the first part
         const childrenItems: readonly PathItem[] = group
           .filter(item => item.parts.length > 1)
           .map(item => ({ parts: item.parts.slice(1),
@@ -106,7 +99,6 @@ export function buildHierarchy(
 
         const children = childrenItems.length > 0 ? buildLevel(childrenItems) : undefined
 
-        // Construct node without mutation
         const node: HierarchyNode = { name }
 
         const nodeWithValue = (leafValue !== undefined && leafValue > 0)

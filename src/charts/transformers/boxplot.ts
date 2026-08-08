@@ -33,7 +33,6 @@ export function createBoxplotChartOption(
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  // 1. Collect all unique X values (categories)
   const xAxisData: readonly string[] = R.pipe(
     data,
     R.map((item) => {
@@ -46,8 +45,6 @@ export function createBoxplotChartOption(
     R.unique(),
   )
 
-  // 2. Group data by series and category
-  // Map<SeriesName, Map<CategoryName, number[]>>
   const seriesMap = R.pipe(
     data,
     R.groupBy((item) => {
@@ -85,17 +82,11 @@ export function createBoxplotChartOption(
     }),
   )
 
-  // 3. Transform to ECharts series
   const seriesOptions: ReadonlyArray<BoxplotSeriesOption> = R.pipe(
     R.keys(seriesMap),
     R.map((sName) => {
       const catMap: Readonly<Record<string, readonly number[]>> = seriesMap[sName] ?? {}
-      // Prepare data for prepareBoxplotData
-      // We need a 2D array where each row is a category's data points
       const rawData: readonly (readonly number[])[] = xAxisData.map((xVal): readonly number[] => catMap[xVal] || [])
-
-      // Use standard ECharts data tool to process the data
-      // prepareBoxplotData expects [ [v1, v2...], [v3, v4...] ] where each inner array is a category
 
       const result: unknown = prepareBoxplotData(rawData)
 

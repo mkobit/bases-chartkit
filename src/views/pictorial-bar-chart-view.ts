@@ -38,7 +38,6 @@ export class PictorialBarChartView extends BaseChartView {
         key: 'symbol',
         displayName: t('views.pictorial_bar.symbol'),
         type: 'dropdown',
-        // description removed as it is not supported
         options: {
           circle: t('views.pictorial_bar.symbol_options.circle'),
           rect: t('views.pictorial_bar.symbol_options.rect'),

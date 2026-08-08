@@ -39,7 +39,6 @@ export function createThemeRiverChartOption(
   const valueProp = options?.valueProp
   const themeProp = options?.themeProp
 
-  // Data format: [date, value, themeName]
   const riverData: readonly ThemeRiverItem[] = R.pipe(
     data,
     R.map((item) => {

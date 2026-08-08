@@ -12,7 +12,6 @@ export class LineChartView extends BaseChartView {
     const yProp = this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY)
     const seriesProp = this.getStringOption(BaseChartView.SERIES_PROP_KEY)
 
-    // Get line specific options safely
     const smooth = this.getBooleanOption('smooth')
     const showSymbol = this.getBooleanOption('showSymbol')
     const areaStyle = this.getBooleanOption('areaStyle')

@@ -52,7 +52,6 @@ export function createBulletChartOption(
           ))
         : undefined
 
-      // Range Values
       const r1Raw = (rangeLowProp !== undefined)
         ? Number(getNestedValue(
             item,
@@ -108,7 +107,6 @@ export function createBulletChartOption(
     source: [...normalizedData],
   }
 
-  // Range Series (Background)
   const hasRanges = Boolean(rangeLowProp || rangeMidProp || rangeHighProp)
   const isDarkMode = options?.isDarkMode ?? false
   // Light-mode bands run light-to-mid-gray against a light/transparent chart

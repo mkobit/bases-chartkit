@@ -33,7 +33,6 @@ export function createLinesChartOption(
   return (!x2Prop || !y2Prop)
     ? {}
     : (() => {
-        // 1. Normalize Data
         const normalizedData: ReadonlyArray<NormalizedSegment> = R.pipe(
           data,
           R.map((item): NormalizedSegment | null => {
@@ -87,14 +86,12 @@ export function createLinesChartOption(
           : { min: Math.min(...allY),
               max: Math.max(...allY) }
 
-        // 2. Group by Series
         const groupedData = R.groupBy(
           normalizedData,
           d => d.series,
         )
         const seriesNames: readonly string[] = Object.keys(groupedData)
 
-        // 3. Build Series
         const seriesOptions: ReadonlyArray<LinesSeriesOption> = seriesNames.map((name): LinesSeriesOption => {
           // ECharts' `lines` data wants a fresh, mutable `number[][]` per segment
           // (LinesCoords); build it here at the option boundary.

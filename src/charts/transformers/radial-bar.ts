@@ -24,8 +24,6 @@ export function createRadialBarChartOption(
   const isStacked = options?.stack
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
-  // 1. Normalize Data for Dataset
-  // Structure: { x, y, s }
   const normalizedData: ReadonlyArray<RadialBarDataPoint> = R.map(
     data,
     (item): RadialBarDataPoint => {
@@ -52,27 +50,23 @@ export function createRadialBarChartOption(
     },
   )
 
-  // 2. Get unique X values (categories) for the angle axis
   const angleAxisData: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.x),
     R.unique(),
   )
 
-  // 3. Identify Series
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
     R.map(d => d.s),
     R.unique(),
   )
 
-  // 4. Create Datasets
   const sourceDataset: DatasetComponentOption = {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
     source: normalizedData as unknown as Record<string, unknown>[],
   }
 
-  // If we have a seriesProp, we create filtered datasets for each series
   const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesProp
     ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
@@ -86,7 +80,6 @@ export function createRadialBarChartOption(
   const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
     ...filterDatasets]
 
-  // 5. Build Series Options
   const seriesOptions: ReadonlyArray<BarSeriesOption> = seriesNames.map((name, idx): BarSeriesOption => {
     const datasetIndex = seriesProp ? idx + 1 : 0
 
