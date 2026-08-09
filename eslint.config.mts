@@ -167,6 +167,11 @@ export default tseslint.config(
         name: 'Date',
         message: 'Use Temporal (from temporal-polyfill) instead of Date. In Obsidian code, use moment.',
       }],
+      '@typescript-eslint/no-restricted-types': ['error', {
+        types: {
+          Date: 'Use Temporal (from temporal-polyfill) instead of Date. In Obsidian code, use moment.',
+        },
+      }],
       'no-restricted-imports': ['error', {
         patterns: ['**/index', '**/index.ts', '**/index.js'],
       }],
