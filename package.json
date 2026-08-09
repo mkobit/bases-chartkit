@@ -6,6 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "bun run typecheck && bun esbuild.config.mjs production",
+		"clean": "bun scripts/clean.ts",
 		"dev": "bun esbuild.config.mjs",
 		"docs:screenshots": "bun scripts/collect-chart-views.ts && bun x playwright test --config=playwright.survey.config.ts",
 		"docs:screenshots:dark": "bun scripts/collect-chart-views.ts && SURVEY_THEME=dark bun x playwright test --config=playwright.survey.config.ts",
