@@ -5,8 +5,8 @@
 import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
-import { applyViewMode } from '../e2e/vault'
-import type { ViewMode } from '../e2e/vault'
+import { applyViewMode } from '../shared/appearance'
+import type { ViewMode } from '../shared/appearance'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
@@ -51,7 +51,6 @@ function parseThemeArg(argv: readonly string[]): ViewMode {
 async function findObsidianPage(): Promise<CdpPage | undefined> {
   try {
     const res = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- fetch().json() is untyped; CDP response shape is trusted here
     const pages: readonly CdpPage[] = await res.json()
     return pages.find(p => p.type === 'page')
   }

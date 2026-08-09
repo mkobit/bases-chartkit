@@ -3,6 +3,7 @@
 [![Obsidian Badge](https://img.shields.io/badge/obsidian-plugin-7a3ee8?logo=obsidian)](https://obsidian.md/)
 [![CI](https://github.com/mkobit/bases-chartkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mkobit/bases-chartkit/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/mkobit/bases-chartkit)](https://github.com/mkobit/bases-chartkit/releases)
+[![Changelog](https://img.shields.io/badge/changelog-view-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
 
@@ -124,7 +125,7 @@ bun run build      # generate main.js / styles.css
 bun run vault:dev  # downloads sandboxed Obsidian (one-time, cached) and launches it
 ```
 
-The launcher uses the same `scripts/lib/obsidian.ts` module as the e2e fixture. On WSL2, GUI rendering goes through WSLg.
+The launcher uses [Obsidian's official CLI](https://obsidian.md/help/cli) via `scripts/obsidian-cli.ts`. On WSL2, GUI rendering goes through WSLg.
 
 To install the built plugin into the example vault without launching (e.g. for use with your own Obsidian):
 

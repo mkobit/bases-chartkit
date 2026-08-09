@@ -23,9 +23,8 @@ interface ThemeRiverItem {
 // series-data boundary, keeping the mutable tuple shape out of the typed
 // pipeline above.
 function asThemeRiverData(items: readonly ThemeRiverItem[]): ThemeRiverSeriesOption['data'] {
-  // ECharts' ThemerRiverDataItem is a mutable [date, value, name] tuple, so
-  // this is a genuine mutable boundary -- prefer-immutable-types is masked for
-  // src/**/*.ts and can't be satisfied without gaming the tuple's typing.
+  // ECharts' ThemerRiverDataItem is a mutable [date, value, name] tuple, so this is a genuine mutable boundary.
+  // eslint-disable-next-line functional/prefer-immutable-types -- see comment above; can't be satisfied without gaming the tuple's typing.
   return items.map(d => [d.date,
     d.value,
     d.theme])

@@ -99,6 +99,7 @@ export function createScatterChartOption(
 
   const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
     ? undefined
+    // eslint-disable-next-line functional/prefer-immutable-types -- VisualMapComponentOption is a union type alias (ContinuousVisualMapOption | PiecewiseVisualMapOption); Readonly<> wrapping a union loses the alias identity the ignoreTypePattern name match relies on (bd memory: prefer-immutable-types-union-option-alias-gap).
     : ((): Readonly<VisualMapComponentOption> => {
         const sizes: readonly number[] = sizeProp
           ? R.pipe(

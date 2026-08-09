@@ -167,6 +167,11 @@ export default tseslint.config(
         name: 'Date',
         message: 'Use Temporal (from temporal-polyfill) instead of Date. In Obsidian code, use moment.',
       }],
+      '@typescript-eslint/no-restricted-types': ['error', {
+        types: {
+          Date: 'Use Temporal (from temporal-polyfill) instead of Date. In Obsidian code, use moment.',
+        },
+      }],
       'no-restricted-imports': ['error', {
         patterns: ['**/index', '**/index.ts', '**/index.js'],
       }],
@@ -423,9 +428,9 @@ export default tseslint.config(
       'functional/readonly-type': 'off',
     },
   },
-  // Scripts
+  // Scripts (and shared/, the Node-side tooling utilities scripts/ and e2e/ both import)
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs'],
+    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'shared/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -461,6 +466,7 @@ export default tseslint.config(
       '@typescript-eslint/no-require-imports': 'off',
       // Relax stylistic indent for scripts if mixed content, but generally enforce tab
       '@stylistic/indent': ['error', 2],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
     },
   },
   {
@@ -469,8 +475,51 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'functional/no-expression-statements': 'off',
       'functional/no-try-statements': 'off',
-      'functional/prefer-immutable-types': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
+  // functional/prefer-immutable-types stays off for src/ generally, but must NOT re-mask the
+  // "Refactored Transformers (Strict)" block above -- a later block matching the same files always
+  // wins per-rule in flat config, so this needs an explicit `ignores` rather than living in the
+  // general src/**/*.ts block above (bck-eyq: it silently masked the rule for all 32 strict files).
+  {
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    ignores: [
+      'src/charts/transformer.ts',
+      'src/charts/transformers/base.ts',
+      'src/charts/transformers/boxplot.ts',
+      'src/charts/transformers/bullet.ts',
+      'src/charts/transformers/calendar.ts',
+      'src/charts/transformers/candlestick.ts',
+      'src/charts/transformers/cartesian.ts',
+      'src/charts/transformers/effect-scatter.ts',
+      'src/charts/transformers/extensions/word-cloud.ts',
+      'src/charts/transformers/funnel.ts',
+      'src/charts/transformers/gauge.ts',
+      'src/charts/transformers/graph.ts',
+      'src/charts/transformers/heatmap.ts',
+      'src/charts/transformers/hierarchy.ts',
+      'src/charts/transformers/histogram.ts',
+      'src/charts/transformers/lines.ts',
+      'src/charts/transformers/map.ts',
+      'src/charts/transformers/gantt.ts',
+      'src/charts/transformers/parallel.ts',
+      'src/charts/transformers/pareto.ts',
+      'src/charts/transformers/pictorial-bar.ts',
+      'src/charts/transformers/pie.ts',
+      'src/charts/transformers/polar-line.ts',
+      'src/charts/transformers/polar-scatter.ts',
+      'src/charts/transformers/radar.ts',
+      'src/charts/transformers/radial-bar.ts',
+      'src/charts/transformers/sankey.ts',
+      'src/charts/transformers/scatter.ts',
+      'src/charts/transformers/theme-river.ts',
+      'src/charts/transformers/treemap.ts',
+      'src/charts/transformers/utils.ts',
+      'src/charts/transformers/waterfall.ts',
+    ],
+    rules: {
+      'functional/prefer-immutable-types': 'off',
     },
   },
   {
@@ -537,5 +586,7 @@ export default tseslint.config(
     'test-results/**',
     // bd-managed scaffolding, not project source
     '.beads/**',
+    // downloaded Obsidian app/plugin files from vault:dev/vault:install
+    '.obsidian-cache/**',
   ]),
 )

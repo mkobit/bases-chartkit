@@ -130,6 +130,7 @@ export function createParallelChartOption(
               },
               // ECharts wants a fresh mutable row array per line; build it here
               // at the option boundary from the readonly pipeline rows.
+              // eslint-disable-next-line functional/prefer-immutable-types -- genuine ECharts mutable-array boundary, see comment above.
               data: sData.map(row => [...row]),
               // Without this, ECharts' default dimension inference flags only
               // the LAST axis column as `defaultedTooltip` (confirmed live:

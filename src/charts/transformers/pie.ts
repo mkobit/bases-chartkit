@@ -40,6 +40,7 @@ export function createPieChartOption(
     }),
     R.groupBy(d => d.name),
     R.entries(),
+    // eslint-disable-next-line functional/prefer-immutable-types -- readonly tuple destructuring isn't recognized here even when explicitly typed (bd memory: prefer-immutable-types-readonly-tuple-gap); PieDataPoint itself is all-readonly.
     R.map(([name, items]): PieDataPoint => ({
       name,
       value: R.sumBy(items, d => d.value),
