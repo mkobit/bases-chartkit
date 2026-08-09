@@ -537,5 +537,7 @@ export default tseslint.config(
     'test-results/**',
     // bd-managed scaffolding, not project source
     '.beads/**',
+    // downloaded Obsidian app/plugin files from vault:dev/vault:install
+    '.obsidian-cache/**',
   ]),
 )
