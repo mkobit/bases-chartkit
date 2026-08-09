@@ -154,6 +154,7 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
   const defaultOrient = (position === 'left' || position === 'right') ? 'vertical' : 'horizontal'
   const orient = options?.legendOrient ?? defaultOrient
 
+  // eslint-disable-next-line functional/prefer-immutable-types -- LegendComponentOption is a union type alias (LegendOption | ScrollableLegendOption); Readonly<> wrapping a union loses the alias identity the ignoreTypePattern name match relies on (bd memory: prefer-immutable-types-union-option-alias-gap).
   const base: Readonly<LegendComponentOption> = {
     orient,
     type: 'scroll',
