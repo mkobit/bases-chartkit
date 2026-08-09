@@ -37,7 +37,11 @@ function findFreePort(): Promise<number> {
 async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   await expect(async () => {
     if (proc.exitCode !== null) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; the rule can't resolve the thrown type through Playwright's generic expect() callback overload.
+      // False positive on plain `new Error(...)` project-wide, not specific to this Playwright callback as
+      // previously assumed here -- root-caused to an upstream typescript-eslint/project-service quirk triggered by
+      // bun-types' Error declaration merging (bd memory: only-throw-error-bun-types-false-positive). Every other
+      // only-throw-error disable comment in this repo points back to this one as the single explanation.
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- see comment above
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
     const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
