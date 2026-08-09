@@ -1,5 +1,5 @@
 import type * as fc from 'fast-check'
-import type { FrontmatterValue } from '../../e2e/vault/schema'
+import type { FrontmatterValue } from './schema'
 import { getDeterministicSample } from '../generators/utils'
 import { deriveSubSeed } from './seed'
 

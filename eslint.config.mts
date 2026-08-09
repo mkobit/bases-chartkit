@@ -423,9 +423,9 @@ export default tseslint.config(
       'functional/readonly-type': 'off',
     },
   },
-  // Scripts
+  // Scripts (and shared/, the Node-side tooling utilities scripts/ and e2e/ both import)
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs'],
+    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'shared/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -461,6 +461,7 @@ export default tseslint.config(
       '@typescript-eslint/no-require-imports': 'off',
       // Relax stylistic indent for scripts if mixed content, but generally enforce tab
       '@stylistic/indent': ['error', 2],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
     },
   },
   {

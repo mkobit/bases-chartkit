@@ -6,8 +6,8 @@ import * as path from 'node:path'
 import * as net from 'node:net'
 import * as fs from 'node:fs/promises'
 import { Temporal } from 'temporal-polyfill'
-import { applyViewMode } from '../vault'
-import type { ViewMode } from '../vault'
+import { applyViewMode } from '../../shared/appearance'
+import type { ViewMode } from '../../shared/appearance'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
