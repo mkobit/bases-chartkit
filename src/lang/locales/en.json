@@ -23,13 +23,25 @@
 				"vertical": "Vertical"
 			},
 			"height": "Height",
-			"height_placeholder": "e.g., 500px, 50vh"
+			"height_placeholder": "e.g., 100%, 500px, 50vh",
+			"echarts_option": "ECharts option override",
+			"echarts_option_placeholder": "JSON string (e.g. {\"grid\": {\"bottom\": 60}})",
+			"value_format": "Value format",
+			"value_format_placeholder": "e.g. duration, YYYY-MM-DD, currency:USD",
+			"title": "Title",
+			"title_placeholder": "Optional chart title",
+			"description": "Description",
+			"description_placeholder": "Optional chart description / caption"
 		},
 		"axis": {
 			"x_label": "X-axis label",
 			"x_label_placeholder": "Override X-axis label",
 			"y_label": "Y-axis label",
 			"y_label_placeholder": "Override Y-axis label",
+			"x_format": "X-axis format",
+			"x_format_placeholder": "e.g. YYYY-MM-DD, duration, Q1",
+			"y_format": "Y-axis format",
+			"y_format_placeholder": "e.g. currency:USD, compact, %",
 			"x_rotate": "X-axis label rotation",
 			"x_rotate_placeholder": "Degrees (e.g. 45)",
 			"flip": "Flip axis"
@@ -347,8 +359,8 @@
 	"settings": {
 		"default_height": {
 			"name": "Default chart height",
-			"desc": "The default height for charts (e.g. 500px, 50vh).",
-			"placeholder": "500px"
+			"desc": "The default height for charts (e.g. 100%, 500px, 50vh).",
+			"placeholder": "100%"
 		},
 		"up_color": {
 			"name": "Positive value color",

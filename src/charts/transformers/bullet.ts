@@ -1,6 +1,7 @@
 import type { EChartsOption, DatasetComponentOption, BarSeriesOption, ScatterSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { THEME_TOKENS } from './palette'
 import * as R from 'remeda'
 
 export interface BulletTransformerOptions extends BaseTransformerOptions {
@@ -116,12 +117,8 @@ export function createBulletChartOption(
   const rangeColors: Readonly<{ low: string
     mid: string
     high: string }> = isDarkMode
-    ? { low: '#404040',
-        mid: '#595959',
-        high: '#737373' }
-    : { low: '#e0e0e0',
-        mid: '#bdbdbd',
-        high: '#9e9e9e' }
+    ? THEME_TOKENS.bulletRanges.dark
+    : THEME_TOKENS.bulletRanges.light
 
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
@@ -189,7 +186,7 @@ export function createBulletChartOption(
           4],
     z: 3,
     itemStyle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode ? THEME_TOKENS.targetMarker.dark : THEME_TOKENS.targetMarker.light,
     },
   }
 

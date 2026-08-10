@@ -3,6 +3,8 @@ import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from '../base'
 import { getNestedValue, safeToString } from '../utils'
 
+import { getCategoricalColor, getParamKey } from '../palette'
+
 export interface WordCloudTransformerOptions extends BaseTransformerOptions {
   readonly shape?: 'circle' | 'cardioid' | 'diamond' | 'triangle-forward' | 'triangle' | 'pentagon' | 'star'
   readonly gridSize?: number
@@ -52,8 +54,7 @@ export function createWordCloudChartOption(
     textStyle: {
       fontFamily: 'sans-serif',
       fontWeight: 'bold',
-      // Color will be handled by ECharts theme or default behavior if not specified
-      // To strictly follow functional protocols, we avoid inline random generation here
+      color: (params: unknown) => getCategoricalColor(getParamKey(params)),
     },
     emphasis: {
       focus: 'self',

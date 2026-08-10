@@ -112,12 +112,6 @@ export class MapChartView extends BaseChartView {
         const key = (o as { key?: string }).key
         return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
       }),
-      {
-        displayName: t('views.map.title'),
-        type: 'text',
-        key: BaseChartView.X_AXIS_LABEL_KEY, // Reusing X-Axis Label as Title for Maps
-        placeholder: t('views.map.title_placeholder'),
-      },
       ...BaseChartView.getVisualMapViewOptions(),
     ]
   }

@@ -1,4 +1,5 @@
 import type { EChartsOption } from 'echarts'
+import { getTitleOption, isRecord } from './transformers/utils'
 
 import type {
   PieTransformerOptions,
@@ -417,7 +418,7 @@ export function transformDataToChartOption(
 ): EChartsOption {
   const transformer = transformerMap[chartType]
 
-  return transformer
+  const rawOption = transformer
     ? transformer(
         data,
         xProp,
@@ -431,6 +432,40 @@ export function transformDataToChartOption(
         'bar',
         asOptions(options),
       )
+
+  const titleOpt = getTitleOption(options)
+  if (!titleOpt) {
+    return rawOption
+  }
+
+  const existingTitle = rawOption.title
+  if (!existingTitle) {
+    return {
+      ...rawOption,
+      title: titleOpt,
+    }
+  }
+
+  if (Array.isArray(existingTitle)) {
+    return {
+      ...rawOption,
+      title: [...existingTitle, titleOpt],
+    }
+  }
+
+  if (isRecord(existingTitle)) {
+    return {
+      ...rawOption,
+      title: {
+        ...titleOpt,
+        ...existingTitle,
+        text: typeof existingTitle.text === 'string' && existingTitle.text.length > 0 ? existingTitle.text : titleOpt.text,
+        subtext: typeof existingTitle.subtext === 'string' && existingTitle.subtext.length > 0 ? existingTitle.subtext : titleOpt.subtext,
+      },
+    }
+  }
+
+  return rawOption
 }
 
 export { type ChartType, type BaseTransformerOptions, type BasesData } from './transformers/base'

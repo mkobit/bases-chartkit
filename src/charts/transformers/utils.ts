@@ -1,4 +1,4 @@
-import type { LegendComponentOption } from 'echarts'
+import type { LegendComponentOption, TitleComponentOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import type { BaseTransformerOptions } from './base'
 
@@ -178,4 +178,22 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
     ? { ...base,
         ...posConfig }
     : undefined
+}
+
+export function getTitleOption(options?: BaseTransformerOptions): Readonly<TitleComponentOption> | undefined {
+  const text = options?.title
+  const subtext = options?.description
+
+  if (!text && !subtext) {
+    return undefined
+  }
+
+  const title: Readonly<TitleComponentOption> = {
+    ...(text ? { text } : {}),
+    ...(subtext ? { subtext } : {}),
+    left: 'left',
+    top: 0,
+  }
+
+  return title
 }

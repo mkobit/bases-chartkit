@@ -44,6 +44,16 @@ const barSpec = defineChartExampleSpec<BarSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Department spend (vintage theme)',
+      viewType: 'bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
   ],
 })
 

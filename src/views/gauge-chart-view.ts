@@ -61,6 +61,7 @@ export class GaugeChartView extends BaseChartView {
       yProp,
       'gauge',
       {
+        ...this.getCommonTransformerOptions(),
         min: isNaN(minVal) ? 0 : minVal,
         max: isNaN(maxVal) ? 100 : maxVal,
         aggregation: isAggregation(aggregationRaw) ? aggregationRaw : 'sum',
@@ -109,6 +110,10 @@ export class GaugeChartView extends BaseChartView {
         key: GaugeChartView.COLOR_BANDS_KEY,
         placeholder: t('views.gauge.color_bands_placeholder'),
       },
+      ...BaseChartView.getCommonViewOptions().filter((o) => {
+        const key = (o as { key?: string }).key
+        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+      }),
     ]
   }
 }

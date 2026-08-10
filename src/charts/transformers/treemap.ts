@@ -1,6 +1,7 @@
 import type { EChartsOption, TreemapSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { buildHierarchy, type HierarchyNode } from './hierarchy'
+import { THEME_TOKENS } from './palette'
 
 export type TreemapTransformerOptions = BaseTransformerOptions
 
@@ -51,7 +52,7 @@ export function createTreemapChartOption(
     // background rect removes that artifact in both themes instead of
     // picking one theme's background color to hardcode instead.
     itemStyle: {
-      borderColor: 'transparent',
+      borderColor: THEME_TOKENS.transparent,
     },
   }
 

@@ -45,7 +45,7 @@ export class SankeyChartView extends BaseChartView {
       yProp,
       'sankey',
       {
-        legend: this.getBooleanOption(BaseChartView.LEGEND_KEY),
+        ...this.getCommonTransformerOptions(),
         valueProp: valueProp,
       },
     )

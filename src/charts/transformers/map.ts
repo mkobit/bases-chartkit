@@ -21,7 +21,6 @@ export function createMapChartOption(
 ): EChartsOption {
   const regionProp = options?.regionProp
   const valueProp = options?.valueProp
-  const title = options?.xAxisLabel
 
   const mapData: ReadonlyArray<MapRegionValue> = R.pipe(
     data,
@@ -85,11 +84,11 @@ export function createMapChartOption(
     },
   }
 
+  const mapOptions = options?.xAxisLabel && !options.title
+    ? { ...options, title: options.xAxisLabel }
+    : options
+
   const opt: EChartsOption = {
-    title: title
-      ? { text: title,
-          left: 'center' }
-      : undefined,
     tooltip: {
       trigger: 'item',
       showDelay: 0,
@@ -97,7 +96,7 @@ export function createMapChartOption(
     },
     visualMap: visualMapOption,
     series: [seriesItem],
-    ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
+    ...(getLegendOption(mapOptions) ? { legend: getLegendOption(mapOptions) } : {}),
   }
 
   return opt

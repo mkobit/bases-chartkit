@@ -1,6 +1,7 @@
 import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
+import { formatValue } from './formatters'
 import * as R from 'remeda'
 
 export interface CartesianTransformerOptions extends BaseTransformerOptions {
@@ -134,6 +135,7 @@ export function createCartesianChartOption(
           const barItem: BarSeriesOption = {
             ...base,
             type: 'bar',
+            ...(!seriesProp ? { colorBy: 'data' as const } : {}),
             ...(isStacked ? { stack: 'total' } : {}),
           }
           return barItem
@@ -156,12 +158,16 @@ export function createCartesianChartOption(
       ]
     : []
 
+  const xAxisFormat = options?.xAxisFormat
+  const yAxisFormat = options?.yAxisFormat ?? options?.valueFormat
+
   const opt: EChartsOption = {
     dataset: [...datasets],
     xAxis: flipAxis
       ? {
           type: 'value',
           name: yAxisLabel,
+          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
         }
       : {
           type: 'category',
@@ -170,6 +176,7 @@ export function createCartesianChartOption(
           axisLabel: {
             rotate: xAxisRotate,
             interval: xAxisInterval,
+            ...(xAxisFormat ? { formatter: (val: unknown) => formatValue(val, xAxisFormat) } : {}),
           },
         },
     yAxis: flipAxis
@@ -179,11 +186,13 @@ export function createCartesianChartOption(
           name: xAxisLabel,
           axisLabel: {
             rotate: xAxisRotate,
+            ...(xAxisFormat ? { formatter: (val: unknown) => formatValue(val, xAxisFormat) } : {}),
           },
         }
       : {
           type: 'value',
           name: yAxisLabel,
+          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
         },
     series: [...seriesOptions],
     tooltip: {

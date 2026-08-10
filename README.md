@@ -74,6 +74,15 @@ The plugin provides several user-configurable settings accessible in the Obsidia
 - **Global Theme**: Select a default theme for all charts from the default options or your custom themes.
 - **Custom Themes**: Define and manage custom JSON-based ECharts themes.
 
+### Chart themes & visual styling
+
+In this plugin, a **theme** refers to an Apache ECharts visual theme definition (color palettes, font styles, component backgrounds, and item styles).
+
+1. **Automatic dark mode**: When Obsidian is set to Dark Mode (`theme-dark`), charts automatically render using ECharts' built-in `'dark'` theme unless a custom theme is selected.
+2. **Custom ECharts themes**: You can paste theme JSON configurations generated with the official [ECharts Theme Builder](https://echarts.apache.org/theme-builder/) into **Settings → Bases Chart Kit → Custom Themes**.
+3. **Global default theme**: Selecting a theme under **Default global theme** in plugin settings applies it as the fallback theme across all chart views in your vault.
+4. **Per-chart view theme override**: You can set `theme: ThemeName` in a `.base` view definition (or select it from the view options dropdown in Bases UI) to apply a specific theme to an individual chart instance.
+
 ## Development
 
 This project uses [Bun](https://bun.sh/) and Node.js.
