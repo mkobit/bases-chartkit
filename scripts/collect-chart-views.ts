@@ -47,18 +47,11 @@ const getViews = (parsed: unknown): ReadonlyArray<unknown> => {
   return parsed.views
 }
 
-// Directory.base is a plain Bases "table" view (see scripts/vault-gen/
-// directory.ts) with no ECharts canvas -- the survey's readiness check
-// (waiting for a `.bases-echarts canvas`) can never succeed for it, and it
-// isn't a chart type to document in docs/chart-types.md anyway.
-const isDocumentableBaseFile = (name: string): boolean => name !== 'Directory.base'
-
 function collectChartViews(): ReadonlyArray<ChartViewEntry> {
   const baseFiles = R.pipe(
     fs.readdirSync(VAULT_DIR, { recursive: true }),
     R.filter(isEntryName),
     R.filter(name => name.endsWith('.base')),
-    R.filter(isDocumentableBaseFile),
     R.sort((a, b) => a.localeCompare(b)),
   )
 

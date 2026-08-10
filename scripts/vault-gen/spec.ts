@@ -48,18 +48,12 @@ export type ChartExampleSpecConfig<T>
     toRows: (sample: T) => readonly FrontmatterRow[]
   }>
 
-// Vault-relative path to a variant's .base file: chart types with a single
-// variant keep the flat `chartType/Basic.base` layout, multi-variant chart
-// types (e.g. effect-scatter) nest each variant under its own slugged
-// subdirectory. Shared by compiler.ts (resolves to an absolute filesystem
-// path for writing) and directory.ts (used as-is for a vault-relative
-// wikilink), so the two never disagree about where a variant actually lives.
-export function variantRelativePath(chartType: string, variant: ChartVariantSpec, variantCount: number): string {
-  if (variantCount <= 1) {
-    return `${chartType}/${variant.fileName}`
-  }
-  const slug = variant.fileName.replace(/\.base$/, '').toLowerCase()
-  return `${chartType}/${slug}/${variant.fileName}`
+// Vault-relative path to a variant's .base file: every variant lives in its
+// specified .base file directly under `chartType/` (defaulting to
+// `Basic.base`), containing multiple views for variants unless split into
+// separate files for materially different dataset schemas.
+export function variantRelativePath(chartType: string, variant: ChartVariantSpec): string {
+  return `${chartType}/${variant.fileName}`
 }
 
 export function defineChartExampleSpec<T>(config: ChartExampleSpecConfig<T>): ChartExampleSpec {

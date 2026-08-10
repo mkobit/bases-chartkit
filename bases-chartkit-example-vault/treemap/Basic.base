@@ -8,6 +8,7 @@ views:
     name: Project tasks treemap
     xAxisProp: note.Path
     valueProp: note.Value
+    showLegend: true
     filters:
       and:
         - file.folder == "treemap/notes"

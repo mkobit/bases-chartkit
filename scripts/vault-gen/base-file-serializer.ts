@@ -19,11 +19,15 @@ function extractFilterPropertyIds(filter: string): readonly string[] {
 }
 
 function collectPropertyIds(variant: ChartVariantSpec): readonly string[] {
+  return [
+    ...Object.values(variant.propBindings).flatMap(extractPropertyIds),
+    ...(variant.filters ?? []).flatMap(extractFilterPropertyIds),
+  ]
+}
+
+function collectAllPropertyIds(variants: readonly ChartVariantSpec[]): readonly string[] {
   return R.pipe(
-    [
-      ...Object.values(variant.propBindings).flatMap(extractPropertyIds),
-      ...(variant.filters ?? []).flatMap(extractFilterPropertyIds),
-    ],
+    variants.flatMap(collectPropertyIds),
     R.unique(),
     R.sort((a, b) => a.localeCompare(b)),
   )
@@ -54,7 +58,7 @@ function serializeValue(value: string | number | boolean): string {
   return typeof value === 'string' ? `"${value}"` : String(value)
 }
 
-function serializeViewBlock(chartType: string, variant: ChartVariantSpec): readonly string[] {
+function serializeViewItem(chartType: string, variant: ChartVariantSpec): readonly string[] {
   const literalLines = Object.entries(variant.literalOptions ?? {})
     .map(([key, value]) => `    ${key}: ${serializeValue(value)}`)
   const bindingLines = Object.entries(variant.propBindings)
@@ -74,7 +78,6 @@ function serializeViewBlock(chartType: string, variant: ChartVariantSpec): reado
   ]
 
   return [
-    'views:',
     `  - type: ${variant.viewType}`,
     `    name: ${variant.viewName}`,
     ...bindingLines,
@@ -83,11 +86,18 @@ function serializeViewBlock(chartType: string, variant: ChartVariantSpec): reado
   ]
 }
 
-export function buildBaseFileYaml(chartType: string, variant: ChartVariantSpec): string {
-  const propertyIds = collectPropertyIds(variant)
+function serializeViewsBlock(chartType: string, variants: readonly ChartVariantSpec[]): readonly string[] {
+  return [
+    'views:',
+    ...variants.flatMap(variant => serializeViewItem(chartType, variant)),
+  ]
+}
+
+export function buildBaseFileYaml(chartType: string, variants: readonly ChartVariantSpec[]): string {
+  const propertyIds = collectAllPropertyIds(variants)
   const lines = [
     ...serializePropertiesBlock(propertyIds),
-    ...serializeViewBlock(chartType, variant),
+    ...serializeViewsBlock(chartType, variants),
   ]
   return `${lines.join('\n')}\n`
 }

@@ -611,7 +611,7 @@ const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
       literalOptions: { showLegend: true },
     },
     {
-      fileName: 'Sized-By-Population.base',
+      fileName: 'Basic.base',
       viewName: 'GDP vs life expectancy sized by population',
       viewType: 'effect-scatter-chart',
       propBindings: {
