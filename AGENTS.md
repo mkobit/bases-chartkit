@@ -8,6 +8,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 -   **Data Transformation**: Prefer **[Remeda](https://remedajs.com/)** (`remeda`) for complex data pipelines.
 -   **Date/Time**: Use the `Temporal` API (via `temporal-polyfill`) for logic. Avoid `Date`. Use `moment` only for Obsidian UI formatting.
 -   **Localization**: Use `i18next` with keys from `src/lang/locales/en.json`. See `src/lang/AGENTS.md`.
+-   **Vault generation**: See `scripts/vault-gen/AGENTS.md` for layout, demo-data richness, and variant view set conventions.
 
 ## Commands
 | Command | Description |

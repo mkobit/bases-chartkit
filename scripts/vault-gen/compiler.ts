@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import * as R from 'remeda'
 import { createNote } from './note'
 import { writeNoteToVault } from './vault'
 import type { NoteDefinition } from './schema'
@@ -12,8 +13,8 @@ function padIndex(index: number, total: number): string {
   return String(index).padStart(width, '0')
 }
 
-function variantFilePath(vaultRoot: string, chartType: string, variant: ChartVariantSpec, variantCount: number): string {
-  return path.join(vaultRoot, variantRelativePath(chartType, variant, variantCount))
+function baseFilePath(vaultRoot: string, chartType: string, variant: ChartVariantSpec): string {
+  return path.join(vaultRoot, variantRelativePath(chartType, variant))
 }
 
 function buildNotes(spec: ChartExampleSpec, seed: number): readonly NoteDefinition[] {
@@ -67,16 +68,26 @@ export async function writeChartTypeDirectory(
     throw new Error(`Failed to write ${failures.length} note(s) for ${spec.chartType}: ${failures.map(e => e.message).join('; ')}`)
   }
 
-  await Promise.all(spec.variants.map(async (variant) => {
-    const baseFilePath = variantFilePath(vaultRoot, spec.chartType, variant, spec.variants.length)
-    await fs.mkdir(path.dirname(baseFilePath), { recursive: true })
-    await fs.writeFile(baseFilePath, buildBaseFileYaml(spec.chartType, variant))
+  const variantsByFile = R.groupBy(spec.variants, variant => variant.fileName)
+  const fileEntries = Object.entries(variantsByFile)
+
+  await Promise.all(fileEntries.map(async ([, variants]) => {
+    if (!variants || variants.length === 0) {
+      return
+    }
+    const firstVariant = variants[0]
+    if (!firstVariant) {
+      return
+    }
+    const filePath = baseFilePath(vaultRoot, spec.chartType, firstVariant)
+    await fs.mkdir(path.dirname(filePath), { recursive: true })
+    await fs.writeFile(filePath, buildBaseFileYaml(spec.chartType, variants))
   }))
 
   return {
     chartType: spec.chartType,
     noteCount: notes.length,
-    baseFileCount: spec.variants.length,
+    baseFileCount: fileEntries.length,
   }
 }
 

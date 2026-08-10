@@ -1,9 +1,0 @@
-views:
-  - type: table
-    name: All example bases
-    order:
-      - file.name
-      - file.path
-    filters:
-      and:
-        - file.ext == "base"
