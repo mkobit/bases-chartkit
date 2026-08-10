@@ -17,8 +17,6 @@ export class GanttChartView extends BaseChartView {
     const endProp = this.config.get(GanttChartView.END_PROP_KEY)
     const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
 
-    const showLegend = this.config.get(BaseChartView.LEGEND_KEY) as boolean
-
     if (typeof taskProp !== 'string' || typeof startProp !== 'string' || typeof endProp !== 'string') {
       return null
     }
@@ -29,11 +27,11 @@ export class GanttChartView extends BaseChartView {
       '',
       'gantt',
       {
+        ...this.getCommonTransformerOptions(),
         taskProp,
         startProp,
         endProp,
         seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-        legend: showLegend,
       },
     )
   }

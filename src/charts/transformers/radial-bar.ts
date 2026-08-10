@@ -92,6 +92,7 @@ export function createRadialBarChartOption(
       // with x/y no bars render even though the angleAxis still draws.
       encode: { angle: 'x',
         radius: 'y' },
+      ...(!seriesProp ? { colorBy: 'data' as const } : {}),
       ...(isStacked ? { stack: 'total' } : {}),
     }
   })

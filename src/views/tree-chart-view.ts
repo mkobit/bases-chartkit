@@ -21,6 +21,10 @@ export class TreeChartView extends BaseChartView {
         key: BaseChartView.X_AXIS_PROP_KEY,
         placeholder: t('views.tree.path_placeholder'),
       },
+      ...BaseChartView.getCommonViewOptions().filter((o) => {
+        const key = (o as { key?: string }).key
+        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+      }),
     ]
   }
 
@@ -35,7 +39,7 @@ export class TreeChartView extends BaseChartView {
       pathProp,
       '',
       'tree',
-      {},
+      this.getCommonTransformerOptions(),
     )
   }
 

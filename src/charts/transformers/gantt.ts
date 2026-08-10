@@ -3,6 +3,7 @@ import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString } from './utils'
+import { formatDurationMs, formatValue } from './formatters'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
   readonly taskProp: string
@@ -31,7 +32,7 @@ export interface GanttTooltipParam {
   }
 }
 
-function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>): string {
+function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>, valueFormat?: string): string {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
   const p = Array.isArray(params) ? params as ReadonlyArray<GanttTooltipParam> : [params] as ReadonlyArray<GanttTooltipParam>
   const visibleItems = p.filter((item: GanttTooltipParam) => item.seriesName !== '_start')
@@ -49,8 +50,9 @@ function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipPar
 
           const marker = item.marker || ''
           const seriesName = item.seriesName || ''
+          const durationStr = valueFormat ? formatValue(data.value, valueFormat) : formatDurationMs(data.value)
 
-          return `<div>${marker} <b>${seriesName}</b> <br/>Start: ${startStr}<br/>End: ${endStr}<br/>Duration: ${data.value}ms</div>`
+          return `<div>${marker} <b>${seriesName}</b> <br/>Start: ${startStr}<br/>End: ${endStr}<br/>Duration: ${durationStr}</div>`
         }).join('')
 
         return `<div><b>${category}</b></div>${itemsHtml}`
@@ -210,7 +212,7 @@ export function createGanttChartOption(
     tooltip: {
       trigger: 'item',
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- formatTooltip's params type is narrower than ECharts' generic tooltip formatter signature; bridge to the extracted formatter type.
-      formatter: formatTooltip as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
+      formatter: ((params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>) => formatTooltip(params, options.valueFormat)) as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
     },
     // ECharts defaults to listing every series in the legend when `data`
     // isn't set explicitly — that would include the invisible '_start'
@@ -237,7 +239,7 @@ export function createGanttChartOption(
       position: 'top',
       splitLine: { show: true },
       axisLabel: {
-        formatter: (value: number) => Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
+        formatter: (value: number) => options.xAxisFormat ? formatValue(value, options.xAxisFormat) : Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
       },
       ...axisRange,
     },

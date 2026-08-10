@@ -1,6 +1,7 @@
 import type { EChartsOption, GraphSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { getCategoricalColor } from './palette'
 import * as R from 'remeda'
 
 export interface GraphTransformerOptions extends BaseTransformerOptions {
@@ -132,6 +133,15 @@ export function createGraphChartOption(
     R.sortBy(x => x),
   )
 
+  const hasCategories = categoriesList.length > 0
+
+  const finalNodesData: ReadonlyArray<GraphNode & { readonly itemStyle?: { readonly color: string } }> = hasCategories
+    ? nodesData
+    : R.map(nodesData, node => ({
+        ...node,
+        itemStyle: { color: getCategoricalColor(node.name) },
+      }))
+
   const categoriesData: ReadonlyArray<GraphCategory> = R.map(
     categoriesList,
     (name): GraphCategory => ({ name }),
@@ -140,7 +150,7 @@ export function createGraphChartOption(
   const seriesItem: GraphSeriesOption = {
     type: 'graph',
     layout: 'force',
-    data: [...nodesData],
+    data: [...finalNodesData],
     links: [...links],
     categories: [...categoriesData],
     roam: true,
@@ -174,7 +184,7 @@ export function createGraphChartOption(
 
   const opt: EChartsOption = {
     tooltip: {},
-    ...(getLegendOption(options)
+    ...(getLegendOption(options) && hasCategories
       ? {
           legend: {
             data: [...categoriesList],

@@ -1,0 +1,15 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: bar-chart
+    name: Department spend (vintage theme)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    theme: "Vintage"
+    filters:
+      and:
+        - file.folder == "bar/notes"

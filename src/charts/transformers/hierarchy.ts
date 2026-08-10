@@ -134,6 +134,7 @@ export function createSunburstChartOption(
   const seriesItem: SunburstSeriesOption = {
     type: 'sunburst',
     data: asSunburstData(hierarchyData),
+    colorBy: 'data',
     radius: [0,
       '90%'],
     label: {

@@ -6,12 +6,14 @@ import {
   BasesView,
   Platform,
 } from 'obsidian'
+import * as R from 'remeda'
 import * as echarts from 'echarts'
 import type BarePlugin from '../main'
 import type { EChartsOption } from 'echarts'
 import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../charts/transformers/base'
 import { ChartModal } from './chart-modal'
 import { t } from '../lang/text'
+import { isRecord } from '../charts/transformers/utils'
 
 export abstract class BaseChartView extends BasesView {
   readonly scrollEl: HTMLElement
@@ -31,14 +33,20 @@ export abstract class BaseChartView extends BasesView {
   public static readonly LEGEND_ORIENT_KEY = 'legendOrient'
   public static readonly HEIGHT_KEY = 'height'
   public static readonly THEME_KEY = 'theme'
+  public static readonly ECHARTS_OPTION_KEY = 'echartsOption'
+  public static readonly TITLE_KEY = 'title'
+  public static readonly DESCRIPTION_KEY = 'description'
 
   public static readonly SIZE_PROP_KEY = 'sizeProp'
   public static readonly MIN_VALUE_KEY = 'minVal'
   public static readonly MAX_VALUE_KEY = 'maxVal'
   public static readonly VALUE_PROP_KEY = 'valueProp'
+  public static readonly VALUE_FORMAT_KEY = 'valueFormat'
 
   public static readonly X_AXIS_LABEL_KEY = 'xAxisLabel'
   public static readonly Y_AXIS_LABEL_KEY = 'yAxisLabel'
+  public static readonly X_AXIS_FORMAT_KEY = 'xAxisFormat'
+  public static readonly Y_AXIS_FORMAT_KEY = 'yAxisFormat'
   public static readonly X_AXIS_LABEL_ROTATE_KEY = 'xAxisLabelRotate'
   public static readonly FLIP_AXIS_KEY = 'flipAxis'
 
@@ -52,6 +60,7 @@ export abstract class BaseChartView extends BasesView {
     super(controller)
     this.scrollEl = scrollEl
     this.plugin = plugin
+    this.scrollEl.classList.add('bases-chart-scroll-container')
     this.containerEl = this.scrollEl.createDiv({ cls: 'bases-echarts-container' })
     this.chartEl = this.containerEl.createDiv({ cls: 'bases-echarts' })
   }
@@ -139,12 +148,17 @@ export abstract class BaseChartView extends BasesView {
 
   protected getCommonTransformerOptions(): BaseTransformerOptions {
     const options: BaseTransformerOptions = {
+      title: this.getStringOption(BaseChartView.TITLE_KEY),
+      description: this.getStringOption(BaseChartView.DESCRIPTION_KEY),
       legend: this.getBooleanOption(BaseChartView.LEGEND_KEY),
       legendPosition: this.config.get(BaseChartView.LEGEND_POSITION_KEY) as 'top' | 'bottom' | 'left' | 'right',
       legendOrient: this.config.get(BaseChartView.LEGEND_ORIENT_KEY) as 'horizontal' | 'vertical',
       flipAxis: this.getBooleanOption(BaseChartView.FLIP_AXIS_KEY),
       xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.X_AXIS_PROP_KEY),
       yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY),
+      xAxisFormat: this.getStringOption(BaseChartView.X_AXIS_FORMAT_KEY),
+      yAxisFormat: this.getStringOption(BaseChartView.Y_AXIS_FORMAT_KEY),
+      valueFormat: this.getStringOption(BaseChartView.VALUE_FORMAT_KEY),
       xAxisLabelRotate: Number(this.config.get(BaseChartView.X_AXIS_LABEL_ROTATE_KEY) || 0),
       isMobile: Platform.isMobile,
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
@@ -172,7 +186,8 @@ export abstract class BaseChartView extends BasesView {
     this.isFullScreenGeneration = true
     // eslint-disable-next-line no-restricted-syntax -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
     const data = this.data.data as unknown as BasesData
-    const option = this.getChartOption(data)
+    const rawOption = this.getChartOption(data)
+    const option = this.applyOptionOverride(rawOption)
     this.isFullScreenGeneration = false
 
     if (option) {
@@ -203,7 +218,8 @@ export abstract class BaseChartView extends BasesView {
 
     // eslint-disable-next-line no-restricted-syntax -- see openFullScreen above for the BasesData bridge.
     const data = this.data.data as unknown as BasesData
-    const option = this.getChartOption(data)
+    const rawOption = this.getChartOption(data)
+    const option = this.applyOptionOverride(rawOption)
 
     option
       ? this.chart.setOption(
@@ -211,6 +227,32 @@ export abstract class BaseChartView extends BasesView {
           true,
         )
       : this.chart.clear()
+  }
+
+  private applyOptionOverride(option: EChartsOption | null): EChartsOption | null {
+    if (!option) {
+      return null
+    }
+    const rawOverride = this.config.get(BaseChartView.ECHARTS_OPTION_KEY)
+    if (!rawOverride) {
+      return option
+    }
+
+    try {
+      const parsedOverride = typeof rawOverride === 'string'
+        ? (JSON.parse(rawOverride) as Record<string, unknown>)
+        : (isRecord(rawOverride) ? rawOverride : null)
+
+      if (!parsedOverride) {
+        return option
+      }
+
+      const optionRec: Record<string, unknown> = option
+      return R.mergeDeep(optionRec, parsedOverride)
+    }
+    catch {
+      return option
+    }
   }
 
   protected abstract getChartOption(data: BasesData): EChartsOption | null
@@ -310,6 +352,30 @@ export abstract class BaseChartView extends BasesView {
         key: BaseChartView.HEIGHT_KEY,
         placeholder: t('views.common.height_placeholder'),
       },
+      {
+        displayName: t('views.common.value_format'),
+        type: 'text',
+        key: BaseChartView.VALUE_FORMAT_KEY,
+        placeholder: t('views.common.value_format_placeholder'),
+      },
+      {
+        displayName: t('views.common.title'),
+        type: 'text',
+        key: BaseChartView.TITLE_KEY,
+        placeholder: t('views.common.title_placeholder'),
+      },
+      {
+        displayName: t('views.common.description'),
+        type: 'text',
+        key: BaseChartView.DESCRIPTION_KEY,
+        placeholder: t('views.common.description_placeholder'),
+      },
+      {
+        displayName: t('views.common.echarts_option'),
+        type: 'text',
+        key: BaseChartView.ECHARTS_OPTION_KEY,
+        placeholder: t('views.common.echarts_option_placeholder'),
+      },
     ]
   }
 
@@ -326,6 +392,18 @@ export abstract class BaseChartView extends BasesView {
         type: 'text',
         key: BaseChartView.Y_AXIS_LABEL_KEY,
         placeholder: t('views.axis.y_label_placeholder'),
+      },
+      {
+        displayName: t('views.axis.x_format'),
+        type: 'text',
+        key: BaseChartView.X_AXIS_FORMAT_KEY,
+        placeholder: t('views.axis.x_format_placeholder'),
+      },
+      {
+        displayName: t('views.axis.y_format'),
+        type: 'text',
+        key: BaseChartView.Y_AXIS_FORMAT_KEY,
+        placeholder: t('views.axis.y_format_placeholder'),
       },
       {
         displayName: t('views.axis.x_rotate'),

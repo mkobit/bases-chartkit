@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS: BarePluginSettings = {
   upColor: '#14b143',
   downColor: '#ef232a',
   mySetting: 'default',
-  defaultHeight: '500px',
+  defaultHeight: '100%',
   customThemes: [],
   selectedTheme: '',
 }

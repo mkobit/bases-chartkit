@@ -1,6 +1,7 @@
 import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel } from './utils'
+import { DEFAULT_HEATMAP_COLOR_GRADIENT } from './palette'
 import * as R from 'remeda'
 
 export interface HeatmapTransformerOptions extends BaseTransformerOptions {
@@ -118,7 +119,11 @@ export function createHeatmapChartOption(
     top: options?.visualMapTop,
     type: options?.visualMapType ?? 'continuous',
     formatter: formatCompactVisualMapLabel,
-    ...(options?.visualMapColor ? { inRange: { color: options.visualMapColor } } : {}),
+    inRange: {
+      color: options?.visualMapColor && options.visualMapColor.length > 0
+        ? [...options.visualMapColor]
+        : [...DEFAULT_HEATMAP_COLOR_GRADIENT],
+    },
   }
 
   const opt: EChartsOption = {

@@ -1,3 +1,5 @@
+// NOTE: In generator vocabulary, "themes" refers to mock data domains/categories (e.g. DEPARTMENTS, PRODUCT_NAMES).
+// This is distinct from ECharts visual chart themes (e.g. color palettes and backgrounds defined in src/settings.ts).
 import * as fc from 'fast-check'
 
 export const WEEK_DAYS = ['Mon',

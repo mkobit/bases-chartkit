@@ -35,6 +35,10 @@ export class SunburstChartView extends BaseChartView {
         key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.sunburst.value_placeholder'),
       },
+      ...BaseChartView.getCommonViewOptions().filter((o) => {
+        const key = (o as { key?: string }).key
+        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+      }),
     ]
   }
 
@@ -52,6 +56,7 @@ export class SunburstChartView extends BaseChartView {
       '',
       'sunburst',
       {
+        ...this.getCommonTransformerOptions(),
         valueProp: valueProp,
       },
     )

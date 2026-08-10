@@ -117,6 +117,7 @@ export function createPictorialBarChartOption(
       name: name,
       type: 'pictorialBar',
       datasetIndex: datasetIndex,
+      ...(!seriesProp ? { colorBy: 'data' as const } : {}),
       // If flipped: X-Axis is Value (y data), Y-Axis is Category (x data)
       encode: flipAxis
         ? { x: 'y',

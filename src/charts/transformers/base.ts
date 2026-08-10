@@ -13,6 +13,8 @@ export interface VisualMapOptions {
 }
 
 export interface BaseTransformerOptions extends VisualMapOptions {
+  readonly title?: string
+  readonly description?: string
   readonly legend?: boolean
   readonly legendPosition?: 'top' | 'bottom' | 'left' | 'right'
   readonly legendOrient?: 'horizontal' | 'vertical'
@@ -25,4 +27,7 @@ export interface BaseTransformerOptions extends VisualMapOptions {
   readonly upColor?: string
   readonly downColor?: string
   readonly isDarkMode?: boolean
+  readonly xAxisFormat?: string
+  readonly yAxisFormat?: string
+  readonly valueFormat?: string
 }
