@@ -1,11 +1,12 @@
 import type { EChartsOption, ScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel } from './utils'
+import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
 
 export interface ScatterTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly sizeProp?: string
+  readonly sizeLabel?: string
 }
 
 interface ScatterDataPoint {
@@ -17,6 +18,40 @@ interface ScatterDataPoint {
 
 function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
   return isRecord(val) && 'x' in val && 'y' in val && 's' in val
+}
+
+export interface ScatterTooltipParam {
+  readonly seriesName?: string
+  readonly marker?: string
+  // ECharts' CallbackDataParams.value for an object-row dataset source is the
+  // WHOLE raw row, not a single scalar (see PieTooltipParam's identical
+  // comment in pie.ts for the retrieveRawValue mechanism this comes from).
+  readonly value: unknown
+}
+
+// ECharts' default (formatter-less) tooltip only renders a labeled, one-line-
+// per-dim block when data.getRawValue() returns an ARRAY -- confirmed via
+// node_modules/echarts/lib/component/tooltip/seriesFormatTooltip.js's
+// formatTooltipArrayValue: `isValueMultipleLine` comes from
+// zrender's `reduce(value, ...)`, which no-ops (returns its initial `false`)
+// whenever `value` isn't array-like, silently skipping every dim's
+// `displayName` check. For an object-row dataset (this transformer's shape),
+// `getRawValue()` returns the raw row OBJECT, not an array, so that check
+// never fires no matter how a series' `dimensions`/`displayName` are
+// declared -- confirmed live: declaring displayName here produced the exact
+// same unlabeled, comma-joined tooltip as not declaring it at all. A fully
+// custom formatter, reading the same raw row via `param.value`, is the only
+// way to get labeled output for this dataset shape.
+function formatTooltip(param: ScatterTooltipParam, xLabel: string, yLabel: string, sizeLabel?: string): string {
+  const row = isScatterDataPoint(param.value) ? param.value : null
+  if (!row) {
+    return ''
+  }
+  const marker = param.marker ?? ''
+  const header = param.seriesName ? `${marker}<b>${param.seriesName}</b><br/>` : ''
+  const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+  const sizeLine = sizeLabel && row.size !== undefined ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}` : ''
+  return `${header}${xLabel}: ${row.x}<br/>${yLabel}: ${yText}${sizeLine}`
 }
 
 function getDimension(dimName: string): number {
@@ -189,6 +224,7 @@ export function createScatterChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
+      formatter: asTooltipFormatter((param: ScatterTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, sizeProp ? (options?.sizeLabel ?? sizeProp) : undefined)),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
 

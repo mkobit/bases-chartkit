@@ -49,6 +49,7 @@ export class HeatmapChartView extends BaseChartView {
       {
         ...this.getCommonTransformerOptions(),
         valueProp: valueProp,
+        valueLabel: this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY),
         ...this.getVisualMapTransformerOptions(),
       },
     )

@@ -31,8 +31,13 @@ test.describe('bubble chart rendering', () => {
     // bubble/Basic.base's properties block).
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
+    // Regression coverage for bck-i9b.8: see scatter-chart-rendering.e2e.ts's
+    // identical comment -- scatter.ts's custom formatter (shared by bubble)
+    // labels each value with its axis/size name instead of ECharts' default
+    // bare, unlabeled comma-joined list.
     expect(tooltipText).toContain('Point Y')
-    expect(tooltipText).toContain('78')
-    expect(tooltipText).toContain('46')
+    expect(tooltipText).toContain('Point X: 37')
+    expect(tooltipText).toContain('Point Y: 5')
+    expect(tooltipText).toContain('Weight: 75')
   })
 })

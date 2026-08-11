@@ -1,6 +1,6 @@
 import type { EChartsOption, CandlestickSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue } from './utils'
+import { safeToString, getNestedValue, isRecord, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
 
 export interface CandlestickTransformerOptions extends BaseTransformerOptions {
@@ -17,6 +17,38 @@ type CandlestickRow = Readonly<{
   low: number
   high: number
 }>
+
+function isCandlestickRow(val: unknown): val is CandlestickRow {
+  return isRecord(val) && 'open' in val && 'close' in val && 'low' in val && 'high' in val
+}
+
+export interface CandlestickTooltipParam {
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar.
+  // The same object-row shape also means ECharts' default formatter-less
+  // tooltip can never label multi-dim values via `dimensions`/`displayName`
+  // (its isValueMultipleLine check needs an ARRAY value, confirmed via
+  // seriesFormatTooltip.js -- getRawValue() here returns an object instead),
+  // so a custom formatter is required to actually show "Open: x" etc.
+  readonly value: unknown
+}
+
+function formatTooltip(params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>): string {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
+  const p = Array.isArray(params) ? params as ReadonlyArray<CandlestickTooltipParam> : [params] as ReadonlyArray<CandlestickTooltipParam>
+  const first = p[0]
+  if (!first || !isCandlestickRow(first.value)) {
+    return ''
+  }
+  const row = first.value
+  const marker = first.marker ?? ''
+  return `${marker}<b>${row.x}</b><br/>`
+    + `Open: ${row.open.toLocaleString('en-US')}<br/>`
+    + `Close: ${row.close.toLocaleString('en-US')}<br/>`
+    + `Low: ${row.low.toLocaleString('en-US')}<br/>`
+    + `High: ${row.high.toLocaleString('en-US')}`
+}
 
 export function createCandlestickChartOption(
   data: BasesData,
@@ -129,6 +161,7 @@ export function createCandlestickChartOption(
       axisPointer: {
         type: 'cross',
       },
+      formatter: asTooltipFormatter(formatTooltip),
     },
     xAxis: {
       type: 'category',

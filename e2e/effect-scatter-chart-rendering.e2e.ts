@@ -104,9 +104,13 @@ test.describe('effect-scatter chart rendering', () => {
       throw new Error(`expected at least one dataset row for continent ${continent}`)
     }
 
+    // Regression coverage for bck-i9b.10: see scatter-chart-rendering.e2e.ts's
+    // identical comment (bck-i9b.8) -- effect-scatter.ts's default
+    // formatter-less tooltip hit the same object-row labeling gap. A custom
+    // formatter now labels each value with its axis name.
     expect(tooltipText).toContain(continent)
-    expect(tooltipText).toContain(firstContinentRow.x)
-    expect(tooltipText).toContain(firstContinentRow.y.toLocaleString('en-US'))
+    expect(tooltipText).toContain(`GDP: ${firstContinentRow.x}`)
+    expect(tooltipText).toContain(`Life Expectancy: ${firstContinentRow.y.toLocaleString('en-US')}`)
   })
   // Regression test: sizeProp must be normalized into a bounded pixel range
   // (matching scatter.ts's visualMap-based approach), not used directly as a

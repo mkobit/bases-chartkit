@@ -89,16 +89,19 @@ test.describe('candlestick chart rendering', () => {
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: filteredCount - 1 })
 
-    // tooltip.trigger: 'axis' shows the hovered category (the Date) as the
-    // tooltip's header, ahead of the series' own formatted blocks (see
-    // TooltipView.js's `_showAxisTooltip` -> axisPointerViewHelper.getValueLabel).
+    // Regression coverage for bck-i9b.8: candlestick's default
+    // (formatter-less) tooltip hit the same object-row labeling gap as
+    // scatter.ts's identical comment -- confirmed live before this fix, the
+    // 4 OHLC values rendered as a bare, unlabeled comma-joined list with no
+    // way to tell which number was which. candlestick.ts's custom formatter
+    // now builds the whole tooltip itself (including the Date header ECharts'
+    // automatic axis-pointer header would otherwise supply, since setting a
+    // component-level `tooltip.formatter` bypasses that default entirely) and
+    // labels each OHLC value explicitly.
     expect(tooltipText).toContain(lastRow.x)
-    // Candlestick has no custom formatter, so ECharts' default per-series
-    // formatter is used, built from CandlestickSeriesModel's
-    // defaultValueDimensions (open/close/lowest/highest).
-    expect(tooltipText).toContain(String(lastRow.open))
-    expect(tooltipText).toContain(String(lastRow.close))
-    expect(tooltipText).toContain(String(lastRow.low))
-    expect(tooltipText).toContain(String(lastRow.high))
+    expect(tooltipText).toContain(`Open: ${lastRow.open.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(`Close: ${lastRow.close.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(`Low: ${lastRow.low.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(`High: ${lastRow.high.toLocaleString('en-US')}`)
   })
 })

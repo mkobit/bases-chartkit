@@ -2,13 +2,14 @@ import { test, expect } from './fixtures/obsidian'
 import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('heatmap chart rendering', () => {
-  // Regression coverage for bck-44j: createHeatmapChartOption uses ECharts'
-  // dataset+encode mechanism (encode: { x, y, value, tooltip: [...] }) with no
-  // custom tooltip.formatter, so the tooltip is ECharts' default
-  // defaultSeriesFormatTooltip -- rendered from the dataset's own column names
-  // ('x'/'y'/'value', since no dataset.dimensions override renames them), not
-  // a fixed label we can predict with confidence. Assert on the real data
-  // VALUES only, not the exact label wording (per bck-44j batch guidance).
+  // Regression coverage for bck-44j (dataset/encode wiring) and bck-i9b.10
+  // (tooltip clarity). createHeatmapChartOption originally had no custom
+  // tooltip.formatter, so hovering showed ECharts' default tooltip -- which,
+  // like every other object-row-dataset transformer fixed this session (see
+  // scatter-chart-rendering.e2e.ts's bck-i9b.8 comment for the underlying
+  // ECharts limitation), rendered as a bare unlabeled comma-joined list, not
+  // "Time: x / Server: y / Load: value". heatmap.ts now has a custom
+  // formatter labeling each value with its axis/value name.
   // normalizedData is a direct R.map over the input rows (no sort/group), so
   // Bases' alphabetical-by-filename row order survives into dataIndex order:
   // Server-Load-000.md is { Time: "00:00", Server: "Mon", Load: 2 }.
@@ -37,8 +38,8 @@ test.describe('heatmap chart rendering', () => {
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('00:00')
-    expect(tooltipText).toContain('Mon')
-    expect(tooltipText).toContain('2')
+    expect(tooltipText).toContain('Time: 00:00')
+    expect(tooltipText).toContain('Server: Mon')
+    expect(tooltipText).toContain('Load: 1')
   })
 })
