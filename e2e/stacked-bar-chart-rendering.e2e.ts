@@ -84,8 +84,12 @@ test.describe('stacked-bar chart rendering', () => {
       throw new Error(`expected at least one dataset row for region ${region}`)
     }
 
-    expect(tooltipText).toContain(region)
-    expect(tooltipText).toContain(firstRegionRow.x)
-    expect(tooltipText).toContain(firstRegionRow.y.toLocaleString('en-US'))
+    // Regression coverage for bck-i9b.10 -- see bar-chart-rendering.e2e.ts's
+    // identical comment for the underlying default-tooltip limitation this
+    // shared cartesian.ts formatter now fixes. Here seriesProp is set, so
+    // each line is labeled by its resolved region name rather than
+    // yAxisLabel.
+    expect(tooltipText).toContain(`Quarter: ${firstRegionRow.x}`)
+    expect(tooltipText).toContain(`${region}: ${firstRegionRow.y.toLocaleString('en-US')}`)
   })
 })

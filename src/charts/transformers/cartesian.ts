@@ -1,6 +1,6 @@
 import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions, isRecord, asTooltipFormatter } from './utils'
 import { formatValue } from './formatters'
 import * as R from 'remeda'
 
@@ -16,6 +16,49 @@ interface CartesianDataPoint {
   readonly x: string
   readonly y: number | null
   readonly s: string
+}
+
+function isCartesianDataPoint(val: unknown): val is CartesianDataPoint {
+  return isRecord(val) && 'x' in val && 'y' in val && 's' in val
+}
+
+export interface CartesianTooltipParam {
+  readonly seriesName?: string
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar --
+  // and that object-row shape means the default formatter-less tooltip can
+  // never label multi-dim values via `dimensions`/`displayName` here either,
+  // so a custom formatter is required.
+  readonly value: unknown
+}
+
+interface CartesianTooltipRow {
+  readonly param: CartesianTooltipParam
+  readonly row: CartesianDataPoint
+}
+
+// Axis-trigger tooltips hand back one param per series active at that
+// category, same array shape as pictorial-bar.ts's formatTooltip.
+function formatTooltip(
+  params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>,
+  xAxisLabel: string,
+): string {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
+  const list = Array.isArray(params) ? params as ReadonlyArray<CartesianTooltipParam> : [params] as ReadonlyArray<CartesianTooltipParam>
+  const validRows: ReadonlyArray<CartesianTooltipRow> = list
+    .map((p): CartesianTooltipRow | null => (isCartesianDataPoint(p.value) ? { param: p, row: p.value } : null))
+    .filter((r): r is CartesianTooltipRow => r !== null)
+  const first = validRows[0]
+  if (!first) {
+    return ''
+  }
+  const lines = validRows.map(({ param, row }) => {
+    const marker = param.marker ?? ''
+    const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+    return `${marker}${row.s}: ${yText}`
+  }).join('<br/>')
+  return `<b>${xAxisLabel}: ${first.row.x}</b><br/>${lines}`
 }
 
 export function createCartesianChartOption(
@@ -197,6 +240,7 @@ export function createCartesianChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
+      formatter: asTooltipFormatter((params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>) => formatTooltip(params, xAxisLabel)),
     },
     grid: {
       containLabel: true,

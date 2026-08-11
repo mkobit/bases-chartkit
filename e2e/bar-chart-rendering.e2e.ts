@@ -9,6 +9,13 @@ test.describe('bar chart rendering', () => {
   // point (via getItemGraphicEl's bounding box, not dispatchAction --
   // see hoverChartDataPointAndGetTooltip's doc comment) and assert on the
   // tooltip's rendered text.
+  // Also regression coverage for bck-i9b.10: createCartesianChartOption
+  // originally had no custom tooltip.formatter (axis-trigger default), which
+  // for this object-row dataset shape rendered as a bare unlabeled
+  // comma-joined list rather than "Department: x" / "Spend: y". cartesian.ts
+  // now has a custom formatter labeling the category with xAxisLabel and
+  // each series line with its series name (which defaults to yAxisLabel when
+  // seriesProp is unset, as here).
   test('hovering the first bar shows its category, series name, and value in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
@@ -31,8 +38,7 @@ test.describe('bar chart rendering', () => {
     // for this chart type) is { Department: "Engineering", Spend: 74155 }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('Engineering')
-    expect(tooltipText).toContain('Spend')
-    expect(tooltipText).toContain('15,005')
+    expect(tooltipText).toContain('Department: Engineering')
+    expect(tooltipText).toContain('Spend: 15,005')
   })
 })
