@@ -11,6 +11,9 @@ test.describe('line chart rendering', () => {
   // shape as bar's own exemplar test (each dataIndex is one drawable symbol
   // marker via SymbolDraw, not a zrender Group), just with a
   // Temporal.PlainDate x-axis property instead of a plain string.
+  // Also regression coverage for bck-i9b.10 -- see bar-chart-rendering.e2e.ts's
+  // identical comment for the underlying default-tooltip limitation this
+  // shared cartesian.ts formatter now fixes.
   test('hovering the first point shows its date, series name, and value in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
@@ -40,8 +43,7 @@ test.describe('line chart rendering', () => {
     // frontmatter value.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('2023-12-22')
-    expect(tooltipText).toContain('Revenue')
-    expect(tooltipText).toContain('242')
+    expect(tooltipText).toContain('Date: 2023-12-22')
+    expect(tooltipText).toContain('Revenue: 242')
   })
 })
