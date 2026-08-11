@@ -17,12 +17,12 @@ const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-31')
  * frontmatter and break rendering for that point.
  */
 export const candlestickChartArbitrary = fc.record({
-  startValue: fc.integer({ min: 100,
-    max: 200 }),
-  days: fc.integer({ min: 14,
-    max: 30 }),
-  volatility: fc.integer({ min: 2,
-    max: 10 }),
+  startValue: fc.integer({ min: 150,
+    max: 350 }),
+  days: fc.integer({ min: 45,
+    max: 75 }),
+  volatility: fc.integer({ min: 3,
+    max: 12 }),
 }).chain((config) => {
   return fc.array(
     fc.record({

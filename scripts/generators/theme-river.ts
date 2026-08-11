@@ -25,20 +25,28 @@ const DATE_TOPIC_COMBINATIONS = DATES.flatMap(date =>
  * Generates mention counts for a Date x Topic cross-product.
  */
 export const themeRiverChartArbitrary = fc.record({
-  maxVal: fc.integer({ min: 20,
-    max: 100 }),
+  maxVal: fc.integer({ min: 50,
+    max: 150 }),
 }).chain((config) => {
   return fc.array(
-    fc.integer({ min: 0,
+    fc.integer({ min: 5,
       max: config.maxVal }),
     { minLength: DATE_TOPIC_COMBINATIONS.length,
       maxLength: DATE_TOPIC_COMBINATIONS.length },
   ).map((values) => {
-    const data = R.zip(DATE_TOPIC_COMBINATIONS, values).map(([combo, mentions]) => ({
-      date: combo.date,
-      topic: combo.topic,
-      mentions,
-    }))
+    const data = R.zip(DATE_TOPIC_COMBINATIONS, values).map(([combo, rawMentions], idx) => {
+      const topicIndex = NEWS_TOPICS.indexOf(combo.topic)
+      const dayIndex = Math.floor(idx / NEWS_TOPICS.length)
+      // Phase-shifted wave per topic to produce non-monotonic, organic flow curves
+      const wave = Math.round(20 * Math.sin((dayIndex + topicIndex * 4) / 4))
+      const mentions = Math.max(2, rawMentions + wave)
+
+      return {
+        date: combo.date,
+        topic: combo.topic,
+        mentions,
+      }
+    })
 
     return {
       type: 'themeRiver',

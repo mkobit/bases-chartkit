@@ -1,4 +1,4 @@
 ---
-Path: "Company/CEO/VP Sales"
-Value: 10
+Path: "Company/CEO/VP Sales/Enterprise"
+Value: 15
 ---

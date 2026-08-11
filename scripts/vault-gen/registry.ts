@@ -191,6 +191,8 @@ interface RadarSample {
     readonly Strength: number
     readonly Intelligence: number
     readonly Agility: number
+    readonly Wisdom: number
+    readonly Charisma: number
   }>
 }
 
@@ -205,6 +207,8 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
     Strength: row.Strength,
     Intelligence: row.Intelligence,
     Agility: row.Agility,
+    Wisdom: row.Wisdom,
+    Charisma: row.Charisma,
   })),
   variants: [
     {
@@ -238,6 +242,8 @@ const parallelSpec = defineChartExampleSpec<RadarSample>({
     Strength: row.Strength,
     Intelligence: row.Intelligence,
     Agility: row.Agility,
+    Wisdom: row.Wisdom,
+    Charisma: row.Charisma,
   })),
   variants: [
     {
@@ -610,7 +616,7 @@ const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   })),
   variants: [
     {
-      fileName: 'Basic.base',
+      fileName: 'basic/Basic.base',
       viewName: 'GDP vs life expectancy (effect scatter)',
       viewType: 'effect-scatter-chart',
       propBindings: {
@@ -621,7 +627,7 @@ const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
       literalOptions: { showLegend: true },
     },
     {
-      fileName: 'Basic.base',
+      fileName: 'sized-by-population/Sized-By-Population.base',
       viewName: 'GDP vs life expectancy sized by population',
       viewType: 'effect-scatter-chart',
       propBindings: {
@@ -963,7 +969,7 @@ const ganttSpec = defineChartExampleSpec<GanttSample>({
   variants: [
     {
       fileName: 'Basic.base',
-      viewName: 'Project Gantt chart',
+      viewName: 'Marketing Campaign Schedule',
       viewType: 'gantt-chart',
       propBindings: {
         taskProp: 'note.Task',

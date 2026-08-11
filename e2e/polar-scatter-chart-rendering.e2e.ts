@@ -104,9 +104,12 @@ test.describe('polar-scatter chart rendering', () => {
       throw new Error(`expected at least one dataset row with a resolved size for continent ${continent}`)
     }
 
+    // Regression coverage for bck-i9b.8: see scatter-chart-rendering.e2e.ts's
+    // identical comment -- polar-scatter.ts's custom formatter (same
+    // approach as scatter.ts) labels each value with its axis/size name.
     expect(tooltipText).toContain(continent)
-    expect(tooltipText).toContain(firstContinentRow.x)
-    expect(tooltipText).toContain(firstContinentRow.y.toLocaleString('en-US'))
-    expect(tooltipText).toContain(firstContinentRow.size.toLocaleString('en-US'))
+    expect(tooltipText).toContain(`GDP: ${firstContinentRow.x}`)
+    expect(tooltipText).toContain(`Life Expectancy: ${firstContinentRow.y.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(`Population: ${firstContinentRow.size.toLocaleString('en-US')}`)
   })
 })

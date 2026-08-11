@@ -45,9 +45,9 @@ test.describe('parallel chart rendering', () => {
     // is series 0's only data point.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0, vertexIndex: 1 })
 
-    expect(tooltipText).toContain('Wizard')
-    expect(tooltipText).toContain('4')
-    expect(tooltipText).toContain('3')
+    expect(tooltipText).toContain('Warrior')
+    expect(tooltipText).toContain('13')
     expect(tooltipText).toContain('8')
+    expect(tooltipText).toContain('6')
   })
 })

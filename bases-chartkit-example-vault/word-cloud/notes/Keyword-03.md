@@ -1,4 +1,4 @@
 ---
 Word: "Plugins"
-Frequency: 99
+Frequency: 501
 ---

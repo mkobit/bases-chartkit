@@ -15,15 +15,15 @@ import { KPI_METRICS, themeSubset } from './themes'
  */
 export const bulletChartArbitrary = themeSubset(
   KPI_METRICS,
-  6,
+  8,
 ).chain((metrics) => {
   return fc.array(
     fc.tuple(
-      fc.integer({ min: 30, max: 50 }), // rangeLow
-      fc.integer({ min: 15, max: 30 }), // rangeMid offset above rangeLow
-      fc.integer({ min: 10, max: 20 }), // rangeHigh offset above rangeMid
-      fc.integer({ min: 40, max: 115 }), // value, as a % of rangeHigh
-      fc.integer({ min: 0, max: 100 }), // target, interpolated between rangeMid and rangeHigh
+      fc.integer({ min: 40, max: 120 }), // rangeLow
+      fc.integer({ min: 25, max: 60 }), // rangeMid offset above rangeLow
+      fc.integer({ min: 20, max: 50 }), // rangeHigh offset above rangeMid
+      fc.integer({ min: 30, max: 130 }), // value, as a % of rangeHigh
+      fc.integer({ min: 10, max: 90 }), // target, interpolated between rangeMid and rangeHigh
     ),
     { minLength: metrics.length, maxLength: metrics.length },
   ).map((rolls) => {

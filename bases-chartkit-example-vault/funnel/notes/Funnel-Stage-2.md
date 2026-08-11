@@ -1,4 +1,4 @@
 ---
-FunnelStage: "AddToCart"
-Population: 64
+FunnelStage: "Product View"
+Population: 5610
 ---

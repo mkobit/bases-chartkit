@@ -1,11 +1,12 @@
 import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel } from './utils'
+import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel, isRecord, asTooltipFormatter } from './utils'
 import { DEFAULT_HEATMAP_COLOR_GRADIENT } from './palette'
 import * as R from 'remeda'
 
 export interface HeatmapTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
+  readonly valueLabel?: string
 }
 
 type HeatmapCell = Readonly<{
@@ -13,6 +14,30 @@ type HeatmapCell = Readonly<{
   y: string
   value: number
 }>
+
+function isHeatmapCell(val: unknown): val is HeatmapCell {
+  return isRecord(val) && 'x' in val && 'y' in val && 'value' in val
+}
+
+export interface HeatmapTooltipParam {
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar --
+  // and (also as in scatter.ts) that object-row shape means the default
+  // formatter-less tooltip can never label multi-dim values via `dimensions`/
+  // `displayName` here either, so a custom formatter is required.
+  readonly value: unknown
+}
+
+// See scatter.ts's identical comment for why this is required at all.
+function formatTooltip(param: HeatmapTooltipParam, xLabel: string, yLabel: string, valueLabel: string): string {
+  const row = isHeatmapCell(param.value) ? param.value : null
+  if (!row) {
+    return ''
+  }
+  const marker = param.marker ?? ''
+  return `${marker}${xLabel}: ${row.x}<br/>${yLabel}: ${row.y}<br/>${valueLabel}: ${row.value.toLocaleString('en-US')}`
+}
 
 // ECharts doesn't derive a default cell label from our dataset + encode series
 // (only from raw [x, y, value] tuples), so `label.formatter` is required or
@@ -130,6 +155,7 @@ export function createHeatmapChartOption(
     dataset: [dataset],
     tooltip: {
       position: 'top',
+      formatter: asTooltipFormatter((param: HeatmapTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, options?.valueLabel ?? valueProp ?? 'Value')),
     },
     grid: {
       height: '70%',

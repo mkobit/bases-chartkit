@@ -86,6 +86,6 @@ test.describe('bullet chart rendering', () => {
 
     expect(tooltipText).toContain('Revenue Growth')
     expect(tooltipText).toContain('Value')
-    expect(tooltipText).toContain('77')
+    expect(tooltipText).toContain('170')
   })
 })

@@ -9,7 +9,7 @@ properties:
     displayName: Task
 views:
   - type: gantt-chart
-    name: Project Gantt chart
+    name: Marketing Campaign Schedule
     taskProp: note.Task
     startProp: note.Start
     endProp: note.End

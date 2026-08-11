@@ -2,7 +2,7 @@ import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString } from './utils'
+import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString, asTooltipFormatter } from './utils'
 import { formatDurationMs, formatValue } from './formatters'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
@@ -211,8 +211,7 @@ export function createGanttChartOption(
   return {
     tooltip: {
       trigger: 'item',
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- formatTooltip's params type is narrower than ECharts' generic tooltip formatter signature; bridge to the extracted formatter type.
-      formatter: ((params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>) => formatTooltip(params, options.valueFormat)) as unknown as NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never,
+      formatter: asTooltipFormatter((params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>) => formatTooltip(params, options.valueFormat)),
     },
     // ECharts defaults to listing every series in the legend when `data`
     // isn't set explicitly — that would include the invisible '_start'

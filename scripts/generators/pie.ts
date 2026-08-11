@@ -8,14 +8,14 @@ import { TRAFFIC_SOURCES, themeSubset } from './themes'
  */
 export const pieChartArbitrary = themeSubset(
   TRAFFIC_SOURCES,
-  3,
+  6,
 )
   .chain((names) => {
     return fc.record({
       names: fc.constant(names),
       values: fc.array(
-        fc.integer({ min: 100,
-          max: 2000 }),
+        fc.integer({ min: 500,
+          max: 15_000 }),
         { minLength: names.length,
           maxLength: names.length },
       ),

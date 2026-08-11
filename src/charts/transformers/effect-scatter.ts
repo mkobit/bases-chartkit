@@ -1,11 +1,12 @@
 import type { EChartsOption, EffectScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel } from './utils'
+import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
 
 export interface EffectScatterTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly sizeProp?: string
+  readonly sizeLabel?: string
 }
 
 interface ScatterDataPoint {
@@ -17,6 +18,30 @@ interface ScatterDataPoint {
 
 function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
   return isRecord(val) && 'x' in val && 'y' in val && 's' in val
+}
+
+export interface EffectScatterTooltipParam {
+  readonly seriesName?: string
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar --
+  // and (also as in scatter.ts) that object-row shape means the default
+  // formatter-less tooltip can never label multi-dim values via `dimensions`/
+  // `displayName` here either, so a custom formatter is required.
+  readonly value: unknown
+}
+
+// See scatter.ts's identical comment for why this is required at all.
+function formatTooltip(param: EffectScatterTooltipParam, xLabel: string, yLabel: string, sizeLabel?: string): string {
+  const row = isScatterDataPoint(param.value) ? param.value : null
+  if (!row) {
+    return ''
+  }
+  const marker = param.marker ?? ''
+  const header = param.seriesName ? `${marker}<b>${param.seriesName}</b><br/>` : ''
+  const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+  const sizeLine = sizeLabel && row.size !== undefined ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}` : ''
+  return `${header}${xLabel}: ${row.x}<br/>${yLabel}: ${yText}${sizeLine}`
 }
 
 function getDimension(dimName: string): number {
@@ -188,6 +213,7 @@ export function createEffectScatterChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
+      formatter: asTooltipFormatter((param: EffectScatterTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, sizeProp ? (options?.sizeLabel ?? sizeProp) : undefined)),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(visualMapOption ? { visualMap: visualMapOption } : {}),

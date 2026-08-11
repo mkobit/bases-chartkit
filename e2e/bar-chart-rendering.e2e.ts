@@ -33,6 +33,6 @@ test.describe('bar chart rendering', () => {
 
     expect(tooltipText).toContain('Engineering')
     expect(tooltipText).toContain('Spend')
-    expect(tooltipText).toContain('74,155')
+    expect(tooltipText).toContain('15,005')
   })
 })

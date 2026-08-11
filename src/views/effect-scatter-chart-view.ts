@@ -26,6 +26,7 @@ export class EffectScatterChartView extends BaseChartView {
         ...this.getCommonTransformerOptions(),
         seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
         sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
+        sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
         ...this.getVisualMapTransformerOptions(),
       },
     )

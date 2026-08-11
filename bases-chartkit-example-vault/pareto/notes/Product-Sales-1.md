@@ -1,4 +1,4 @@
 ---
-Product: "Milk Tea"
-Sales: 148
+Product: "Cheese Cocoa"
+Sales: 2600
 ---

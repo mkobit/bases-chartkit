@@ -1,7 +1,9 @@
 ---
-Name: "Tamsin"
-Class: "Bard"
-Strength: 12
+Name: "Locke"
+Class: "Rogue"
+Strength: 9
 Intelligence: 4
-Agility: 9
+Agility: 5
+Wisdom: 16
+Charisma: 16
 ---

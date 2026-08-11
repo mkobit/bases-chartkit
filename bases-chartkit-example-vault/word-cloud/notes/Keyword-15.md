@@ -1,4 +1,4 @@
 ---
-Word: "Vault"
-Frequency: 99
+Word: "Workspace"
+Frequency: 153
 ---

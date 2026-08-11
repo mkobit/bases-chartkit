@@ -1,8 +1,8 @@
 ---
 Metric: "Revenue Growth"
-Value: 77
-Target: 84
-RangeLow: 50
-RangeMid: 77
-RangeHigh: 87
+Value: 170
+Target: 164
+RangeLow: 118
+RangeMid: 143
+RangeHigh: 167
 ---

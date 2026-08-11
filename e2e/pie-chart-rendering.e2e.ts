@@ -27,12 +27,15 @@ test.describe('pie chart rendering', () => {
     ).toBeGreaterThan(0)
 
     // Sales-Region-0.md is { Region: "Search Engine", Revenue: 100 }. pie.ts
-    // sets no series `name` (unlike bar's yAxisLabel-as-series-name), so the
-    // tooltip's header line is suppressed and only the slice's own
-    // name/value show.
+    // uses a custom tooltip formatter (bck-i9b.8: the default formatter-less
+    // tooltip can't label multi-dim object-row values -- see scatter.ts's
+    // comment on the same underlying ECharts limitation -- and pie's raw
+    // value alone doesn't convey share-of-whole), so the tooltip is
+    // "name: value (percent%)" with no separate series-name header line.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     expect(tooltipText).toContain('Search Engine')
-    expect(tooltipText).toContain('100')
+    expect(tooltipText).toContain('3,227')
+    expect(tooltipText).toMatch(/\(\d+(\.\d+)?%\)/)
   })
 })

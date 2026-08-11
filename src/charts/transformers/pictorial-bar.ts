@@ -1,6 +1,6 @@
 import type { EChartsOption, PictorialBarSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions, isRecord, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
 
 export interface PictorialBarTransformerOptions extends BaseTransformerOptions {
@@ -16,6 +16,44 @@ interface PictorialBarDataPoint {
   readonly x: string
   readonly y: number | null
   readonly s: string
+}
+
+function isPictorialBarDataPoint(val: unknown): val is PictorialBarDataPoint {
+  return isRecord(val) && 'x' in val && 'y' in val && 's' in val
+}
+
+export interface PictorialBarTooltipParam {
+  readonly seriesName?: string
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar --
+  // and (also as in scatter.ts) that same object-row shape means the default
+  // formatter-less tooltip can never label multi-dim values via `dimensions`/
+  // `displayName` here either, so a custom formatter is required.
+  readonly value: unknown
+}
+
+interface PictorialBarTooltipRow {
+  readonly param: PictorialBarTooltipParam
+  readonly row: PictorialBarDataPoint
+}
+
+function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>): string {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
+  const list = Array.isArray(params) ? params as ReadonlyArray<PictorialBarTooltipParam> : [params] as ReadonlyArray<PictorialBarTooltipParam>
+  const validRows: ReadonlyArray<PictorialBarTooltipRow> = list
+    .map((p): PictorialBarTooltipRow | null => (isPictorialBarDataPoint(p.value) ? { param: p, row: p.value } : null))
+    .filter((r): r is PictorialBarTooltipRow => r !== null)
+  const first = validRows[0]
+  if (!first) {
+    return ''
+  }
+  const lines = validRows.map(({ param, row }) => {
+    const marker = param.marker ?? ''
+    const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+    return `${marker}${param.seriesName ?? ''}: ${yText}`
+  }).join('<br/>')
+  return `<b>${first.row.x}</b><br/>${lines}`
 }
 
 export function createPictorialBarChartOption(
@@ -174,6 +212,7 @@ export function createPictorialBarChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
+      formatter: asTooltipFormatter(formatTooltip),
     },
     grid: {
       containLabel: true,

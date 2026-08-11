@@ -29,8 +29,8 @@ const CHICAGO_LANDMARKS: readonly LandmarkLocation[] = [
 export const mapChartArbitrary = fc.array(
   fc.tuple(
     fc.constantFrom(...CHICAGO_EVENT_TYPES),
-    fc.integer({ min: 5,
-      max: 30 }),
+    fc.integer({ min: 15,
+      max: 150 }),
   ),
   { minLength: CHICAGO_LANDMARKS.length,
     maxLength: CHICAGO_LANDMARKS.length },

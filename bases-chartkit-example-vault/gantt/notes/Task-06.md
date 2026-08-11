@@ -1,6 +1,6 @@
 ---
-Task: "QA Testing"
-Start: 2024-10-13
-End: 2024-11-03
-Project: "Mobile App Launch"
+Task: "Prototype Build"
+Start: 2024-08-28
+End: 2024-09-24
+Project: "Marketing Campaign"
 ---

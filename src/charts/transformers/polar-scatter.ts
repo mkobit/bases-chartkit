@@ -1,11 +1,12 @@
 import type { EChartsOption, ScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel } from './utils'
+import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
 
 export interface PolarScatterTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly sizeProp?: string
+  readonly sizeLabel?: string
 }
 
 interface ScatterDataPoint {
@@ -17,6 +18,30 @@ interface ScatterDataPoint {
 
 function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
   return isRecord(val) && 'x' in val && 'y' in val && 's' in val
+}
+
+export interface PolarScatterTooltipParam {
+  readonly seriesName?: string
+  readonly marker?: string
+  // See scatter.ts's identical comment: ECharts' CallbackDataParams.value for
+  // an object-row dataset source is the WHOLE raw row, not a single scalar.
+  readonly value: unknown
+}
+
+// See scatter.ts's identical comment for why a fully custom formatter is
+// required here: ECharts' default tooltip's displayName-based labeling only
+// works when getRawValue() returns an array, never true for this
+// transformer's object-row dataset shape.
+function formatTooltip(param: PolarScatterTooltipParam, xLabel: string, yLabel: string, sizeLabel?: string): string {
+  const row = isScatterDataPoint(param.value) ? param.value : null
+  if (!row) {
+    return ''
+  }
+  const marker = param.marker ?? ''
+  const header = param.seriesName ? `${marker}<b>${param.seriesName}</b><br/>` : ''
+  const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+  const sizeLine = sizeLabel && row.size !== undefined ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}` : ''
+  return `${header}${xLabel}: ${row.x}<br/>${yLabel}: ${yText}${sizeLine}`
 }
 
 function getDimension(dimName: string): number {
@@ -32,6 +57,7 @@ export function createPolarScatterChartOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
   const sizeProp = options?.sizeProp
+  const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
   const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
@@ -186,6 +212,7 @@ export function createPolarScatterChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
+      formatter: asTooltipFormatter((param: PolarScatterTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, sizeProp ? (options?.sizeLabel ?? sizeProp) : undefined)),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(visualMapOption ? { visualMap: visualMapOption } : {}),

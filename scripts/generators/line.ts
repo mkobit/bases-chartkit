@@ -11,17 +11,17 @@ const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-31')
  * Simulates a random walk trend (e.g., stock price or temperature).
  */
 export const lineChartArbitrary = fc.record({
-  startValue: fc.integer({ min: 50,
-    max: 100 }),
-  days: fc.integer({ min: 20,
-    max: 30 }),
+  startValue: fc.integer({ min: 100,
+    max: 250 }),
+  days: fc.integer({ min: 35,
+    max: 50 }),
   trend: fc.constantFrom(
-    -2,
-    0,
+    -1,
+    1,
     2,
   ), // Overall bias
-  volatility: fc.integer({ min: 1,
-    max: 5 }),
+  volatility: fc.integer({ min: 3,
+    max: 8 }),
 }).chain((config) => {
   // Generate a sequence of deltas
   return fc.array(
@@ -37,9 +37,10 @@ export const lineChartArbitrary = fc.record({
       (acc, delta, i) => {
         // @ts-expect-error - suppress strictNullChecks/type errors
         const prevValue = i === 0 ? config.startValue : acc[i - 1].value
+        const wave = Math.round(5 * Math.sin(i / 3))
         const nextValue = Math.max(
-          0,
-          prevValue + delta + config.trend,
+          10,
+          prevValue + delta + config.trend + wave,
         )
 
         const date = today.subtract({ days: config.days - i }).toString()

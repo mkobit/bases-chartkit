@@ -1,4 +1,4 @@
 ---
-Word: "Search"
-Frequency: 26
+Word: "Sidebar"
+Frequency: 355
 ---

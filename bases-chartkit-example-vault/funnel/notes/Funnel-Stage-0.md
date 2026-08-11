@@ -1,4 +1,4 @@
 ---
-FunnelStage: "Visit"
-Population: 100
+FunnelStage: "Ad Impression"
+Population: 10000
 ---

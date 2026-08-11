@@ -1,4 +1,4 @@
 ---
-Word: "Aliases"
-Frequency: 97
+Word: "Vault"
+Frequency: 258
 ---

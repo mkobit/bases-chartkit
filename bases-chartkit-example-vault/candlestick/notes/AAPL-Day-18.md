@@ -1,7 +1,7 @@
 ---
-Date: 2024-01-23
-Open: 98
-Close: 106
-High: 110
-Low: 98
+Date: 2023-12-18
+Open: 161
+Close: 155
+High: 165.5
+Low: 155
 ---

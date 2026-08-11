@@ -1,4 +1,4 @@
 ---
-Step: "Step 1"
-Change: 94
+Step: "Starting Balance"
+Change: 500
 ---

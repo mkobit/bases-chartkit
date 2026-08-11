@@ -1,4 +1,4 @@
 ---
-Word: "Themes"
-Frequency: 98
+Word: "Hotkeys"
+Frequency: 104
 ---

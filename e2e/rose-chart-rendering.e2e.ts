@@ -61,7 +61,10 @@ test.describe('rose chart rendering', () => {
   // grouping is a no-op and the alphabetical note-filename order survives
   // into dataIndex order, same as pie's own test. pie.ts sets no series
   // `name`, so (per pie's test) the tooltip shows only the slice's own
-  // name/value, no series-name header.
+  // name/value, no series-name header. Extended for bck-i9b.8: rose's angle
+  // (roseType: 'area' keeps angle constant) vs. radius encoding makes the
+  // raw value alone ambiguous, so pie.ts's custom formatter (shared with
+  // pie) appends a percent-of-total.
   test('hovering the first slice shows its department and spend in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
@@ -85,6 +88,7 @@ test.describe('rose chart rendering', () => {
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     expect(tooltipText).toContain('Engineering')
-    expect(tooltipText).toContain('10,001')
+    expect(tooltipText).toContain('15,017')
+    expect(tooltipText).toMatch(/\(\d+(\.\d+)?%\)/)
   })
 })

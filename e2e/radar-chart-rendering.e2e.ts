@@ -75,12 +75,12 @@ test.describe('radar chart rendering', () => {
     // Agility: 16 }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('Conan')
+    expect(tooltipText).toContain('Draven')
     expect(tooltipText).toContain('Strength')
     expect(tooltipText).toContain('15')
     expect(tooltipText).toContain('Intelligence')
-    expect(tooltipText).toContain('18')
-    expect(tooltipText).toContain('Agility')
     expect(tooltipText).toContain('16')
+    expect(tooltipText).toContain('Agility')
+    expect(tooltipText).toContain('12')
   })
 })

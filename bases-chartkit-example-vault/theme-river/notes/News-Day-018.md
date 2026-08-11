@@ -1,5 +1,5 @@
 ---
 Date: 2024-01-04
 Topic: "Sports"
-Mentions: 13
+Mentions: 2
 ---

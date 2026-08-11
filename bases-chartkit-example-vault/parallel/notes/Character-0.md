@@ -1,7 +1,9 @@
 ---
 Name: "Gandalf"
-Class: "Wizard"
-Strength: 4
-Intelligence: 3
-Agility: 8
+Class: "Rogue"
+Strength: 7
+Intelligence: 8
+Agility: 14
+Wisdom: 13
+Charisma: 4
 ---

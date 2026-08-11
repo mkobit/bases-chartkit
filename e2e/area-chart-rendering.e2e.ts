@@ -41,8 +41,8 @@ test.describe('area chart rendering', () => {
     // frontmatter value.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('2024-01-09')
+    expect(tooltipText).toContain('2023-12-25')
     expect(tooltipText).toContain('Revenue')
-    expect(tooltipText).toContain('60')
+    expect(tooltipText).toContain('106')
   })
 })

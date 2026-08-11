@@ -55,6 +55,6 @@ test.describe('word cloud chart rendering', () => {
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: maxIndex })
 
     expect(tooltipText).toContain(maxWord?.name ?? '')
-    expect(tooltipText).toContain(String(maxWord?.value ?? ''))
+    expect(tooltipText).toContain((maxWord?.value ?? 0).toLocaleString('en-US'))
   })
 })

@@ -1,4 +1,4 @@
 ---
 Word: "Graph View"
-Frequency: 11
+Frequency: 700
 ---

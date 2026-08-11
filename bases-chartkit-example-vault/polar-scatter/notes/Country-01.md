@@ -1,6 +1,6 @@
 ---
-GDP: 100
-LifeExpectancy: 131.4
-Continent: "Europe"
-Population: 608
+GDP: 180
+LifeExpectancy: 197.5
+Continent: "Asia"
+Population: 647
 ---

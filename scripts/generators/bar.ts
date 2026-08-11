@@ -9,14 +9,14 @@ import { DEPARTMENTS, QUARTERS, REGIONS, themeSubset } from './themes'
  */
 export const barChartArbitrary = themeSubset(
   DEPARTMENTS,
-  8,
+  10,
 )
   .chain((categories) => {
     return fc.record({
       categories: fc.constant(categories),
       values: fc.array(
-        fc.integer({ min: 10_000,
-          max: 100_000 }),
+        fc.integer({ min: 15_000,
+          max: 250_000 }),
         { minLength: categories.length,
           maxLength: categories.length },
       ),

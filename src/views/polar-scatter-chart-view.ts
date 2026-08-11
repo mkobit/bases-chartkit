@@ -18,6 +18,7 @@ export class PolarScatterChartView extends BaseChartView {
         ...this.getCommonTransformerOptions(),
         seriesProp: this.config.get(BaseChartView.SERIES_PROP_KEY) as string,
         sizeProp: this.config.get(BaseChartView.SIZE_PROP_KEY) as string,
+        sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
         visualMapMin: this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)) : undefined,
         visualMapMax: this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)) : undefined,
         visualMapColor: this.config.get(BaseChartView.VISUAL_MAP_COLOR_KEY) ? (this.config.get(BaseChartView.VISUAL_MAP_COLOR_KEY) as string).split(',') : undefined,

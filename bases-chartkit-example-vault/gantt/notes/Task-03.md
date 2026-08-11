@@ -1,6 +1,6 @@
 ---
-Task: "Prototype Build"
-Start: 2024-05-11
-End: 2024-05-28
-Project: "Mobile App Launch"
+Task: "Architecture Planning"
+Start: 2024-07-01
+End: 2024-07-09
+Project: "Data Migration"
 ---

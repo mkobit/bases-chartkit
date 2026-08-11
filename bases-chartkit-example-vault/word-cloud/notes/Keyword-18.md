@@ -1,4 +1,4 @@
 ---
-Word: "Bases"
-Frequency: 11
+Word: "Command Palette"
+Frequency: 354
 ---

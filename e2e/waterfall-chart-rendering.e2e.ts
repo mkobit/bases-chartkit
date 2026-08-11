@@ -64,6 +64,6 @@ test.describe('waterfall chart rendering', () => {
 
     expect(tooltipText).toContain(stepName)
     expect(tooltipText).toContain('Increase')
-    expect(tooltipText).toContain(String(riseValue))
+    expect(tooltipText).toContain(riseValue.toLocaleString('en-US'))
   })
 })

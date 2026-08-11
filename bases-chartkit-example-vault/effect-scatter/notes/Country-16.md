@@ -1,6 +1,6 @@
 ---
-GDP: 17.5
-LifeExpectancy: 67
-Continent: "North America"
-Population: 672
+GDP: 59.1
+LifeExpectancy: 93.4
+Continent: "South America"
+Population: 8
 ---

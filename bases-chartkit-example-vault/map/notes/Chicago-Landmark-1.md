@@ -1,7 +1,7 @@
 ---
 Landmark: "Navy Pier"
-EventType: "Exhibition"
-EventCount: 9
+EventType: "Festival"
+EventCount: 23
 Latitude: 41.892654
 Longitude: -87.610168
 ---

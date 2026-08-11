@@ -1,4 +1,4 @@
 ---
 Path: "Company/CEO/VP Engineering/Frontend Lead"
-Value: 8
+Value: 12
 ---

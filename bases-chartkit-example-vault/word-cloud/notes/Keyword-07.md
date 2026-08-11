@@ -1,4 +1,4 @@
 ---
-Word: "Embeds"
-Frequency: 66
+Word: "Daily Notes"
+Frequency: 273
 ---

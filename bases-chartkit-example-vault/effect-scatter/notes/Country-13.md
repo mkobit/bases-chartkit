@@ -1,6 +1,6 @@
 ---
-GDP: 50.3
-LifeExpectancy: 73.8
-Continent: "South America"
-Population: 10
+GDP: 25.6
+LifeExpectancy: 61.2
+Continent: "Asia"
+Population: 1350
 ---

@@ -35,8 +35,15 @@ test.describe('scatter chart rendering', () => {
     // this chart type) is { GDP: 12.8, LifeExpectancy: 53.4, Continent: "Asia" }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
+    // Regression coverage for bck-i9b.8: ECharts' default formatter-less
+    // tooltip can't label multi-dim values for this transformer's object-row
+    // dataset (isValueMultipleLine's array check in
+    // seriesFormatTooltip.js never fires for an object -- confirmed live
+    // before this fix, the tooltip showed a bare, unlabeled "31.1  62.6
+    // Asia"). scatter.ts's custom formatter reads the raw row directly and
+    // labels each value with its axis name instead.
     expect(tooltipText).toContain('Asia')
-    expect(tooltipText).toContain('12.8')
-    expect(tooltipText).toContain('53.4')
+    expect(tooltipText).toContain('GDP: 31.1')
+    expect(tooltipText).toContain('Life Expectancy: 62.6')
   })
 })

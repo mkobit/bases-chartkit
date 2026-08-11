@@ -5,13 +5,13 @@ import * as fc from 'fast-check'
  * Generates x, y, and size.
  */
 export const bubbleChartArbitrary = fc.record({
-  count: fc.integer({ min: 10, max: 30 }),
+  count: fc.integer({ min: 20, max: 40 }),
 }).chain((config) => {
   return fc.array(
     fc.record({
-      x: fc.integer({ min: 0, max: 100 }),
-      y: fc.integer({ min: 0, max: 100 }),
-      size: fc.integer({ min: 10, max: 50 }),
+      x: fc.integer({ min: 0, max: 200 }),
+      y: fc.integer({ min: 0, max: 200 }),
+      size: fc.integer({ min: 15, max: 80 }),
     }),
     { minLength: config.count, maxLength: config.count },
   ).map((points) => {

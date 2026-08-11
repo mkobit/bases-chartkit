@@ -3,7 +3,7 @@ import * as R from 'remeda'
 import { FANTASY_CHARACTER_NAMES, themeSubset } from './themes'
 
 const CLASSES = ['Warrior', 'Wizard', 'Rogue', 'Ranger', 'Cleric', 'Bard']
-const INDICATORS = ['Strength', 'Intelligence', 'Agility'] as const
+const INDICATORS = ['Strength', 'Intelligence', 'Agility', 'Wisdom', 'Charisma'] as const
 
 /**
  * Arbitrary for Radar chart data.
@@ -14,7 +14,7 @@ const INDICATORS = ['Strength', 'Intelligence', 'Agility'] as const
  */
 export const radarChartArbitrary = themeSubset(
   FANTASY_CHARACTER_NAMES,
-  2,
+  4,
 ).chain((names) => {
   return fc.tuple(
     ...names.map(() => fc.tuple(
@@ -22,16 +22,20 @@ export const radarChartArbitrary = themeSubset(
       fc.integer({ min: 3, max: 18 }),
       fc.integer({ min: 3, max: 18 }),
       fc.integer({ min: 3, max: 18 }),
+      fc.integer({ min: 3, max: 18 }),
+      fc.integer({ min: 3, max: 18 }),
     )),
   ).map((rolls) => {
     const data = R.pipe(
       R.zip(names, rolls),
-      R.map(([name, [characterClass, strength, intelligence, agility]]) => ({
+      R.map(([name, [characterClass, strength, intelligence, agility, wisdom, charisma]]) => ({
         name,
         class: characterClass,
         [INDICATORS[0]]: strength,
         [INDICATORS[1]]: intelligence,
         [INDICATORS[2]]: agility,
+        [INDICATORS[3]]: wisdom,
+        [INDICATORS[4]]: charisma,
       })),
     )
 

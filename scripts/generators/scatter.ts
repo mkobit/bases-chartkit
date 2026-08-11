@@ -30,8 +30,8 @@ import { CONTINENTS, themeItem } from './themes'
  * realistic slope/noise ranges themselves.
  */
 export const scatterChartArbitrary = fc.record({
-  count: fc.integer({ min: 20,
-    max: 50 }),
+  count: fc.integer({ min: 35,
+    max: 65 }),
   slope: fc.float({ min: 0.5,
     max: 2.0,
     noNaN: true }),
@@ -41,10 +41,10 @@ export const scatterChartArbitrary = fc.record({
   return fc.array(
     fc.record({
       x: fc.float({ min: 10,
-        max: 100,
+        max: 180,
         noNaN: true }),
-      noise: fc.float({ min: -10,
-        max: 10,
+      noise: fc.float({ min: -15,
+        max: 15,
         noNaN: true }),
     }),
     { minLength: config.count,

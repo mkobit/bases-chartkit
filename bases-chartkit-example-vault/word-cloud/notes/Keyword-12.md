@@ -1,4 +1,4 @@
 ---
-Word: "Kanban"
-Frequency: 50
+Word: "Excalidraw"
+Frequency: 296
 ---
