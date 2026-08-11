@@ -1,6 +1,6 @@
 ---
-Task: "Development Sprint 2"
+Task: "Wireframing"
 Start: 2024-01-05
-End: 2024-01-12
+End: 2024-01-24
 Project: "Mobile App Launch"
 ---

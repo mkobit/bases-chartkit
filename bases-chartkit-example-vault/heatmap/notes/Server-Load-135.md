@@ -1,5 +1,5 @@
 ---
 Time: "15:00"
 Server: "Sat"
-Load: 3
+Load: 2
 ---

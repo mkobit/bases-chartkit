@@ -1,4 +1,4 @@
 ---
-Department: "IT"
-Spend: 49182
+Department: "Infrastructure"
+Spend: 97693
 ---

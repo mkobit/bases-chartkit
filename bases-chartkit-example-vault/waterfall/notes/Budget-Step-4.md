@@ -1,4 +1,4 @@
 ---
-Step: "Step 5"
-Change: -5
+Step: "Q2 Gross Revenue"
+Change: -8
 ---

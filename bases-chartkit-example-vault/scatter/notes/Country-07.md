@@ -1,5 +1,5 @@
 ---
-GDP: 18
-LifeExpectancy: 56
-Continent: "North America"
+GDP: 93.9
+LifeExpectancy: 93.9
+Continent: "South America"
 ---

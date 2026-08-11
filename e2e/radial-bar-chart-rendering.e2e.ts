@@ -37,6 +37,6 @@ test.describe('radial-bar chart rendering', () => {
 
     expect(tooltipText).toContain('Engineering')
     expect(tooltipText).toContain('Spend')
-    expect(tooltipText).toContain('13,482')
+    expect(tooltipText).toContain('249,989')
   })
 })

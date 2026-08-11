@@ -17,16 +17,16 @@ const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-01')
  * near-zero/NaN degeneracy under this project's numRuns: 1 sampling.
  */
 export const ganttChartArbitrary = fc.record({
-  projects: themeSubset(GANTT_PROJECTS, 3),
-  tasks: fc.subarray(PROJECT_TASK_NAMES, { minLength: 12, maxLength: 15 }),
+  projects: themeSubset(GANTT_PROJECTS, 4),
+  tasks: fc.subarray(PROJECT_TASK_NAMES, { minLength: 16, maxLength: 19 }),
 }).chain(({ projects, tasks }) => {
   return fc.record({
     tasks: fc.constant(tasks),
     taskDetails: fc.array(
       fc.tuple(
         fc.constantFrom(...projects),
-        fc.integer({ min: 0, max: 300 }), // start offset, in days, from the anchor
-        fc.integer({ min: 3, max: 21 }), // duration, in days (days to three weeks)
+        fc.integer({ min: 0, max: 240 }), // start offset, in days, from the anchor
+        fc.integer({ min: 4, max: 28 }), // duration, in days (4 days to four weeks)
       ),
       { minLength: tasks.length, maxLength: tasks.length },
     ),

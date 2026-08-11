@@ -1,6 +1,6 @@
 ---
-GDP: 78.3
-LifeExpectancy: 88.2
+GDP: 15
+LifeExpectancy: 55.7
 Continent: "North America"
-Population: 762
+Population: 502
 ---

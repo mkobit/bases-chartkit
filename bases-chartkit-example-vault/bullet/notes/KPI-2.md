@@ -1,8 +1,8 @@
 ---
-Metric: "Conversion Rate"
-Value: 27
-Target: 67
-RangeLow: 36
-RangeMid: 51
-RangeHigh: 67
+Metric: "Uptime"
+Value: 159
+Target: 104
+RangeLow: 46
+RangeMid: 100
+RangeHigh: 123
 ---

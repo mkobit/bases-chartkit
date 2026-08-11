@@ -1,6 +1,6 @@
 ---
-GDP: 11.8
-LifeExpectancy: 54.1
-Continent: "Africa"
-Population: 255
+GDP: 78.8
+LifeExpectancy: 105.2
+Continent: "Oceania"
+Population: 12
 ---

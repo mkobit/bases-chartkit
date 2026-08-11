@@ -110,7 +110,7 @@ test.describe('map chart rendering', () => {
     // existing region-state test's use of the same note above).
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('Millennium Park')
-    expect(tooltipText).toContain('24')
+    expect(tooltipText).toContain('Grant Park')
+    expect(tooltipText).toContain('91')
   })
 })

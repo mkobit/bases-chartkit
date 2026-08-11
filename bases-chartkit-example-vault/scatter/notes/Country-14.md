@@ -1,5 +1,5 @@
 ---
-GDP: 36
-LifeExpectancy: 65
-Continent: "Asia"
+GDP: 58
+LifeExpectancy: 76
+Continent: "Africa"
 ---

@@ -1,4 +1,4 @@
 ---
-Word: "Mobile"
-Frequency: 98
+Word: "Search"
+Frequency: 233
 ---

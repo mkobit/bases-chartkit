@@ -1,4 +1,4 @@
 ---
-Word: "Footnotes"
-Frequency: 68
+Word: "Sync"
+Frequency: 349
 ---

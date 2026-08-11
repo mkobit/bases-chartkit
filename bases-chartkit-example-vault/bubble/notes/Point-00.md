@@ -1,5 +1,5 @@
 ---
-PointX: 78
-PointY: 0
-Weight: 46
+PointX: 37
+PointY: 5
+Weight: 75
 ---

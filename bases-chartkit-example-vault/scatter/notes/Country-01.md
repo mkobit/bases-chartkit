@@ -1,5 +1,5 @@
 ---
-GDP: 45.8
-LifeExpectancy: 69.9
-Continent: "Asia"
+GDP: 30.9
+LifeExpectancy: 62.4
+Continent: "North America"
 ---

@@ -1,5 +1,5 @@
 ---
 Date: 2024-01-06
 Topic: "Entertainment"
-Mentions: 4
+Mentions: 6
 ---

@@ -1,6 +1,6 @@
 ---
-GDP: 27.4
-LifeExpectancy: 66
-Continent: "Oceania"
-Population: 235
+GDP: 85.8
+LifeExpectancy: 110.5
+Continent: "Asia"
+Population: 11
 ---

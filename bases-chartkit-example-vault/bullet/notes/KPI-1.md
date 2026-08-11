@@ -1,8 +1,8 @@
 ---
 Metric: "Customer Satisfaction"
-Value: 67
-Target: 65
-RangeLow: 48
-RangeMid: 64
-RangeHigh: 83
+Value: 51
+Target: 134
+RangeLow: 44
+RangeMid: 100
+RangeHigh: 146
 ---

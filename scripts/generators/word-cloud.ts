@@ -8,7 +8,7 @@ import { KEYWORDS, themeSubset } from './themes'
  */
 export const wordCloudChartArbitrary = themeSubset(
   KEYWORDS,
-  20,
+  30,
 ).chain((words) => {
   return fc.array(
     fc.integer({ min: 10,
@@ -18,7 +18,12 @@ export const wordCloudChartArbitrary = themeSubset(
   ).map((frequencies) => {
     const data = R.pipe(
       R.zip(words, frequencies),
-      R.map(([word, frequency]) => ({ word, frequency })),
+      R.map(([word, rawFreq], idx) => {
+        // Zipfian power-law decay so top keywords draw prominently large in the cloud
+        const frequency = Math.round(1200 / (idx + 1) + rawFreq * 3)
+
+        return { word, frequency }
+      }),
     )
 
     return {

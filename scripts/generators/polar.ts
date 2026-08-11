@@ -4,13 +4,18 @@ import * as R from 'remeda'
 // A handful of categorical time-of-day buckets, not a full 24-hour grid --
 // this is a line/polar chart (angle axis is a small set of categories), not
 // a heatmap.ts-scale hourly grid.
-const TIME_BUCKETS = ['08:00',
+const TIME_BUCKETS = ['00:00',
+  '03:00',
+  '06:00',
+  '09:00',
   '12:00',
-  '16:00',
-  '20:00']
+  '15:00',
+  '18:00',
+  '21:00']
 const SERVERS = ['Server-1',
   'Server-2',
-  'Server-3']
+  'Server-3',
+  'Server-4']
 
 // Every Time x Server combination, generated once so sampled load values
 // can be paired onto it via R.zip below -- same cross-product + R.zip

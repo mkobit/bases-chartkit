@@ -1,7 +1,7 @@
 ---
 Landmark: "Wrigley Field"
-EventType: "Concert"
-EventCount: 7
+EventType: "Tour"
+EventCount: 83
 Latitude: 41.948463
 Longitude: -87.6558
 ---

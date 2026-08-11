@@ -1,7 +1,9 @@
 ---
 Name: "Gandalf"
-Class: "Cleric"
-Strength: 6
-Intelligence: 16
-Agility: 15
+Class: "Warrior"
+Strength: 5
+Intelligence: 4
+Agility: 18
+Wisdom: 4
+Charisma: 18
 ---

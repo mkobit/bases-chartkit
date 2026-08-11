@@ -66,6 +66,6 @@ test.describe('pareto chart rendering', () => {
 
     expect(tooltipText).toContain(row.name)
     expect(tooltipText).toContain(barSeries?.name ?? 'Sales')
-    expect(tooltipText).toContain(String(row.value))
+    expect(tooltipText).toContain(row.value.toLocaleString('en-US'))
   })
 })

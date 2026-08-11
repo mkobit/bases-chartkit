@@ -1,5 +1,5 @@
 ---
-GDP: 25
-LifeExpectancy: 59.5
-Continent: "Europe"
+GDP: 108
+LifeExpectancy: 101
+Continent: "Africa"
 ---

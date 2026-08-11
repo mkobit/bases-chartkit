@@ -1,5 +1,5 @@
 ---
-GDP: 45.6
-LifeExpectancy: 69.8
-Continent: "Oceania"
+GDP: 127.2
+LifeExpectancy: 110.6
+Continent: "South America"
 ---

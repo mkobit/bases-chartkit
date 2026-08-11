@@ -1,5 +1,5 @@
 ---
-GDP: 78.4
-LifeExpectancy: 86.2
+GDP: 14
+LifeExpectancy: 54
 Continent: "Asia"
 ---

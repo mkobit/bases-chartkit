@@ -40,8 +40,8 @@ test.describe('line chart rendering', () => {
     // frontmatter value.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('2024-01-07')
+    expect(tooltipText).toContain('2023-12-22')
     expect(tooltipText).toContain('Revenue')
-    expect(tooltipText).toContain('99')
+    expect(tooltipText).toContain('242')
   })
 })

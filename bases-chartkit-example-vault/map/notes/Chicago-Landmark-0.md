@@ -1,7 +1,7 @@
 ---
 Landmark: "Millennium Park"
-EventType: "Tour"
-EventCount: 24
+EventType: "Food Fair"
+EventCount: 136
 Latitude: 41.882702
 Longitude: -87.619392
 ---

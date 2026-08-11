@@ -1,4 +1,4 @@
 ---
 Word: "Canvas"
-Frequency: 67
+Frequency: 398
 ---

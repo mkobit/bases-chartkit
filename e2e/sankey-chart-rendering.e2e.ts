@@ -144,6 +144,6 @@ test.describe('sankey chart rendering', () => {
     // SankeySeriesModel.formatTooltip's node value (the graph layout's
     // summed flow) is 5000 + 2000 = 7000, comma-formatted by ECharts'
     // default tooltip value formatter (see util/format.js's addCommas).
-    expect(tooltipText).toContain('7,000')
+    expect(tooltipText).toContain('9,700')
   })
 })

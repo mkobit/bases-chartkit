@@ -33,7 +33,7 @@ views:
 - **[[bullet/Basic.base|bullet]]** — KPI metrics against targets and range bands -- demonstrates a bullet chart.
 - **[[calendar/Basic.base|calendar]]** — Daily mood log -- demonstrates a calendar chart over a full year of daily values.
 - **[[candlestick/Basic.base|candlestick]]** — AAPL stock analysis -- demonstrates a candlestick chart.
-- **[[effect-scatter/Basic.base|effect-scatter]]** — GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.
+- **[[effect-scatter/basic/Basic.base|effect-scatter]]** — GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.
 - **[[funnel/Basic.base|funnel]]** — User journey funnel -- demonstrates a funnel chart with decreasing stage values.
 - **[[gantt/Basic.base|gantt]]** — Project task schedule across projects -- demonstrates a gantt chart grouped by project.
 - **[[gauge/Basic.base|gauge]]** — Server load gauge -- demonstrates a gauge chart with an averaging aggregation.

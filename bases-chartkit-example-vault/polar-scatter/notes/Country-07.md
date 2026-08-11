@@ -1,6 +1,6 @@
 ---
-GDP: 11.5
-LifeExpectancy: 53.8
-Continent: "Europe"
-Population: 10
+GDP: 100.2
+LifeExpectancy: 121.6
+Continent: "Oceania"
+Population: 788
 ---

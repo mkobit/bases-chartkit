@@ -1,5 +1,5 @@
 ---
-GDP: 21.7
-LifeExpectancy: 57.9
-Continent: "North America"
+GDP: 61.4
+LifeExpectancy: 77.7
+Continent: "Europe"
 ---

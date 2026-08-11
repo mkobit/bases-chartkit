@@ -1,4 +1,4 @@
 ---
 Word: "Templates"
-Frequency: 100
+Frequency: 396
 ---

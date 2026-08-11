@@ -1,18 +1,15 @@
 import * as fc from 'fast-check'
 
 const hierarchyData = [
-  { path: 'Company/CEO/VP Sales',
-    employees: 10 },
-  { path: 'Company/CEO/VP Engineering',
-    employees: 5 },
-  { path: 'Company/CEO/VP Engineering/Frontend Lead',
-    employees: 8 },
-  { path: 'Company/CEO/VP Engineering/Backend Lead',
-    employees: 12 },
-  { path: 'Company/CEO/VP Marketing',
-    employees: 7 },
-  { path: 'Company/CEO/VP Marketing/Growth',
-    employees: 4 },
+  { path: 'Company/CEO/VP Sales/Enterprise', employees: 15 },
+  { path: 'Company/CEO/VP Sales/SMB', employees: 10 },
+  { path: 'Company/CEO/VP Engineering/Frontend Lead', employees: 12 },
+  { path: 'Company/CEO/VP Engineering/Backend Lead', employees: 16 },
+  { path: 'Company/CEO/VP Engineering/DevOps', employees: 8 },
+  { path: 'Company/CEO/VP Marketing/Growth', employees: 9 },
+  { path: 'Company/CEO/VP Marketing/Brand', employees: 5 },
+  { path: 'Company/CEO/VP Product/Design System', employees: 7 },
+  { path: 'Company/CEO/VP Operations/IT Support', employees: 6 },
 ]
 
 /**

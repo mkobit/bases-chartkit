@@ -1,8 +1,8 @@
 ---
-Metric: "Response Time"
-Value: 40
-Target: 81
-RangeLow: 50
-RangeMid: 67
-RangeHigh: 86
+Metric: "Customer Retention"
+Value: 196
+Target: 181
+RangeLow: 107
+RangeMid: 163
+RangeHigh: 187
 ---

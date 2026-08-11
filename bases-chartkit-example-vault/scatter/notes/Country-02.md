@@ -1,5 +1,5 @@
 ---
-GDP: 100
-LifeExpectancy: 97
-Continent: "South America"
+GDP: 180
+LifeExpectancy: 137
+Continent: "Asia"
 ---

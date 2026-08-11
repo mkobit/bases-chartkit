@@ -1,7 +1,7 @@
 ---
 Landmark: "Grant Park"
-EventType: "Exhibition"
-EventCount: 15
+EventType: "Parade"
+EventCount: 91
 Latitude: 41.876465
 Longitude: -87.621887
 ---
