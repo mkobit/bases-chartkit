@@ -12,7 +12,7 @@ test.describe('heatmap chart rendering', () => {
   // formatter labeling each value with its axis/value name.
   // normalizedData is a direct R.map over the input rows (no sort/group), so
   // Bases' alphabetical-by-filename row order survives into dataIndex order:
-  // Server-Load-000.md is { Time: "00:00", Server: "Mon", Load: 2 }.
+  // Server-Load-000.md is { Time: "00:00", Server: "Mon", Load: 1 }.
   test('hovering the first cell shows its time, server, and load in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {

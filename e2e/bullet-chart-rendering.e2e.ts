@@ -79,7 +79,7 @@ test.describe('bullet chart rendering', () => {
     expect(valueSeriesIndex).toBeGreaterThanOrEqual(0)
 
     // KPI-0.md (the vault's deterministically-generated first note for this
-    // chart type) is { Metric: "Revenue Growth", Value: 77, ... }. The value
+    // chart type) is { Metric: "Revenue Growth", Value: 170, ... }. The value
     // bar's dataset row order matches note-file order directly -- unlike
     // funnel/pie, bullet.ts's dataset is neither grouped nor sorted.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: valueSeriesIndex, dataIndex: 0 })

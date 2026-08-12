@@ -70,9 +70,8 @@ test.describe('radar chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Character-0.md (the vault's deterministically-generated first note for
-    // this chart type) is { Name: "Conan", Strength: 15, Intelligence: 18,
-    // Agility: 16 }.
+    // Character-3.md ({ Name: "Draven", Strength: 15, Intelligence: 16,
+    // Agility: 12 }) resolves to dataIndex 0.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     expect(tooltipText).toContain('Draven')

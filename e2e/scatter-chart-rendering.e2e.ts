@@ -32,7 +32,7 @@ test.describe('scatter chart rendering', () => {
     ).toBeGreaterThan(0)
 
     // Country-00.md (the vault's deterministically-generated first note for
-    // this chart type) is { GDP: 12.8, LifeExpectancy: 53.4, Continent: "Asia" }.
+    // this chart type) is { GDP: 31.1, LifeExpectancy: 62.6, Continent: "Asia" }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     // Regression coverage for bck-i9b.8: ECharts' default formatter-less

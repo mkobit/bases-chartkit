@@ -808,11 +808,6 @@ export async function hoverChartDataPointAndGetTooltip(
   // caller); pass a higher value only for chart types that need it.
   moveSteps = 1,
 ): Promise<string> {
-  // Wait out indexing-driven re-renders before measuring anything: once the
-  // vault is fully resolved, Bases has no further reason to call
-  // `chart.setOption` on its own, so the position-stability and tooltip
-  // polls below are no longer racing against a re-render that could land at
-  // any moment.
   await waitForVaultIndexed(page)
 
   await expect.poll(

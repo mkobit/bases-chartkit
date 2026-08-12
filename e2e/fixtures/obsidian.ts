@@ -8,16 +8,16 @@ import * as fs from 'node:fs/promises'
 import { Temporal } from 'temporal-polyfill'
 import { applyViewMode } from '../../shared/appearance'
 import type { ViewMode } from '../../shared/appearance'
+import { evaluateObsidian } from '../helpers/evaluate'
 
-const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
-const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
-const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
+export const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
+export const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
+export const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
 
-// Pinned rather than 'latest' so test runs are reproducible across time; bump deliberately.
-const OBSIDIAN_APP_VERSION = '1.13.4'
-const OBSIDIAN_INSTALLER_VERSION = '1.13.4'
+export const OBSIDIAN_APP_VERSION = '1.13.4'
+export const OBSIDIAN_INSTALLER_VERSION = '1.13.4'
 
-function findFreePort(): Promise<number> {
+export function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer()
     server.listen(0, () => {
@@ -34,52 +34,24 @@ function findFreePort(): Promise<number> {
   })
 }
 
-async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
+export async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   await expect(async () => {
     if (proc.exitCode !== null) {
-      // False positive on plain `new Error(...)` project-wide, not specific to this Playwright callback as
-      // previously assumed here -- root-caused to an upstream typescript-eslint/project-service quirk triggered by
-      // bun-types' Error declaration merging (bd memory: only-throw-error-bun-types-false-positive). Every other
-      // only-throw-error disable comment in this repo points back to this one as the single explanation.
-      // eslint-disable-next-line @typescript-eslint/only-throw-error -- see comment above
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- see comment in original file
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
-    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 2000 })
+    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 30_000 })
     await browser.close()
   }).toPass({ intervals: [1000], timeout: 30_000 })
 }
 
-// Grace period between SIGTERM and a SIGKILL escalation in stopObsidian.
-// Confirmed necessary for bck-0ic via two separate live reproductions
-// (2026-07-28): a genuinely orphaned process never exited on its own, and
-// -- more surprisingly -- a normal, successful, non-orphaned test run also
-// needed this escalation every time in this environment. Testing 5s vs 15s
-// made no difference to the outcome (only to how long the test waited
-// first), so Electron appears to simply never respond to SIGTERM once it
-// hits the "GPU process isn't usable" FATAL state seen in this environment,
-// rather than just being slow to shut down -- kept short since waiting
-// longer buys nothing. Root cause of that FATAL state itself is untracked;
-// this only guarantees the process actually exits either way.
 const SIGTERM_GRACE_PERIOD = Temporal.Duration.from({ seconds: 5 })
 
-// obsidian-launcher doesn't clean up the configDir/vault-copy tmpdirs it
-// creates per launch -- without this, every test run leaks a fresh configDir
-// (~26MB) and vault copy into the OS tmpdir forever. Called from `finally`
-// so it still runs if setup (waitForCDP, connectOverCDP, etc.) throws --
-// otherwise a failed test run leaks a live Electron process, not just disk.
-async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
-  // Check whether the process already exited (e.g. it crashed on its own
-  // during the test) before registering the listener -- 'exit' only fires
-  // once, so registering it after the process has already exited would
-  // hang forever waiting for an event that already happened.
+export async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
   const exited = proc.exitCode !== null || proc.signalCode !== null
     ? Promise.resolve()
     : new Promise<void>((resolve) => { proc.once('exit', () => resolve()) })
 
-  // Signal the whole process group (negative pid), not just Electron's
-  // top-level PID -- launch() spawns with detached:true specifically so
-  // this targets the GPU/renderer children too, not only the main process
-  // that a bare proc.kill() would reach.
   if (proc.pid !== undefined) {
     process.kill(-proc.pid, 'SIGTERM')
   }
@@ -94,9 +66,6 @@ async function stopObsidian(proc: ChildProcess, configDir: string, vault: string
     process.kill(-proc.pid, 'SIGKILL')
   }
 
-  // `kill()` only sends the signal -- Electron still needs a moment to
-  // release its file locks on configDir, so cleanup must wait for the
-  // process to actually exit rather than racing it.
   await exited
 
   const results = await Promise.allSettled([
@@ -114,26 +83,18 @@ export type ObsidianPage = {
   readonly page: Page
 }
 
-type ObsidianOptions = {
-  // Presets Obsidian's color scheme before launch via test.use({ theme: ... }).
-  // Undefined (the default) leaves the committed example vault's own
-  // appearance.json untouched, matching every existing test's behavior.
+type ObsidianWorkerOptions = {
   readonly theme: ViewMode | undefined
 }
 
-type ObsidianFixtures = ObsidianOptions & {
+type ObsidianWorkerFixtures = ObsidianWorkerOptions & {
   readonly obsidianPage: ObsidianPage
 }
 
-// Guarantees the child + its tmpdirs are cleaned up even if this worker
-// process itself is asked to terminate (Ctrl-C, an external test timeout
-// sending SIGTERM) while a test is mid-flight -- the try/finally below only
-// runs once the pending `await use(...)` actually settles, which a bare
-// signal doesn't force by itself. Re-raises the same signal against the
-// default disposition afterward so the process still terminates with the
-// exit code a caller would normally expect. A true SIGKILL of this worker
-// process can't be intercepted at all; that's a hard OS-level limit, not
-// something in-process code can work around.
+type ObsidianTestFixtures = {
+  readonly resetWorkspace: void
+}
+
 function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string | undefined): () => void {
   const onSignal = (signal: NodeJS.Signals): void => {
     void stopObsidian(proc, configDir, vault).finally(() => process.kill(process.pid, signal))
@@ -146,17 +107,12 @@ function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string 
   }
 }
 
-export const test = base.extend<ObsidianFixtures>({
-  theme: [undefined, { option: true }],
-  obsidianPage: async ({ theme }, use) => {
+export const test = base.extend<ObsidianTestFixtures, ObsidianWorkerFixtures>({
+  theme: [undefined, { option: true, scope: 'worker' }],
+  obsidianPage: [async ({ theme }, use) => {
     const port = await findFreePort()
     const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
 
-    // Copied via setupVault (rather than launch()'s own copy:true) so
-    // there's a copied-but-not-yet-launched vault to preset appearance.json
-    // into before Obsidian ever reads it -- writing after launch() races
-    // Obsidian actually reading the file. Matches scripts/vault-dev.ts's
-    // validated --theme technique.
     const copiedVault = await launcher.setupVault({
       vault: VAULT_PATH,
       copy: true,
@@ -170,29 +126,28 @@ export const test = base.extend<ObsidianFixtures>({
       appVersion: OBSIDIAN_APP_VERSION,
       installerVersion: OBSIDIAN_INSTALLER_VERSION,
       vault: copiedVault,
-      // Already copied (and, if requested, theme-preset) above -- copy:false
-      // here avoids a redundant second copy of the vault.
       copy: false,
-      // Avoids the "GPU process isn't usable" FATAL abort seen repeatedly in
-      // this WSL2/Xvfb environment under sustained CDP+canvas activity (see
-      // bck-to4): bare --disable-gpu alone still spawns a GPU process for
-      // OOP rasterization via SwiftShader, which can hit Chromium's
-      // GPU-process crash-retry ceiling just as fast or faster than with no
-      // flag at all. These four keep Chromium off that GPU-process path
-      // entirely for canvas compositing instead. Confirmed via 3 consecutive
-      // clean e2e trials (zero FATAL) with this combination -- a workaround
-      // for the crash-retry ceiling, not a fix for the underlying WSL2/Xvfb
-      // GL-context failure itself.
       args: [
         `--remote-debugging-port=${port}`,
         '--disable-gpu',
         '--disable-gpu-compositing',
         '--disable-software-rasterizer',
         '--disable-gpu-sandbox',
+        // Keep timers/animations running at real speed even when this
+        // Obsidian window isn't the foreground one on the (shared, single)
+        // display -- far more likely now that one long-lived instance is
+        // reused per worker. Chromium otherwise treats an occluded/hidden
+        // page as backgrounded and clamps nested setTimeout toward 1000ms.
+        // ECharts' force-graph layout drives its ~510 settle iterations via
+        // setTimeout(step, 16) (chart/graph/GraphView.js), not rAF, so under
+        // that clamp an ~8s settle can stretch past the 100s stability-poll
+        // budget in hoverChartDataPointAndGetTooltip -- the observed
+        // graph-chart flake. These are the canonical Chromium switches to
+        // opt an Electron renderer out of that throttling entirely.
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
       ],
-      // detached:true makes this process its own group leader so
-      // stopObsidian can SIGTERM/SIGKILL the whole group (including GPU
-      // children), not just the top-level PID.
       spawnOptions: { stdio: 'pipe', detached: true },
     })
 
@@ -222,7 +177,14 @@ export const test = base.extend<ObsidianFixtures>({
       removeSignalHandlers()
       await stopObsidian(proc, configDir, vault)
     }
-  },
+  }, { scope: 'worker' }],
+
+  resetWorkspace: [async ({ obsidianPage: { page } }, use) => {
+    await evaluateObsidian(page, (app) => {
+      app.workspace.detachLeavesOfType('bases')
+    })
+    await use()
+  }, { auto: true }],
 })
 
 export { expect }

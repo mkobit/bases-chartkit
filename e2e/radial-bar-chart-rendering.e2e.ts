@@ -31,8 +31,8 @@ test.describe('radial-bar chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Dept-Spend-0.md (the vault's deterministically-generated first note
-    // for this chart type) is { Department: "Engineering", Spend: 13482 }.
+    // Dept-Spend-00.md (the vault's deterministically-generated first note
+    // for this chart type) is { Department: "Engineering", Spend: 249989 }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     expect(tooltipText).toContain('Engineering')

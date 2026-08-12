@@ -35,7 +35,7 @@ test.describe('bar chart rendering', () => {
     ).toBeGreaterThan(0)
 
     // Dept-Spend-0.md (the vault's deterministically-generated first note
-    // for this chart type) is { Department: "Engineering", Spend: 74155 }.
+    // for this chart type) is { Department: "Engineering", Spend: 15005 }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     expect(tooltipText).toContain('Department: Engineering')

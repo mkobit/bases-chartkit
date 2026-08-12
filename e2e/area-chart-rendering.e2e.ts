@@ -35,7 +35,7 @@ test.describe('area chart rendering', () => {
 
     // Area-Revenue-00.md (the vault's deterministically-generated first note
     // for this chart type -- zero-padded since area/ has 22 notes) is
-    // { Date: 2024-01-09, Revenue: 60 }. safeToString renders a
+    // { Date: 2023-12-25, Revenue: 106 }. safeToString renders a
     // Temporal.PlainDate Value wrapper as its ISO date string (verified in
     // tests/transformer_utils.test.ts's safeToString spec), matching the raw
     // frontmatter value.

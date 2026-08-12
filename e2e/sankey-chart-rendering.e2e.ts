@@ -139,10 +139,10 @@ test.describe('sankey chart rendering', () => {
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex })
 
     expect(tooltipText).toContain('Homepage')
-    // 'Homepage' only appears as a link Source (Funnel-Step-0.md ->
-    // "Product Page": 5000, Funnel-Step-1.md -> "Blog": 2000), so
+    // 'Homepage' only appears as a link Source (Funnel-Step-00.md ->
+    // "Product Page": 6500, Funnel-Step-01.md -> "Blog": 3200), so
     // SankeySeriesModel.formatTooltip's node value (the graph layout's
-    // summed flow) is 5000 + 2000 = 7000, comma-formatted by ECharts'
+    // summed flow) is 6500 + 3200 = 9700, comma-formatted by ECharts'
     // default tooltip value formatter (see util/format.js's addCommas).
     expect(tooltipText).toContain('9,700')
   })

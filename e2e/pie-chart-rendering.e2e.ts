@@ -26,7 +26,7 @@ test.describe('pie chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Sales-Region-0.md is { Region: "Search Engine", Revenue: 100 }. pie.ts
+    // Sales-Region-0.md is { Region: "Search Engine", Revenue: 3227 }. pie.ts
     // uses a custom tooltip formatter (bck-i9b.8: the default formatter-less
     // tooltip can't label multi-dim object-row values -- see scatter.ts's
     // comment on the same underlying ECharts limitation -- and pie's raw
