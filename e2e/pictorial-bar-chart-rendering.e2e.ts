@@ -36,7 +36,7 @@ test.describe('pictorial-bar chart rendering', () => {
     ).toBeGreaterThan(0)
 
     // Dept-Spend-0.md (the vault's deterministically-generated first note
-    // for this chart type) is { Department: "Engineering", Spend: 61961 }.
+    // for this chart type) is { Department: "Sales", Spend: 140022 }.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     // Regression coverage for bck-i9b.8: pictorial-bar.ts's default

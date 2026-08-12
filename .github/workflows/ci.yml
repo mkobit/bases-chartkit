@@ -88,7 +88,7 @@ jobs:
                       obsidian-cache-${{ runner.os }}-
 
             - name: Run E2E Tests
-              run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" bun run test:e2e
+              run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" bun run test:e2e
 
             - name: Upload Playwright Report
               if: always()

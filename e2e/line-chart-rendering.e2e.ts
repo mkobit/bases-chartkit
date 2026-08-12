@@ -37,7 +37,7 @@ test.describe('line chart rendering', () => {
 
     // Revenue-00.md (the vault's deterministically-generated first note for
     // this chart type -- zero-padded since line/ has 24 notes) is
-    // { Date: 2024-01-07, Revenue: 99 }. safeToString renders a
+    // { Date: 2023-12-22, Revenue: 242 }. safeToString renders a
     // Temporal.PlainDate Value wrapper as its ISO date string (verified in
     // tests/transformer_utils.test.ts's safeToString spec), matching the raw
     // frontmatter value.

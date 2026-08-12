@@ -25,7 +25,7 @@ test.describe('bubble chart rendering', () => {
     ).toBeGreaterThan(0)
 
     // Point-00.md (the vault's deterministically-generated first note for
-    // this chart type) is { PointX: 78, PointY: 0, Weight: 46 }. With no
+    // this chart type) is { PointX: 37, PointY: 5, Weight: 75 }. With no
     // seriesProp bound, scatter.ts names the single series after yAxisLabel
     // -- the Bases-configured display name for note.PointY, "Point Y" (see
     // bubble/Basic.base's properties block).
