@@ -133,6 +133,20 @@ export const test = base.extend<ObsidianTestFixtures, ObsidianWorkerFixtures>({
         '--disable-gpu-compositing',
         '--disable-software-rasterizer',
         '--disable-gpu-sandbox',
+        // Keep timers/animations running at real speed even when this
+        // Obsidian window isn't the foreground one on the (shared, single)
+        // display -- far more likely now that one long-lived instance is
+        // reused per worker. Chromium otherwise treats an occluded/hidden
+        // page as backgrounded and clamps nested setTimeout toward 1000ms.
+        // ECharts' force-graph layout drives its ~510 settle iterations via
+        // setTimeout(step, 16) (chart/graph/GraphView.js), not rAF, so under
+        // that clamp an ~8s settle can stretch past the 100s stability-poll
+        // budget in hoverChartDataPointAndGetTooltip -- the observed
+        // graph-chart flake. These are the canonical Chromium switches to
+        // opt an Electron renderer out of that throttling entirely.
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
       ],
       spawnOptions: { stdio: 'pipe', detached: true },
     })
