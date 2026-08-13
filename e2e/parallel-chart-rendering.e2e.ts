@@ -38,16 +38,35 @@ test.describe('parallel chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Character-0.md (the vault's deterministically-generated first note for
-    // this chart type) is
-    // { Name: "Gandalf", Class: "Wizard", Strength: 4, Intelligence: 3, Agility: 8 }.
-    // seriesProp groups by Class, and Gandalf is the only Wizard, so his row
-    // is series 0's only data point.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0, vertexIndex: 1 })
+    // Series order is R.groupBy first-occurrence order of `Class`, which
+    // follows Bases' row order and is NOT stable across vault-indexing states
+    // (verified: series 0 was a Warrior in isolation but a Rogue as spec #25
+    // under full-suite load). So derive the expected row FROM the option's
+    // own series[0]/data[0] rather than hardcoding a class -- this exercises
+    // the real invariant (hovering a point shows THAT point's whole row)
+    // deterministically regardless of grouping order.
+    const option = await getChartOption(page) as {
+      readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: ReadonlyArray<ReadonlyArray<number | string>> }>
+    } | null
+    const targetSeries = option?.series?.[0]
+    const targetRow = targetSeries?.data?.[0]
+    expect(targetSeries?.name).toBeTruthy()
+    expect(targetRow?.length ?? 0).toBeGreaterThan(0)
 
-    expect(tooltipText).toContain('Warrior')
-    expect(tooltipText).toContain('13')
-    expect(tooltipText).toContain('8')
-    expect(tooltipText).toContain('6')
+    // Break the final move into several intermediate mousemove events (as
+    // polar-line does): a single-jump teleport onto the ~1px-wide zigzag
+    // polyline occasionally lands just off it under full-suite load, so the
+    // trigger:'item' tooltip never fires within the 5s budget. Gradual moves
+    // cross the line reliably. vertexIndex 1 targets an interior axis vertex
+    // (bck-44x: exercises the isPolyline branch reading the exact rendered
+    // vertex, not a bounding-rect center that lands between axes).
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0, vertexIndex: 1 }, 10)
+
+    // trigger:'item' shows the series name (the Class) plus every dimension
+    // value of the hovered row.
+    expect(tooltipText).toContain(targetSeries?.name ?? '')
+    for (const value of targetRow ?? []) {
+      expect(tooltipText).toContain(String(value))
+    }
   })
 })
