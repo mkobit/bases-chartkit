@@ -82,9 +82,15 @@ export async function getChartOption(page: Page): Promise<unknown> {
       // Annotating immediately contains that `any` leak instead of letting it
       // propagate through the rest of the traversal.
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -92,9 +98,10 @@ export async function getChartOption(page: Page): Promise<unknown> {
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     return chartView?.chart?.getOption() ?? null
   })
@@ -154,9 +161,15 @@ export async function getSeriesVisualValues(
       // Annotating immediately contains that `any` leak instead of letting it
       // propagate through the rest of the traversal.
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -164,9 +177,10 @@ export async function getSeriesVisualValues(
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
     if (!seriesData) {
@@ -229,9 +243,15 @@ export async function getSeriesDataCount(
       }
       const nextVisited = [...visited, obj]
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -239,9 +259,10 @@ export async function getSeriesDataCount(
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
     return seriesData?.count() ?? 0
@@ -295,9 +316,15 @@ export async function waitForChartFinished(page: Page, timeoutMs = 1500): Promis
       // Annotating immediately contains that `any` leak instead of letting it
       // propagate through the rest of the traversal.
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -305,9 +332,10 @@ export async function waitForChartFinished(page: Page, timeoutMs = 1500): Promis
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     const chart = chartView?.chart
     if (!chart) {
@@ -410,9 +438,15 @@ export async function getMapSeriesState(
       // Annotating immediately contains that `any` leak instead of letting it
       // propagate through the rest of the traversal.
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -420,9 +454,10 @@ export async function getMapSeriesState(
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     const series = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)
     if (!series) {
@@ -673,9 +708,15 @@ export async function getSeriesItemScreenPosition(
       }
       const nextVisited = [...visited, obj]
       const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
+      // Short-circuit at the first match (bck-b39): `??` skips the recursive
+      // call for every remaining value once one is found, so this stops
+      // descending instead of walking the whole ~90k-node live ECharts/zrender
+      // object graph. `.map().find()` evaluated every branch fully before
+      // selecting one -- ~10s per call while the chart was still animating.
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
     }
 
     const leaves = [
@@ -683,9 +724,10 @@ export async function getSeriesItemScreenPosition(
       ...app.workspace.getLeavesOfType('bases'),
     ]
 
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
 
     const chart = chartView?.chart
     if (!chart) {
