@@ -142,6 +142,10 @@ const userTextPlugin = {
       create(context: Rule.RuleContext): Rule.RuleListener {
         return {
           NewExpression(node) {
+            // Matches the unaliased `new Notice(literal | template)` form used
+            // throughout the codebase. Aliased imports, `ns.Notice(...)`, or a
+            // concatenated argument would slip through -- acceptable, since the
+            // rule's job is to catch the common drift, not be unbypassable.
             if (node.callee.type !== 'Identifier' || node.callee.name !== 'Notice') {
               return
             }
@@ -151,6 +155,12 @@ const userTextPlugin = {
             }
           },
           Property(node) {
+            // A computed identifier key (`{ [displayName]: x }`) references a
+            // variable, not a property literally named `displayName`, so it
+            // must not match. A computed string-literal key still counts.
+            if (node.computed && node.key.type === 'Identifier') {
+              return
+            }
             const keyName = propertyKeyName(node.key)
             if (keyName === undefined || !USER_TEXT_KEYS.has(keyName)) {
               return
