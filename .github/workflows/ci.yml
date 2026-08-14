@@ -20,14 +20,23 @@ jobs:
               with:
                   bun-version: ${{ env.BUN_VERSION }}
 
-            # Report-only: surfaces advisories on every PR/push without blocking.
-            # Remediation is tracked via GitHub Dependabot security updates; today's
-            # findings are all transitive dev/build tooling and unfixable via
-            # `bun update`. Revisit gating (audit-level threshold) once the tree can
-            # pass a blocking audit.
+            # Report-only: writes advisories to the run's job summary on every
+            # PR/push without blocking. `bun audit` exits nonzero when it finds
+            # advisories, so `|| true` keeps the report from failing the workflow
+            # (a broken audit command itself still fails visibly). Remediation is
+            # tracked via GitHub Dependabot security updates; today's findings are
+            # all transitive dev/build tooling and unfixable via `bun update`.
+            # Revisit gating (audit-level threshold) once the tree can pass a
+            # blocking audit.
             - name: Audit dependencies
-              continue-on-error: true
-              run: bun audit
+              run: |
+                  {
+                    echo '## Dependency audit (`bun audit`)'
+                    echo ''
+                    echo '```'
+                    bun audit 2>&1 || true
+                    echo '```'
+                  } | tee -a "$GITHUB_STEP_SUMMARY"
 
     build:
         runs-on: ubuntu-latest
