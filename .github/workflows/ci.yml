@@ -10,6 +10,34 @@ env:
     BUN_VERSION: "1.3.14"
 
 jobs:
+    audit:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+            - name: Setup Environment
+              uses: ./.github/actions/setup-env
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            # Report-only: writes advisories to the run's job summary on every
+            # PR/push without blocking. `bun audit` exits nonzero when it finds
+            # advisories, so `|| true` keeps the report from failing the workflow
+            # (a broken audit command itself still fails visibly). Remediation is
+            # tracked via GitHub Dependabot security updates; today's findings are
+            # all transitive dev/build tooling and unfixable via `bun update`.
+            # Revisit gating (audit-level threshold) once the tree can pass a
+            # blocking audit.
+            - name: Audit dependencies
+              run: |
+                  {
+                    echo '## Dependency audit (`bun audit`)'
+                    echo ''
+                    echo '```'
+                    bun audit 2>&1 || true
+                    echo '```'
+                  } | tee -a "$GITHUB_STEP_SUMMARY"
+
     build:
         runs-on: ubuntu-latest
         outputs:
