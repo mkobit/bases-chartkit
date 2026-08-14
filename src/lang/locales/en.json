@@ -326,7 +326,9 @@
 			"value_prop": "Value property",
 			"value_placeholder": "Metric (e.g. Population)",
 			"title": "Chart title",
-			"title_placeholder": "Optional chart title"
+			"title_placeholder": "Optional chart title",
+			"file_not_found": "Map file not found: {{file}}",
+			"load_error": "Failed to load map file: {{error}}"
 		},
 		"word_cloud": {
 			"name": "Word cloud",

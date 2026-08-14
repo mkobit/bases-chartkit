@@ -6,6 +6,8 @@ import promise from 'eslint-plugin-promise'
 import stylistic from '@stylistic/eslint-plugin'
 import unicorn from 'eslint-plugin-unicorn'
 import { type Config, globalIgnores } from 'eslint/config'
+import { type Rule } from 'eslint'
+import type { Node } from 'estree'
 import json, { type JSONRuleDefinition } from '@eslint/json'
 import yml from 'eslint-plugin-yml'
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
@@ -90,6 +92,76 @@ const packageJsonPlugin = {
         }
       },
     } satisfies JSONRuleDefinition<{ MessageIds: 'unsorted' }>,
+  },
+}
+
+// User-visible strings must go through i18next (AGENTS.md). This flags raw
+// string literals in the UI-text sinks used across views/settings -- `new
+// Notice(...)`, and the `displayName`/`placeholder` fields of Bases view
+// options -- so localization drift is caught at lint time instead of review.
+const USER_TEXT_KEYS = new Set(['displayName', 'placeholder'])
+
+// Translatable copy contains at least one letter. Purely numeric/symbolic
+// placeholders ('0', '100', '100%') are locale-neutral example values, not UI
+// prose, so they're intentionally exempt to avoid false positives. Template
+// literals are always constructed prose in these sinks, so always flagged.
+function isTranslatableText(node: Node): boolean {
+  if (node.type === 'TemplateLiteral') {
+    return true
+  }
+  if (node.type === 'Literal' && typeof node.value === 'string') {
+    return /\p{L}/u.test(node.value)
+  }
+  return false
+}
+
+function propertyKeyName(key: Node): string | undefined {
+  if (key.type === 'Identifier') {
+    return key.name
+  }
+  if (key.type === 'Literal' && typeof key.value === 'string') {
+    return key.value
+  }
+  return undefined
+}
+
+const userTextPlugin = {
+  rules: {
+    'no-untranslated-user-text': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description: 'Require i18next t() for user-visible strings (Notice, displayName, placeholder)',
+        },
+        messages: {
+          notice: 'Pass a t(\'...\') key to Notice instead of a raw string; add the key to src/lang/locales/en.json.',
+          prop: 'User-visible \'{{key}}\' must use a t(\'...\') key, not a raw string; add the key to src/lang/locales/en.json.',
+        },
+        schema: [],
+      },
+      create(context: Rule.RuleContext): Rule.RuleListener {
+        return {
+          NewExpression(node) {
+            if (node.callee.type !== 'Identifier' || node.callee.name !== 'Notice') {
+              return
+            }
+            const arg = node.arguments[0]
+            if (arg && isTranslatableText(arg)) {
+              context.report({ node: arg, messageId: 'notice' })
+            }
+          },
+          Property(node) {
+            const keyName = propertyKeyName(node.key)
+            if (keyName === undefined || !USER_TEXT_KEYS.has(keyName)) {
+              return
+            }
+            if (isTranslatableText(node.value)) {
+              context.report({ node: node.value, messageId: 'prop', data: { key: keyName } })
+            }
+          },
+        }
+      },
+    } satisfies Rule.RuleModule,
   },
 }
 
@@ -471,11 +543,15 @@ export default tseslint.config(
   },
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
+    plugins: {
+      'user-text': userTextPlugin,
+    },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'functional/no-expression-statements': 'off',
       'functional/no-try-statements': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+      'user-text/no-untranslated-user-text': 'error',
     },
   },
   // functional/prefer-immutable-types stays off for src/ generally, but must NOT re-mask the
