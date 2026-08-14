@@ -10,6 +10,25 @@ env:
     BUN_VERSION: "1.3.14"
 
 jobs:
+    audit:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+            - name: Setup Environment
+              uses: ./.github/actions/setup-env
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            # Report-only: surfaces advisories on every PR/push without blocking.
+            # Remediation is tracked via GitHub Dependabot security updates; today's
+            # findings are all transitive dev/build tooling and unfixable via
+            # `bun update`. Revisit gating (audit-level threshold) once the tree can
+            # pass a blocking audit.
+            - name: Audit dependencies
+              continue-on-error: true
+              run: bun audit
+
     build:
         runs-on: ubuntu-latest
         outputs:
