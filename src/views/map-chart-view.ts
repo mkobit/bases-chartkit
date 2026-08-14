@@ -45,7 +45,7 @@ export class MapChartView extends BaseChartView {
             const adapter = this.plugin.app.vault.adapter
             if (!(await adapter.exists(mapFile))) {
               // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-              throw new Error(`Map file not found: ${mapFile}`)
+              throw new Error(t('views.map.file_not_found', { file: mapFile }))
             }
             const content = await adapter.read(mapFile)
             const geoJson = geoJsonSchema.parse(content)
@@ -58,7 +58,7 @@ export class MapChartView extends BaseChartView {
         this.executeRender()
       }
       catch (e) {
-        new Notice(`Failed to load map file: ${e instanceof Error ? e.message : String(e)}`)
+        new Notice(t('views.map.load_error', { error: e instanceof Error ? e.message : String(e) }))
       }
     })()
   }
