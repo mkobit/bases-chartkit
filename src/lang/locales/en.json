@@ -128,7 +128,8 @@
 		"area": {
 			"name": "Area chart",
 			"smooth": "Smooth line",
-			"show_symbol": "Show symbol"
+			"show_symbol": "Show symbol",
+			"stack": "Stack series"
 		},
 		"scatter": {
 			"name": "Scatter chart",
