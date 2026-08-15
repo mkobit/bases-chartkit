@@ -54,13 +54,11 @@
 			"colors": "Visual map colors",
 			"colors_placeholder": "Comma-separated hex colors (e.g. #fff,#000)",
 			"orient": "Visual map orientation",
-			"orient_placeholder": "horizontal or vertical (default: horizontal)",
 			"orient_options": {
 				"horizontal": "Horizontal",
 				"vertical": "Vertical"
 			},
 			"type": "Visual map type",
-			"type_placeholder": "continuous or piecewise (default: continuous)",
 			"type_options": {
 				"continuous": "Continuous",
 				"piecewise": "Piecewise"

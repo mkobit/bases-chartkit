@@ -441,15 +441,21 @@ export abstract class BaseChartView extends BasesView {
       },
       {
         displayName: t('views.visual_map.orient'),
-        type: 'text',
+        type: 'dropdown',
         key: BaseChartView.VISUAL_MAP_ORIENT_KEY,
-        placeholder: t('views.visual_map.orient_placeholder'),
+        options: {
+          horizontal: t('views.visual_map.orient_options.horizontal'),
+          vertical: t('views.visual_map.orient_options.vertical'),
+        },
       },
       {
         displayName: t('views.visual_map.type'),
-        type: 'text',
+        type: 'dropdown',
         key: BaseChartView.VISUAL_MAP_TYPE_KEY,
-        placeholder: t('views.visual_map.type_placeholder'),
+        options: {
+          continuous: t('views.visual_map.type_options.continuous'),
+          piecewise: t('views.visual_map.type_options.piecewise'),
+        },
       },
     ]
   }
