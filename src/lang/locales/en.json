@@ -184,13 +184,13 @@
 			"x_axis_prop": "X-axis property (Date/Time)",
 			"x_axis_placeholder": "Select date property",
 			"open_prop": "Open property",
-			"open_placeholder": "Select Open price property",
+			"open_placeholder": "Select open price property",
 			"close_prop": "Close property",
-			"close_placeholder": "Select Close price property",
+			"close_placeholder": "Select close price property",
 			"low_prop": "Lowest property",
-			"low_placeholder": "Select Low price property",
+			"low_placeholder": "Select low price property",
 			"high_prop": "Highest property",
-			"high_placeholder": "Select High price property"
+			"high_placeholder": "Select high price property"
 		},
 		"boxplot": {
 			"name": "Boxplot chart",
