@@ -1,4 +1,5 @@
 ---
 Step: "Net Balance"
-Change: 0
+Change: 961
+IsTotal: true
 ---

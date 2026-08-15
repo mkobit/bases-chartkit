@@ -66,4 +66,57 @@ test.describe('waterfall chart rendering', () => {
     expect(tooltipText).toContain('Increase')
     expect(tooltipText).toContain(riseValue.toLocaleString('en-US'))
   })
+
+  // Coverage for bck-h0b's absolute-total bars. Basic.base binds
+  // totalProp: note.IsTotal, so Starting Balance / Net Balance render as a
+  // dedicated 'Total' series (a real number at those indices, '-' elsewhere)
+  // drawn from zero rather than stacked on the running delta sum. The custom
+  // formatter labels them '<step><br/>Total: <value>'. Read which index holds
+  // the total live and hover exactly that bar, same as the rising-step test.
+  test('hovering an absolute-total bar shows its step name and total value in the tooltip', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'waterfall/Basic.base', viewName: 'Budget waterfall' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly series?: readonly WaterfallSeriesLike[] } | null
+        const totalSeries = option?.series?.find(s => s.name === 'Total')
+        return totalSeries?.data?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const option = await getChartOption(page) as {
+      readonly series: readonly WaterfallSeriesLike[]
+      readonly xAxis: CategoryAxisLike | readonly CategoryAxisLike[]
+    }
+    const seriesIndex = option.series.findIndex(s => s.name === 'Total')
+    const totalSeries = option.series[seriesIndex]
+    const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+
+    const dataIndex = (totalSeries?.data ?? []).findIndex(v => typeof v === 'number')
+    const stepName = xAxis?.data?.[dataIndex]
+    const totalValue = totalSeries?.data?.[dataIndex]
+    if (dataIndex < 0 || !stepName || typeof totalValue !== 'number') {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected at least one absolute-total bar with a numeric value')
+    }
+
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex, dataIndex })
+
+    expect(tooltipText).toContain(stepName)
+    expect(tooltipText).toContain('Total')
+    // The formatter prints the raw number (String(value)), not a locale-grouped
+    // one, so match that exactly rather than toLocaleString.
+    expect(tooltipText).toContain(String(totalValue))
+  })
 })

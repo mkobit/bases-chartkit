@@ -98,15 +98,26 @@ export const waterfallChartArbitrary = fc.array(
   fc.integer({ min: -60, max: 120 }),
   { minLength: WATERFALL_STEP_NAMES.length, maxLength: WATERFALL_STEP_NAMES.length },
 ).map((changes) => {
+  // First and last steps are absolute totals (opening/closing balance); middle
+  // steps are positive/negative deltas. Net Balance is the accumulated opening
+  // balance plus every delta, so the closing total bar lands exactly where the
+  // deltas leave off rather than needing the caller to hand-fake it (bck-h0b).
+  const startingBalance = 500
+  const lastIndex = WATERFALL_STEP_NAMES.length - 1
+  const deltas: readonly number[] = WATERFALL_STEP_NAMES.map((_, i) => {
+    const rawVal = changes[i] ?? 0
+    return i % 2 === 1 ? Math.abs(rawVal) * 3 : -Math.abs(rawVal) * 2
+  })
+  const netBalance = startingBalance + deltas.slice(1, lastIndex).reduce((sum, d) => sum + d, 0)
   return {
     type: 'waterfall',
     data: WATERFALL_STEP_NAMES.map((step, i) => {
-      // First and last steps are structural totals; middle steps are positive/negative deltas
-      const rawVal = changes[i] ?? 0
-      const value = i === 0 ? 500 : i === WATERFALL_STEP_NAMES.length - 1 ? 0 : (i % 2 === 1 ? Math.abs(rawVal) * 3 : -Math.abs(rawVal) * 2)
+      const isTotal = i === 0 || i === lastIndex
+      const value = i === 0 ? startingBalance : (i === lastIndex ? netBalance : (deltas[i] ?? 0))
       return {
         step,
         value,
+        isTotal,
       }
     }),
   }

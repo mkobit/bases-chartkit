@@ -569,18 +569,21 @@ views:
 
 ## waterfall
 ![waterfall example](images/chart-types/waterfall-basic--budget-waterfall.png)
-Displays how an initial value is affected by a series of intermediate positive or negative values, useful for financial analysis.
+Displays how an initial value is affected by a series of intermediate positive or negative values, useful for financial analysis. Dashed connector lines link consecutive bars at their shared running-sum boundary. Set `totalProp` to a boolean property to mark rows as absolute totals (e.g. an opening or closing balance): those bars are drawn from zero and reset the running sum instead of stacking on the accumulated deltas.
 ```yaml
 properties:
-  note.Stage:
-    displayName: Stage
+  note.Step:
+    displayName: Step
   note.Change:
     displayName: Change
+  note.IsTotal:
+    displayName: Is Total
 views:
   - type: waterfall-chart
-    name: Waterfall Chart Sample
-    xAxisProp: note.Stage
+    name: Budget waterfall
+    xAxisProp: note.Step
     yAxisProp: note.Change
+    totalProp: note.IsTotal
 ```
 
 ## wordCloud
