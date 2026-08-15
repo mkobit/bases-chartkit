@@ -1,18 +1,32 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+
+interface AreaSeriesLike {
+  readonly name?: string
+}
+
+interface AreaRow {
+  readonly x: string
+  readonly y: number | null
+  readonly s: string
+}
 
 interface DatasetLike {
-  readonly source?: readonly unknown[]
+  readonly source?: readonly AreaRow[]
 }
 
 test.describe('area chart rendering', () => {
   // Regression coverage for bck-44j: area-chart is a pure rendering variant
   // of line-chart -- cartesian.ts's 'line' path with areaStyle:{} forced on
-  // (see src/views/area-chart-view.ts) -- so its hover/tooltip behavior is
-  // identical to line's own test. Uses its own notes directory
-  // (notePrefix 'Area-Revenue', distinct from line's 'Revenue') even though
-  // the data shape is the same.
-  test('hovering the first point shows its date, series name, and value in the tooltip', async ({ obsidianPage: { page } }) => {
+  // (see src/views/area-chart-view.ts). Its Basic.base ships a multi-series
+  // Month x Region dataset (notePrefix 'Area-Revenue') with seriesProp set,
+  // so -- like stacked-bar -- it builds one filtered series PER unique Region
+  // value in first-appearance order. Hand-tracing which Date/Region combo
+  // lands at a given seriesIndex/dataIndex would duplicate the transformer's
+  // grouping and drift if the fixture changes, so this reads series[0]'s
+  // resolved region name and dataset[0]'s first row for that region off the
+  // live option, hovers exactly that point, and asserts the tooltip matches.
+  test('hovering the first point of the first region series shows its region, date, and revenue in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
       await new Promise<void>((resolve) => {
         app.workspace.onLayoutReady(() => resolve())
@@ -23,7 +37,7 @@ test.describe('area chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'area/Basic.base', viewName: 'Sales area chart' })
+    }, { path: 'area/Basic.base', viewName: 'Sales by region (area)' })
 
     await expect.poll(
       async () => {
@@ -33,16 +47,36 @@ test.describe('area chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Area-Revenue-00.md (the vault's deterministically-generated first note
-    // for this chart type -- zero-padded since area/ has 22 notes) is
-    // { Date: 2023-12-25, Revenue: 106 }. safeToString renders a
-    // Temporal.PlainDate Value wrapper as its ISO date string (verified in
-    // tests/transformer_utils.test.ts's safeToString spec), matching the raw
-    // frontmatter value.
+    // See stacked-bar-chart-rendering.e2e.ts for why this waits for full
+    // indexing before reading the comparison values, then reads them AFTER
+    // the hover's own position-stability poll resolves -- so the assertion
+    // values describe the exact render the tooltip came from.
+    await waitForVaultIndexed(page)
+
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('2023-12-25')
-    expect(tooltipText).toContain('Revenue')
-    expect(tooltipText).toContain('106')
+    const option = await getChartOption(page) as {
+      readonly series: readonly AreaSeriesLike[]
+      readonly dataset: readonly DatasetLike[]
+    }
+    const region = option.series[0]?.name
+    if (typeof region !== 'string') {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected area series[0] to have a resolved region name')
+    }
+
+    const sourceRows = option.dataset[0]?.source ?? []
+    const firstRegionRow = sourceRows.find(row => row.s === region)
+    if (!firstRegionRow || firstRegionRow.y === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error(`expected at least one dataset row for region ${region}`)
+    }
+
+    // seriesProp is set, so each area is labeled by its resolved region name
+    // rather than yAxisLabel (see stacked-bar-chart-rendering.e2e.ts). The
+    // x-axis label is the Date prop's displayName; a Temporal.PlainDate Value
+    // renders as its ISO date string via safeToString.
+    expect(tooltipText).toContain(`Date: ${firstRegionRow.x}`)
+    expect(tooltipText).toContain(`${region}: ${firstRegionRow.y.toLocaleString('en-US')}`)
   })
 })

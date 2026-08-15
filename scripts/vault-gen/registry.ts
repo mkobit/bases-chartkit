@@ -8,7 +8,7 @@ import { funnelChartArbitrary, gaugeChartArbitrary } from '../generators/funnel'
 import { ganttChartArbitrary } from '../generators/gantt'
 import { calendarChartArbitrary, heatmapChartArbitrary } from '../generators/heatmap'
 import { sunburstChartArbitrary, treeChartArbitrary, treemapChartArbitrary } from '../generators/hierarchy'
-import { lineChartArbitrary } from '../generators/line'
+import { lineChartArbitrary, stackedAreaChartArbitrary } from '../generators/line'
 import { pieChartArbitrary } from '../generators/pie'
 import { polarLineChartArbitrary } from '../generators/polar'
 import { radarChartArbitrary } from '../generators/radar'
@@ -878,28 +878,46 @@ const candlestickSpec = defineChartExampleSpec<CandlestickSample>({
   ],
 })
 
-// area-chart is a pure rendering variant of line-chart with an identical
-// data shape (per Sales-Dashboard.base's area-chart view) -- reuses
-// lineChartArbitrary and LineSample rather than defining a new arbitrary.
-const areaSpec = defineChartExampleSpec<LineSample>({
+interface StackedAreaSample {
+  readonly data: ReadonlyArray<{ readonly date: string, readonly region: string, readonly revenue: number }>
+}
+
+// area-chart is a rendering variant of line-chart, but ships a multi-series
+// Month x Region dataset (not line's single-series random walk) so the
+// stack toggle has real series to stack -- the overlapping "by region" view
+// and the stacked view read the same notes, differing only in stack:true.
+const areaSpec = defineChartExampleSpec<StackedAreaSample>({
   chartType: 'area',
-  description: 'Sales area chart -- demonstrates an area chart, a rendering variant of line-chart reusing lineChartArbitrary.',
-  arbitrary: lineChartArbitrary,
+  description: 'Monthly revenue by region -- demonstrates a multi-series area chart, unstacked and stacked.',
+  arbitrary: stackedAreaChartArbitrary,
   notePrefix: 'Area-Revenue',
   toRows: sample => sample.data.map(row => ({
     Date: Temporal.PlainDate.from(row.date),
-    Revenue: row.value,
+    Region: row.region,
+    Revenue: row.revenue,
   })),
   variants: [
     {
       fileName: 'Basic.base',
-      viewName: 'Sales area chart',
+      viewName: 'Sales by region (area)',
       viewType: 'area-chart',
       propBindings: {
         xAxisProp: 'note.Date',
         yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
       },
       literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'Basic.base',
+      viewName: 'Sales by region (stacked area)',
+      viewType: 'area-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, stack: true },
     },
   ],
 })

@@ -26,7 +26,7 @@ views:
 
 ## Chart types
 
-- **[[area/Basic.base|area]]** — Sales area chart -- demonstrates an area chart, a rendering variant of line-chart reusing lineChartArbitrary.
+- **[[area/Basic.base|area]]** — Monthly revenue by region -- demonstrates a multi-series area chart, unstacked and stacked.
 - **[[bar/Basic.base|bar]]** — Department spend, ranked -- demonstrates a basic bar chart.
 - **[[boxplot/Basic.base|boxplot]]** — Product score distribution -- demonstrates a boxplot chart.
 - **[[bubble/Basic.base|bubble]]** — Weighted point cloud -- demonstrates a bubble chart with size-encoded points.
