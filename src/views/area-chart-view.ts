@@ -14,6 +14,7 @@ export class AreaChartView extends BaseChartView {
 
     const smooth = this.getBooleanOption('smooth')
     const showSymbol = this.getBooleanOption('showSymbol')
+    const stack = this.getBooleanOption('stack')
     const areaStyle = true
 
     if (typeof xProp !== 'string' || typeof yProp !== 'string') {
@@ -29,6 +30,7 @@ export class AreaChartView extends BaseChartView {
         ...this.getCommonTransformerOptions(),
         smooth,
         showSymbol,
+        stack,
         areaStyle,
         seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
       },
@@ -48,6 +50,11 @@ export class AreaChartView extends BaseChartView {
         displayName: t('views.area.show_symbol'),
         type: 'toggle',
         key: 'showSymbol',
+      },
+      {
+        displayName: t('views.area.stack'),
+        type: 'toggle',
+        key: 'stack',
       },
     ]
   }

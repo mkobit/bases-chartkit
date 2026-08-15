@@ -110,6 +110,42 @@ describe(
     )
 
     it(
+      'should stack line series when stack is enabled (stacked-area path)',
+      () => {
+        const option = createCartesianChartOption(
+          data,
+          'date',
+          'value',
+          'line',
+          { seriesProp: 'category',
+            areaStyle: true,
+            stack: true },
+        )
+
+        const series = option.series as readonly any[]
+        expect(series).toHaveLength(2)
+        expect(series.every(s => s.stack === 'total')).toBe(true)
+        expect(series.every(s => s.areaStyle !== undefined)).toBe(true)
+      },
+    )
+
+    it(
+      'should not set stack on series when stack is omitted',
+      () => {
+        const option = createCartesianChartOption(
+          data,
+          'date',
+          'value',
+          'line',
+          { seriesProp: 'category' },
+        )
+
+        const series = option.series as readonly any[]
+        expect(series.every(s => s.stack === undefined)).toBe(true)
+      },
+    )
+
+    it(
       'should handle flipAxis correctly',
       () => {
         const option = createCartesianChartOption(
