@@ -919,6 +919,28 @@ const areaSpec = defineChartExampleSpec<StackedAreaSample>({
       },
       literalOptions: { showLegend: true, stack: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Sales by region (vintage theme)',
+      viewType: 'area-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Sales by region (flipped axis)',
+      viewType: 'area-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
   ],
 })
 

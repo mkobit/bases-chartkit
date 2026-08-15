@@ -1,0 +1,18 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: area-chart
+    name: Sales by region (vintage theme)
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
+    showLegend: true
+    theme: "Vintage"
+    filters:
+      and:
+        - file.folder == "area/notes"

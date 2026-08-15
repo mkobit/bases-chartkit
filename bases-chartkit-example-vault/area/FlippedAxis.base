@@ -1,0 +1,18 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: area-chart
+    name: Sales by region (flipped axis)
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
+    showLegend: true
+    flipAxis: true
+    filters:
+      and:
+        - file.folder == "area/notes"
