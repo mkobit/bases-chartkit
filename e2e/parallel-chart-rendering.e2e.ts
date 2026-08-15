@@ -1,3 +1,4 @@
+import * as R from 'remeda'
 import { test, expect } from './fixtures/obsidian'
 import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
@@ -38,34 +39,56 @@ test.describe('parallel chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
+    // vertexIndex 1 targets an interior axis vertex (bck-44x: exercises the
+    // isPolyline branch reading the exact rendered vertex, not a bounding-rect
+    // center that lands between axes). The xProp axis order is
+    // Strength, Intelligence, Agility -- so vertex 1 is each row's Intelligence
+    // crossing, and each series data row is that axis-value triple.
+    const interiorVertexIndex = 1
+
     // Series order is R.groupBy first-occurrence order of `Class`, which
     // follows Bases' row order and is NOT stable across vault-indexing states
     // (verified: series 0 was a Warrior in isolation but a Rogue as spec #25
-    // under full-suite load). So derive the expected row FROM the option's
-    // own series[0]/data[0] rather than hardcoding a class -- this exercises
-    // the real invariant (hovering a point shows THAT point's whole row)
-    // deterministically regardless of grouping order.
+    // under full-suite load). So derive the target row FROM the option rather
+    // than hardcoding a class or index.
     const option = await getChartOption(page) as {
       readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: ReadonlyArray<ReadonlyArray<number | string>> }>
     } | null
-    const targetSeries = option?.series?.[0]
-    const targetRow = targetSeries?.data?.[0]
-    expect(targetSeries?.name).toBeTruthy()
-    expect(targetRow?.length ?? 0).toBeGreaterThan(0)
+    const rows = (option?.series ?? []).flatMap((series, seriesIndex) =>
+      (series.data ?? []).map((values, dataIndex) => ({ seriesIndex, dataIndex, name: series.name ?? '', values })),
+    )
+    expect(rows.length).toBeGreaterThan(0)
+
+    // At the Intelligence axis x-coordinate every polyline sits exactly at its
+    // own Intelligence value's y, so two characters that share that value
+    // share the identical vertex pixel -- hovering it is inherently ambiguous
+    // and z-order alone decides which line's trigger:'item' tooltip fires
+    // (bck-npq: Gandalf/Rogue and Draven/Warrior both have Intelligence 8, so
+    // the hover flaked onto the Warrior row 'Warrior 13 8 6'). Pick a row whose
+    // interior-axis value is UNIQUE across all characters, so no other line
+    // touches that vertex and the resolved tooltip is deterministic.
+    const interiorValueCounts = R.countBy(rows, row => String(row.values[interiorVertexIndex]))
+    const target = rows.find(row => interiorValueCounts[String(row.values[interiorVertexIndex])] === 1)
+    expect(target, 'no row has a unique interior-axis value to hover unambiguously').toBeTruthy()
+    if (!target) {
+      return
+    }
 
     // Break the final move into several intermediate mousemove events (as
     // polar-line does): a single-jump teleport onto the ~1px-wide zigzag
     // polyline occasionally lands just off it under full-suite load, so the
     // trigger:'item' tooltip never fires within the 5s budget. Gradual moves
-    // cross the line reliably. vertexIndex 1 targets an interior axis vertex
-    // (bck-44x: exercises the isPolyline branch reading the exact rendered
-    // vertex, not a bounding-rect center that lands between axes).
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0, vertexIndex: 1 }, 10)
+    // cross the line reliably.
+    const tooltipText = await hoverChartDataPointAndGetTooltip(
+      page,
+      { seriesIndex: target.seriesIndex, dataIndex: target.dataIndex, vertexIndex: interiorVertexIndex },
+      10,
+    )
 
     // trigger:'item' shows the series name (the Class) plus every dimension
     // value of the hovered row.
-    expect(tooltipText).toContain(targetSeries?.name ?? '')
-    for (const value of targetRow ?? []) {
+    expect(tooltipText).toContain(target.name)
+    for (const value of target.values) {
       expect(tooltipText).toContain(String(value))
     }
   })
