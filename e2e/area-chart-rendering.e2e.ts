@@ -118,4 +118,50 @@ test.describe('area chart rendering', () => {
     expect(option?.yAxis?.[0]?.type).toBe('category')
     expect(option?.yAxis?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
   })
+
+  // Coverage for the Formula.base variant (bck-aie.30 feedback + bck-g79): the
+  // x-axis binds to a Bases-native formula (`formula.FormattedDate` =
+  // Date.format("MMMM DD, YYYY")) rather than a chart-side format option. This
+  // proves two untested things end-to-end: (1) a `formula.*` property id flows
+  // through the same picker/getNestedValue path as a `note.*` id, and (2) Bases
+  // evaluates the formula so the value arrives pre-formatted. If either failed,
+  // the x categories would be raw ISO dates or 'Unknown' (cartesian.ts's
+  // null/undefined fallback), not full-month-name strings. Category data is a
+  // plain string[] on a category axis, so getChartOption reads it directly --
+  // no in-page formatter invocation needed.
+  test('the formula variant plots Bases-formula-formatted "Month DD, YYYY" dates on the x-axis', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'area/Formula.base', viewName: 'Sales by region (formatted dates)' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    await waitForVaultIndexed(page)
+
+    const option = await getChartOption(page) as {
+      readonly xAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+    } | null
+    const categories = option?.xAxis?.[0]?.data ?? []
+    expect(categories.length).toBeGreaterThan(0)
+    // Every backing note's Date is the first of a 2024 month, so each formula-
+    // computed category is a full month name, zero-padded day 01, and the year.
+    for (const category of categories) {
+      expect(category).toMatch(/^(January|February|March|April|May|June|July|August|September|October|November|December) \d{2}, 2024$/)
+    }
+    expect(categories).toContain('January 01, 2024')
+  })
 })

@@ -152,6 +152,36 @@ describe('Transformer Utils', () => {
       }
       expect(getNestedValue(obj, 'wrapper.inline')).toBe('direct')
     })
+
+    it('should resolve formula.* ids through the entry getValue(propertyId) evaluator', () => {
+      // Mimics a Bases entry: formula results aren't dot-walkable fields --
+      // only getValue('formula.<name>') evaluates and returns them (bck-g79).
+      const entry = {
+        getValue(id: string): unknown {
+          return id === 'formula.FormattedDate' ? 'January 01, 2024' : null
+        },
+      }
+      expect(getNestedValue(entry, 'formula.FormattedDate')).toBe('January 01, 2024')
+    })
+
+    it('should not use getValue for note.*/file.* ids, preserving the direct-access path', () => {
+      // note.* must keep dot-walking so absent-prop handling is unchanged; the
+      // flag proves getValue isn't consulted for a note.* id.
+      let getValueCalled = false
+      const entry = {
+        note: {
+          get(key: string): unknown {
+            return key === 'Date' ? '2024-01-01' : undefined
+          },
+        },
+        getValue(_id: string): unknown {
+          getValueCalled = true
+          return 'via-getValue'
+        },
+      }
+      expect(getNestedValue(entry, 'note.Date')).toBe('2024-01-01')
+      expect(getValueCalled).toBe(false)
+    })
   })
 
   describe('getLegendOption', () => {

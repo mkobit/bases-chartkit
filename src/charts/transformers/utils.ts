@@ -51,21 +51,41 @@ function isRecordWithGetAccessor(
   return typeof o.get === 'function'
 }
 
+// A Bases data row (BasesEntry) resolves any property id -- note.*, file.*,
+// and crucially formula.* -- through a single getValue(propertyId) evaluator.
+function isRecordWithGetValueAccessor(
+  o: Record<string, unknown>,
+): o is Record<string, unknown> & { readonly getValue: (id: string) => unknown } {
+  return typeof o.getValue === 'function'
+}
+
 export function getNestedValue(obj: unknown, path: string): unknown {
-  return (typeof obj !== 'object' || obj === null)
-    ? undefined
-    : path.split('.').reduce(
-        (o: unknown, key: string): unknown => {
-          if (!isRecord(o)) {
-            return undefined
-          }
-          const direct = key in o ? o[key] : undefined
-          return direct !== undefined
-            ? direct
-            : isRecordWithGetAccessor(o) ? o.get(key) : undefined
-        },
-        obj,
-      )
+  if (typeof obj !== 'object' || obj === null) {
+    return undefined
+  }
+  // Bases formula results (`formula.<name>`) are computed lazily and are NOT
+  // reachable by dot-walking the entry the way `note.*`/`file.*` fields are --
+  // they're only exposed via the entry's own getValue(propertyId) evaluator,
+  // which also runs the formula. Verified live (bck-g79): dot-walking
+  // formula.* yields undefined -> a bogus "Unknown" category, while
+  // entry.getValue('formula.FormattedDate') returns the evaluated value. Gated
+  // to the `formula.` prefix so note.*/file.* keep their existing direct-access
+  // path (and its handling of genuinely-absent props) unchanged.
+  if (path.startsWith('formula.') && isRecord(obj) && isRecordWithGetValueAccessor(obj)) {
+    return obj.getValue(path)
+  }
+  return path.split('.').reduce(
+    (o: unknown, key: string): unknown => {
+      if (!isRecord(o)) {
+        return undefined
+      }
+      const direct = key in o ? o[key] : undefined
+      return direct !== undefined
+        ? direct
+        : isRecordWithGetAccessor(o) ? o.get(key) : undefined
+    },
+    obj,
+  )
 }
 
 // Beyond this many categories, forcing every x-axis label to render

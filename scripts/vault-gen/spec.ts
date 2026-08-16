@@ -14,6 +14,12 @@ export interface ChartVariantSpec {
   readonly propBindings: Readonly<Record<string, string>>
   readonly literalOptions?: Readonly<Record<string, string | number | boolean>>
   readonly filters?: readonly string[]
+  // Bases-native computed columns for this .base file's top-level `formulas:`
+  // block (keyed by formula name, valued by a Bases formula expression). A
+  // binding can then reference the result as `formula.<name>` -- e.g. a
+  // date-formatting formula feeding an axis prop. Merged across all variants
+  // sharing one file.
+  readonly formulas?: Readonly<Record<string, string>>
 }
 
 export type FrontmatterRow = Readonly<Record<string, FrontmatterValue>>
