@@ -93,6 +93,27 @@ export const GANTT_PROJECTS = ['Website Redesign',
   'Mobile App Launch',
   'Data Migration',
   'Marketing Campaign']
+// Deliverables become the y-axis rows; each one runs through every phase in
+// GANTT_PHASES as a contiguous multi-color span (plan -> develop -> test ->
+// release) so a single task line shows the whole lifecycle.
+export const GANTT_DELIVERABLES = ['User Authentication',
+  'Payment Gateway',
+  'Search Indexing',
+  'Notification Service',
+  'Admin Dashboard',
+  'Reporting Engine',
+  'Mobile Offline Sync',
+  'Onboarding Flow',
+  'Content Pipeline',
+  'Billing System',
+  'API Gateway',
+  'Data Warehouse']
+// Ordered lifecycle phases -- each deliverable's phases run back-to-back, so
+// order here is the left-to-right span order on the timeline.
+export const GANTT_PHASES = ['Plan',
+  'Develop',
+  'Test',
+  'Release']
 export const CHICAGO_EVENT_TYPES = ['Concert',
   'Festival',
   'Sports',

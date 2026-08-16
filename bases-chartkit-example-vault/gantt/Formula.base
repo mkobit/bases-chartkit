@@ -1,0 +1,21 @@
+properties:
+  note.End:
+    displayName: End
+  note.Start:
+    displayName: Start
+  note.Task:
+    displayName: Task
+formulas:
+  StartMonth: 'Start.format("MMM YYYY")'
+views:
+  - type: gantt-chart
+    name: Delivery timeline (quarter-labeled axis)
+    taskProp: note.Task
+    startProp: note.Start
+    endProp: note.End
+    seriesProp: formula.StartMonth
+    showLegend: true
+    xAxisFormat: "YYYY-[Q]Q"
+    filters:
+      and:
+        - file.folder == "gantt/notes"

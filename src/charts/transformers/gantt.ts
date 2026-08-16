@@ -3,7 +3,7 @@ import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString, asTooltipFormatter } from './utils'
-import { formatDurationMs, formatValue } from './formatters'
+import { formatDateValue, formatDurationMs, formatValue } from './formatters'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
   readonly taskProp: string
@@ -238,7 +238,11 @@ export function createGanttChartOption(
       position: 'top',
       splitLine: { show: true },
       axisLabel: {
-        formatter: (value: number) => options.xAxisFormat ? formatValue(value, options.xAxisFormat) : Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
+        // The tick value is always epoch-ms (a number). formatValue() would
+        // route a number straight to numeric formatting and ignore date tokens
+        // like 'MMM DD' or 'YYYY-[Q]Q', printing raw milliseconds; formatDateValue
+        // parses the epoch-ms and applies the date pattern instead.
+        formatter: (value: number) => options.xAxisFormat ? formatDateValue(value, options.xAxisFormat) : Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
       },
       ...axisRange,
     },

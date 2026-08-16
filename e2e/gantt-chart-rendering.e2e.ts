@@ -59,21 +59,31 @@ function findGanttTarget(option: GanttOptionLike): GanttTarget | null {
   return candidates[0] ?? null
 }
 
+async function openBasesView(page: Parameters<typeof getChartOption>[0], path: string, viewName: string): Promise<void> {
+  await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+    await new Promise<void>((resolve) => {
+      app.workspace.onLayoutReady(() => {
+        resolve()
+      })
+    })
+    const leaf = app.workspace.getLeaf('tab')
+    await leaf.setViewState({
+      type: 'bases',
+      state: { file: args.path, viewName: args.viewName },
+      active: true,
+    })
+  }, { path, viewName })
+}
+
+function groupNamesOf(option: GanttOptionLike | null): readonly string[] {
+  return (option?.series ?? [])
+    .map(s => s.name)
+    .filter((n): n is string => n !== undefined && n !== '_start')
+}
+
 test.describe('gantt chart rendering', () => {
   test('hovering a task\'s bar shows its start, end, and duration in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
-        })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'gantt/Basic.base', viewName: 'Marketing Campaign Schedule' })
+    await openBasesView(page, 'gantt/Basic.base', 'Delivery timeline by phase')
 
     await expect.poll(
       async () => {
@@ -100,5 +110,24 @@ test.describe('gantt chart rendering', () => {
     expect(tooltipText).toContain(`Start: ${startStr}`)
     expect(tooltipText).toContain(`End: ${endStr}`)
     expect(tooltipText).toContain(`Duration: ${formatDurationMs(target.duration)}`)
+  })
+
+  test('a formula.* seriesProp groups tasks by a Bases-computed column', async ({ obsidianPage: { page } }) => {
+    // Formula.base binds seriesProp to formula.StartMonth
+    // (= Start.format("MMM YYYY")). If formula.* resolution didn't flow through
+    // the gantt property picker, grouping would collapse to a single bogus
+    // bucket instead of real month labels -- this asserts the platform
+    // capability (bck-g79) end-to-end against the live Bases formula engine.
+    await openBasesView(page, 'gantt/Formula.base', 'Delivery timeline (quarter-labeled axis)')
+
+    await expect.poll(
+      async () => groupNamesOf(await getChartOption(page) as GanttOptionLike | null).length,
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(1)
+
+    const groupNames = groupNamesOf(await getChartOption(page) as GanttOptionLike)
+
+    // Every group name is a formatted "MMM YYYY" -> contains a 4-digit year.
+    expect(groupNames.every(name => /\b\d{4}\b/.test(name))).toBe(true)
   })
 })

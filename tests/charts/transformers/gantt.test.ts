@@ -216,6 +216,52 @@ describe(
     )
 
     it(
+      'should format time-axis ticks with a date pattern when xAxisFormat is set',
+      () => {
+        // Regression: the tick value is epoch-ms (a number), and the old
+        // formatter routed it through formatValue(), which treats numbers as
+        // numeric and ignores date tokens -- so 'MMM DD' / 'YYYY-[Q]Q' printed
+        // raw milliseconds. It must parse the epoch-ms and apply the pattern.
+        const option = createGanttChartOption(
+          data,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+            xAxisFormat: 'YYYY-[Q]Q',
+          },
+        )
+
+        const xAxis = option.xAxis as { axisLabel?: { formatter?: (value: number) => string } }
+        const epochMs = Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds
+        const formatted = xAxis.axisLabel?.formatter?.(epochMs)
+
+        expect(formatted).toBe('2023-Q1')
+      },
+    )
+
+    it(
+      'should format time-axis ticks with month/day tokens when xAxisFormat is set',
+      () => {
+        const option = createGanttChartOption(
+          data,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+            xAxisFormat: 'MMM DD',
+          },
+        )
+
+        const xAxis = option.xAxis as { axisLabel?: { formatter?: (value: number) => string } }
+        const epochMs = Temporal.PlainDate.from('2023-03-05').toZonedDateTime('UTC').epochMilliseconds
+        const formatted = xAxis.axisLabel?.formatter?.(epochMs)
+
+        expect(formatted).toBe('Mar 05')
+      },
+    )
+
+    it(
       'should exclude the invisible _start series from the legend',
       () => {
         // Regression (fs4.11): ECharts lists every series in the legend when

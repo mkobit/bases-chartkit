@@ -1,6 +1,7 @@
 ---
-Task: "Development Sprint 2"
-Start: 2024-03-10
-End: 2024-03-16
+Task: "Search Indexing"
+Phase: "Plan"
+Start: 2024-01-06
+End: 2024-01-11
 Project: "Mobile App Launch"
 ---

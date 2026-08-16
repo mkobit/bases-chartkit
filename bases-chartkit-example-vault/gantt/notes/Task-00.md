@@ -1,6 +1,7 @@
 ---
-Task: "Kickoff Meeting"
-Start: 2024-01-04
-End: 2024-01-08
-Project: "Data Migration"
+Task: "User Authentication"
+Phase: "Plan"
+Start: 2024-01-07
+End: 2024-01-24
+Project: "Marketing Campaign"
 ---

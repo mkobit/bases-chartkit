@@ -1043,6 +1043,7 @@ const bulletSpec = defineChartExampleSpec<BulletSample>({
 interface GanttSample {
   readonly data: ReadonlyArray<{
     readonly task: string
+    readonly phase: string
     readonly project: string
     readonly start: string
     readonly end: string
@@ -1051,11 +1052,12 @@ interface GanttSample {
 
 const ganttSpec = defineChartExampleSpec<GanttSample>({
   chartType: 'gantt',
-  description: 'Project task schedule across projects -- demonstrates a gantt chart grouped by project.',
+  description: 'Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart.',
   arbitrary: ganttChartArbitrary,
   notePrefix: 'Task',
   toRows: sample => sample.data.map(row => ({
     Task: row.task,
+    Phase: row.phase,
     Start: Temporal.PlainDate.from(row.start),
     End: Temporal.PlainDate.from(row.end),
     Project: row.project,
@@ -1063,7 +1065,19 @@ const ganttSpec = defineChartExampleSpec<GanttSample>({
   variants: [
     {
       fileName: 'Basic.base',
-      viewName: 'Marketing Campaign Schedule',
+      viewName: 'Delivery timeline by phase',
+      viewType: 'gantt-chart',
+      propBindings: {
+        taskProp: 'note.Task',
+        startProp: 'note.Start',
+        endProp: 'note.End',
+        seriesProp: 'note.Phase',
+      },
+      literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'Basic.base',
+      viewName: 'Delivery timeline by project',
       viewType: 'gantt-chart',
       propBindings: {
         taskProp: 'note.Task',
@@ -1072,6 +1086,38 @@ const ganttSpec = defineChartExampleSpec<GanttSample>({
         seriesProp: 'note.Project',
       },
       literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Delivery timeline (vintage theme)',
+      viewType: 'gantt-chart',
+      propBindings: {
+        taskProp: 'note.Task',
+        startProp: 'note.Start',
+        endProp: 'note.End',
+        seriesProp: 'note.Phase',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'Formula.base',
+      viewName: 'Delivery timeline (quarter-labeled axis)',
+      viewType: 'gantt-chart',
+      // Gantt's time axis is a computed value axis of epoch-ms, not a bound
+      // property, so area/Formula.base's pattern (bind an axis prop to a
+      // Date.format() display string) can't drive it -- a formatted string
+      // wouldn't parse back to a timestamp. Two things stand in for it here:
+      // (1) xAxisFormat renders friendly "YYYY-Q" ticks on the time axis, and
+      // (2) seriesProp binds to a formula.* computed column, proving formula
+      // resolution flows through the gantt property pickers (bck-g79).
+      formulas: { StartMonth: 'Start.format("MMM YYYY")' },
+      propBindings: {
+        taskProp: 'note.Task',
+        startProp: 'note.Start',
+        endProp: 'note.End',
+        seriesProp: 'formula.StartMonth',
+      },
+      literalOptions: { showLegend: true, xAxisFormat: 'YYYY-[Q]Q' },
     },
   ],
 })

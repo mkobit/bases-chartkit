@@ -3,30 +3,19 @@ properties:
     displayName: End
   note.Phase:
     displayName: Phase
-  note.Project:
-    displayName: Project
   note.Start:
     displayName: Start
   note.Task:
     displayName: Task
 views:
   - type: gantt-chart
-    name: Delivery timeline by phase
+    name: Delivery timeline (vintage theme)
     taskProp: note.Task
     startProp: note.Start
     endProp: note.End
     seriesProp: note.Phase
     showLegend: true
-    filters:
-      and:
-        - file.folder == "gantt/notes"
-  - type: gantt-chart
-    name: Delivery timeline by project
-    taskProp: note.Task
-    startProp: note.Start
-    endProp: note.End
-    seriesProp: note.Project
-    showLegend: true
+    theme: "Vintage"
     filters:
       and:
         - file.folder == "gantt/notes"
