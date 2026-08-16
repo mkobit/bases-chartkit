@@ -35,7 +35,7 @@ views:
 - **[[candlestick/Basic.base|candlestick]]** — AAPL stock analysis -- demonstrates a candlestick chart.
 - **[[effect-scatter/basic/Basic.base|effect-scatter]]** — GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.
 - **[[funnel/Basic.base|funnel]]** — User journey funnel -- demonstrates a funnel chart with decreasing stage values.
-- **[[gantt/Basic.base|gantt]]** — Project task schedule across projects -- demonstrates a gantt chart grouped by project.
+- **[[gantt/Basic.base|gantt]]** — Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart.
 - **[[gauge/Basic.base|gauge]]** — Server load gauge -- demonstrates a gauge chart with an averaging aggregation.
 - **[[graph/Basic.base|graph]]** — Network topology -- demonstrates a graph chart.
 - **[[heatmap/Basic.base|heatmap]]** — Server load heatmap -- demonstrates a heatmap chart over a day x hour activity grid.
