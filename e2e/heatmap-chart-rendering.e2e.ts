@@ -42,4 +42,54 @@ test.describe('heatmap chart rendering', () => {
     expect(tooltipText).toContain('Server: Mon')
     expect(tooltipText).toContain('Load: 1')
   })
+
+  // Regression coverage for bck-aie.26 (feedback: "better heatmap coloring",
+  // "numbers are a bit confusing", "x axis of time could be a bit better").
+  // Asserts the enrichment end-to-end off the live option: the default ramp is
+  // the sequential blue (light->dark, not the old rainbow), cell labels carry a
+  // legibility halo, and the 24 hourly x categories get thinned + rotated.
+  test('renders a sequential blue ramp, haloed cell labels, and a thinned time axis', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'heatmap/Basic.base', viewName: 'Server load heatmap' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: ReadonlyArray<{ readonly source?: readonly unknown[] }> } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    // ECharts' live getOption() normalizes every component to an array (same
+    // reason the area formula test reads xAxis[0]), so index into each.
+    const option = await getChartOption(page) as {
+      readonly visualMap?: ReadonlyArray<{ readonly inRange?: { readonly color?: readonly string[] } }>
+      readonly series?: ReadonlyArray<{ readonly label?: { readonly textBorderColor?: string, readonly textBorderWidth?: number } }>
+      readonly xAxis?: ReadonlyArray<{ readonly data?: readonly unknown[], readonly axisLabel?: { readonly interval?: unknown, readonly rotate?: number } }>
+    } | null
+
+    const ramp = option?.visualMap?.[0]?.inRange?.color ?? []
+    // Sequential: light low end, dark high end (guards against a rainbow revert).
+    expect(ramp[0]).toBe('#cde2fb')
+    expect(ramp.at(-1)).toBe('#0d366b')
+
+    const label = option?.series?.[0]?.label
+    expect(label?.textBorderColor).toBe('rgba(255, 255, 255, 0.85)')
+    expect(label?.textBorderWidth).toBe(2)
+
+    // 24 hourly categories exceed the thinning threshold, so ECharts thins the
+    // x labels (interval:'auto') to prevent collision. Rotation is the separate
+    // cross-cutting bck-i9b.12 concern (and is view-gated to 0), out of scope here.
+    expect((option?.xAxis?.[0]?.data ?? []).length).toBe(24)
+    expect(option?.xAxis?.[0]?.axisLabel?.interval).toBe('auto')
+  })
 })

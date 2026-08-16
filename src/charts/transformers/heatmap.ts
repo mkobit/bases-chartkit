@@ -1,6 +1,6 @@
 import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel, isRecord, asTooltipFormatter } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions, formatCompactVisualMapLabel, isRecord, asTooltipFormatter } from './utils'
 import { DEFAULT_HEATMAP_COLOR_GRADIENT } from './palette'
 import * as R from 'remeda'
 
@@ -60,7 +60,10 @@ export function createHeatmapChartOption(
   const valueProp = options?.valueProp
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
-  const xAxisRotate = options?.xAxisLabelRotate ?? 0
+
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
 
   const normalizedData: ReadonlyArray<HeatmapCell> = R.map(
     data,
@@ -99,6 +102,17 @@ export function createHeatmapChartOption(
     R.unique(),
   )
 
+  // A time-of-day heatmap can carry 24 hourly x categories; at 0deg every
+  // label collides. Thin/rotate them with the same shared helper the cartesian
+  // charts use (flipAxis:false -- heatmap has no axis-swap mode), honoring an
+  // explicit xAxisLabelRotate override when the user set one.
+  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+    xAxisData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    false,
+  )
+
   const values: readonly number[] = R.map(
     normalizedData,
     d => d.value,
@@ -127,6 +141,15 @@ export function createHeatmapChartOption(
     },
     label: {
       show: true,
+      // Cells span the full light->dark ramp, so no single ink color stays
+      // readable on every background. A light halo (textBorderColor) outlines
+      // dark ink so the value reads on both the pale low cells and the deep
+      // high cells -- this is the "numbers are confusing" legibility fix; the
+      // sequential ramp above already lets color carry magnitude so the number
+      // is now confirmation, not the sole signal.
+      color: '#1a1a19',
+      textBorderColor: 'rgba(255, 255, 255, 0.85)',
+      textBorderWidth: 2,
       formatter: (params: unknown) => {
         const val = asHeatmapCellValue(params)
         return val === undefined || Number.isNaN(val) ? '' : safeToString(val)
@@ -166,7 +189,7 @@ export function createHeatmapChartOption(
       data: [...xAxisData], // Keeping explicit categories for order control
       name: xAxisLabel,
       splitArea: { show: true },
-      axisLabel: { rotate: xAxisRotate },
+      axisLabel: { rotate: xAxisRotate, interval: xAxisInterval },
     },
     yAxis: {
       type: 'category',

@@ -866,6 +866,35 @@ const heatmapSpec = defineChartExampleSpec<HeatmapSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Server load heatmap (vintage theme)',
+      viewType: 'heatmap-chart',
+      propBindings: {
+        xAxisProp: 'note.Time',
+        yAxisProp: 'note.Server',
+        valueProp: 'note.Load',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      // Demonstrates the visualMapColor override -- the same hook a future
+      // theme layer would drive to re-tint the ramp. Swaps the default
+      // sequential blue for a sequential green ramp (still one hue, light->
+      // dark), proving magnitude coloring is data-driven, not hardcoded.
+      fileName: 'CustomColor.base',
+      viewName: 'Server load heatmap (green ramp)',
+      viewType: 'heatmap-chart',
+      propBindings: {
+        xAxisProp: 'note.Time',
+        yAxisProp: 'note.Server',
+        valueProp: 'note.Load',
+      },
+      literalOptions: {
+        showLegend: true,
+        visualMapColor: '#e5f5e0,#a1d99b,#41ab5d,#238b45,#005a32',
+      },
+    },
   ],
 })
 
