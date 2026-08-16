@@ -1,7 +1,13 @@
 import type { EChartsOption, CandlestickSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, isRecord, asTooltipFormatter } from './utils'
+import { safeToString, getNestedValue, getAxisLabelOverlapOptions, isRecord, asTooltipFormatter } from './utils'
 import * as R from 'remeda'
+
+// Bull-green / bear-red, the near-universal candlestick convention. Shared by
+// the candle body (itemStyle) and the tooltip's colored change line so the two
+// always agree on which direction a day moved.
+const DEFAULT_UP_COLOR = '#14b143'
+const DEFAULT_DOWN_COLOR = '#ef232a'
 
 export interface CandlestickTransformerOptions extends BaseTransformerOptions {
   readonly openProp?: string
@@ -34,7 +40,26 @@ export interface CandlestickTooltipParam {
   readonly value: unknown
 }
 
-function formatTooltip(params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>): string {
+// Turns the four raw OHLC numbers into the day's story: signed price move and
+// percent from open to close, arrow + color matching the candle. This is the
+// "i dont know what the hover values mean" fix -- the labels were already there
+// (bck-t21), but a Change line is what actually says up-or-down and by how much.
+function formatChangeLine(open: number, close: number, upColor: string, downColor: string): string {
+  const change = close - open
+  const pct = open !== 0 ? (change / open) * 100 : 0
+  const up = change >= 0
+  const arrow = up ? '▲' : '▼'
+  const color = up ? upColor : downColor
+  const changeStr = `${up ? '+' : '-'}${Math.abs(change).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+  const pctStr = `${up ? '+' : '-'}${Math.abs(pct).toFixed(2)}%`
+  return `Change: <span style="color:${color}">${arrow} ${changeStr} (${pctStr})</span>`
+}
+
+function formatTooltip(
+  params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>,
+  upColor: string,
+  downColor: string,
+): string {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
   const p = Array.isArray(params) ? params as ReadonlyArray<CandlestickTooltipParam> : [params] as ReadonlyArray<CandlestickTooltipParam>
   const first = p[0]
@@ -43,11 +68,14 @@ function formatTooltip(params: CandlestickTooltipParam | ReadonlyArray<Candlesti
   }
   const row = first.value
   const marker = first.marker ?? ''
+  // Conventional Open/High/Low/Close reading order (the "OHLC" acronym), rather
+  // than the dataset's own open/close/low/high key order.
   return `${marker}<b>${row.x}</b><br/>`
     + `Open: ${row.open.toLocaleString('en-US')}<br/>`
-    + `Close: ${row.close.toLocaleString('en-US')}<br/>`
+    + `High: ${row.high.toLocaleString('en-US')}<br/>`
     + `Low: ${row.low.toLocaleString('en-US')}<br/>`
-    + `High: ${row.high.toLocaleString('en-US')}`
+    + `Close: ${row.close.toLocaleString('en-US')}<br/>`
+    + formatChangeLine(row.open, row.close, upColor, downColor)
 }
 
 export function createCandlestickChartOption(
@@ -60,7 +88,12 @@ export function createCandlestickChartOption(
   const lowProp = options?.lowProp ?? 'low'
   const highProp = options?.highProp ?? 'high'
   const xAxisLabel = options?.xAxisLabel ?? xProp
-  const xAxisRotate = options?.xAxisLabelRotate ?? 0
+  const upColor = options?.upColor ?? DEFAULT_UP_COLOR
+  const downColor = options?.downColor ?? DEFAULT_DOWN_COLOR
+
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
 
   const normalizedData: ReadonlyArray<CandlestickRow> = R.pipe(
     data,
@@ -118,6 +151,16 @@ export function createCandlestickChartOption(
 
   const xAxisData: readonly string[] = normalizedData.map(d => d.x)
 
+  // A daily series carries 45-75 date categories; even inside the dataZoom
+  // window they collide at interval 0. Thin them with the shared helper (same
+  // as heatmap). Rotation stays with the cross-cutting bck-i9b.12 concern.
+  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+    xAxisData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    false,
+  )
+
   const seriesItem: CandlestickSeriesOption = {
     type: 'candlestick',
     datasetIndex: 0,
@@ -144,10 +187,10 @@ export function createCandlestickChartOption(
         'high'],
     },
     itemStyle: {
-      color: options?.upColor ?? '#14b143',
-      color0: options?.downColor ?? '#ef232a',
-      borderColor: options?.upColor ?? '#14b143',
-      borderColor0: options?.downColor ?? '#ef232a',
+      color: upColor,
+      color0: downColor,
+      borderColor: upColor,
+      borderColor0: downColor,
     },
   }
 
@@ -161,7 +204,7 @@ export function createCandlestickChartOption(
       axisPointer: {
         type: 'cross',
       },
-      formatter: asTooltipFormatter(formatTooltip),
+      formatter: asTooltipFormatter((params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>) => formatTooltip(params, upColor, downColor)),
     },
     xAxis: {
       type: 'category',
@@ -172,6 +215,7 @@ export function createCandlestickChartOption(
       splitLine: { show: false },
       axisLabel: {
         rotate: xAxisRotate,
+        interval: xAxisInterval,
       },
     },
     yAxis: {

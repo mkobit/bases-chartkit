@@ -990,6 +990,36 @@ const candlestickSpec = defineChartExampleSpec<CandlestickSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'AAPL stock analysis (vintage theme)',
+      viewType: 'candlestick-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        openProp: 'note.Open',
+        closeProp: 'note.Close',
+        highProp: 'note.High',
+        lowProp: 'note.Low',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'Formula.base',
+      viewName: 'AAPL stock analysis (formatted dates)',
+      viewType: 'candlestick-chart',
+      // Date-axis enrichment (bck-g79), mirroring line/area's Formula.base: the
+      // raw ISO Date is pre-formatted by a Bases-native formula upstream and the
+      // candlestick's category x-axis plots the resulting "Mon DD, YYYY" string.
+      formulas: { FormattedDate: 'Date.format("MMM DD, YYYY")' },
+      propBindings: {
+        xAxisProp: 'formula.FormattedDate',
+        openProp: 'note.Open',
+        closeProp: 'note.Close',
+        highProp: 'note.High',
+        lowProp: 'note.Low',
+      },
+      literalOptions: { showLegend: true },
+    },
   ],
 })
 

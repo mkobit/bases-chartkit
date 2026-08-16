@@ -1,0 +1,23 @@
+properties:
+  note.Close:
+    displayName: Close
+  note.High:
+    displayName: High
+  note.Low:
+    displayName: Low
+  note.Open:
+    displayName: Open
+formulas:
+  FormattedDate: 'Date.format("MMM DD, YYYY")'
+views:
+  - type: candlestick-chart
+    name: AAPL stock analysis (formatted dates)
+    xAxisProp: formula.FormattedDate
+    openProp: note.Open
+    closeProp: note.Close
+    highProp: note.High
+    lowProp: note.Low
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "candlestick/notes"
