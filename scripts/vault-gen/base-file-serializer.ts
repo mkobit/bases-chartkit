@@ -58,6 +58,27 @@ function serializeValue(value: string | number | boolean): string {
   return typeof value === 'string' ? `"${value}"` : String(value)
 }
 
+// Merge every variant's `formulas` into one file-level block. A Bases file
+// has a single top-level `formulas:` map shared by all its views, so
+// same-named formulas across variants must resolve to one definition;
+// last-writer-wins keeps that deterministic. Single-quote the expression so
+// its inner double-quoted format tokens (e.g. .format("MMMM DD, YYYY")) stay
+// valid YAML.
+function serializeFormulasBlock(variants: readonly ChartVariantSpec[]): readonly string[] {
+  const merged = variants.reduce<Record<string, string>>(
+    (acc, variant) => ({ ...acc, ...(variant.formulas ?? {}) }),
+    {},
+  )
+  const entries = Object.entries(merged)
+  if (entries.length === 0) {
+    return []
+  }
+  return [
+    'formulas:',
+    ...entries.map(([name, expression]) => `  ${name}: '${expression}'`),
+  ]
+}
+
 function serializeViewItem(chartType: string, variant: ChartVariantSpec): readonly string[] {
   const literalLines = Object.entries(variant.literalOptions ?? {})
     .map(([key, value]) => `    ${key}: ${serializeValue(value)}`)
@@ -97,6 +118,7 @@ export function buildBaseFileYaml(chartType: string, variants: readonly ChartVar
   const propertyIds = collectAllPropertyIds(variants)
   const lines = [
     ...serializePropertiesBlock(propertyIds),
+    ...serializeFormulasBlock(variants),
     ...serializeViewsBlock(chartType, variants),
   ]
   return `${lines.join('\n')}\n`

@@ -1,0 +1,17 @@
+properties:
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+formulas:
+  FormattedDate: 'Date.format("MMMM DD, YYYY")'
+views:
+  - type: area-chart
+    name: Sales by region (formatted dates)
+    xAxisProp: formula.FormattedDate
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "area/notes"

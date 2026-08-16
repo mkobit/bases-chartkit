@@ -966,6 +966,24 @@ const areaSpec = defineChartExampleSpec<StackedAreaSample>({
       },
       literalOptions: { showLegend: true, flipAxis: true },
     },
+    {
+      fileName: 'Formula.base',
+      viewName: 'Sales by region (formatted dates)',
+      viewType: 'area-chart',
+      // Feedback-driven variant: rather than a chart-side format option, the
+      // x-axis binds to a Bases-native formula that pre-formats the raw ISO
+      // Date into "January 01, 2024" upstream -- the user controls the
+      // transform in Bases' own formula language, and the chart just plots the
+      // resulting string category. Proves formula.* props flow through the
+      // property picker unmodified (bck-g79).
+      formulas: { FormattedDate: 'Date.format("MMMM DD, YYYY")' },
+      propBindings: {
+        xAxisProp: 'formula.FormattedDate',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true },
+    },
   ],
 })
 
