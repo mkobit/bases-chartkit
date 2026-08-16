@@ -36,10 +36,33 @@ export function createTreemapChartOption(
     breadcrumb: {
       show: true,
     },
+    // Render the whole tree at once and print each non-leaf node's name in a
+    // header strip. Without this, ECharts' defaults (upperLabel.show:false,
+    // gapWidth:0, click-to-drill) collapse every branch into an ungrouped grid
+    // of leaf tiles -- the "no tree map relationship, all flat boxes" bug. The
+    // header strips plus the per-level gaps below are what make the nesting
+    // legible (a sunburst gets this for free from its concentric rings).
+    upperLabel: {
+      show: true,
+      height: 24,
+    },
     label: {
       show: true,
       formatter: '{b}',
     },
+    // Per-depth framing: a gap between sibling tiles exposes the parent tile
+    // behind them, so each branch reads as a contained group. Gaps widen toward
+    // the root so the top-level branches separate most strongly, and leaves get
+    // a light saturation lift so a branch's tiles read as one family. Gaps are
+    // derived from tile geometry/color rather than a hardcoded background, so
+    // they hold up in both light and dark themes.
+    levels: [
+      { itemStyle: { gapWidth: 5 } },
+      { itemStyle: { gapWidth: 3 },
+        colorSaturation: [0.3, 0.5] },
+      { itemStyle: { gapWidth: 1 },
+        colorSaturation: [0.35, 0.6] },
+    ],
     // ECharts' treemap defaultOption hardcodes itemStyle.borderColor to an
     // opaque white design token with no dark-theme override (dark.js's
     // treemap entry only restyles the breadcrumb, unlike sunburst's, which

@@ -96,6 +96,57 @@ describe(
     )
 
     it(
+      'should show non-leaf node names in a header strip so the hierarchy is legible',
+      () => {
+        // Regression: with ECharts' upperLabel default (show:false) every branch
+        // collapsed into an ungrouped grid of leaf tiles -- the "all flat boxes,
+        // no tree map relationship" bug. Header strips label each parent tile.
+        const data = [{ path: 'A/B/C',
+          val: 10 }]
+
+        const option = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          {},
+        )
+
+        const series = option.series as readonly TreemapSeriesOption[]
+        expect(series[0]?.upperLabel?.show).toBe(true)
+      },
+    )
+
+    it(
+      'should gap sibling tiles per depth so parents visibly contain their children',
+      () => {
+        // Regression: at ECharts' default gapWidth:0 sibling tiles butt together
+        // with no visible parent framing, so nested branches read as flat. Each
+        // level must define a positive gap; gaps shrink with depth.
+        const data = [{ path: 'A/B/C',
+          val: 10 }]
+
+        const option = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          {},
+        )
+
+        const series = option.series as readonly TreemapSeriesOption[]
+        const levels = series[0]?.levels
+        expect(levels).toBeDefined()
+        expect(levels?.length).toBeGreaterThanOrEqual(2)
+
+        const gaps = (levels ?? []).map(level => level.itemStyle?.gapWidth ?? 0)
+        // Every level frames its children, and the framing tapers toward leaves.
+        expect(gaps.every(g => g > 0)).toBe(true)
+        expect(gaps[0]).toBeGreaterThan(gaps[gaps.length - 1] ?? 0)
+      },
+    )
+
+    it(
       'should handle missing values gracefully',
       () => {
         const data = [
