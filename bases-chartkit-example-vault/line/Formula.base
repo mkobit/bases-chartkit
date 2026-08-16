@@ -1,0 +1,14 @@
+properties:
+  note.Revenue:
+    displayName: Revenue
+formulas:
+  FormattedDate: 'Date.format("MMMM DD, YYYY")'
+views:
+  - type: line-chart
+    name: Revenue trend (formatted dates)
+    xAxisProp: formula.FormattedDate
+    yAxisProp: note.Revenue
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "line/notes"

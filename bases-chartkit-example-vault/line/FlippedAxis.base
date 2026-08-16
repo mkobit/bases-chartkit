@@ -1,0 +1,15 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: line-chart
+    name: Revenue trend (flipped axis)
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    showLegend: true
+    flipAxis: true
+    filters:
+      and:
+        - file.folder == "line/notes"

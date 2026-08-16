@@ -1,0 +1,15 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: line-chart
+    name: Revenue trend (vintage theme)
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    showLegend: true
+    theme: "Vintage"
+    filters:
+      and:
+        - file.folder == "line/notes"

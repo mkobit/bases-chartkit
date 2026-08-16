@@ -12,3 +12,13 @@ views:
     filters:
       and:
         - file.folder == "line/notes"
+  - type: line-chart
+    name: Revenue trend (smoothed)
+    xAxisProp: note.Date
+    yAxisProp: note.Revenue
+    showLegend: true
+    smooth: true
+    showSymbol: false
+    filters:
+      and:
+        - file.folder == "line/notes"

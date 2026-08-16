@@ -181,6 +181,56 @@ const lineSpec = defineChartExampleSpec<LineSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      // line-unique option combo: smooth the daily random walk into a curve
+      // and drop the per-point symbols so the trend reads as one continuous
+      // line -- neither toggle exists on the categorical bar path.
+      fileName: 'Basic.base',
+      viewName: 'Revenue trend (smoothed)',
+      viewType: 'line-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: { showLegend: true, smooth: true, showSymbol: false },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Revenue trend (vintage theme)',
+      viewType: 'line-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Revenue trend (flipped axis)',
+      viewType: 'line-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
+    {
+      fileName: 'Formula.base',
+      viewName: 'Revenue trend (formatted dates)',
+      viewType: 'line-chart',
+      // Mirrors area/Formula.base (bck-g79): line is the simplest cartesian to
+      // showcase a `formula.*`-bound x-axis. The raw ISO Date is pre-formatted
+      // into "Month DD, YYYY" by a Bases-native formula upstream rather than a
+      // chart-side format option, and the category axis plots the resulting
+      // string. If the formula id didn't flow through getNestedValue, the
+      // categories would render as raw ISO dates or 'Unknown'.
+      formulas: { FormattedDate: 'Date.format("MMMM DD, YYYY")' },
+      propBindings: {
+        xAxisProp: 'formula.FormattedDate',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: { showLegend: true },
+    },
   ],
 })
 
