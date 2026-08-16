@@ -1,0 +1,18 @@
+properties:
+  note.Load:
+    displayName: Load
+  note.Server:
+    displayName: Server
+  note.Time:
+    displayName: Time
+views:
+  - type: heatmap-chart
+    name: Server load heatmap (green ramp)
+    xAxisProp: note.Time
+    yAxisProp: note.Server
+    valueProp: note.Load
+    showLegend: true
+    visualMapColor: "#e5f5e0,#a1d99b,#41ab5d,#238b45,#005a32"
+    filters:
+      and:
+        - file.folder == "heatmap/notes"

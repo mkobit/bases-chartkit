@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
+import { DEFAULT_HEATMAP_COLOR_GRADIENT } from '../src/charts/transformers/palette'
 import type { DatasetComponentOption } from 'echarts'
 
 interface HeatmapSourceItem {
@@ -183,6 +184,114 @@ describe(
         const visualMap = option.visualMap as any
 
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
+      },
+    )
+
+    it(
+      'applies the default sequential blue gradient (light->dark) when no visualMapColor is set',
+      () => {
+        // Regression for bck-aie.26: heatmap value is a magnitude, so the
+        // default ramp must be sequential (one hue, monotonic lightness), not
+        // the old blue->yellow->red spectral rainbow that made both ends read
+        // as equally intense. Guards against a revert to a diverging/rainbow
+        // default.
+        const option = transformDataToChartOption(
+          [{ x: 'A', y: '1', val: 10 }],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const visualMap = option.visualMap as any
+
+        expect(visualMap.inRange.color).toEqual([...DEFAULT_HEATMAP_COLOR_GRADIENT])
+        // Light low end, dark high end -- the sequential invariant.
+        expect(visualMap.inRange.color[0]).toBe('#cde2fb')
+        expect(visualMap.inRange.color.at(-1)).toBe('#0d366b')
+      },
+    )
+
+    it(
+      'uses an explicit visualMapColor override instead of the default gradient',
+      () => {
+        // The override is the hook a future theme layer drives to re-tint the
+        // ramp; it must win over the default.
+        const override = ['#e5f5e0',
+          '#41ab5d',
+          '#005a32']
+        const option = transformDataToChartOption(
+          [{ x: 'A', y: '1', val: 10 }],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val', visualMapColor: override },
+        )
+        const visualMap = option.visualMap as any
+
+        expect(visualMap.inRange.color).toEqual(override)
+      },
+    )
+
+    it(
+      'outlines cell labels with a light halo so values read on both light and dark cells',
+      () => {
+        // The sequential ramp spans light->dark, so no single ink stays
+        // readable on every cell. A light textBorder halo around dark ink is
+        // the "confusing numbers" legibility fix.
+        const option = transformDataToChartOption(
+          [{ x: 'A', y: '1', val: 10 }],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const label = (option.series as any)[0].label
+
+        expect(label.color).toBe('#1a1a19')
+        expect(label.textBorderColor).toBe('rgba(255, 255, 255, 0.85)')
+        expect(label.textBorderWidth).toBe(2)
+      },
+    )
+
+    it(
+      'thins x-axis labels when there are many time categories',
+      () => {
+        // A time-of-day heatmap can carry 24 hourly categories (> the shared
+        // MANY_CATEGORIES_THRESHOLD of 15); at interval 0 every label renders
+        // and they collide, so the axis switches to 'auto' thinning. (Rotation
+        // is the separate cross-cutting bck-i9b.12 concern and is left to it.)
+        const manyHours = Array.from({ length: 24 }, (_, h) => ({
+          x: `${String(h).padStart(2, '0')}:00`,
+          y: 'Mon',
+          val: h,
+        }))
+        const option = transformDataToChartOption(
+          manyHours,
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const xAxis = option.xAxis as any
+
+        expect(xAxis.axisLabel.interval).toBe('auto')
+      },
+    )
+
+    it(
+      'shows every x-axis label when few categories',
+      () => {
+        const option = transformDataToChartOption(
+          [{ x: 'Mon', y: '1', val: 10 },
+            { x: 'Tue', y: '1', val: 20 }],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const xAxis = option.xAxis as any
+
+        expect(xAxis.axisLabel.interval).toBe(0)
       },
     )
   },
