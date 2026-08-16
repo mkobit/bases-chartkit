@@ -1,0 +1,17 @@
+properties:
+  note.Change:
+    displayName: Change
+  note.IsTotal:
+    displayName: Is Total
+  note.Step:
+    displayName: Step
+views:
+  - type: waterfall-chart
+    name: Budget waterfall (vintage theme)
+    xAxisProp: note.Step
+    yAxisProp: note.Change
+    totalProp: note.IsTotal
+    theme: "Vintage"
+    filters:
+      and:
+        - file.folder == "waterfall/notes"

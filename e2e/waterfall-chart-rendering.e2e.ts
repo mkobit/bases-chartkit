@@ -119,4 +119,37 @@ test.describe('waterfall chart rendering', () => {
     // one, so match that exactly rather than toLocaleString.
     expect(tooltipText).toContain(String(totalValue))
   })
+
+  // The DeltasOnly.base variant (bck-aie.12) binds no totalProp, so the same
+  // notes render with every row as a delta and no dedicated Total series --
+  // the opt-in half of bck-h0b. Asserts the view-level wiring passes an absent
+  // totalProp through end-to-end (the transformer omits the Total series when
+  // no row is flagged), which unit tests can't exercise since they can't feed
+  // Bases' Value-wrapped booleans.
+  test('the deltas-only variant renders no Total series when totalProp is unset', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'waterfall/DeltasOnly.base', viewName: 'Budget waterfall (deltas only)' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly series?: readonly WaterfallSeriesLike[] } | null
+        const increaseSeries = option?.series?.find(s => s.name === 'Increase')
+        return increaseSeries?.data?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const option = await getChartOption(page) as { readonly series: readonly WaterfallSeriesLike[] }
+    expect(option.series.find(s => s.name === 'Total')).toBeUndefined()
+    expect(option.series.find(s => s.name === 'Increase')).toBeDefined()
+  })
 })

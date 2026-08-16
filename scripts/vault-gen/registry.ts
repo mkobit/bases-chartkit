@@ -362,6 +362,29 @@ const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
         totalProp: 'note.IsTotal',
       },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Budget waterfall (vintage theme)',
+      viewType: 'waterfall-chart',
+      propBindings: {
+        xAxisProp: 'note.Step',
+        yAxisProp: 'note.Change',
+        totalProp: 'note.IsTotal',
+      },
+      literalOptions: { theme: 'Vintage' },
+    },
+    {
+      // No totalProp: every row is treated as a delta, so the same notes render
+      // without the absolute-total bars -- shows what the totalProp toggle
+      // changes (the opening/closing balance steps become plain deltas).
+      fileName: 'DeltasOnly.base',
+      viewName: 'Budget waterfall (deltas only)',
+      viewType: 'waterfall-chart',
+      propBindings: {
+        xAxisProp: 'note.Step',
+        yAxisProp: 'note.Change',
+      },
+    },
   ],
 })
 
