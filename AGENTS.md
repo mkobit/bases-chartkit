@@ -20,7 +20,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 | `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `bases-chartkit-example-vault/` (requires `bun run build` first). |
 | `bun run vault:install` | Install the built plugin into the in-repo example vault without launching. |
 | `bun run clean` | Remove generated/build/test-output dirs (`main.js`, `test-results/`, `playwright-report/`, `.test-output/`, `.obsidian-cache/`, `coverage/`). |
-| `bun exec openspec validate --all` | Runs as a PR check on changes under `openspec/**`. Validates OpenSpec specs and changes. |
+| `bun run openspec:validate` | Runs as a PR check on changes under `openspec/**`. Validates OpenSpec specs and changes. |
 
 ## Dependency installation handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.

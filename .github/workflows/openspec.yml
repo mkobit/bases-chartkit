@@ -32,4 +32,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-env
       - name: Validate OpenSpec specs and changes
-        run: bun exec openspec validate --all
+        run: bun run openspec:validate
