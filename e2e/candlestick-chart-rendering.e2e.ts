@@ -103,5 +103,49 @@ test.describe('candlestick chart rendering', () => {
     expect(tooltipText).toContain(`Close: ${lastRow.close.toLocaleString('en-US')}`)
     expect(tooltipText).toContain(`Low: ${lastRow.low.toLocaleString('en-US')}`)
     expect(tooltipText).toContain(`High: ${lastRow.high.toLocaleString('en-US')}`)
+
+    // bck-aie.29: the Change line interprets the OHLC values (up-or-down, how
+    // much). Direction is close vs open; arrow matches the live candle.
+    expect(tooltipText).toContain('Change:')
+    expect(tooltipText).toContain(lastRow.close >= lastRow.open ? '▲' : '▼')
+  })
+
+  // Date-axis enrichment coverage for bck-aie.29 (mirrors line/area): the
+  // Formula.base variant binds the x-axis to formula.FormattedDate =
+  // Date.format("MMM DD, YYYY"), so Bases pre-formats the raw ISO Date and the
+  // candlestick's category axis plots the "Mon DD, YYYY" string. A raw ISO date
+  // or 'Unknown' here would mean the formula.* id never flowed through.
+  test('the formula variant plots Bases-formula-formatted dates on the x-axis', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'candlestick/Formula.base', viewName: 'AAPL stock analysis (formatted dates)' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    await waitForVaultIndexed(page)
+
+    const option = await getChartOption(page) as {
+      readonly xAxis?: readonly { readonly data?: readonly unknown[] }[]
+    } | null
+    const categories = option?.xAxis?.[0]?.data ?? []
+    expect(categories.length).toBeGreaterThan(0)
+    // Every category is an abbreviated month, zero-padded day, and year.
+    for (const category of categories) {
+      expect(category).toMatch(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}, 20\d{2}$/)
+    }
   })
 })

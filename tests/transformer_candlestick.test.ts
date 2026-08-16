@@ -151,6 +151,76 @@ describe(
       },
     )
 
+    const invokeTooltip = (option: ReturnType<typeof transformDataToChartOption>, row: Record<string, unknown>): string => {
+      const formatter = (option.tooltip as any).formatter as (params: unknown) => string
+      return formatter([{ value: row, marker: '' }])
+    }
+
+    it(
+      'labels the tooltip in Open/High/Low/Close order with a signed, colored change line',
+      () => {
+        // bck-aie.29 feedback ("i dont know what the hover values mean"): the
+        // raw OHLC labels alone don't say up-or-down. A Change line interprets
+        // them; reading order follows the OHLC acronym, not the dataset keys.
+        const option = transformDataToChartOption(
+          data,
+          'date',
+          '',
+          'candlestick',
+          { openProp: 'open', closeProp: 'close', lowProp: 'low', highProp: 'high' },
+        )
+        // Up day: open 100 -> close 110 = +10 (+10.00%), bull green.
+        const upText = invokeTooltip(option, { x: '2023-10-01', open: 100, close: 110, low: 95, high: 115 })
+
+        expect(upText.indexOf('Open:')).toBeLessThan(upText.indexOf('High:'))
+        expect(upText.indexOf('High:')).toBeLessThan(upText.indexOf('Low:'))
+        expect(upText.indexOf('Low:')).toBeLessThan(upText.indexOf('Close:'))
+        expect(upText).toContain('Change:')
+        expect(upText).toContain('▲ +10 (+10.00%)')
+        expect(upText).toContain('#14b143')
+      },
+    )
+
+    it(
+      'shows a bear-red down arrow and negative change when close is below open',
+      () => {
+        const option = transformDataToChartOption(
+          data,
+          'date',
+          '',
+          'candlestick',
+          { openProp: 'open', closeProp: 'close', lowProp: 'low', highProp: 'high' },
+        )
+        // Down day: open 110 -> close 105 = -5 (-4.55%), bear red.
+        const downText = invokeTooltip(option, { x: '2023-10-02', open: 110, close: 105, low: 100, high: 112 })
+
+        expect(downText).toContain('▼ -5 (-4.55%)')
+        expect(downText).toContain('#ef232a')
+      },
+    )
+
+    it(
+      'thins x-axis date labels when there are many daily categories',
+      () => {
+        const manyDays = Array.from({ length: 40 }, (_, i) => ({
+          date: `2024-02-${String(i + 1).padStart(2, '0')}`,
+          open: 100,
+          close: 101,
+          low: 99,
+          high: 102,
+        }))
+        const option = transformDataToChartOption(
+          manyDays,
+          'date',
+          '',
+          'candlestick',
+          { openProp: 'open', closeProp: 'close', lowProp: 'low', highProp: 'high' },
+        )
+
+        expect((option.xAxis as any).axisLabel.interval).toBe('auto')
+      },
+    )
+
     it(
       'should use default property names if options are missing',
       () => {
