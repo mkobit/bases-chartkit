@@ -264,7 +264,9 @@
 		"waterfall": {
 			"name": "Waterfall chart",
 			"category_prop": "Category property",
-			"value_prop": "Value property"
+			"value_prop": "Value property",
+			"total_prop": "Total property",
+			"total_prop_placeholder": "Boolean property marking absolute-total bars"
 		},
 		"pareto": {
 			"name": "Pareto chart",

@@ -59,5 +59,5 @@ views:
 - **[[theme-river/Basic.base|theme-river]]** — News topic mentions over a month -- demonstrates a theme river chart over a date x topic cross-product.
 - **[[tree/Basic.base|tree]]** — Company org chart -- demonstrates a tree chart over hierarchical, slash-delimited path data.
 - **[[treemap/Basic.base|treemap]]** — Company org chart -- demonstrates a treemap chart over hierarchical, slash-delimited path data.
-- **[[waterfall/Basic.base|waterfall]]** — Budget waterfall -- demonstrates a waterfall chart.
+- **[[waterfall/Basic.base|waterfall]]** — Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.
 - **[[word-cloud/Basic.base|word-cloud]]** — Keyword frequency -- demonstrates a word cloud chart.

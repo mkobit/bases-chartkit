@@ -25,6 +25,12 @@ export class WaterfallChartView extends BaseChartView {
 
     return [
       ...options,
+      {
+        displayName: t('views.waterfall.total_prop'),
+        type: 'property',
+        key: BaseChartView.TOTAL_PROP_KEY,
+        placeholder: t('views.waterfall.total_prop_placeholder'),
+      },
       ...BaseChartView.getAxisViewOptions(),
     ]
   }
@@ -37,13 +43,18 @@ export class WaterfallChartView extends BaseChartView {
       return null
     }
 
+    const totalProp = this.config.get(BaseChartView.TOTAL_PROP_KEY)
+
     // We use 'waterfall' chart type
     return transformDataToChartOption(
       data,
       xProp,
       yProp,
       'waterfall',
-      this.getCommonTransformerOptions(),
+      {
+        ...this.getCommonTransformerOptions(),
+        totalProp: typeof totalProp === 'string' ? totalProp : undefined,
+      },
     )
   }
 }

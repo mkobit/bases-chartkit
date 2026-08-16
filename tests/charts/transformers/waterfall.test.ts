@@ -119,5 +119,105 @@ describe(
         expect((option.series as any[])[0].data).toHaveLength(0)
       },
     )
+
+    it(
+      'draws a connector markLine at each running-sum boundary between adjacent bars',
+      () => {
+        // Running sums after A/B/C/D = 100 / 80 / 110 / 100.
+        const option = createWaterfallChartOption(
+          data,
+          'category',
+          'value',
+        )
+        const series = option.series as any[]
+        const baseSeries = series.find(s => s.name === '_base')
+
+        // One connector per adjacent pair (n-1), each a flat segment at the
+        // shared boundary height, spanning the two category indices.
+        expect(baseSeries.markLine.data).toEqual([
+          [{ coord: [0, 100] }, { coord: [1, 100] }],
+          [{ coord: [1, 80] }, { coord: [2, 80] }],
+          [{ coord: [2, 110] }, { coord: [3, 110] }],
+        ])
+        expect(baseSeries.markLine.silent).toBe(true)
+      },
+    )
+
+    it(
+      'does not add a Total series when no totalProp is configured',
+      () => {
+        const option = createWaterfallChartOption(
+          data,
+          'category',
+          'value',
+        )
+        const series = option.series as any[]
+        expect(series.find(s => s.name === 'Total')).toBeUndefined()
+        expect(series).toHaveLength(3)
+      },
+    )
+
+    it(
+      'renders totalProp-flagged rows as absolute bars from zero and resets the running sum',
+      () => {
+        const totalData = [
+          { category: 'Start',
+            value: 1000,
+            total: true },
+          { category: 'Up',
+            value: 200,
+            total: false },
+          { category: 'Down',
+            value: -50,
+            total: false },
+          { category: 'End',
+            value: 1150,
+            total: true },
+        ]
+
+        const option = createWaterfallChartOption(
+          totalData,
+          'category',
+          'value',
+          { totalProp: 'total' },
+        )
+        const series = option.series as any[]
+        const baseSeries = series.find(s => s.name === '_base')
+        const increaseSeries = series.find(s => s.name === 'Increase')
+        const decreaseSeries = series.find(s => s.name === 'Decrease')
+        const totalSeries = series.find(s => s.name === 'Total')
+
+        expect(totalSeries).toBeDefined()
+        // Total bars sit at index 0 and 3, drawn from a zero base.
+        expect(totalSeries.data).toEqual([1000, '-', '-', 1150])
+        expect(baseSeries.data).toEqual([0, 1000, 1150, 0])
+        // Deltas stack on the reset baseline: Up rises from 1000, Down falls to 1150.
+        expect(increaseSeries.data).toEqual(['-', 200, '-', '-'])
+        expect(decreaseSeries.data).toEqual(['-', '-', 50, '-'])
+        // Connectors follow the reset sums: 1000 -> 1200 -> 1150 -> 1150.
+        expect(baseSeries.markLine.data).toEqual([
+          [{ coord: [0, 1000] }, { coord: [1, 1000] }],
+          [{ coord: [1, 1200] }, { coord: [2, 1200] }],
+          [{ coord: [2, 1150] }, { coord: [3, 1150] }],
+        ])
+      },
+    )
+
+    it(
+      'treats the string "true" as a total flag',
+      () => {
+        const option = createWaterfallChartOption(
+          [{ category: 'A',
+            value: 42,
+            total: 'true' }],
+          'category',
+          'value',
+          { totalProp: 'total' },
+        )
+        const series = option.series as any[]
+        const totalSeries = series.find(s => s.name === 'Total')
+        expect(totalSeries.data).toEqual([42])
+      },
+    )
   },
 )

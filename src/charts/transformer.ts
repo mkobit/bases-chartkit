@@ -121,6 +121,7 @@ import {
 import {
   createWaterfallChartOption,
 } from './transformers/waterfall'
+import type { WaterfallTransformerOptions } from './transformers/waterfall'
 import type {
   ParetoTransformerOptions,
 } from './transformers/pareto'
@@ -199,6 +200,7 @@ export type ChartTransformerOptions
     | PolarLineTransformerOptions
     | PolarScatterTransformerOptions
     | WordCloudTransformerOptions
+    | WaterfallTransformerOptions
 
 // Helper to cast options
 function asOptions<T>(options: unknown): T {

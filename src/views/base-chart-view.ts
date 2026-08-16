@@ -41,6 +41,7 @@ export abstract class BaseChartView extends BasesView {
   public static readonly MIN_VALUE_KEY = 'minVal'
   public static readonly MAX_VALUE_KEY = 'maxVal'
   public static readonly VALUE_PROP_KEY = 'valueProp'
+  public static readonly TOTAL_PROP_KEY = 'totalProp'
   public static readonly VALUE_FORMAT_KEY = 'valueFormat'
 
   public static readonly X_AXIS_LABEL_KEY = 'xAxisLabel'

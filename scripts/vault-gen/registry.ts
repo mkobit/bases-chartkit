@@ -338,17 +338,18 @@ const paretoSpec = defineChartExampleSpec<ParetoSample>({
 })
 
 interface WaterfallSample {
-  readonly data: ReadonlyArray<{ readonly step: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly step: string, readonly value: number, readonly isTotal: boolean }>
 }
 
 const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
   chartType: 'waterfall',
-  description: 'Budget waterfall -- demonstrates a waterfall chart.',
+  description: 'Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.',
   arbitrary: waterfallChartArbitrary,
   notePrefix: 'Budget-Step',
   toRows: sample => sample.data.map(row => ({
     Step: row.step,
     Change: row.value,
+    IsTotal: row.isTotal,
   })),
   variants: [
     {
@@ -358,6 +359,7 @@ const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
       propBindings: {
         xAxisProp: 'note.Step',
         yAxisProp: 'note.Change',
+        totalProp: 'note.IsTotal',
       },
     },
   ],
