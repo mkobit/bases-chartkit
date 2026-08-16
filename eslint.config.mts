@@ -512,7 +512,7 @@ export default tseslint.config(
   },
   // Scripts (and shared/, the Node-side tooling utilities scripts/ and e2e/ both import)
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'shared/**/*.ts'],
+    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'shared/**/*.ts', '.claude/hooks/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,

@@ -40,6 +40,7 @@
 		"scripts/**/*.ts",
 		"shared/**/*.ts",
 		"playwright.config.ts",
-		"playwright.survey.config.ts"
+		"playwright.survey.config.ts",
+		".claude/hooks/**/*.ts"
 	]
 }
