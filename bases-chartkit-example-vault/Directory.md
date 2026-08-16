@@ -58,6 +58,6 @@ views:
 - **[[sunburst/Basic.base|sunburst]]** — Company org chart -- demonstrates a sunburst chart over hierarchical, slash-delimited path data.
 - **[[theme-river/Basic.base|theme-river]]** — News topic mentions over a month -- demonstrates a theme river chart over a date x topic cross-product.
 - **[[tree/Basic.base|tree]]** — Company org chart -- demonstrates a tree chart over hierarchical, slash-delimited path data.
-- **[[treemap/Basic.base|treemap]]** — Company org chart -- demonstrates a treemap chart over hierarchical, slash-delimited path data.
+- **[[treemap/Basic.base|treemap]]** — Org headcount by division -- demonstrates a treemap over multi-root, slash-delimited hierarchical path data with area-proportional leaves.
 - **[[waterfall/Basic.base|waterfall]]** — Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.
 - **[[word-cloud/Basic.base|word-cloud]]** — Keyword frequency -- demonstrates a word cloud chart.

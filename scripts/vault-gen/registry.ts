@@ -534,7 +534,7 @@ const sunburstSpec = defineChartExampleSpec<HierarchySample>({
 
 const treemapSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'treemap',
-  description: 'Company org chart -- demonstrates a treemap chart over hierarchical, slash-delimited path data.',
+  description: 'Org headcount by division -- demonstrates a treemap over multi-root, slash-delimited hierarchical path data with area-proportional leaves.',
   arbitrary: treemapChartArbitrary,
   notePrefix: 'Org-Node',
   toRows: sample => sample.data.map(row => ({
@@ -544,13 +544,24 @@ const treemapSpec = defineChartExampleSpec<HierarchySample>({
   variants: [
     {
       fileName: 'Basic.base',
-      viewName: 'Project tasks treemap',
+      viewName: 'Org headcount treemap',
       viewType: 'treemap-chart',
       propBindings: {
         xAxisProp: 'note.Path',
         valueProp: 'note.Value',
       },
       literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Org headcount treemap (vintage theme)',
+      viewType: 'treemap-chart',
+      propBindings: {
+        xAxisProp: 'note.Path',
+        valueProp: 'note.Value',
+      },
+      literalOptions: { showLegend: true,
+        theme: 'Vintage' },
     },
   ],
 })

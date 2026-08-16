@@ -5,10 +5,11 @@ properties:
     displayName: Value
 views:
   - type: treemap-chart
-    name: Org headcount treemap
+    name: Org headcount treemap (vintage theme)
     xAxisProp: note.Path
     valueProp: note.Value
     showLegend: true
+    theme: "Vintage"
     filters:
       and:
         - file.folder == "treemap/notes"

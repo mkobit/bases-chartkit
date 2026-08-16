@@ -5,6 +5,8 @@ import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, wai
 interface TreemapSeriesLike {
   readonly type?: string
   readonly itemStyle?: { readonly borderColor?: string }
+  readonly upperLabel?: { readonly show?: boolean }
+  readonly levels?: ReadonlyArray<{ readonly itemStyle?: { readonly gapWidth?: number } }>
 }
 
 interface HierarchyLeaf {
@@ -125,7 +127,7 @@ test.describe('treemap chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'treemap/Basic.base', viewName: 'Project tasks treemap' })
+    }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
 
     await expect.poll(
       async () => {
@@ -139,6 +141,16 @@ test.describe('treemap chart rendering', () => {
     const treemapSeries = option.series.find(s => s.type === 'treemap')
 
     expect(treemapSeries?.itemStyle?.borderColor).toBe('transparent')
+
+    // Regression (bck-aie.18): the treemap rendered every branch as an
+    // ungrouped grid of leaf tiles -- "no tree map relationship, all flat
+    // boxes". The fix makes the nesting legible via non-leaf header strips
+    // (upperLabel) and positive per-depth sibling gaps; assert both survive
+    // round-trip into the live series.
+    expect(treemapSeries?.upperLabel?.show).toBe(true)
+    const gapWidths = (treemapSeries?.levels ?? []).map(level => level.itemStyle?.gapWidth ?? 0)
+    expect(gapWidths.length).toBeGreaterThanOrEqual(2)
+    expect(gapWidths.every(gap => gap > 0)).toBe(true)
   })
 
   // Regression coverage for bck-44j: extends the bar/radar hover-tooltip
@@ -159,7 +171,7 @@ test.describe('treemap chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'treemap/Basic.base', viewName: 'Project tasks treemap' })
+    }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
 
     await expect.poll(
       () => findHierarchyLeaf(page),
