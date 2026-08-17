@@ -922,7 +922,54 @@ const polarLineSpec = defineChartExampleSpec<PolarLineSample>({
         valueProp: 'note.Load',
         seriesProp: 'note.Server',
       },
-      literalOptions: { showLegend: true },
+      // Explainability (bck-aie.27 feedback: "i dont know what to look for
+      // here"). Polar-line has no cartesian axis chrome to lean on, so a title
+      // + subtext state what's encoded; legend moves to the bottom so it
+      // clears the top-left title.
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        title: 'Server load across time of day',
+        description: 'Angle is time-of-day; distance from center is load. Each line is one server.',
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Server load (polar line, vintage theme)',
+      viewType: 'polar-line-chart',
+      propBindings: {
+        xAxisProp: 'note.Time',
+        valueProp: 'note.Load',
+        seriesProp: 'note.Server',
+      },
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        theme: 'Vintage',
+        title: 'Server load across time of day',
+        description: 'Vintage palette variant of the same time x server polar line.',
+      },
+    },
+    {
+      fileName: 'Stacked.base',
+      viewName: 'Total server load by time of day (stacked)',
+      viewType: 'polar-line-chart',
+      propBindings: {
+        xAxisProp: 'note.Time',
+        valueProp: 'note.Load',
+        seriesProp: 'note.Server',
+      },
+      // Domain-specific variant: stack + areaStyle turns the per-server lines
+      // into a filled composition, so the outer edge at each angle reads as
+      // the fleet's total load for that time-of-day bucket.
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        stack: true,
+        areaStyle: true,
+        title: 'Total server load by time of day (stacked)',
+        description: 'Each server\'s load stacks on the others; the outer edge is the fleet total for that time bucket.',
+      },
     },
   ],
 })

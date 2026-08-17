@@ -7,14 +7,15 @@ properties:
     displayName: Time
 views:
   - type: polar-line-chart
-    name: Server load (polar line)
+    name: Server load (polar line, vintage theme)
     xAxisProp: note.Time
     valueProp: note.Load
     seriesProp: note.Server
     showLegend: true
     legendPosition: "bottom"
+    theme: "Vintage"
     title: "Server load across time of day"
-    description: "Angle is time-of-day; distance from center is load. Each line is one server."
+    description: "Vintage palette variant of the same time x server polar line."
     filters:
       and:
         - file.folder == "polar-line/notes"
