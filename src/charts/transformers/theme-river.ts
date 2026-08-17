@@ -1,7 +1,7 @@
-import type { EChartsOption, ThemeRiverSeriesOption } from 'echarts'
+import type { EChartsOption, SingleAxisComponentOption, ThemeRiverSeriesOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, parseDateToEpochMs } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getTitleOption, parseDateToEpochMs } from './utils'
 import * as R from 'remeda'
 
 export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {
@@ -84,6 +84,10 @@ export function createThemeRiverChartOption(
   const seriesItem: ThemeRiverSeriesOption = {
     type: 'themeRiver',
     data: asThemeRiverData(riverData),
+    // Direct-label each band with its topic name so identity never rests on
+    // the legend swatch alone -- the river bands are wide enough to carry a
+    // short label, and it reads without cross-referencing the legend.
+    label: { show: true },
     emphasis: {
       itemStyle: {
         shadowBlur: 20,
@@ -92,7 +96,28 @@ export function createThemeRiverChartOption(
     },
   }
 
+  const title = getTitleOption(options)
+
+  // flipAxis pivots the river from the default horizontal time flow (time along
+  // the x-axis, bands stacked vertically) to a vertical one (time running top
+  // to bottom, bands spreading horizontally) -- the themeRiver analog of a
+  // flipped bar chart. `top` reserves room for the title/legend chrome above.
+  const flip = options?.flipAxis ?? false
+  const singleAxis: SingleAxisComponentOption = {
+    type: 'time',
+    orient: flip ? 'vertical' : 'horizontal',
+    boundaryGap: [0,
+      0],
+    top: title ? 70 : 50,
+    bottom: 55,
+    ...(flip
+      ? { left: 60,
+          right: 60 }
+      : {}),
+  }
+
   return {
+    ...(title ? { title } : {}),
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -104,11 +129,7 @@ export function createThemeRiverChartOption(
         },
       },
     },
-    singleAxis: {
-      type: 'time',
-      boundaryGap: [0,
-        0],
-    },
+    singleAxis,
     series: [seriesItem],
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
   }

@@ -7,14 +7,15 @@ properties:
     displayName: Topic
 views:
   - type: theme-river-chart
-    name: News topics river
+    name: News topics river (vintage theme)
     xAxisProp: note.Date
     valueProp: note.Mentions
     seriesProp: note.Topic
     showLegend: true
     legendPosition: "bottom"
+    theme: "Vintage"
     title: "News topics over time"
-    description: "Each band is a topic; its thickness is that day's mention count. Bands stack to show total news volume."
+    description: "Vintage palette variant of the same date x topic river."
     filters:
       and:
         - file.folder == "theme-river/notes"
