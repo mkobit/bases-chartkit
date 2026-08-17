@@ -1,5 +1,9 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+
+interface DatasetLike {
+  readonly source?: readonly unknown[]
+}
 
 test.describe('bar chart rendering', () => {
   // Regression coverage for bck-0zd: every chart transformer configures a
@@ -40,5 +44,46 @@ test.describe('bar chart rendering', () => {
 
     expect(tooltipText).toContain('Department: Engineering')
     expect(tooltipText).toContain('Spend: 15,005')
+  })
+
+  // Coverage for the FlippedAxis.base variant (bck-aie.1): flipAxis:true is a
+  // real structural change, not cosmetic -- cartesian.ts swaps the category
+  // and value axes (and each series' encode) so Department runs up the
+  // y-axis and Spend along the x-axis, turning the vertical column chart
+  // into a horizontal bar chart. Assert the swap landed on the live ECharts
+  // option rather than a screenshot, mirroring area-chart-rendering.e2e.ts's
+  // identical FlippedAxis.base coverage.
+  test('the flipped-axis variant renders the category axis on y and the value axis on x', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'bar/FlippedAxis.base', viewName: 'Department spend (flipped axis)' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    // getOption() normalizes xAxis/yAxis to arrays. Default (un-flipped) bar
+    // puts the Department category on x and Spend value on y; flipAxis
+    // inverts both, so this assertion fails if the option ever regressed to
+    // default.
+    const option = await getChartOption(page) as {
+      readonly xAxis?: readonly { readonly type?: string }[]
+      readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+    } | null
+    expect(option?.xAxis?.[0]?.type).toBe('value')
+    expect(option?.yAxis?.[0]?.type).toBe('category')
+    expect(option?.yAxis?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
   })
 })

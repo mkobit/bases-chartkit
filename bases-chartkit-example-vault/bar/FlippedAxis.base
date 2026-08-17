@@ -1,0 +1,15 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: bar-chart
+    name: Department spend (flipped axis)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    flipAxis: true
+    filters:
+      and:
+        - file.folder == "bar/notes"

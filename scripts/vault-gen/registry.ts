@@ -54,6 +54,16 @@ const barSpec = defineChartExampleSpec<BarSample>({
       },
       literalOptions: { showLegend: true, theme: 'Vintage' },
     },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Department spend (flipped axis)',
+      viewType: 'bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
   ],
 })
 
