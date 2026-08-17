@@ -1,6 +1,6 @@
 import type { EChartsOption, LineSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { safeToString, getNestedValue, getLegendOption, getTitleOption } from './utils'
 import * as R from 'remeda'
 
 export interface PolarLineTransformerOptions extends BaseTransformerOptions {
@@ -26,6 +26,7 @@ export function createPolarLineChartOption(
   const isStacked = options?.stack
   const isSmooth = options?.smooth
   const hasAreaStyle = options?.areaStyle
+  const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
   const normalizedData: ReadonlyArray<PolarLineDataPoint> = R.map(
@@ -100,16 +101,29 @@ export function createPolarLineChartOption(
     }
   })
 
+  const title = getTitleOption(options)
+
   const opt: EChartsOption = {
     dataset: [...datasets],
+    ...(title ? { title } : {}),
+    // Angle/radius carry no axis chrome unlike a cartesian chart, so without a
+    // name a first-time reader has no label for what's being encoded (bck-aie.27
+    // feedback: "i dont know what to look for here"). Also shift the plot down
+    // and shrink it slightly when a title is present, so the polar circle
+    // doesn't start under the title/legend chrome -- the polar analog of
+    // theme-river's singleAxis top offset.
     polar: {
+      center: ['50%', title ? '56%' : '50%'],
+      radius: title ? '70%' : '75%',
     },
     angleAxis: {
       type: 'category',
       data: [...angleAxisData],
       startAngle: 90,
+      name: xAxisLabel,
     },
     radiusAxis: {
+      name: yAxisLabel,
     },
     series: [...seriesOptions],
     tooltip: {

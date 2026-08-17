@@ -23,6 +23,11 @@ export class PolarLineChartView extends BaseChartView {
       'polarLine',
       {
         ...this.getCommonTransformerOptions(),
+        // getCommonTransformerOptions()'s yAxisLabel default resolves
+        // Y_AXIS_PROP_KEY, but polar-line's radius value comes from
+        // VALUE_PROP_KEY (there's no cartesian y-axis prop here) -- same
+        // override bullet-chart-view.ts uses for the same reason.
+        yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? yProp,
         seriesProp,
         smooth: isSmooth,
         areaStyle: hasAreaStyle,

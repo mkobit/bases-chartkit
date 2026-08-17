@@ -7,14 +7,16 @@ properties:
     displayName: Time
 views:
   - type: polar-line-chart
-    name: Server load (polar line)
+    name: Total server load by time of day (stacked)
     xAxisProp: note.Time
     valueProp: note.Load
     seriesProp: note.Server
     showLegend: true
     legendPosition: "bottom"
-    title: "Server load across time of day"
-    description: "Angle is time-of-day; distance from center is load. Each line is one server."
+    stack: true
+    areaStyle: true
+    title: "Total server load by time of day (stacked)"
+    description: "Each server's load stacks on the others; the outer edge is the fleet total for that time bucket."
     filters:
       and:
         - file.folder == "polar-line/notes"

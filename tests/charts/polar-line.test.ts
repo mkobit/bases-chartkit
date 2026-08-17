@@ -128,5 +128,74 @@ describe(
         expect(series[1].stack).toBe('total')
       },
     )
+
+    it(
+      'should not set a title by default',
+      () => {
+        const option = createPolarLineChartOption(
+          data,
+          'angle',
+          'value',
+        )
+
+        expect(option.title).toBeUndefined()
+      },
+    )
+
+    it(
+      'should render a title and subtext when provided',
+      () => {
+        const option = createPolarLineChartOption(
+          data,
+          'angle',
+          'value',
+          {
+            title: 'Compass readings',
+            description: 'Angle is direction; radius is value.',
+          },
+        )
+
+        const title = option.title as { text?: string
+          subtext?: string }
+        expect(title.text).toBe('Compass readings')
+        expect(title.subtext).toBe('Angle is direction; radius is value.')
+      },
+    )
+
+    it(
+      'should name the angle and radius axes from the x/y labels',
+      () => {
+        const option = createPolarLineChartOption(
+          data,
+          'angle',
+          'value',
+          {
+            xAxisLabel: 'Direction',
+            yAxisLabel: 'Reading',
+          },
+        )
+
+        const angleAxis = option.angleAxis as { name?: string }
+        const radiusAxis = option.radiusAxis as { name?: string }
+        expect(angleAxis.name).toBe('Direction')
+        expect(radiusAxis.name).toBe('Reading')
+      },
+    )
+
+    it(
+      'should default the angle and radius axis names to the raw prop keys',
+      () => {
+        const option = createPolarLineChartOption(
+          data,
+          'angle',
+          'value',
+        )
+
+        const angleAxis = option.angleAxis as { name?: string }
+        const radiusAxis = option.radiusAxis as { name?: string }
+        expect(angleAxis.name).toBe('angle')
+        expect(radiusAxis.name).toBe('value')
+      },
+    )
   },
 )
