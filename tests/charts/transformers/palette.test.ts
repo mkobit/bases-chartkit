@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
   DEFAULT_CATEGORICAL_PALETTE,
-  DEFAULT_HEATMAP_COLOR_GRADIENT,
+  DEFAULT_SEQUENTIAL_COLOR_GRADIENT,
   getCategoricalColor,
   getParamKey,
   THEME_TOKENS,
@@ -10,7 +10,7 @@ import {
 describe('palette module', () => {
   it('provides non-empty default categorical palette and heatmap gradient', () => {
     expect(DEFAULT_CATEGORICAL_PALETTE.length).toBeGreaterThanOrEqual(10)
-    expect(DEFAULT_HEATMAP_COLOR_GRADIENT.length).toBeGreaterThanOrEqual(5)
+    expect(DEFAULT_SEQUENTIAL_COLOR_GRADIENT.length).toBeGreaterThanOrEqual(5)
   })
 
   it('deterministically selects color from categorical palette', () => {

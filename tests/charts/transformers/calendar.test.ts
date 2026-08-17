@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
+import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../../../src/charts/transformers/palette'
 import type { CalendarComponentOption, VisualMapComponentOption } from 'echarts'
 
 describe(
@@ -156,6 +157,56 @@ describe(
         const visualMap = option.visualMap as VisualMapComponentOption
 
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
+      },
+    )
+
+    it(
+      'defaults the visualMap ramp to the sequential single-hue gradient when no color override is given',
+      () => {
+        const data = [
+          { date: '2023-01-01',
+            val: 10 },
+          { date: '2023-01-02',
+            val: 100 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'date',
+          '',
+          'calendar',
+          { valueProp: 'val' },
+        )
+
+        const visualMap = option.visualMap as VisualMapComponentOption
+        expect(visualMap.inRange?.color).toEqual([...DEFAULT_SEQUENTIAL_COLOR_GRADIENT])
+      },
+    )
+
+    it(
+      'uses the visualMapColor override for the ramp when provided',
+      () => {
+        const data = [
+          { date: '2023-01-01',
+            val: 10 },
+          { date: '2023-01-02',
+            val: 100 },
+        ]
+
+        const override = ['#e5f5e0',
+          '#a1d99b',
+          '#005a32']
+        const option = transformDataToChartOption(
+          data,
+          'date',
+          '',
+          'calendar',
+          { valueProp: 'val',
+            visualMapColor: override },
+        )
+
+        const visualMap = option.visualMap as VisualMapComponentOption
+        expect(visualMap.inRange?.color).toEqual(override)
       },
     )
 

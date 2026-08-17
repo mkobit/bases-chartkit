@@ -1,0 +1,15 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Mood:
+    displayName: Mood
+views:
+  - type: calendar-chart
+    name: Mood calendar (vintage theme)
+    xAxisProp: note.Date
+    valueProp: note.Mood
+    showLegend: true
+    theme: "Vintage"
+    filters:
+      and:
+        - file.folder == "calendar/notes"

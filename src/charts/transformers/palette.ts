@@ -45,18 +45,19 @@ export function getParamKey(params: unknown): string {
 }
 
 /**
- * Default heatmap gradient when no visualMapColor override is provided.
+ * Default magnitude gradient when no visualMapColor override is provided.
  *
- * Heatmap value is a magnitude, so this is a *sequential* single-hue blue ramp
- * (light = low, dark = high) with monotonic lightness -- not the old blue->
- * yellow->red spectral rainbow, which encoded magnitude as hue and made both
- * the low (dark blue) and high (dark red) ends read as equally "intense" while
- * the mid values washed out to pale yellow. A sequential ramp lets color alone
- * communicate more/less. Steps are the dataviz reference sequential-blue ramp
- * (100->700). A future theme layer can override this per-theme via the existing
- * visualMapColor option; heatmap.ts already falls back here only when unset.
+ * A magnitude value (heatmap load, calendar activity) maps to a *sequential*
+ * single-hue blue ramp (light = low, dark = high) with monotonic lightness --
+ * not a blue->yellow->red spectral rainbow, which encoded magnitude as hue and
+ * made both the low (dark blue) and high (dark red) ends read as equally
+ * "intense" while the mid values washed out to pale yellow. A sequential ramp
+ * lets color alone communicate more/less. Steps are the dataviz reference
+ * sequential-blue ramp (100->700). A future theme layer can override this
+ * per-theme via the existing visualMapColor option; the heatmap and calendar
+ * transformers fall back here only when unset.
  */
-export const DEFAULT_HEATMAP_COLOR_GRADIENT: readonly string[] = [
+export const DEFAULT_SEQUENTIAL_COLOR_GRADIENT: readonly string[] = [
   '#cde2fb',
   '#9ec5f4',
   '#6da7ec',

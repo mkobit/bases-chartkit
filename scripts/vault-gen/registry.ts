@@ -928,17 +928,17 @@ const polarLineSpec = defineChartExampleSpec<PolarLineSample>({
 })
 
 interface CalendarSample {
-  readonly data: ReadonlyArray<{ readonly date: string, readonly commits: number }>
+  readonly data: ReadonlyArray<{ readonly date: string, readonly mood: number }>
 }
 
 const calendarSpec = defineChartExampleSpec<CalendarSample>({
   chartType: 'calendar',
-  description: 'Daily mood log -- demonstrates a calendar chart over a full year of daily values.',
+  description: 'Daily mood journal (1..5) -- demonstrates a calendar chart mapping a full year of daily values onto a sequential ramp.',
   arbitrary: calendarChartArbitrary,
   notePrefix: 'Mood-Day',
   toRows: sample => sample.data.map(row => ({
     Date: Temporal.PlainDate.from(row.date),
-    Mood: row.commits,
+    Mood: row.mood,
   })),
   variants: [
     {
@@ -950,6 +950,32 @@ const calendarSpec = defineChartExampleSpec<CalendarSample>({
         valueProp: 'note.Mood',
       },
       literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Mood calendar (vintage theme)',
+      viewType: 'calendar-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        valueProp: 'note.Mood',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      // Overrides the default sequential blue with a sequential green ramp
+      // (still one hue, light->dark) -- the same visualMapColor hook a future
+      // theme layer would drive, and the recognizable "activity calendar" tint.
+      fileName: 'CustomColor.base',
+      viewName: 'Mood calendar (green ramp)',
+      viewType: 'calendar-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        valueProp: 'note.Mood',
+      },
+      literalOptions: {
+        showLegend: true,
+        visualMapColor: '#e5f5e0,#a1d99b,#41ab5d,#238b45,#005a32',
+      },
     },
   ],
 })
