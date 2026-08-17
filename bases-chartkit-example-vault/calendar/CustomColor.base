@@ -1,0 +1,15 @@
+properties:
+  note.Date:
+    displayName: Date
+  note.Mood:
+    displayName: Mood
+views:
+  - type: calendar-chart
+    name: Mood calendar (green ramp)
+    xAxisProp: note.Date
+    valueProp: note.Mood
+    showLegend: true
+    visualMapColor: "#e5f5e0,#a1d99b,#41ab5d,#238b45,#005a32"
+    filters:
+      and:
+        - file.folder == "calendar/notes"

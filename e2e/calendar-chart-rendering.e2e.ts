@@ -32,13 +32,15 @@ test.describe('calendar chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Mood-Day-000.md is { Date: "2024-01-01", Mood: 7 }.
+    // Mood-Day-000.md is { Date: "2024-01-01", Mood: 3 } -- calendarChartArbitrary
+    // pins the first cell to FIRST_DAY_MOOD (3) so this assertion is stable
+    // regardless of the sampled per-day noise.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
     // createCalendarChartOption's tooltip.formatter is a custom
     // `${p.value[0]} : ${p.value[1]}` template (raw string interpolation, not
     // ECharts' default formatter) -- no thousand-separator commas.
     expect(tooltipText).toContain('2024-01-01')
-    expect(tooltipText).toContain('7')
+    expect(tooltipText).toContain('3')
   })
 })

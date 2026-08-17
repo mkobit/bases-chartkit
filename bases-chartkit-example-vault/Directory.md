@@ -31,7 +31,7 @@ views:
 - **[[boxplot/Basic.base|boxplot]]** — Product score distribution -- demonstrates a boxplot chart.
 - **[[bubble/Basic.base|bubble]]** — Weighted point cloud -- demonstrates a bubble chart with size-encoded points.
 - **[[bullet/Basic.base|bullet]]** — KPI metrics against targets and range bands -- demonstrates a bullet chart.
-- **[[calendar/Basic.base|calendar]]** — Daily mood log -- demonstrates a calendar chart over a full year of daily values.
+- **[[calendar/Basic.base|calendar]]** — Daily mood journal (1..5) -- demonstrates a calendar chart mapping a full year of daily values onto a sequential ramp.
 - **[[candlestick/Basic.base|candlestick]]** — AAPL stock analysis -- demonstrates a candlestick chart.
 - **[[effect-scatter/basic/Basic.base|effect-scatter]]** — GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.
 - **[[funnel/Basic.base|funnel]]** — User journey funnel -- demonstrates a funnel chart with decreasing stage values.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
-import { DEFAULT_HEATMAP_COLOR_GRADIENT } from '../src/charts/transformers/palette'
+import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../src/charts/transformers/palette'
 import type { DatasetComponentOption } from 'echarts'
 
 interface HeatmapSourceItem {
@@ -204,7 +204,7 @@ describe(
         )
         const visualMap = option.visualMap as any
 
-        expect(visualMap.inRange.color).toEqual([...DEFAULT_HEATMAP_COLOR_GRADIENT])
+        expect(visualMap.inRange.color).toEqual([...DEFAULT_SEQUENTIAL_COLOR_GRADIENT])
         // Light low end, dark high end -- the sequential invariant.
         expect(visualMap.inRange.color[0]).toBe('#cde2fb')
         expect(visualMap.inRange.color.at(-1)).toBe('#0d366b')

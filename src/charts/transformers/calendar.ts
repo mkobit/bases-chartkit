@@ -3,6 +3,7 @@ import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { safeToString, getNestedValue, formatCompactVisualMapLabel } from './utils'
+import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from './palette'
 
 export interface CalendarTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
@@ -141,7 +142,16 @@ export function createCalendarChartOption(
           top: options?.visualMapTop ?? 65,
           type: options?.visualMapType ?? 'continuous',
           formatter: formatCompactVisualMapLabel,
-          ...(options?.visualMapColor ? { inRange: { color: options.visualMapColor } } : {}),
+          // Daily activity is a magnitude, so default to the shared sequential
+          // single-hue blue ramp (light = low, dark = high) instead of ECharts'
+          // built-in blue->green->red rainbow visualMap, which encoded
+          // magnitude as hue and read as unordered. A view can still override
+          // the ramp via visualMapColor (see the CustomColor variant).
+          inRange: {
+            color: options?.visualMapColor && options.visualMapColor.length > 0
+              ? [...options.visualMapColor]
+              : [...DEFAULT_SEQUENTIAL_COLOR_GRADIENT],
+          },
         }
 
         return {

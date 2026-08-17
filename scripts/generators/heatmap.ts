@@ -81,42 +81,49 @@ export const heatmapChartArbitrary = fc.record({
 // already fixed in line.ts's ANCHOR_DATE).
 const CALENDAR_YEAR_START = Temporal.PlainDate.from('2024-01-01')
 
+// 2024 is a leap year (366 days), so a bare arbitrary spans a full calendar.
+const CALENDAR_DAYS = 366
+// First cell is pinned to a fixed mood so the e2e can assert a stable value at
+// dataIndex 0 (2024-01-01) without depending on the sampled noise draw.
+const FIRST_DAY_MOOD = 3
+
 /**
  * Arbitrary for Calendar data.
- * Generates daily values for a fixed year.
+ *
+ * Models a year-long daily mood journal on a 1..5 scale (1 = rough, 5 = great)
+ * -- the calendar's magnitude maps onto the sequential ramp, so higher mood
+ * reads as darker. The shape carries real, legible variance rather than a flat
+ * or spiky field: weekends run happier than workdays, a seasonal sine lifts
+ * summer and dips midwinter, and per-day noise keeps adjacent cells from
+ * banding into solid blocks. Values stay clamped to 1..5 so the label and the
+ * data agree (the old generator emitted "Mood" counts up to ~300, which read
+ * as an activity heatmap mislabelled as mood).
  */
-export const calendarChartArbitrary = fc.record({
-  minVal: fc.integer({ min: 0,
-    max: 100 }),
-  maxVal: fc.integer({ min: 200,
-    max: 500 }),
-}).chain((config) => {
-  // Generate data for 365 days
-  return fc.array(
-    fc.integer({ min: config.minVal,
-      max: config.maxVal }),
-    { minLength: 365,
-      maxLength: 366 },
-  ).map((values) => {
-    const data = values.map((val, i) => {
-      const plainDate = CALENDAR_YEAR_START.add({ days: i })
-      const date = plainDate.toString()
-      // Preserve first day's raw sampled value (7) to satisfy e2e assertions;
-      // add weekday vs weekend and quarterly variance across remaining days.
-      const dayOfWeek = plainDate.dayOfWeek // 1 (Mon) .. 7 (Sun)
-      const isWeekend = dayOfWeek >= 6
-      const quarterBoost = plainDate.month >= 9 ? 1.3 : 1.0
-      const commits = i === 0 ? val : Math.round(val * (isWeekend ? 0.25 : 1.0) * quarterBoost)
-
-      return {
-        date,
-        commits,
-      }
-    })
+export const calendarChartArbitrary = fc.array(
+  fc.integer({ min: -1,
+    max: 1 }),
+  { minLength: CALENDAR_DAYS,
+    maxLength: CALENDAR_DAYS },
+).map((noise) => {
+  const data = noise.map((jitter, i) => {
+    const plainDate = CALENDAR_YEAR_START.add({ days: i })
+    const date = plainDate.toString()
+    const isWeekend = plainDate.dayOfWeek >= 6 // 6 (Sat), 7 (Sun)
+    // Peaks near midsummer (~day 172), troughs midwinter -- amplitude ~0.9 of a
+    // mood point so the season shifts the baseline without pinning the extremes.
+    const seasonal = 0.9 * Math.sin((2 * Math.PI * (plainDate.dayOfYear - 80)) / CALENDAR_DAYS)
+    const baseline = isWeekend ? 4 : 3
+    const raw = Math.round(baseline + seasonal + jitter)
+    const mood = i === 0 ? FIRST_DAY_MOOD : Math.max(1, Math.min(5, raw))
 
     return {
-      type: 'calendar',
-      data,
+      date,
+      mood,
     }
   })
+
+  return {
+    type: 'calendar',
+    data,
+  }
 })
