@@ -70,4 +70,56 @@ test.describe('theme river chart rendering', () => {
     expect(tooltipText).toContain('Sports')
     expect(tooltipText).toContain('Health')
   })
+
+  // Explainability enrichment (bck-aie.33): the Basic view carries a title +
+  // subtext so a first-time reader knows what a theme river encodes. Assert the
+  // live-rendered option surfaces them rather than screenshotting the chrome.
+  test('the basic view renders an explanatory title and subtext', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'theme-river/Basic.base', viewName: 'News topics river' })
+
+    // chart.getOption() normalizes single components into arrays, so title is
+    // [{...}] here (unlike the raw transformer output the unit tests assert).
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly title?: ReadonlyArray<{ readonly text?: string }> } | null
+        return option?.title?.[0]?.text ?? ''
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBe('News topics over time')
+  })
+
+  // Flipped-axis variant (bck-aie.33): flipAxis pivots the singleAxis time flow
+  // to vertical. Assert the resolved orient rather than pixel geometry.
+  test('the vertical variant pivots the single time axis to vertical', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'theme-river/Vertical.base', viewName: 'News topics river (vertical)' })
+
+    // getOption() normalizes singleAxis into an array of axis components.
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly singleAxis?: ReadonlyArray<{ readonly orient?: string }> } | null
+        return option?.singleAxis?.[0]?.orient ?? ''
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBe('vertical')
+  })
 })

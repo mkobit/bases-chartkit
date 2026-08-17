@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createThemeRiverChartOption } from '../../../src/charts/transformers/theme-river'
-import type { ThemeRiverSeriesOption } from 'echarts'
+import type { SingleAxisComponentOption, ThemeRiverSeriesOption, TitleComponentOption } from 'echarts'
 
 describe(
   'createThemeRiverChartOption',
@@ -115,6 +115,70 @@ describe(
         const series = option.series as ThemeRiverSeriesOption[]
         const themes = (series[0]?.data as any).map((row: unknown[]) => row[2])
         expect(themes.every((t: string) => t === 'mentions')).toBe(true)
+      },
+    )
+
+    it(
+      'should emit a title/subtext when title and description options are set, for first-read explainability',
+      () => {
+        const option = createThemeRiverChartOption(
+          data,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            title: 'News topics over time',
+            description: 'Band thickness is mention count.' },
+        )
+
+        const title = option.title as TitleComponentOption
+        expect(title.text).toBe('News topics over time')
+        expect(title.subtext).toBe('Band thickness is mention count.')
+      },
+    )
+
+    it(
+      'should omit the title when neither title nor description is set',
+      () => {
+        const option = createThemeRiverChartOption(
+          data,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic' },
+        )
+
+        expect(option.title).toBeUndefined()
+      },
+    )
+
+    it(
+      'should default to a horizontal single time axis',
+      () => {
+        const option = createThemeRiverChartOption(
+          data,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic' },
+        )
+
+        const singleAxis = option.singleAxis as SingleAxisComponentOption
+        expect(singleAxis.orient).toBe('horizontal')
+        expect(singleAxis.type).toBe('time')
+      },
+    )
+
+    it(
+      'should pivot to a vertical single axis when flipAxis is set',
+      () => {
+        const option = createThemeRiverChartOption(
+          data,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const singleAxis = option.singleAxis as SingleAxisComponentOption
+        expect(singleAxis.orient).toBe('vertical')
       },
     )
   },

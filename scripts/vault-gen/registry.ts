@@ -1281,7 +1281,52 @@ const themeRiverSpec = defineChartExampleSpec<ThemeRiverSample>({
         valueProp: 'note.Mentions',
         seriesProp: 'note.Topic',
       },
-      literalOptions: { showLegend: true },
+      // Explainability (bck-aie.33 feedback: "never seen this chart... cant
+      // provide feedback yet"). A title + subtext state what a theme river
+      // encodes so a first-time reader knows what to look for; the legend
+      // moves to the bottom so it clears the top-left title.
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        title: 'News topics over time',
+        description: 'Each band is a topic; its thickness is that day\'s mention count. Bands stack to show total news volume.',
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'News topics river (vintage theme)',
+      viewType: 'theme-river-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        valueProp: 'note.Mentions',
+        seriesProp: 'note.Topic',
+      },
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        theme: 'Vintage',
+        title: 'News topics over time',
+        description: 'Vintage palette variant of the same date x topic river.',
+      },
+    },
+    {
+      fileName: 'Vertical.base',
+      viewName: 'News topics river (vertical)',
+      viewType: 'theme-river-chart',
+      propBindings: {
+        xAxisProp: 'note.Date',
+        valueProp: 'note.Mentions',
+        seriesProp: 'note.Topic',
+      },
+      // flipAxis pivots the river to a vertical time flow -- the themeRiver
+      // analog of the flipped-axis variant every enrichable chart ships.
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'bottom',
+        flipAxis: true,
+        title: 'News topics over time (vertical)',
+        description: 'Time runs top to bottom; bands spread horizontally.',
+      },
     },
   ],
 })
