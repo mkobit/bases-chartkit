@@ -1,0 +1,15 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: bar-chart
+    name: Department spend (rotated labels)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    xAxisLabelRotate: 45
+    filters:
+      and:
+        - file.folder == "bar/notes"
