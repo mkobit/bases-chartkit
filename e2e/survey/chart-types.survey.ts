@@ -19,7 +19,7 @@ import * as path from 'node:path'
 import * as R from 'remeda'
 import type { Page } from '@playwright/test'
 import { test, expect } from '../fixtures/obsidian'
-import { evaluateObsidian, waitForChartFinished } from '../helpers/evaluate'
+import { evaluateObsidian, waitForChartFinished, waitForVaultIndexed } from '../helpers/evaluate'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 const CHART_VIEWS_PATH = path.join(ROOT_DIR, '.test-output', 'chart-views.json')
@@ -190,6 +190,20 @@ test(`capture chart-type screenshots (${SURVEY_THEME ?? 'light'})`, async ({ obs
     })
     app.workspace.getLeaf('tab')
   })
+
+  // onLayoutReady alone doesn't mean the vault has finished indexing --
+  // Obsidian keeps an "Indexing vault..." status banner visible at the top
+  // of the window while metadataCache resolution catches up (this example
+  // vault's calendar/heatmap/theme-river dirs alone add hundreds of notes;
+  // see VAULT_INDEXED_POLL_TIMEOUT_MS's doc comment). Root-caused for bck-6gf:
+  // that banner overlapping the first few captured canvases -- always the
+  // same fixed pixel footprint regardless of chart content, landing on
+  // whichever chart(s) happen to be mid-capture during the indexing window --
+  // was the exact-same-diff-footprint anomaly across unrelated chart types
+  // both here and in the original bug report. Waiting it out here, once,
+  // before the sweep starts, keeps that banner off of every capture instead
+  // of at the mercy of how far the sweep gets before indexing finishes.
+  await waitForVaultIndexed(page)
 
   // Sequential by design: one Obsidian instance, one workspace leaf, reused
   // across all views (36 separate `test()` launches would be prohibitively
