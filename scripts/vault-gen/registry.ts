@@ -64,6 +64,16 @@ const barSpec = defineChartExampleSpec<BarSample>({
       },
       literalOptions: { showLegend: true, flipAxis: true },
     },
+    {
+      fileName: 'RotatedLabels.base',
+      viewName: 'Department spend (rotated labels)',
+      viewType: 'bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, xAxisLabelRotate: 45 },
+    },
   ],
 })
 

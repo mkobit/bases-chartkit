@@ -86,4 +86,38 @@ test.describe('bar chart rendering', () => {
     expect(option?.yAxis?.[0]?.type).toBe('category')
     expect(option?.yAxis?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
   })
+
+  // Regression coverage for bck-i9b.12: reported as "x axis rotation seems
+  // to just move the y axis offset up and down" instead of rotating labels.
+  // Investigation found getAxisLabelOverlapOptions already threads rotate
+  // into xAxis.axisLabel.rotate correctly (confirmed live: RotatedLabels.base
+  // renders visibly tilted category labels) -- this pins that live behavior
+  // down as a permanent assertion on the shared cartesian.ts/utils.ts path
+  // every other cartesian chart type (line, stacked-bar, heatmap, etc.) uses.
+  test('xAxisLabelRotate rotates the category axis labels, not the grid offset', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'bar/RotatedLabels.base', viewName: 'Department spend (rotated labels)' })
+
+    await expect.poll(
+      async () => {
+        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const option = await getChartOption(page) as {
+      readonly xAxis?: readonly { readonly axisLabel?: { readonly rotate?: number } }[]
+    } | null
+    expect(option?.xAxis?.[0]?.axisLabel?.rotate).toBe(45)
+  })
 })
