@@ -3,6 +3,7 @@
 // `--theme` presets Obsidian's base color scheme before launch, so a manual
 // visual pass doesn't have to navigate Settings -> Appearance by hand.
 import ObsidianLauncher from 'obsidian-launcher'
+import * as net from 'node:net'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
 import { applyViewMode } from '../shared/appearance'
@@ -11,12 +12,16 @@ import type { ViewMode } from '../shared/appearance'
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
 const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
-// Only used for the window-resize workaround below -- scripts/vault-eval.ts,
-// vault-screenshot.ts, and vault-reload.ts talk to the running instance via
-// Obsidian's official CLI instead (over its own Unix domain socket, no CDP
-// involved). The CLI has no window-sizing command, so resizing still goes
-// through raw CDP.
-const CDP_PORT = 9222
+// The CDP port is resolved fresh per launch (see getFreePort() below) rather
+// than pinned -- a fixed port collides with any other obsidian-launcher-based
+// project (e.g. a sibling plugin repo) already running on it, silently
+// redirecting the resize/readiness probe below to the WRONG process's
+// window. Only used for that window-resize workaround --
+// scripts/vault-eval.ts, vault-screenshot.ts, and vault-reload.ts talk to the
+// running instance via Obsidian's official CLI instead (over its own Unix
+// domain socket, no CDP involved). The CLI has no window-sizing command, so
+// resizing still goes through raw CDP.
+
 // Pinned rather than left at 'latest', matching this file's Obsidian
 // app/installer version pins -- keeps `vault:dev` launches reproducible and
 // offline-friendly once cached. Bump deliberately.
@@ -48,9 +53,31 @@ function parseThemeArg(argv: readonly string[]): ViewMode {
   return value
 }
 
-async function findObsidianPage(): Promise<CdpPage | undefined> {
+// Reserves an OS-assigned ephemeral port by binding to port 0 and reading
+// back what the kernel picked, then releasing it immediately so Electron can
+// bind it in turn. Electron needs the port number up front (as a launch
+// arg), so this has to happen once, before launch, with the result threaded
+// into both the launch args and the resize probe below.
+function getFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.on('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      server.close(() => {
+        if (address === null || typeof address === 'string') {
+          reject(new Error('failed to determine ephemeral port: no address info'))
+          return
+        }
+        resolve(address.port)
+      })
+    })
+  })
+}
+
+async function findObsidianPage(cdpPort: number): Promise<CdpPage | undefined> {
   try {
-    const res = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`)
+    const res = await fetch(`http://127.0.0.1:${cdpPort}/json/list`)
     const pages: readonly CdpPage[] = await res.json()
     return pages.find(p => p.type === 'page')
   }
@@ -77,8 +104,8 @@ function resizeOverWebsocket(wsUrl: string): Promise<void> {
   })
 }
 
-async function resizeWindowWhenReady(attemptsRemaining = 20): Promise<void> {
-  const page = await findObsidianPage()
+async function resizeWindowWhenReady(cdpPort: number, attemptsRemaining = 20): Promise<void> {
+  const page = await findObsidianPage(cdpPort)
   if (page) {
     await resizeOverWebsocket(page.webSocketDebuggerUrl)
     return
@@ -88,7 +115,7 @@ async function resizeWindowWhenReady(attemptsRemaining = 20): Promise<void> {
     return
   }
   await Bun.sleep(500)
-  await resizeWindowWhenReady(attemptsRemaining - 1)
+  await resizeWindowWhenReady(cdpPort, attemptsRemaining - 1)
 }
 
 async function main(): Promise<void> {
@@ -108,6 +135,8 @@ async function main(): Promise<void> {
 
   await applyViewMode(copiedVault, viewMode)
 
+  const cdpPort = await getFreePort()
+
   const { proc, configDir, vault } = await launcher.launch({
     appVersion: 'latest',
     installerVersion: 'latest',
@@ -117,15 +146,15 @@ async function main(): Promise<void> {
     copy: false,
     args: [
       '--disable-gpu',
-      `--remote-debugging-port=${CDP_PORT}`,
+      `--remote-debugging-port=${cdpPort}`,
       '--remote-allow-origins=*',
     ],
     spawnOptions: { stdio: 'inherit' },
   })
 
-  console.log(`\nObsidian CLI: \`bun scripts/vault-eval.ts '<js>'\`, \`vault:screenshot\`, \`vault:reload\` | CDP (devtools/resize only): http://localhost:${CDP_PORT}\n`)
+  console.log(`\nObsidian CLI: \`bun scripts/vault-eval.ts '<js>'\`, \`vault:screenshot\`, \`vault:reload\` | CDP (devtools/resize only): http://localhost:${cdpPort}\n`)
 
-  void resizeWindowWhenReady()
+  void resizeWindowWhenReady(cdpPort)
 
   const forwardSignal = (signal: NodeJS.Signals): void => {
     process.on(signal, () => proc.kill(signal))
