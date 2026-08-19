@@ -33,10 +33,10 @@ export class RadialBarChartView extends BaseChartView {
         key: 'stack',
       },
       ...BaseChartView.getCommonViewOptions().filter(opt =>
-        (opt as { key?: string }).key === BaseChartView.LEGEND_KEY
-        || (opt as { key?: string }).key === BaseChartView.HEIGHT_KEY
-        || (opt as { key?: string }).key === BaseChartView.LEGEND_POSITION_KEY
-        || (opt as { key?: string }).key === BaseChartView.LEGEND_ORIENT_KEY),
+        opt.key === BaseChartView.LEGEND_KEY
+        || opt.key === BaseChartView.HEIGHT_KEY
+        || opt.key === BaseChartView.LEGEND_POSITION_KEY
+        || opt.key === BaseChartView.LEGEND_ORIENT_KEY),
     ]
   }
 

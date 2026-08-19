@@ -35,7 +35,7 @@ export class ScatterChartView extends BaseChartView {
   static getViewOptions(): BasesOptions[] {
     return [
       ...BaseChartView.getCommonViewOptions(),
-      ...BaseChartView.getAxisViewOptions().filter(opt => (opt as { key?: string }).key !== BaseChartView.FLIP_AXIS_KEY),
+      ...BaseChartView.getAxisViewOptions().filter(opt => opt.key !== BaseChartView.FLIP_AXIS_KEY),
       {
         displayName: t('views.scatter.size_prop'),
         type: 'property',

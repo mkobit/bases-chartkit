@@ -116,6 +116,16 @@ export abstract class BaseChartView extends BasesView {
     return typeof val === 'string' ? val : undefined
   }
 
+  // Bases dropdown values are stored as arbitrary user-editable YAML (the
+  // `.base` file), not validated against the dropdown's own `options` map --
+  // narrows to one of the caller's allowed literals, falling back to
+  // `undefined` (same "invalid -> absent" contract as getStringOption above)
+  // instead of trusting an unchecked cast from `unknown`.
+  protected getLiteralOption<T extends string>(key: string, allowed: readonly T[]): T | undefined {
+    const val = this.config.get(key)
+    return typeof val === 'string' ? allowed.find(a => a === val) : undefined
+  }
+
   // Falls back to undefined (not the raw property path) so callers can chain
   // further fallbacks.
   protected getPropDisplayName(key: string): string | undefined {
@@ -127,16 +137,27 @@ export abstract class BaseChartView extends BasesView {
   // comma-separated dimensions list) rather than through a `type: 'property'`
   // picker. The path is already in Bases' `type.name` id format, so it can be
   // resolved directly without going through getAsPropertyId first.
+  //
+  // (bck-cme audit) Genuine library-typing-gap bridge, not an unvalidated
+  // cast: BasesPropertyId is a template-literal type with no public
+  // constructor from a raw string -- getAsPropertyId only round-trips a
+  // config *key* back to its already-stored id, not an arbitrary string like
+  // these caller-supplied dimension/metric names. If the user's typed path
+  // doesn't match the `prefix.name` format, Obsidian's getDisplayName just
+  // does its own string prefix-stripping on it (no throw path -- it's plain
+  // string manipulation on a real string), so worst case is a wrong display
+  // label, not a crash.
   protected getDisplayNameForPropertyPath(propertyPath: string): string {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- see comment above; BasesPropertyId has no public constructor from a raw string.
     return this.config.getDisplayName(propertyPath as BasesPropertyId)
   }
 
   protected getVisualMapTransformerOptions(): VisualMapOptions {
     const visualMapMin = this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)) : undefined
     const visualMapMax = this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)) : undefined
-    const visualMapColor = (this.config.get(BaseChartView.VISUAL_MAP_COLOR_KEY) as string)?.split(',').map(s => s.trim()).filter(Boolean)
-    const visualMapOrient = this.config.get(BaseChartView.VISUAL_MAP_ORIENT_KEY) as 'horizontal' | 'vertical' | undefined
-    const visualMapType = this.config.get(BaseChartView.VISUAL_MAP_TYPE_KEY) as 'continuous' | 'piecewise' | undefined
+    const visualMapColor = this.getStringOption(BaseChartView.VISUAL_MAP_COLOR_KEY)?.split(',').map(s => s.trim()).filter(Boolean)
+    const visualMapOrient = this.getLiteralOption(BaseChartView.VISUAL_MAP_ORIENT_KEY, ['horizontal', 'vertical'] as const)
+    const visualMapType = this.getLiteralOption(BaseChartView.VISUAL_MAP_TYPE_KEY, ['continuous', 'piecewise'] as const)
 
     return {
       visualMapMin: !Number.isNaN(visualMapMin) ? visualMapMin : undefined,
@@ -152,8 +173,8 @@ export abstract class BaseChartView extends BasesView {
       title: this.getStringOption(BaseChartView.TITLE_KEY),
       description: this.getStringOption(BaseChartView.DESCRIPTION_KEY),
       legend: this.getBooleanOption(BaseChartView.LEGEND_KEY),
-      legendPosition: this.config.get(BaseChartView.LEGEND_POSITION_KEY) as 'top' | 'bottom' | 'left' | 'right',
-      legendOrient: this.config.get(BaseChartView.LEGEND_ORIENT_KEY) as 'horizontal' | 'vertical',
+      legendPosition: this.getLiteralOption(BaseChartView.LEGEND_POSITION_KEY, ['top', 'bottom', 'left', 'right'] as const),
+      legendOrient: this.getLiteralOption(BaseChartView.LEGEND_ORIENT_KEY, ['horizontal', 'vertical'] as const),
       flipAxis: this.getBooleanOption(BaseChartView.FLIP_AXIS_KEY),
       xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.X_AXIS_PROP_KEY),
       yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY),
@@ -185,7 +206,7 @@ export abstract class BaseChartView extends BasesView {
 
   private openFullScreen() {
     this.isFullScreenGeneration = true
-    // eslint-disable-next-line no-restricted-syntax -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
+    // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
     const data = this.data.data as unknown as BasesData
     const rawOption = this.getChartOption(data)
     const option = this.applyOptionOverride(rawOption)
@@ -217,7 +238,7 @@ export abstract class BaseChartView extends BasesView {
           this.getTheme(),
         ))
 
-    // eslint-disable-next-line no-restricted-syntax -- see openFullScreen above for the BasesData bridge.
+    // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- see openFullScreen above for the BasesData bridge.
     const data = this.data.data as unknown as BasesData
     const rawOption = this.getChartOption(data)
     const option = this.applyOptionOverride(rawOption)
@@ -240,9 +261,14 @@ export abstract class BaseChartView extends BasesView {
     }
 
     try {
-      const parsedOverride = typeof rawOverride === 'string'
-        ? (JSON.parse(rawOverride) as Record<string, unknown>)
-        : (isRecord(rawOverride) ? rawOverride : null)
+      // JSON.parse's return type is (unsoundly) `any` -- a user-typed override
+      // string can parse to an array, number, or other non-record JSON value
+      // just as easily as an object. Route it through the same isRecord guard
+      // as the non-string branch below instead of casting straight to
+      // Record<string, unknown>, so a non-object override falls back to the
+      // un-overridden option instead of feeding a bogus shape into mergeDeep.
+      const parsed: unknown = typeof rawOverride === 'string' ? JSON.parse(rawOverride) : rawOverride
+      const parsedOverride = isRecord(parsed) ? parsed : null
 
       if (!parsedOverride) {
         return option

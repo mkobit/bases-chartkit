@@ -356,7 +356,6 @@ export default tseslint.config(
       // RELAX Functional Rules for Obsidian API
       // The Obsidian API necessitates classes, inheritance, side effects, and mutations (of 'this').
       'functional/no-expression-statements': 'off',
-      '@typescript-eslint/consistent-type-assertions': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',

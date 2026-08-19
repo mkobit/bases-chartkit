@@ -14,12 +14,12 @@ export class BulletChartView extends BaseChartView {
   type = 'bullet'
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const categoryProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
-    const targetProp = this.config.get(BulletChartView.TARGET_PROP_KEY) as string
-    const rangeLowProp = this.config.get(BulletChartView.RANGE_LOW_PROP_KEY) as string
-    const rangeMidProp = this.config.get(BulletChartView.RANGE_MID_PROP_KEY) as string
-    const rangeHighProp = this.config.get(BulletChartView.RANGE_HIGH_PROP_KEY) as string
+    const categoryProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY)
+    const targetProp = this.getStringOption(BulletChartView.TARGET_PROP_KEY)
+    const rangeLowProp = this.getStringOption(BulletChartView.RANGE_LOW_PROP_KEY)
+    const rangeMidProp = this.getStringOption(BulletChartView.RANGE_MID_PROP_KEY)
+    const rangeHighProp = this.getStringOption(BulletChartView.RANGE_HIGH_PROP_KEY)
 
     if (!categoryProp || !valueProp) {
       return null

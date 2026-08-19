@@ -9,7 +9,7 @@ const AGGREGATIONS = ['sum', 'avg', 'min', 'max', 'last'] as const
 type Aggregation = typeof AGGREGATIONS[number]
 
 function isAggregation(value: unknown): value is Aggregation {
-  return typeof value === 'string' && (AGGREGATIONS as readonly string[]).includes(value)
+  return typeof value === 'string' && AGGREGATIONS.some(a => a === value)
 }
 
 interface GaugeColorBand {
@@ -111,7 +111,7 @@ export class GaugeChartView extends BaseChartView {
         placeholder: t('views.gauge.color_bands_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((o) => {
-        const key = (o as { key?: string }).key
+        const key = o.key
         return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
       }),
     ]

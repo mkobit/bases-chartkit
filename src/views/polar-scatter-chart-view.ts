@@ -11,19 +11,24 @@ export class PolarScatterChartView extends BaseChartView {
   getChartOption(data: BasesData): EChartsOption {
     return transformDataToChartOption(
       data,
-      this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string,
-      this.config.get(BaseChartView.Y_AXIS_PROP_KEY) as string,
+      // '' is a safe fallback for the required xProp/yProp positional slots --
+      // getChartOption has no null-config guard (unlike most other chart
+      // views), so an absent/invalid config value degrades to an empty-string
+      // property path (already tolerated by getNestedValue) rather than a
+      // cast that silently lies about an undefined value being a string.
+      this.getStringOption(BaseChartView.X_AXIS_PROP_KEY) ?? '',
+      this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY) ?? '',
       'polarScatter',
       {
         ...this.getCommonTransformerOptions(),
-        seriesProp: this.config.get(BaseChartView.SERIES_PROP_KEY) as string,
-        sizeProp: this.config.get(BaseChartView.SIZE_PROP_KEY) as string,
+        seriesProp: this.getStringOption(BaseChartView.SERIES_PROP_KEY),
+        sizeProp: this.getStringOption(BaseChartView.SIZE_PROP_KEY),
         sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
         visualMapMin: this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)) : undefined,
         visualMapMax: this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)) : undefined,
-        visualMapColor: this.config.get(BaseChartView.VISUAL_MAP_COLOR_KEY) ? (this.config.get(BaseChartView.VISUAL_MAP_COLOR_KEY) as string).split(',') : undefined,
-        visualMapOrient: this.config.get(BaseChartView.VISUAL_MAP_ORIENT_KEY) as 'horizontal' | 'vertical',
-        visualMapType: this.config.get(BaseChartView.VISUAL_MAP_TYPE_KEY) as 'continuous' | 'piecewise',
+        visualMapColor: this.getStringOption(BaseChartView.VISUAL_MAP_COLOR_KEY)?.split(','),
+        visualMapOrient: this.getLiteralOption(BaseChartView.VISUAL_MAP_ORIENT_KEY, ['horizontal', 'vertical'] as const),
+        visualMapType: this.getLiteralOption(BaseChartView.VISUAL_MAP_TYPE_KEY, ['continuous', 'piecewise'] as const),
       },
     )
   }

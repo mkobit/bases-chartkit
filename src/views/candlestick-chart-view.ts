@@ -15,12 +15,12 @@ export class CandlestickChartView extends BaseChartView {
 
   readonly type = 'candlestick-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
+    const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
 
-    const openProp = this.config.get(CandlestickChartView.OPEN_PROP_KEY) as string
-    const closeProp = this.config.get(CandlestickChartView.CLOSE_PROP_KEY) as string
-    const lowProp = this.config.get(CandlestickChartView.LOW_PROP_KEY) as string
-    const highProp = this.config.get(CandlestickChartView.HIGH_PROP_KEY) as string
+    const openProp = this.getStringOption(CandlestickChartView.OPEN_PROP_KEY)
+    const closeProp = this.getStringOption(CandlestickChartView.CLOSE_PROP_KEY)
+    const lowProp = this.getStringOption(CandlestickChartView.LOW_PROP_KEY)
+    const highProp = this.getStringOption(CandlestickChartView.HIGH_PROP_KEY)
 
     if (!xProp || !openProp || !closeProp || !lowProp || !highProp) {
       return null
@@ -73,7 +73,7 @@ export class CandlestickChartView extends BaseChartView {
         key: CandlestickChartView.HIGH_PROP_KEY,
         placeholder: t('views.candlestick.high_placeholder'),
       },
-      ...BaseChartView.getAxisViewOptions().filter(opt => (opt as { key?: string }).key !== BaseChartView.FLIP_AXIS_KEY),
+      ...BaseChartView.getAxisViewOptions().filter(opt => opt.key !== BaseChartView.FLIP_AXIS_KEY),
     ]
   }
 }

@@ -36,8 +36,8 @@ export class WaterfallChartView extends BaseChartView {
   }
 
   getChartOption(data: BasesData) {
-    const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY) as string
+    const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const yProp = this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY)
 
     if (!xProp || !yProp) {
       return null

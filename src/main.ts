@@ -548,10 +548,13 @@ export default class BarePlugin extends Plugin {
   onunload() {}
 
   async loadSettings() {
+    // Obsidian's loadData() is typed Promise<any> -- no cast needed to feed it
+    // into Object.assign, whose result already collapses to `any` once one of
+    // its sources is `any`, and `any` is assignable to `this.settings` as-is.
     this.settings = Object.assign(
       {},
       DEFAULT_SETTINGS,
-      await this.loadData() as Partial<BarePluginSettings>,
+      await this.loadData(),
     )
   }
 
