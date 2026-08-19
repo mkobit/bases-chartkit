@@ -1,7 +1,18 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { GaugeSeriesOption } from 'echarts'
+import type { EChartsOption, GaugeSeriesOption } from 'echarts'
 import type { GaugeTransformerOptions } from '../src/charts/transformers/gauge'
+
+// EChartsOption['series'] is a `type`-discriminated union, so this needs no
+// cast -- checking the literal `type` narrows `series` to GaugeSeriesOption.
+function firstGaugeSeries(option: EChartsOption): GaugeSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'gauge') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a gauge series, got ${String(series?.type)}`)
+  }
+  return series
+}
 
 describe(
   'Transformer: Gauge',
@@ -22,15 +33,7 @@ describe(
           'gauge',
         )
 
-        expect(option.series).toBeDefined()
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-        expect(option.series).toHaveLength(1)
-
-        const series = option.series[0] as GaugeSeriesOption
-        expect(series.type).toBe('gauge')
+        const series = firstGaugeSeries(option)
         expect(series.data).toBeDefined()
 
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -59,12 +62,7 @@ describe(
           'gauge',
         )
 
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-
-        const series = option.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         const seriesData = series.data[0]
         // @ts-expect-error - value property access
@@ -84,12 +82,7 @@ describe(
           'gauge',
         )
 
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-
-        const series = option.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         const seriesData = series.data[0]
         // @ts-expect-error - value property access
@@ -117,12 +110,7 @@ describe(
           options,
         )
 
-        expect(Array.isArray(chartOption.series)).toBe(true)
-        if (!Array.isArray(chartOption.series)) {
-          return
-        }
-
-        const series = chartOption.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(chartOption)
         expect(series.min).toBe(-100)
         expect(series.max).toBe(200)
       },
@@ -142,12 +130,7 @@ describe(
           'gauge',
         )
 
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-
-        const series = option.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(option)
         expect(series.min).toBe(0)
         expect(series.max).toBe(100)
       },
@@ -169,12 +152,7 @@ describe(
           { yAxisLabel: 'Load' },
         )
 
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-
-        const series = option.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.data[0].name).toBe('Load')
       },
@@ -192,12 +170,7 @@ describe(
           'gauge',
         )
 
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-
-        const series = option.series[0] as GaugeSeriesOption
+        const series = firstGaugeSeries(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.data[0].name).toBe('val')
       },
@@ -219,7 +192,7 @@ describe(
           'should default to sum when aggregation is omitted',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge')
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(150)
           },
@@ -229,7 +202,7 @@ describe(
           'should average values when aggregation is avg',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'avg' })
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(50)
           },
@@ -239,7 +212,7 @@ describe(
           'should take the minimum when aggregation is min',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'min' })
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(20)
           },
@@ -249,7 +222,7 @@ describe(
           'should take the maximum when aggregation is max',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'max' })
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(80)
           },
@@ -259,7 +232,7 @@ describe(
           'should take the last value when aggregation is last',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'last' })
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(80)
           },
@@ -269,7 +242,7 @@ describe(
           'should result in 0 for any aggregation when data is empty',
           () => {
             const option = transformDataToChartOption([], '', 'val', 'gauge', { aggregation: 'avg' })
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(series.data[0].value).toBe(0)
           },
@@ -297,8 +270,8 @@ describe(
               },
             )
 
-            const series = (option.series as GaugeSeriesOption[])[0]
-            expect(series?.axisLine?.lineStyle?.color).toEqual([
+            const series = firstGaugeSeries(option)
+            expect(series.axisLine?.lineStyle?.color).toEqual([
               [0.3, '#67e0e3'],
               [0.7, '#37a2da'],
               [1, '#fd666d'],
@@ -322,8 +295,8 @@ describe(
               },
             )
 
-            const series = (option.series as GaugeSeriesOption[])[0]
-            expect(series?.axisLine?.lineStyle?.color).toEqual([
+            const series = firstGaugeSeries(option)
+            expect(series.axisLine?.lineStyle?.color).toEqual([
               [0.3, '#67e0e3'],
               [1, '#fd666d'],
             ])
@@ -345,9 +318,9 @@ describe(
               },
             )
 
-            const series = (option.series as GaugeSeriesOption[])[0]
+            const series = firstGaugeSeries(option)
             // (50 - -100) / (200 - -100) = 0.5
-            expect(series?.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
+            expect(series.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
           },
         )
 
@@ -355,8 +328,8 @@ describe(
           'should leave axisLine unset when no color bands are configured',
           () => {
             const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge')
-            const series = (option.series as GaugeSeriesOption[])[0]
-            expect(series?.axisLine).toBeUndefined()
+            const series = firstGaugeSeries(option)
+            expect(series.axisLine).toBeUndefined()
           },
         )
       },

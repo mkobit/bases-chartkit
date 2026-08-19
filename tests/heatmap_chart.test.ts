@@ -2,12 +2,72 @@ import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../src/charts/transformers/palette'
-import type { DatasetComponentOption } from 'echarts'
+import type { ContinuousVisualMapComponentOption, EChartsOption, HeatmapSeriesOption } from 'echarts'
 
 interface HeatmapSourceItem {
   readonly x: string
   readonly y: string
   readonly value: number
+}
+
+function isHeatmapSourceItem(value: unknown): value is HeatmapSourceItem {
+  return typeof value === 'object' && value !== null
+    && 'x' in value && typeof value.x === 'string'
+    && 'y' in value && typeof value.y === 'string'
+    && 'value' in value && typeof value.value === 'number'
+}
+
+// EChartsOption['xAxis']/['yAxis'] are `type`-discriminated unions (only the
+// 'category' member has `.data`) -- heatmap.ts always sets both to
+// 'category', so this checks the real discriminant rather than asserting it.
+function firstCategoryXAxis(option: EChartsOption) {
+  const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+  if (xAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category xAxis, got ${String(xAxis?.type)}`)
+  }
+  return xAxis
+}
+
+function firstCategoryYAxis(option: EChartsOption) {
+  const yAxis = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis
+  if (yAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category yAxis, got ${String(yAxis?.type)}`)
+  }
+  return yAxis
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so this needs no
+// cast -- checking the literal `type` narrows `series` to HeatmapSeriesOption.
+function firstHeatmapSeries(option: EChartsOption): HeatmapSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'heatmap') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a heatmap series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// heatmap.ts always sets visualMap.type explicitly (defaulting to
+// 'continuous' when options.visualMapType is omitted, as in every test
+// below), so this checks the real discriminant rather than asserting it.
+function firstContinuousVisualMap(option: EChartsOption): ContinuousVisualMapComponentOption {
+  const visualMap = Array.isArray(option.visualMap) ? option.visualMap[0] : option.visualMap
+  if (visualMap?.type !== 'continuous') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a continuous visualMap, got ${String(visualMap?.type)}`)
+  }
+  return visualMap
+}
+
+// DatasetOption['source'] is a generic library union (array-of-arrays,
+// array-of-objects, or dict) with no discriminant TS can check -- this is a
+// genuine runtime shape check, not an unverified cast to our known row type.
+function firstDatasetSource(option: EChartsOption): readonly HeatmapSourceItem[] {
+  const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+  const source = dataset?.source
+  return Array.isArray(source) ? source.flatMap(row => isHeatmapSourceItem(row) ? [row] : []) : []
 }
 
 describe(
@@ -41,7 +101,7 @@ describe(
 
         expect(option).toBeDefined()
         // Check X Axis
-        const xAxis = option.xAxis as any
+        const xAxis = firstCategoryXAxis(option)
 
         expect(xAxis.type).toBe('category')
 
@@ -50,7 +110,7 @@ describe(
         expect(xAxis.data).toContain('Tue')
 
         // Check Y Axis
-        const yAxis = option.yAxis as any
+        const yAxis = firstCategoryYAxis(option)
 
         expect(yAxis.type).toBe('category')
 
@@ -59,19 +119,10 @@ describe(
         expect(yAxis.data).toContain('Evening')
 
         // Check Series
-        const series = option.series as readonly any[]
-        expect(series).toHaveLength(1)
+        const series = firstHeatmapSeries(option)
 
-        expect(series[0]?.type).toBe('heatmap')
-
-        // Check Data Mapping
-
-        expect(series[0].datasetIndex).toBe(0)
-        const dataset = option.dataset as readonly DatasetComponentOption[]
-        expect(dataset).toBeDefined()
-
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const source = dataset[0].source as readonly HeatmapSourceItem[]
+        expect(series.datasetIndex).toBe(0)
+        const source = firstDatasetSource(option)
         expect(source).toHaveLength(4)
         expect(source[0]).toEqual({ x: 'Mon',
           y: 'Morning',
@@ -97,10 +148,7 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const dataset = option.dataset as readonly DatasetComponentOption[]
-
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const source = dataset[0].source as readonly HeatmapSourceItem[]
+        const source = firstDatasetSource(option)
 
         // Should produce 0 for missing value based on current logic
         const missingPoint = source.find(d => d.value === 0)
@@ -127,11 +175,20 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const series = option.series as any
-        const formatter = series[0].label.formatter as (params: unknown) => string
+        const series = firstHeatmapSeries(option)
+        const formatter = series.label?.formatter
+        if (typeof formatter !== 'function') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error('expected series.label.formatter to be a function')
+        }
 
-        expect(formatter({ value: { x: 'Mon', y: 'Morning', value: 5 } })).toBe('5')
-        expect(formatter({ value: undefined })).toBe('')
+        // The formatter only reads `params.value`; ECharts' real CallbackDataParams
+        // has a dozen other required fields (componentType, dataIndex, $vars, ...)
+        // this formatter never touches, so a full mock would test nothing extra.
+        // eslint-disable-next-line no-restricted-syntax -- library callback type bridge: see comment above for why a minimal double is used instead of a full CallbackDataParams mock.
+        const call = (value: unknown) => formatter({ value } as unknown as Parameters<typeof formatter>[0])
+        expect(call({ x: 'Mon', y: 'Morning', value: 5 })).toBe('5')
+        expect(call(undefined)).toBe('')
       },
     )
 
@@ -154,7 +211,7 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const visualMap = option.visualMap as any
+        const visualMap = firstContinuousVisualMap(option)
 
         expect(visualMap.min).toBe(10)
 
@@ -181,7 +238,7 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const visualMap = option.visualMap as any
+        const visualMap = firstContinuousVisualMap(option)
 
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
@@ -202,12 +259,17 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const visualMap = option.visualMap as any
+        const visualMap = firstContinuousVisualMap(option)
 
-        expect(visualMap.inRange.color).toEqual([...DEFAULT_SEQUENTIAL_COLOR_GRADIENT])
+        expect(visualMap.inRange?.color).toEqual([...DEFAULT_SEQUENTIAL_COLOR_GRADIENT])
         // Light low end, dark high end -- the sequential invariant.
-        expect(visualMap.inRange.color[0]).toBe('#cde2fb')
-        expect(visualMap.inRange.color.at(-1)).toBe('#0d366b')
+        const colors = visualMap.inRange?.color
+        if (!Array.isArray(colors)) {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error('expected visualMap.inRange.color to be an array')
+        }
+        expect(colors[0]).toBe('#cde2fb')
+        expect(colors.at(-1)).toBe('#0d366b')
       },
     )
 
@@ -226,9 +288,9 @@ describe(
           'heatmap',
           { valueProp: 'val', visualMapColor: override },
         )
-        const visualMap = option.visualMap as any
+        const visualMap = firstContinuousVisualMap(option)
 
-        expect(visualMap.inRange.color).toEqual(override)
+        expect(visualMap.inRange?.color).toEqual(override)
       },
     )
 
@@ -245,11 +307,12 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const label = (option.series as any)[0].label
+        const series = firstHeatmapSeries(option)
+        const label = series.label
 
-        expect(label.color).toBe('#1a1a19')
-        expect(label.textBorderColor).toBe('rgba(255, 255, 255, 0.85)')
-        expect(label.textBorderWidth).toBe(2)
+        expect(label?.color).toBe('#1a1a19')
+        expect(label?.textBorderColor).toBe('rgba(255, 255, 255, 0.85)')
+        expect(label?.textBorderWidth).toBe(2)
       },
     )
 
@@ -272,9 +335,9 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const xAxis = option.xAxis as any
+        const xAxis = firstCategoryXAxis(option)
 
-        expect(xAxis.axisLabel.interval).toBe('auto')
+        expect(xAxis.axisLabel?.interval).toBe('auto')
       },
     )
 
@@ -289,9 +352,9 @@ describe(
           'heatmap',
           { valueProp: 'val' },
         )
-        const xAxis = option.xAxis as any
+        const xAxis = firstCategoryXAxis(option)
 
-        expect(xAxis.axisLabel.interval).toBe(0)
+        expect(xAxis.axisLabel?.interval).toBe(0)
       },
     )
   },
