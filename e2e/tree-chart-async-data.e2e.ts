@@ -1,11 +1,15 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface HierarchyLeaf {
   readonly name: string
   readonly fullPath: string
   readonly dataIndex: number
+}
+
+interface TreeOptionLike {
+  readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }>
 }
 
 /**
@@ -148,52 +152,13 @@ test.describe('tree chart async data update', () => {
       })
     }, { path: 'tree/Basic.base', viewName: 'Project tasks tree' })
 
-    await expect.poll(async () => evaluateObsidian(page, (app) => {
-      // The tree-chart view is nested inside Bases' own container view, at a
-      // depth that isn't part of any public API. Walk the object graph
-      // looking for the instance with a `getChartOption` method (our
-      // BaseChartView subclass) rather than hardcoding child indices.
-      interface ChartLike {
-        chart: { getOption: () => { series?: readonly { data?: readonly unknown[] }[] } }
-      }
-
-      function isChartView(obj: unknown): obj is ChartLike {
-        if (obj === null || typeof obj !== 'object') {
-          return false
-        }
-        const candidate = obj as Record<string, unknown>
-        const chart = candidate.chart as Record<string, unknown> | undefined
-        return typeof candidate.getChartOption === 'function' && typeof chart?.getOption === 'function'
-      }
-
-      function findChartView(obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined {
-        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-          return undefined
-        }
-        if (depth > 8 || visited.includes(obj)) {
-          return undefined
-        }
-        if (isChartView(obj)) {
-          return obj
-        }
-        const nextVisited = [...visited, obj]
-        for (const value of Object.values(obj as Record<string, unknown>)) {
-          const found = findChartView(value, depth + 1, nextVisited)
-          if (found) {
-            return found
-          }
-        }
-        return undefined
-      }
-
-      const activeLeafView = app.workspace.getLeaf(false).view
-      const chartView = findChartView(activeLeafView, 0, [])
-      const option = chartView?.chart.getOption()
-      return option?.series?.[0]?.data?.length ?? 0
-    // tree/ sorts alphabetically after all three large-volume chart-type
-    // directories (calendar, heatmap, theme-river) -- the highest cold-start
-    // indexing risk in the suite.
-    }), { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS }).toBeGreaterThan(0)
+    await expect.poll(
+      async () => asOptionLike<TreeOptionLike>(await getChartOption(page))?.series?.[0]?.data?.length ?? 0,
+      // tree/ sorts alphabetically after all three large-volume chart-type
+      // directories (calendar, heatmap, theme-river) -- the highest cold-start
+      // indexing risk in the suite.
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
   })
 })
 

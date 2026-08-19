@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface AreaSeriesLike {
   readonly name?: string
@@ -41,7 +41,7 @@ test.describe('area chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -55,9 +55,13 @@ test.describe('area chart rendering', () => {
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly series: readonly AreaSeriesLike[]
       readonly dataset: readonly DatasetLike[]
+    }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
     }
     const region = option.series[0]?.name
     if (typeof region !== 'string') {
@@ -101,7 +105,7 @@ test.describe('area chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -110,10 +114,10 @@ test.describe('area chart rendering', () => {
     // getOption() normalizes xAxis/yAxis to arrays. Default (un-flipped) area
     // puts the Date category on x and Revenue value on y; flipAxis inverts
     // both, so this assertion fails if the option ever regressed to default.
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string }[]
       readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
-    } | null
+    }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.type).toBe('value')
     expect(option?.yAxis?.[0]?.type).toBe('category')
     expect(option?.yAxis?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
@@ -144,7 +148,7 @@ test.describe('area chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -152,9 +156,9 @@ test.describe('area chart rendering', () => {
 
     await waitForVaultIndexed(page)
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
-    } | null
+    }>(await getChartOption(page))
     const categories = option?.xAxis?.[0]?.data ?? []
     expect(categories.length).toBeGreaterThan(0)
     // Every backing note's Date is the first of a 2024 month, so each formula-

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface TreemapSeriesLike {
   readonly type?: string
@@ -131,13 +131,17 @@ test.describe('treemap chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
         return option?.series?.length ?? 0
       },
       { timeout: 30_000 },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly series: readonly TreemapSeriesLike[] }
+    const option = asOptionLike<{ readonly series: readonly TreemapSeriesLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const treemapSeries = option.series.find(s => s.type === 'treemap')
 
     expect(treemapSeries?.itemStyle?.borderColor).toBe('transparent')

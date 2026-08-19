@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface StackedBarSeriesLike {
   readonly name?: string
@@ -43,7 +43,7 @@ test.describe('stacked-bar chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -67,9 +67,13 @@ test.describe('stacked-bar chart rendering', () => {
     // the resolved region name/row to start the hover.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly series: readonly StackedBarSeriesLike[]
       readonly dataset: readonly DatasetLike[]
+    }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
     }
     const region = option.series[0]?.name
     if (typeof region !== 'string') {

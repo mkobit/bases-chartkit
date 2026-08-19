@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import type { SankeySeriesOption } from 'echarts'
 
 interface SankeyOptionLike {
@@ -24,13 +24,13 @@ test.describe('sankey chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as SankeyOptionLike | null
+        const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
         return opt?.series?.[0]?.links?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as SankeyOptionLike | null
+    const option = asOptionLike<SankeyOptionLike>(await getChartOption(page))
     expect(option?.series?.[0]?.type).toBe('sankey')
     expect(option?.series?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
   })
@@ -93,7 +93,7 @@ test.describe('sankey chart rendering', () => {
     // series with empty arrays -- assert on that directly rather than
     // defaulting through optional chaining, which would pass even if
     // `series` were missing for an unrelated reason.
-    const option = await getChartOption(page) as SankeyOptionLike | null
+    const option = asOptionLike<SankeyOptionLike>(await getChartOption(page))
     expect(option?.series ?? []).toHaveLength(0)
   })
 
@@ -119,7 +119,7 @@ test.describe('sankey chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as SankeyOptionLike | null
+        const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
         return opt?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -131,7 +131,7 @@ test.describe('sankey chart rendering', () => {
     // name encountered, so it lands at dataIndex 0. Confirmed live rather
     // than trusted by hand-derivation, since dedup order is exactly the
     // kind of detail a transformer change could silently reorder.
-    const option = await getChartOption(page) as SankeyOptionLike | null
+    const option = asOptionLike<SankeyOptionLike>(await getChartOption(page))
     const nodeNames = option?.series?.[0]?.data?.map(node => node.name) ?? []
     const dataIndex = nodeNames.indexOf('Homepage')
     expect(dataIndex).toBeGreaterThanOrEqual(0)

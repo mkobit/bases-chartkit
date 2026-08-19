@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('radar chart rendering', () => {
   // Regression test for obsidian-bases-charts-769: wide-format (metricProps)
@@ -28,13 +28,17 @@ test.describe('radar chart rendering', () => {
     // cold-start indexing timeout, same as rose/ and effect-scatter/.
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.radar?.[0]?.indicator?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }
+    const option = asOptionLike<{ readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- verified with `tsc --noEmit` directly: removing this produces TS2532 'Object is possibly undefined' under noUncheckedIndexedAccess. The lint rule's own type analysis disagrees with tsc here.
     const indicatorNames = option.radar[0]!.indicator.map(indicator => indicator.name)
 
@@ -64,7 +68,7 @@ test.describe('radar chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.radar?.[0]?.indicator?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },

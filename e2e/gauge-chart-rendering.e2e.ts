@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface GaugeDataPointLike {
   readonly name: string
@@ -31,13 +31,17 @@ test.describe('gauge chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly series: ReadonlyArray<{ readonly data: readonly GaugeDataPointLike[] }> }
+    const option = asOptionLike<{ readonly series: ReadonlyArray<{ readonly data: readonly GaugeDataPointLike[] }> }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- verified with `tsc --noEmit` directly: removing this produces TS2532 'Object is possibly undefined' under noUncheckedIndexedAccess. The lint rule's own type analysis disagrees with tsc here.
     const gaugeSeries = option.series[0]!
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- see above.

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import * as R from 'remeda'
 
 interface WordCloudOptionLike {
@@ -35,7 +35,7 @@ test.describe('word cloud chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as WordCloudOptionLike | null
+        const opt = asOptionLike<WordCloudOptionLike>(await getChartOption(page))
         return opt?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -46,7 +46,7 @@ test.describe('word cloud chart rendering', () => {
     // order (not the layout's placement order) is what setItemGraphicEl's
     // dataIndex addresses, so find that word's live dataIndex rather than
     // hand-deriving it, guarding against note-content drift.
-    const option = await getChartOption(page) as WordCloudOptionLike | null
+    const option = asOptionLike<WordCloudOptionLike>(await getChartOption(page))
     const words = option?.series?.[0]?.data ?? []
     const maxWord = R.firstBy(words, [w => w.value ?? Number.NEGATIVE_INFINITY, 'desc'])
     const maxIndex = maxWord ? words.indexOf(maxWord) : -1

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface BoxplotSeriesLike {
   readonly type?: string
@@ -35,13 +35,17 @@ test.describe('boxplot chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
         return option?.series?.length ?? 0
       },
       { timeout: 30_000 },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly series: readonly BoxplotSeriesLike[] }
+    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const boxplotSeries = option.series.find(s => s.type === 'boxplot')
 
     expect(boxplotSeries?.itemStyle?.color).toBe('transparent')
@@ -86,7 +90,7 @@ test.describe('boxplot chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly BoxplotSeriesLike[] } | null
+        const option = asOptionLike<{ readonly series?: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
         const boxplotSeries = option?.series?.find(s => s.type === 'boxplot')
         return boxplotSeries?.data?.length ?? 0
       },
@@ -95,15 +99,23 @@ test.describe('boxplot chart rendering', () => {
 
     await waitForVaultIndexed(page)
 
-    const seriesIndex = (await getChartOption(page) as { readonly series: readonly BoxplotSeriesLike[] })
-      .series.findIndex(s => s.type === 'boxplot')
+    const seriesOption = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    if (seriesOption === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
+    const seriesIndex = seriesOption.series.findIndex(s => s.type === 'boxplot')
     const dataIndex = 0
 
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex, dataIndex })
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly series: readonly BoxplotSeriesLike[]
       readonly xAxis: CategoryAxisLike | readonly CategoryAxisLike[]
+    }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
     }
     const boxplotSeries = option.series[seriesIndex]
     const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis

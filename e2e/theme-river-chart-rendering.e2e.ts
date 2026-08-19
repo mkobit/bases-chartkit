@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('theme river chart rendering', () => {
   // Regression coverage for bck-44j. createThemeRiverChartOption builds ONE
@@ -56,7 +56,7 @@ test.describe('theme river chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -91,7 +91,7 @@ test.describe('theme river chart rendering', () => {
     // [{...}] here (unlike the raw transformer output the unit tests assert).
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly title?: ReadonlyArray<{ readonly text?: string }> } | null
+        const option = asOptionLike<{ readonly title?: ReadonlyArray<{ readonly text?: string }> }>(await getChartOption(page))
         return option?.title?.[0]?.text ?? ''
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -116,7 +116,7 @@ test.describe('theme river chart rendering', () => {
     // getOption() normalizes singleAxis into an array of axis components.
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly singleAxis?: ReadonlyArray<{ readonly orient?: string }> } | null
+        const option = asOptionLike<{ readonly singleAxis?: ReadonlyArray<{ readonly orient?: string }> }>(await getChartOption(page))
         return option?.singleAxis?.[0]?.orient ?? ''
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },

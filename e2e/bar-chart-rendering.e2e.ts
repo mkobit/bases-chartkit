@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface DatasetLike {
   readonly source?: readonly unknown[]
@@ -68,7 +68,7 @@ test.describe('bar chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -78,10 +78,10 @@ test.describe('bar chart rendering', () => {
     // puts the Department category on x and Spend value on y; flipAxis
     // inverts both, so this assertion fails if the option ever regressed to
     // default.
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string }[]
       readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
-    } | null
+    }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.type).toBe('value')
     expect(option?.yAxis?.[0]?.type).toBe('category')
     expect(option?.yAxis?.[0]?.data?.length ?? 0).toBeGreaterThan(0)
@@ -109,15 +109,15 @@ test.describe('bar chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly axisLabel?: { readonly rotate?: number } }[]
-    } | null
+    }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.axisLabel?.rotate).toBe(45)
   })
 })
