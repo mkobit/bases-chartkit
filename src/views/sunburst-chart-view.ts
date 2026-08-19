@@ -36,15 +36,15 @@ export class SunburstChartView extends BaseChartView {
         placeholder: t('views.sunburst.value_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((o) => {
-        const key = (o as { key?: string }).key
+        const key = o.key
         return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
       }),
     ]
   }
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const pathProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
+    const pathProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY)
 
     if (!pathProp) {
       return null

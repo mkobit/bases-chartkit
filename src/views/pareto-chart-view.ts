@@ -8,8 +8,8 @@ import { t } from '../lang/text'
 export class ParetoChartView extends BaseChartView {
   type = 'pareto-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY) as string
+    const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const yProp = this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY)
 
     if (!xProp || !yProp) {
       return null

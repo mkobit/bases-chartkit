@@ -39,8 +39,8 @@ export class TreemapChartView extends BaseChartView {
   }
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const pathProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
+    const pathProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY)
 
     if (!pathProp || !valueProp) {
       return null

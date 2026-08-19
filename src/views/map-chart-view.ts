@@ -20,7 +20,7 @@ export class MapChartView extends BaseChartView {
   public static readonly REGION_PROP_KEY = 'regionProp'
 
   protected renderChart(): void {
-    const mapFile = this.config.get(MapChartView.MAP_FILE_KEY) as string
+    const mapFile = this.getStringOption(MapChartView.MAP_FILE_KEY)
 
     if (!mapFile) {
       this.executeRender()
@@ -49,7 +49,7 @@ export class MapChartView extends BaseChartView {
             }
             const content = await adapter.read(mapFile)
             const geoJson = geoJsonSchema.parse(content)
-            // eslint-disable-next-line no-restricted-syntax -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
+            // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
             return (geoJson as unknown) as Parameters<typeof echarts.registerMap>[1]
           },
         )
@@ -64,9 +64,13 @@ export class MapChartView extends BaseChartView {
   }
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const mapFile = this.config.get(MapChartView.MAP_FILE_KEY) as string
-    const regionProp = this.config.get(MapChartView.REGION_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
+    const mapFile = this.getStringOption(MapChartView.MAP_FILE_KEY)
+    const regionProp = this.getStringOption(MapChartView.REGION_PROP_KEY)
+    // Used both as the required yProp-slot positional arg below and as the
+    // options.valueProp field -- '' is a safe default for the positional
+    // slot (getNestedValue('') just resolves to undefined per-row, same as
+    // any other absent/invalid property path already tolerated here).
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY) ?? ''
 
     if (!mapFile || this.registeredMapName !== mapFile) {
       // Map not loaded yet; renderChart loads it asynchronously, then re-renders.
@@ -109,7 +113,7 @@ export class MapChartView extends BaseChartView {
         placeholder: t('views.map.value_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((o) => {
-        const key = (o as { key?: string }).key
+        const key = o.key
         return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
       }),
       ...BaseChartView.getVisualMapViewOptions(),

@@ -63,7 +63,7 @@ export class GanttChartView extends BaseChartView {
         placeholder: t('views.gantt.group_prop_placeholder'),
       },
       ...BaseChartView.getCommonViewOptions().filter((o) => {
-        const key = (o as { key?: string }).key
+        const key = o.key
         return key !== BaseChartView.X_AXIS_PROP_KEY
           && key !== BaseChartView.Y_AXIS_PROP_KEY
           && key !== BaseChartView.SERIES_PROP_KEY

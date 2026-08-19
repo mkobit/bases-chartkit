@@ -27,7 +27,7 @@ export class HeatmapChartView extends BaseChartView {
         key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.heatmap.value_prop_placeholder'),
       },
-      ...BaseChartView.getAxisViewOptions().filter(opt => (opt as { key?: string }).key !== BaseChartView.FLIP_AXIS_KEY),
+      ...BaseChartView.getAxisViewOptions().filter(opt => opt.key !== BaseChartView.FLIP_AXIS_KEY),
       ...BaseChartView.getVisualMapViewOptions(),
     ]
   }

@@ -9,9 +9,11 @@ export class PolarLineChartView extends BaseChartView {
   readonly type = 'polar-line-chart'
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const yProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
-    const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY) as string
+    // '' is a safe fallback for the required xProp/yProp positional slots --
+    // this view has no null-config guard before rendering.
+    const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY) ?? ''
+    const yProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY) ?? ''
+    const seriesProp = this.getStringOption(BaseChartView.SERIES_PROP_KEY)
     const isSmooth = this.getBooleanOption('smooth') ?? false
     const hasAreaStyle = this.getBooleanOption('areaStyle') ?? false
     const isStacked = this.getBooleanOption('stack') ?? false

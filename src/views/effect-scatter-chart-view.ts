@@ -35,7 +35,7 @@ export class EffectScatterChartView extends BaseChartView {
   static getViewOptions(): BasesOptions[] {
     return [
       ...BaseChartView.getCommonViewOptions(),
-      ...BaseChartView.getAxisViewOptions().filter(opt => (opt as { key?: string }).key !== BaseChartView.FLIP_AXIS_KEY),
+      ...BaseChartView.getAxisViewOptions().filter(opt => opt.key !== BaseChartView.FLIP_AXIS_KEY),
       {
         key: BaseChartView.SIZE_PROP_KEY,
         type: 'property',

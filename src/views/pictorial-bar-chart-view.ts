@@ -9,16 +9,18 @@ export class PictorialBarChartView extends BaseChartView {
   type: ChartType = 'pictorialBar'
 
   getChartOption(data: BasesData) {
-    const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY) as string
+    // '' is a safe fallback for the required xProp/yProp positional slots --
+    // this view has no null-config guard before rendering.
+    const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY) ?? ''
+    const yProp = this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY) ?? ''
 
     const options: PictorialBarTransformerOptions = {
       ...this.getCommonTransformerOptions(),
-      seriesProp: this.config.get(BaseChartView.SERIES_PROP_KEY) as string,
-      symbol: this.config.get('symbol') as string,
-      symbolRepeat: this.config.get('symbolRepeat') as PictorialBarTransformerOptions['symbolRepeat'],
-      symbolClip: this.config.get('symbolClip') as boolean,
-      symbolSize: this.config.get('symbolSize') as string | number,
+      seriesProp: this.getStringOption(BaseChartView.SERIES_PROP_KEY),
+      symbol: this.getStringOption('symbol'),
+      symbolRepeat: this.getLiteralOption('symbolRepeat', ['fixed', 'true', 'false'] as const),
+      symbolClip: this.getBooleanOption('symbolClip'),
+      symbolSize: this.getStringOption('symbolSize'),
     }
 
     return transformDataToChartOption(

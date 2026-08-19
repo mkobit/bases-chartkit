@@ -28,8 +28,11 @@ export class ParallelChartView extends BaseChartView {
   }
 
   getChartOption(data: BasesData): EChartsOption {
-    const xProp = this.config.get('xProp') as string
-    const seriesProp = this.config.get('seriesProp') as string
+    // '' is a safe fallback for the required xProp positional slot below --
+    // dims then parses to an empty list, matching the "no dimensions" branch
+    // the transformer already handles for a blank config value.
+    const xProp = this.getStringOption('xProp') ?? ''
+    const seriesProp = this.getStringOption('seriesProp')
 
     const dims = typeof xProp === 'string'
       ? xProp.split(',').map(s => s.trim()).filter(s => s.length > 0)

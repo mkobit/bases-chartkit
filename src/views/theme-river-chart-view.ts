@@ -42,9 +42,9 @@ export class ThemeRiverChartView extends BaseChartView {
   }
 
   protected getChartOption(data: BasesData): EChartsOption | null {
-    const dateProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY) as string
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
-    const themeProp = this.config.get(BaseChartView.SERIES_PROP_KEY) as string
+    const dateProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY)
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY)
+    const themeProp = this.getStringOption(BaseChartView.SERIES_PROP_KEY)
 
     if (!dateProp || !valueProp) {
       return null

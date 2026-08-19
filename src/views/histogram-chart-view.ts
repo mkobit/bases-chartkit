@@ -15,12 +15,12 @@ export class HistogramChartView extends BaseChartView {
       return null
     }
 
-    const valueProp = this.config.get(BaseChartView.VALUE_PROP_KEY) as string
+    const valueProp = this.getStringOption(BaseChartView.VALUE_PROP_KEY)
     if (!valueProp) {
       return null
     }
 
-    const binCountStr = this.config.get(HistogramChartView.BIN_COUNT_KEY) as string
+    const binCountStr = this.getStringOption(HistogramChartView.BIN_COUNT_KEY)
     // Invalid or empty stays undefined so the transformer falls back to Sturges.
     const parsedBinCount = binCountStr
       ? parseInt(
