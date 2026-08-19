@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface GraphOptionLike {
   readonly series?: ReadonlyArray<{ readonly data?: ReadonlyArray<{ readonly name?: string }> }>
@@ -37,7 +37,7 @@ test.describe('graph chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as GraphOptionLike | null
+        const opt = asOptionLike<GraphOptionLike>(await getChartOption(page))
         return opt?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -51,7 +51,7 @@ test.describe('graph chart rendering', () => {
     // series, and reading the node name from an earlier, still-settling
     // render risks it not matching what's on screen by hover time.
     await waitForVaultIndexed(page)
-    const option = await getChartOption(page) as GraphOptionLike | null
+    const option = asOptionLike<GraphOptionLike>(await getChartOption(page))
     const nodeName = option?.series?.[0]?.data?.[0]?.name ?? ''
     expect(nodeName.length).toBeGreaterThan(0)
 

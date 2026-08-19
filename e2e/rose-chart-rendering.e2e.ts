@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface LegendOptionLike {
   readonly orient?: string
@@ -35,13 +35,17 @@ test.describe('rose chart rendering', () => {
     // risk as radar/ and map/.
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
         return option?.series?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly legend?: LegendOptionLike | readonly LegendOptionLike[] }
+    const option = asOptionLike<{ readonly legend?: LegendOptionLike | readonly LegendOptionLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const legend = Array.isArray(option.legend) ? option.legend[0] : option.legend
 
     // rose/Basic.base sets legendPosition: right -- getLegendOption maps that

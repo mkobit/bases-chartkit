@@ -1,6 +1,6 @@
 import { Temporal } from 'temporal-polyfill'
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import { formatDurationMs } from '../src/charts/transformers/formatters'
 
 interface GanttDataItem {
@@ -87,13 +87,13 @@ test.describe('gantt chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as GanttOptionLike | null
+        const option = asOptionLike<GanttOptionLike>(await getChartOption(page))
         return option ? findGanttTarget(option) : null
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).not.toBeNull()
 
-    const option = await getChartOption(page) as GanttOptionLike
+    const option = asOptionLike<GanttOptionLike>(await getChartOption(page)) ?? {}
     const target = findGanttTarget(option)
     if (target === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
@@ -121,11 +121,11 @@ test.describe('gantt chart rendering', () => {
     await openBasesView(page, 'gantt/Formula.base', 'Delivery timeline (quarter-labeled axis)')
 
     await expect.poll(
-      async () => groupNamesOf(await getChartOption(page) as GanttOptionLike | null).length,
+      async () => groupNamesOf(asOptionLike<GanttOptionLike>(await getChartOption(page))).length,
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(1)
 
-    const groupNames = groupNamesOf(await getChartOption(page) as GanttOptionLike)
+    const groupNames = groupNamesOf(asOptionLike<GanttOptionLike>(await getChartOption(page)))
 
     // Every group name is a formatted "MMM YYYY" -> contains a 4-digit year.
     expect(groupNames.every(name => /\b\d{4}\b/.test(name))).toBe(true)

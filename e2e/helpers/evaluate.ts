@@ -40,10 +40,29 @@ export async function evaluateObsidian<T, A>(
 ): Promise<T> {
   const fnSrc = fn.toString()
   return page.evaluate(([src, fnArgs]) => {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `new Function(...)()` is typed `any` by TypeScript with no way to narrow it further; `fn`'s own signature is the source of truth for what was serialized above.
     const fnObj = new Function(`return (${src})`)() as (app: App, a?: unknown) => T | Promise<T>
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `activeWindow` is Obsidian's global, typed as a bare `Window` with no `.app` -- the extension is a real Obsidian runtime property with no public type declaration to import instead.
     const obsidianApp = (activeWindow as Window & { app: App }).app
     return fnObj(obsidianApp, fnArgs)
   }, [fnSrc, args] as const)
+}
+
+/**
+ * Narrows a value read across the CDP `page.evaluate()` JSON boundary (e.g.
+ * from `getChartOption`) to a caller-supplied shape. Nothing on this side can
+ * verify a live ECharts option's actual runtime structure beyond "is it
+ * non-null" -- every `*OptionLike` interface passed as `T` documents the
+ * minimal fields its caller reads, all optional and read via `?.`/`??`, so an
+ * actual shape mismatch degrades to an empty/undefined read (caught by the
+ * caller's own assertions) rather than a crash.
+ */
+export function asOptionLike<T>(option: unknown): T | null {
+  if (option === null || typeof option !== 'object') {
+    return null
+  }
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- see function doc comment: this is the one place that bridges the CDP boundary's `unknown` into a caller's declared `*OptionLike` shape.
+  return option as T
 }
 
 /**

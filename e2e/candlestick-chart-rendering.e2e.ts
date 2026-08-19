@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, getSeriesDataCount, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, getSeriesDataCount, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface CandlestickRow {
   readonly x: string
@@ -60,7 +60,7 @@ test.describe('candlestick chart rendering', () => {
     // dataset readiness (not series[0].data) is the real signal here.
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -73,7 +73,11 @@ test.describe('candlestick chart rendering', () => {
     // all observe the same, final state.
     await waitForVaultIndexed(page)
 
-    const option = await getChartOption(page) as { readonly dataset: readonly DatasetLike[] }
+    const option = asOptionLike<{ readonly dataset: readonly DatasetLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const sourceRows = option.dataset[0]?.source ?? []
     const lastRow = sourceRows.at(-1)
     if (!lastRow) {
@@ -130,7 +134,7 @@ test.describe('candlestick chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -138,9 +142,9 @@ test.describe('candlestick chart rendering', () => {
 
     await waitForVaultIndexed(page)
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly data?: readonly unknown[] }[]
-    } | null
+    }>(await getChartOption(page))
     const categories = option?.xAxis?.[0]?.data ?? []
     expect(categories.length).toBeGreaterThan(0)
     // Every category is an abbreviated month, zero-padded day, and year.

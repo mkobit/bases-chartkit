@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('heatmap chart rendering', () => {
   // Regression coverage for bck-44j (dataset/encode wiring) and bck-i9b.10
@@ -30,7 +30,7 @@ test.describe('heatmap chart rendering', () => {
     // dataset readiness (not series[0].data) is the real signal here.
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: ReadonlyArray<{ readonly source?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly dataset?: ReadonlyArray<{ readonly source?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -63,7 +63,7 @@ test.describe('heatmap chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: ReadonlyArray<{ readonly source?: readonly unknown[] }> } | null
+        const option = asOptionLike<{ readonly dataset?: ReadonlyArray<{ readonly source?: readonly unknown[] }> }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -71,11 +71,11 @@ test.describe('heatmap chart rendering', () => {
 
     // ECharts' live getOption() normalizes every component to an array (same
     // reason the area formula test reads xAxis[0]), so index into each.
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly visualMap?: ReadonlyArray<{ readonly inRange?: { readonly color?: readonly string[] } }>
       readonly series?: ReadonlyArray<{ readonly label?: { readonly textBorderColor?: string, readonly textBorderWidth?: number } }>
       readonly xAxis?: ReadonlyArray<{ readonly data?: readonly unknown[], readonly axisLabel?: { readonly interval?: unknown, readonly rotate?: number } }>
-    } | null
+    }>(await getChartOption(page))
 
     const ramp = option?.visualMap?.[0]?.inRange?.color ?? []
     // Sequential: light low end, dark high end (guards against a rainbow revert).

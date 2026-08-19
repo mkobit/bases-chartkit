@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface LinesOptionLike {
   readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: readonly unknown[] }>
@@ -31,7 +31,7 @@ test.describe('lines chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as LinesOptionLike | null
+        const opt = asOptionLike<LinesOptionLike>(await getChartOption(page))
         return opt?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -41,7 +41,7 @@ test.describe('lines chart rendering', () => {
     // (Outbound/Return) into separate series via Object.keys(groupBy(...)),
     // whose insertion order isn't something to hand-derive -- read the real
     // series name at seriesIndex 0 from the live option instead.
-    const option = await getChartOption(page) as LinesOptionLike | null
+    const option = asOptionLike<LinesOptionLike>(await getChartOption(page))
     const seriesName = option?.series?.[0]?.name ?? ''
     expect(seriesName.length).toBeGreaterThan(0)
 

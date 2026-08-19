@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface BulletSeriesLike {
   readonly type?: string
@@ -31,13 +31,17 @@ test.describe('bullet chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
         return option?.series?.length ?? 0
       },
       { timeout: 30_000 },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly series: readonly BulletSeriesLike[] }
+    const option = asOptionLike<{ readonly series: readonly BulletSeriesLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const rangeSeries = option.series.filter(s => s.type === 'bar' && s.stack === 'range')
     const targetSeries = option.series.find(s => s.type === 'scatter')
 
@@ -68,13 +72,17 @@ test.describe('bullet chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly unknown[] } | null
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
         return option?.series?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const option = await getChartOption(page) as { readonly series: readonly BulletSeriesLike[] }
+    const option = asOptionLike<{ readonly series: readonly BulletSeriesLike[] }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
+    }
     const valueSeriesIndex = option.series.findIndex(s => s.type === 'bar' && s.stack !== 'range')
     expect(valueSeriesIndex).toBeGreaterThanOrEqual(0)
 

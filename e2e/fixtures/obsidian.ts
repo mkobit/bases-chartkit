@@ -165,6 +165,7 @@ export const test = base.extend<ObsidianTestFixtures, ObsidianWorkerFixtures>({
       const page = context.pages()[0] ?? await context.newPage()
 
       await page.waitForFunction(
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `window` inside this browser-context callback is typed as the bare DOM `Window`, which has no `.app` -- Obsidian's runtime extension with no public type declaration to import instead (same bridge as evaluate.ts's `activeWindow as Window & { app: App }`).
         () => typeof (window as { app?: unknown }).app !== 'undefined',
         { timeout: 30_000 },
       )

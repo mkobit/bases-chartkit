@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 test.describe('chart rendering', () => {
   test('opens a .base file and mounts an echarts canvas', async ({ obsidianPage: { page } }) => {
@@ -52,14 +52,14 @@ test.describe('chart rendering', () => {
     // Wait for the chart to render and for its series to be populated.
     await expect.poll(
       async () => {
-        const opt = await getChartOption(page) as { readonly series?: ReadonlyArray<{ readonly type: string }> } | null
+        const opt = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly type: string }> }>(await getChartOption(page))
         return opt?.series?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
     // Verify the options.
-    const option = await getChartOption(page) as { readonly series: ReadonlyArray<{ readonly type: string }> } | null
+    const option = asOptionLike<{ readonly series: ReadonlyArray<{ readonly type: string }> }>(await getChartOption(page))
     expect(option).not.toBeNull()
     expect(option?.series?.[0]?.type).toBe('bar')
   })

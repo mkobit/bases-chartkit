@@ -394,7 +394,6 @@ export default tseslint.config(
       'functional/no-expression-statements': 'off', // Needed for expect() assertions
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }], // Allow devDependencies in tests
       'import/no-nodejs-modules': 'off', // Node built-ins are allowed in tests and e2e fixtures
-      '@typescript-eslint/consistent-type-assertions': 'off', // Needed for mocking
       '@typescript-eslint/no-explicit-any': 'off', // Needed to narrow into ECharts' deeply-nested option union types for assertions
       '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe args in tests
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -424,6 +423,15 @@ export default tseslint.config(
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
       'obsidianmd/rule-custom-message': 'off', // same new Function() usage trips obsidianmd's no-new-func message too
       'obsidianmd/prefer-window-timers': 'off', // e2e fixtures run in the Playwright/Node worker process, not Obsidian's renderer -- `window` doesn't exist there
+    },
+  },
+  // tests/** still allows unaudited type assertions (mocking, deep option-type
+  // narrowing) -- e2e/** was audited (bck-1cs) and now enforces the same
+  // 'never' rule as src/, via the general **/*.ts block above.
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off', // Needed for mocking
     },
   },
   // Legacy Transformers (Pending Refactor)

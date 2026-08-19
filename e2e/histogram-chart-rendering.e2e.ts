@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface HistogramSeriesLike {
   readonly type?: string
@@ -36,7 +36,7 @@ test.describe('histogram chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly HistogramSeriesLike[] } | null
+        const option = asOptionLike<{ readonly series?: readonly HistogramSeriesLike[] }>(await getChartOption(page))
         const barSeries = option?.series?.find(s => s.type === 'bar')
         return barSeries?.data?.length ?? 0
       },
@@ -52,9 +52,13 @@ test.describe('histogram chart rendering', () => {
     // same, final state.
     await waitForVaultIndexed(page)
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly series: readonly HistogramSeriesLike[]
       readonly xAxis: CategoryAxisLike | readonly CategoryAxisLike[]
+    }>(await getChartOption(page))
+    if (option === null) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+      throw new Error('expected a non-null chart option')
     }
     const seriesIndex = option.series.findIndex(s => s.type === 'bar')
     const histogramSeries = option.series[seriesIndex]

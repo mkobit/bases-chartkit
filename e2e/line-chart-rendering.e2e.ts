@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface DatasetLike {
   readonly source?: readonly unknown[]
@@ -29,7 +29,7 @@ test.describe('line chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -71,7 +71,7 @@ test.describe('line chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly dataset?: readonly DatasetLike[] } | null
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
         return option?.dataset?.[0]?.source?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -79,9 +79,9 @@ test.describe('line chart rendering', () => {
 
     await waitForVaultIndexed(page)
 
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
-    } | null
+    }>(await getChartOption(page))
     const categories = option?.xAxis?.[0]?.data ?? []
     expect(categories.length).toBeGreaterThan(0)
     // The daily random walk spans late December 2023 into January 2024, so each

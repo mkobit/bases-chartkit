@@ -1,6 +1,6 @@
 import * as R from 'remeda'
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface ParallelSeriesLike {
   readonly data?: readonly unknown[]
@@ -33,7 +33,7 @@ test.describe('parallel chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = await getChartOption(page) as { readonly series?: readonly ParallelSeriesLike[] } | null
+        const option = asOptionLike<{ readonly series?: readonly ParallelSeriesLike[] }>(await getChartOption(page))
         return option?.series?.[0]?.data?.length ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
@@ -51,9 +51,9 @@ test.describe('parallel chart rendering', () => {
     // (verified: series 0 was a Warrior in isolation but a Rogue as spec #25
     // under full-suite load). So derive the target row FROM the option rather
     // than hardcoding a class or index.
-    const option = await getChartOption(page) as {
+    const option = asOptionLike<{
       readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: ReadonlyArray<ReadonlyArray<number | string>> }>
-    } | null
+    }>(await getChartOption(page))
     const rows = (option?.series ?? []).flatMap((series, seriesIndex) =>
       (series.data ?? []).map((values, dataIndex) => ({ seriesIndex, dataIndex, name: series.name ?? '', values })),
     )
