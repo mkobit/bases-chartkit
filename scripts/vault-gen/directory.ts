@@ -40,11 +40,19 @@ function primaryVariantPath(spec: ChartExampleSpec): string {
   return variantRelativePath(spec.chartType, firstVariant)
 }
 
+// bck-i9b.6: appends a link to the canonical Apache ECharts gallery example
+// this chart type is modeled after, when the spec has a verified one (see
+// spec.ts's `echartsExample` and the call sites in registry.ts). Omitted
+// entirely for chart types with no confirmed 1:1 gallery example.
+function echartsSuffix(spec: ChartExampleSpec): string {
+  return spec.echartsExampleUrl ? ` ([ECharts example](${spec.echartsExampleUrl}))` : ''
+}
+
 function buildDirectoryMarkdown(specs: readonly ChartExampleSpec[]): string {
   const bulletLines = R.pipe(
     specs,
     R.sortBy(spec => spec.chartType),
-    R.map(spec => `- **[[${primaryVariantPath(spec)}|${spec.chartType}]]** — ${spec.description}`),
+    R.map(spec => `- **[[${primaryVariantPath(spec)}|${spec.chartType}]]** — ${spec.description}${echartsSuffix(spec)}`),
   )
 
   return [

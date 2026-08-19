@@ -37,6 +37,13 @@ export type ChartExampleSpec
     description: string
     notePrefix: string
     variants: readonly ChartVariantSpec[]
+    // Link to the canonical Apache ECharts gallery example this chart type
+    // is modeled after, so a maintainer can visually/behaviorally compare
+    // this plugin's rendering against ECharts' own reference (bck-i9b.6).
+    // Omitted for chart types with no confirmed 1:1 gallery example -- see
+    // the comment on `echartsExample` below for why this is never derived
+    // from `chartType` automatically.
+    echartsExampleUrl?: string
   }>
   & Readonly<{
     sampleRows: (seed: number) => readonly FrontmatterRow[]
@@ -48,6 +55,7 @@ export type ChartExampleSpecConfig<T>
     description: string
     notePrefix: string
     variants: readonly ChartVariantSpec[]
+    echartsExampleUrl?: string
   }>
   & Readonly<{
     arbitrary: fc.Arbitrary<T>
@@ -62,12 +70,25 @@ export function variantRelativePath(chartType: string, variant: ChartVariantSpec
   return `${chartType}/${variant.fileName}`
 }
 
+// Builds a gallery URL from an ECharts example id (the `c=` slug used by
+// https://echarts.apache.org/examples/en/editor.html). The id is NOT
+// derivable from this repo's `chartType` -- e.g. `rose` maps to gallery id
+// `pie-roseType-simple`, `histogram` maps to `bar-histogram`, and several
+// chart types (bullet, pareto) have no gallery example at all. Every call
+// site in registry.ts passes an id that was manually confirmed against
+// Apache ECharts' own generated example list (`src/data/chart-list-data.js`
+// in apache/echarts-examples) -- never guess one from a chart-type slug.
+export function echartsExample(id: string): string {
+  return `https://echarts.apache.org/examples/en/editor.html?c=${id}`
+}
+
 export function defineChartExampleSpec<T>(config: ChartExampleSpecConfig<T>): ChartExampleSpec {
   return {
     chartType: config.chartType,
     description: config.description,
     notePrefix: config.notePrefix,
     variants: config.variants,
+    echartsExampleUrl: config.echartsExampleUrl,
     sampleRows: (seed) => {
       const subSeed = deriveSubSeed(seed, config.chartType)
       const sample = getDeterministicSample(config.arbitrary, subSeed)

@@ -17,7 +17,7 @@ import { demographicScatterArbitrary } from '../generators/scatter'
 import { mapChartArbitrary } from '../generators/map'
 import { themeRiverChartArbitrary } from '../generators/theme-river'
 import { wordCloudChartArbitrary } from '../generators/word-cloud'
-import { defineChartExampleSpec } from './spec'
+import { defineChartExampleSpec, echartsExample } from './spec'
 import type { ChartExampleSpec } from './spec'
 
 interface BarSample {
@@ -26,6 +26,7 @@ interface BarSample {
 
 const barSpec = defineChartExampleSpec<BarSample>({
   chartType: 'bar',
+  echartsExampleUrl: echartsExample('bar-simple'),
   description: 'Department spend, ranked -- demonstrates a basic bar chart.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
@@ -79,6 +80,7 @@ const barSpec = defineChartExampleSpec<BarSample>({
 
 const pictorialBarSpec = defineChartExampleSpec<BarSample>({
   chartType: 'pictorial-bar',
+  echartsExampleUrl: echartsExample('pictorialBar-vehicle'),
   description: 'Department spend, ranked -- demonstrates a pictorial bar chart with a custom symbol.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
@@ -102,6 +104,7 @@ const pictorialBarSpec = defineChartExampleSpec<BarSample>({
 
 const radialBarSpec = defineChartExampleSpec<BarSample>({
   chartType: 'radial-bar',
+  echartsExampleUrl: echartsExample('bar-polar-real-estate'),
   description: 'Department spend, ranked -- demonstrates a radial bar chart.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
@@ -125,6 +128,7 @@ const radialBarSpec = defineChartExampleSpec<BarSample>({
 
 const roseSpec = defineChartExampleSpec<BarSample>({
   chartType: 'rose',
+  echartsExampleUrl: echartsExample('pie-roseType-simple'),
   description: 'Department spend, ranked -- demonstrates a rose chart.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
@@ -154,6 +158,7 @@ interface StackedBarSample {
 
 const stackedBarSpec = defineChartExampleSpec<StackedBarSample>({
   chartType: 'stacked-bar',
+  echartsExampleUrl: echartsExample('bar-stack'),
   description: 'Quarterly revenue by region -- demonstrates a stacked bar chart with multiple series.',
   arbitrary: stackedBarChartArbitrary,
   notePrefix: 'Quarterly-Revenue',
@@ -183,6 +188,7 @@ interface LineSample {
 
 const lineSpec = defineChartExampleSpec<LineSample>({
   chartType: 'line',
+  echartsExampleUrl: echartsExample('line-simple'),
   description: 'Daily revenue trend -- demonstrates a basic line chart.',
   arbitrary: lineChartArbitrary,
   notePrefix: 'Revenue',
@@ -268,6 +274,7 @@ interface RadarSample {
 
 const radarSpec = defineChartExampleSpec<RadarSample>({
   chartType: 'radar',
+  echartsExampleUrl: echartsExample('radar'),
   description: 'Character attribute comparison -- demonstrates a radar chart with multiple series.',
   arbitrary: radarChartArbitrary,
   notePrefix: 'Character',
@@ -303,6 +310,7 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
 // No new data-generation logic needed.
 const parallelSpec = defineChartExampleSpec<RadarSample>({
   chartType: 'parallel',
+  echartsExampleUrl: echartsExample('parallel-simple'),
   description: 'Character attribute comparison grouped by class -- demonstrates a parallel-coordinates chart, reusing radarChartArbitrary.',
   arbitrary: radarChartArbitrary,
   notePrefix: 'Character',
@@ -336,6 +344,7 @@ interface BoxplotSample {
 
 const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
   chartType: 'boxplot',
+  echartsExampleUrl: echartsExample('boxplot-multi'),
   description: 'Product score distribution -- demonstrates a boxplot chart.',
   arbitrary: boxplotChartArbitrary,
   notePrefix: 'Product-Score',
@@ -363,6 +372,7 @@ interface HistogramSample {
 
 const histogramSpec = defineChartExampleSpec<HistogramSample>({
   chartType: 'histogram',
+  echartsExampleUrl: echartsExample('bar-histogram'),
   description: 'Score distribution -- demonstrates a histogram chart.',
   arbitrary: histogramChartArbitrary,
   notePrefix: 'Score',
@@ -387,6 +397,10 @@ interface ParetoSample {
 
 const paretoSpec = defineChartExampleSpec<ParetoSample>({
   chartType: 'pareto',
+  // No echartsExampleUrl: Pareto isn't a native ECharts series type (it's a
+  // dual-axis bar+line combo this plugin composes itself) and the official
+  // gallery (apache/echarts-examples) has no example titled/tagged "pareto"
+  // -- confirmed against its full generated example list (bck-i9b.6).
   description: 'Product sales, ranked -- demonstrates a pareto chart.',
   arbitrary: paretoChartArbitrary,
   notePrefix: 'Product-Sales',
@@ -413,6 +427,7 @@ interface WaterfallSample {
 
 const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
   chartType: 'waterfall',
+  echartsExampleUrl: echartsExample('bar-waterfall'),
   description: 'Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.',
   arbitrary: waterfallChartArbitrary,
   notePrefix: 'Budget-Step',
@@ -464,6 +479,7 @@ interface SankeySample {
 
 const sankeySpec = defineChartExampleSpec<SankeySample>({
   chartType: 'sankey',
+  echartsExampleUrl: echartsExample('sankey-simple'),
   description: 'User funnel flow -- demonstrates a sankey chart.',
   arbitrary: sankeyChartArbitrary,
   notePrefix: 'Funnel-Step',
@@ -493,6 +509,7 @@ interface GraphSample {
 
 const graphSpec = defineChartExampleSpec<GraphSample>({
   chartType: 'graph',
+  echartsExampleUrl: echartsExample('graph-simple'),
   description: 'Network topology -- demonstrates a graph chart.',
   arbitrary: graphChartArbitrary,
   notePrefix: 'Network-Link',
@@ -522,6 +539,7 @@ interface LinesSample {
 
 const linesSpec = defineChartExampleSpec<LinesSample>({
   chartType: 'lines',
+  echartsExampleUrl: echartsExample('lines-airline'),
   description: 'Route lines -- demonstrates a lines chart with start/end coordinate pairs.',
   arbitrary: linesChartArbitrary,
   notePrefix: 'Route',
@@ -559,6 +577,7 @@ interface HierarchySample {
 
 const treeSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'tree',
+  echartsExampleUrl: echartsExample('tree-basic'),
   description: 'Company org chart -- demonstrates a tree chart over hierarchical, slash-delimited path data.',
   arbitrary: treeChartArbitrary,
   notePrefix: 'Org-Node',
@@ -581,6 +600,7 @@ const treeSpec = defineChartExampleSpec<HierarchySample>({
 
 const sunburstSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'sunburst',
+  echartsExampleUrl: echartsExample('sunburst-simple'),
   description: 'Company org chart -- demonstrates a sunburst chart over hierarchical, slash-delimited path data.',
   arbitrary: sunburstChartArbitrary,
   notePrefix: 'Org-Node',
@@ -604,6 +624,7 @@ const sunburstSpec = defineChartExampleSpec<HierarchySample>({
 
 const treemapSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'treemap',
+  echartsExampleUrl: echartsExample('treemap-simple'),
   description: 'Org headcount by division -- demonstrates a treemap over multi-root, slash-delimited hierarchical path data with area-proportional leaves.',
   arbitrary: treemapChartArbitrary,
   notePrefix: 'Org-Node',
@@ -647,6 +668,7 @@ interface ScatterWithSeriesSample {
 
 const scatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'scatter',
+  echartsExampleUrl: echartsExample('scatter-simple'),
   description: 'GDP vs life expectancy by continent -- demonstrates a scatter chart with a categorical series.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
@@ -676,6 +698,7 @@ interface BubblePointSample {
 
 const bubbleSpec = defineChartExampleSpec<BubblePointSample>({
   chartType: 'bubble',
+  echartsExampleUrl: echartsExample('bubble-gradient'),
   description: 'Weighted point cloud -- demonstrates a bubble chart with size-encoded points.',
   arbitrary: bubbleChartArbitrary,
   notePrefix: 'Point',
@@ -711,6 +734,7 @@ const bubbleSpec = defineChartExampleSpec<BubblePointSample>({
 // render nicely -- that would defang the regression test bck-ma9 depends on.
 const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'effect-scatter',
+  echartsExampleUrl: echartsExample('scatter-effect'),
   description: 'GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
@@ -751,6 +775,7 @@ const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
 // preserve, this is just the ordinary working example.
 const polarScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'polar-scatter',
+  echartsExampleUrl: echartsExample('scatter-polar-punchCard'),
   description: 'GDP vs life expectancy by continent, sized by population -- demonstrates a polar-scatter chart with a normalized sizeProp.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
@@ -782,6 +807,7 @@ interface PieSample {
 
 const pieSpec = defineChartExampleSpec<PieSample>({
   chartType: 'pie',
+  echartsExampleUrl: echartsExample('pie-simple'),
   description: 'Sales by region -- demonstrates a basic pie chart.',
   arbitrary: pieChartArbitrary,
   notePrefix: 'Sales-Region',
@@ -809,6 +835,7 @@ interface FunnelSample {
 
 const funnelSpec = defineChartExampleSpec<FunnelSample>({
   chartType: 'funnel',
+  echartsExampleUrl: echartsExample('funnel'),
   description: 'User journey funnel -- demonstrates a funnel chart with decreasing stage values.',
   arbitrary: funnelChartArbitrary,
   notePrefix: 'Funnel-Stage',
@@ -836,6 +863,7 @@ interface GaugeSample {
 
 const gaugeSpec = defineChartExampleSpec<GaugeSample>({
   chartType: 'gauge',
+  echartsExampleUrl: echartsExample('gauge'),
   description: 'Server load gauge -- demonstrates a gauge chart with an averaging aggregation.',
   arbitrary: gaugeChartArbitrary,
   notePrefix: 'Server-Load',
@@ -866,6 +894,7 @@ interface HeatmapSample {
 
 const heatmapSpec = defineChartExampleSpec<HeatmapSample>({
   chartType: 'heatmap',
+  echartsExampleUrl: echartsExample('heatmap-cartesian'),
   description: 'Server load heatmap -- demonstrates a heatmap chart over a day x hour activity grid.',
   arbitrary: heatmapChartArbitrary,
   notePrefix: 'Server-Load',
@@ -924,6 +953,7 @@ interface PolarLineSample {
 
 const polarLineSpec = defineChartExampleSpec<PolarLineSample>({
   chartType: 'polar-line',
+  echartsExampleUrl: echartsExample('line-polar'),
   description: 'Server load across time-of-day buckets -- demonstrates a polar-line chart over a time x server cross-product.',
   arbitrary: polarLineChartArbitrary,
   notePrefix: 'Server-Load',
@@ -1000,6 +1030,7 @@ interface CalendarSample {
 
 const calendarSpec = defineChartExampleSpec<CalendarSample>({
   chartType: 'calendar',
+  echartsExampleUrl: echartsExample('calendar-heatmap'),
   description: 'Daily mood journal (1..5) -- demonstrates a calendar chart mapping a full year of daily values onto a sequential ramp.',
   arbitrary: calendarChartArbitrary,
   notePrefix: 'Mood-Day',
@@ -1059,6 +1090,7 @@ interface CandlestickSample {
 
 const candlestickSpec = defineChartExampleSpec<CandlestickSample>({
   chartType: 'candlestick',
+  echartsExampleUrl: echartsExample('candlestick-simple'),
   description: 'AAPL stock analysis -- demonstrates a candlestick chart.',
   arbitrary: candlestickChartArbitrary,
   notePrefix: 'AAPL-Day',
@@ -1126,6 +1158,7 @@ interface StackedAreaSample {
 // and the stacked view read the same notes, differing only in stack:true.
 const areaSpec = defineChartExampleSpec<StackedAreaSample>({
   chartType: 'area',
+  echartsExampleUrl: echartsExample('area-basic'),
   description: 'Monthly revenue by region -- demonstrates a multi-series area chart, unstacked and stacked.',
   arbitrary: stackedAreaChartArbitrary,
   notePrefix: 'Area-Revenue',
@@ -1213,6 +1246,10 @@ interface BulletSample {
 
 const bulletSpec = defineChartExampleSpec<BulletSample>({
   chartType: 'bullet',
+  // No echartsExampleUrl: bullet charts aren't a native ECharts series type
+  // (this plugin composes one from primitives) and the official gallery has
+  // no example titled/tagged "bullet" -- confirmed against its full
+  // generated example list (bck-i9b.6).
   description: 'KPI metrics against targets and range bands -- demonstrates a bullet chart.',
   arbitrary: bulletChartArbitrary,
   notePrefix: 'KPI',
@@ -1254,6 +1291,7 @@ interface GanttSample {
 
 const ganttSpec = defineChartExampleSpec<GanttSample>({
   chartType: 'gantt',
+  echartsExampleUrl: echartsExample('custom-gantt-flight'),
   description: 'Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart.',
   arbitrary: ganttChartArbitrary,
   notePrefix: 'Task',
@@ -1330,6 +1368,7 @@ interface ThemeRiverSample {
 
 const themeRiverSpec = defineChartExampleSpec<ThemeRiverSample>({
   chartType: 'theme-river',
+  echartsExampleUrl: echartsExample('themeRiver-basic'),
   description: 'News topic mentions over a month -- demonstrates a theme river chart over a date x topic cross-product.',
   arbitrary: themeRiverChartArbitrary,
   notePrefix: 'News-Day',
@@ -1404,6 +1443,11 @@ interface WordCloudSample {
 
 const wordCloudSpec = defineChartExampleSpec<WordCloudSample>({
   chartType: 'word-cloud',
+  // Word cloud is an official-but-separate ECharts extension (not a
+  // built-in series type), so it has no entry in apache/echarts-examples'
+  // gallery -- this points at the extension's own verified reference demo
+  // instead (bck-i9b.6).
+  echartsExampleUrl: 'https://ecomfe.github.io/echarts-wordcloud/example/wordCloud.html',
   description: 'Keyword frequency -- demonstrates a word cloud chart.',
   arbitrary: wordCloudChartArbitrary,
   notePrefix: 'Keyword',
@@ -1437,6 +1481,7 @@ interface MapSample {
 
 const mapSpec = defineChartExampleSpec<MapSample>({
   chartType: 'map',
+  echartsExampleUrl: echartsExample('map-usa'),
   description: 'Chicago landmarks by event count -- demonstrates a map chart over a real GeoJSON asset.',
   arbitrary: mapChartArbitrary,
   notePrefix: 'Chicago-Landmark',
