@@ -7,6 +7,7 @@
 	"scripts": {
 		"build": "bun run typecheck && bun esbuild.config.mjs production",
 		"check:eslint-disable-budget": "bun scripts/check-eslint-disable-budget.ts",
+		"check:test-cast-budget": "bun scripts/check-test-cast-budget.ts",
 		"clean": "bun scripts/clean.ts",
 		"dev": "bun esbuild.config.mjs",
 		"docs:screenshots": "bun scripts/collect-chart-views.ts && bun x playwright test --config=playwright.survey.config.ts",

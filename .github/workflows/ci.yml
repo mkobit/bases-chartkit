@@ -71,6 +71,9 @@ jobs:
             - name: Check eslint-disable budget
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run check:eslint-disable-budget
+            - name: Check tests/ cast budget
+              if: (success() || failure()) && steps.setup.outcome == 'success'
+              run: bun run check:test-cast-budget
             - name: Test
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run test:coverage
