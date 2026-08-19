@@ -68,6 +68,9 @@ jobs:
             - name: Lint
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run lint
+            - name: Check eslint-disable budget
+              if: (success() || failure()) && steps.setup.outcome == 'success'
+              run: bun run check:eslint-disable-budget
             - name: Test
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run test:coverage
