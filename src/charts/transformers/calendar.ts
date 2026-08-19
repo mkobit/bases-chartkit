@@ -1,4 +1,4 @@
-import type { EChartsOption, CalendarComponentOption, HeatmapSeriesOption, VisualMapComponentOption } from 'echarts'
+import type { EChartsOption, CalendarComponentOption, HeatmapSeriesOption, VisualMapComponentOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
@@ -20,11 +20,6 @@ interface CalendarPoint {
 // out of `prefer-immutable-types` (which exempts echarts option types via
 // `ignoreTypePattern`).
 type MutableCalendarHeatmapValueOption = (string | number)[]
-
-function asCalendarTooltipParams(params: unknown): Readonly<{ value: readonly (number | string)[] }> {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts tooltip formatter callback params are typed as a wide union; bridge to the shape this chart's tooltip actually receives.
-  return params as Readonly<{ value: readonly (number | string)[] }>
-}
 
 export function createCalendarChartOption(
   data: BasesData,
@@ -157,11 +152,12 @@ export function createCalendarChartOption(
         return {
           tooltip: {
             position: 'top',
-            formatter: (params: unknown) => {
-              const p = asCalendarTooltipParams(params)
-              return (!p || !Array.isArray(p.value))
+            formatter: (params: TooltipComponentFormatterCallbackParams) => {
+              const item = Array.isArray(params) ? params[0] : params
+              const val = item?.value
+              return (!val || !Array.isArray(val))
                 ? ''
-                : `${p.value[0]} : ${p.value[1]}`
+                : `${String(val[0])} : ${String(val[1])}`
             },
           },
           visualMap: visualMapOption,

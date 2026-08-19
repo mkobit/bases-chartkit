@@ -101,10 +101,8 @@ export function createParetoChartOption(
     encode: { x: 'name',
       y: 'cumulative' },
     tooltip: {
-      valueFormatter: (value: unknown) => {
-        const v = Array.isArray(value) ? value[0] : value
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts tooltip valueFormatter param is untyped; narrow to what this series actually produces
-        const val = v as number | string | null | undefined
+      valueFormatter: (value) => {
+        const val = Array.isArray(value) ? value[0] : value
         return (typeof val === 'number' ? val.toFixed(1) : String(val)) + ' %'
       },
     },

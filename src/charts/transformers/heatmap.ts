@@ -39,18 +39,6 @@ function formatTooltip(param: HeatmapTooltipParam, xLabel: string, yLabel: strin
   return `${marker}${xLabel}: ${row.x}<br/>${yLabel}: ${row.y}<br/>${valueLabel}: ${row.value.toLocaleString('en-US')}`
 }
 
-// ECharts doesn't derive a default cell label from our dataset + encode series
-// (only from raw [x, y, value] tuples), so `label.formatter` is required or
-// every cell renders as '-'. Isolate the loosely-typed callback param.
-function asHeatmapLabelParams(params: unknown): Readonly<{ value?: Readonly<{ value?: number }> }> {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts label formatter callback params are typed as a wide union; bridge to the shape this chart's label formatter actually receives.
-  return params as Readonly<{ value?: Readonly<{ value?: number }> }>
-}
-
-function asHeatmapCellValue(params: unknown): number | undefined {
-  return asHeatmapLabelParams(params).value?.value
-}
-
 export function createHeatmapChartOption(
   data: BasesData,
   xProp: string,
@@ -150,8 +138,8 @@ export function createHeatmapChartOption(
       color: '#1a1a19',
       textBorderColor: 'rgba(255, 255, 255, 0.85)',
       textBorderWidth: 2,
-      formatter: (params: unknown) => {
-        const val = asHeatmapCellValue(params)
+      formatter: (params) => {
+        const val = isHeatmapCell(params.value) ? params.value.value : undefined
         return val === undefined || Number.isNaN(val) ? '' : safeToString(val)
       },
     },
