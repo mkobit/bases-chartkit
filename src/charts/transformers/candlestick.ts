@@ -60,8 +60,7 @@ function formatTooltip(
   upColor: string,
   downColor: string,
 ): string {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
-  const p = Array.isArray(params) ? params as ReadonlyArray<CandlestickTooltipParam> : [params] as ReadonlyArray<CandlestickTooltipParam>
+  const p: ReadonlyArray<CandlestickTooltipParam> = Array.isArray(params) ? params : [params]
   const first = p[0]
   if (!first || !isCandlestickRow(first.value)) {
     return ''

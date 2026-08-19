@@ -17,11 +17,6 @@ type ParallelAxisSpec = Readonly<{
 
 type ParallelRow = ReadonlyArray<number | string | null>
 
-function asParallelAxis(axis: unknown): EChartsOption['parallelAxis'] {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts parallelAxis type is a complex union; bridge to the shape we construct.
-  return axis as EChartsOption['parallelAxis']
-}
-
 export function createParallelChartOption(
   data: BasesData,
   dimensionsStr: string,
@@ -164,7 +159,10 @@ export function createParallelChartOption(
               nameGap: 20,
             },
           },
-          parallelAxis: asParallelAxis(parallelAxis),
+          // ECharts wants fresh mutable axis (and per-axis data) arrays, same
+          // boundary rule as the series `data` build below.
+          parallelAxis: parallelAxis.map(axis => ({ ...axis,
+            data: axis.data ? [...axis.data] : undefined })),
           series: [...series],
           tooltip: {
             trigger: 'item',

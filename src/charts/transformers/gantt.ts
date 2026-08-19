@@ -33,15 +33,14 @@ export interface GanttTooltipParam {
 }
 
 function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>, valueFormat?: string): string {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
-  const p = Array.isArray(params) ? params as ReadonlyArray<GanttTooltipParam> : [params] as ReadonlyArray<GanttTooltipParam>
+  const p: ReadonlyArray<GanttTooltipParam> = Array.isArray(params) ? params : [params]
   const visibleItems = p.filter((item: GanttTooltipParam) => item.seriesName !== '_start')
+  const [firstVisible] = visibleItems
 
-  return visibleItems.length === 0
+  return !firstVisible
     ? ''
     : (() => {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- length already checked above; noUncheckedIndexedAccess still types this access as possibly undefined
-        const category = (visibleItems[0] as GanttTooltipParam).name
+        const category = firstVisible.name
 
         const itemsHtml = visibleItems.map((item: GanttTooltipParam) => {
           const data = item.data
@@ -192,8 +191,7 @@ export function createGanttChartOption(
             // anchors it just past the bar's end instead, so it grows into
             // open timeline space rather than back over the axis.
             position: 'right',
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- ECharts label formatter callback param is untyped; narrow to the shape this series actually receives
-            formatter: (p: unknown) => (p as GanttTooltipParam).seriesName === 'Task' ? '' : (p as GanttTooltipParam).seriesName,
+            formatter: p => (p.seriesName === 'Task' ? '' : (p.seriesName ?? '')),
           },
           // Narrow bars/tightly-packed rows can't always fit their task-name
           // label without it bleeding into a neighboring row -- hide whichever

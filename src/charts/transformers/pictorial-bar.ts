@@ -39,8 +39,7 @@ interface PictorialBarTooltipRow {
 }
 
 function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>): string {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
-  const list = Array.isArray(params) ? params as ReadonlyArray<PictorialBarTooltipParam> : [params] as ReadonlyArray<PictorialBarTooltipParam>
+  const list: ReadonlyArray<PictorialBarTooltipParam> = Array.isArray(params) ? params : [params]
   const validRows: ReadonlyArray<PictorialBarTooltipRow> = list
     .map((p): PictorialBarTooltipRow | null => (isPictorialBarDataPoint(p.value) ? { param: p, row: p.value } : null))
     .filter((r): r is PictorialBarTooltipRow => r !== null)

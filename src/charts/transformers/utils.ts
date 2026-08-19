@@ -131,6 +131,12 @@ export function formatCompactVisualMapLabel(value: unknown): string {
   return typeof value === 'number' ? compactNumberFormatter.format(value) : String(value)
 }
 
+// Duck-types a native Date (or anything Date-shaped) without importing the
+// banned `Date` global as a type -- same pattern as isRenderableValue above.
+function isDateLike(val: unknown): val is { getTime: () => number } {
+  return typeof val === 'object' && val !== null && 'getTime' in val && typeof val.getTime === 'function'
+}
+
 // Parses a raw Bases property value (number, native Date, Value-wrapper, or
 // date/instant string) into epoch milliseconds via the Temporal API per
 // AGENTS.md, returning null for anything that isn't a real, parseable date --
@@ -140,9 +146,8 @@ export function parseDateToEpochMs(val: unknown): number | null {
   if (typeof val === 'number') {
     return val
   }
-  if (val && typeof val === 'object' && 'getTime' in val && typeof val.getTime === 'function') {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- already narrowed via the 'getTime' in val + typeof check above
-    return (val as { getTime: () => number }).getTime()
+  if (isDateLike(val)) {
+    return val.getTime()
   }
   // Bases' Value wrapper for date properties isn't a string or a native
   // Date — unwrap it via safeToString (-> ISO date string) before parsing,

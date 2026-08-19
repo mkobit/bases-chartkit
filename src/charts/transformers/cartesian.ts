@@ -44,8 +44,7 @@ function formatTooltip(
   params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>,
   xAxisLabel: string,
 ): string {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Array.isArray narrows to unknown[]; reassert the element type ECharts actually passes
-  const list = Array.isArray(params) ? params as ReadonlyArray<CartesianTooltipParam> : [params] as ReadonlyArray<CartesianTooltipParam>
+  const list: ReadonlyArray<CartesianTooltipParam> = Array.isArray(params) ? params : [params]
   const validRows: ReadonlyArray<CartesianTooltipRow> = list
     .map((p): CartesianTooltipRow | null => (isCartesianDataPoint(p.value) ? { param: p, row: p.value } : null))
     .filter((r): r is CartesianTooltipRow => r !== null)
