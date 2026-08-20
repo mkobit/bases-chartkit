@@ -1,11 +1,33 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { TreemapSeriesOption } from 'echarts'
+import type { EChartsOption, TreemapSeriesOption } from 'echarts'
 
 interface HierarchyNode {
   readonly name: string
   readonly value?: number
   readonly children?: readonly HierarchyNode[]
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so filtering on the
+// literal `type` narrows each element to TreemapSeriesOption with no cast.
+function treemapSeriesList(option: EChartsOption): readonly TreemapSeriesOption[] {
+  const rawSeries = Array.isArray(option.series)
+    ? option.series
+    : option.series === undefined ? [] : [option.series]
+  return rawSeries.flatMap(series => series.type === 'treemap' ? [series] : [])
+}
+
+// TreemapSeriesOption['data'] is a wide OptionDataValue union with no
+// discriminant TS can check -- this is a genuine runtime shape check against
+// our HierarchyNode tree rather than an unverified cast.
+function isHierarchyNode(value: unknown): value is HierarchyNode {
+  return typeof value === 'object' && value !== null
+    && 'name' in value && typeof value.name === 'string'
+}
+
+function treemapHierarchy(series: TreemapSeriesOption | undefined): readonly HierarchyNode[] {
+  const data = series?.data
+  return Array.isArray(data) ? data.flatMap(node => isHierarchyNode(node) ? [node] : []) : []
 }
 
 describe(
@@ -31,14 +53,13 @@ describe(
           {},
         )
 
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
         expect(series).toBeDefined()
         expect(series.length).toBe(1)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('treemap')
 
-        // eslint-disable-next-line no-restricted-syntax -- ECharts series data is a wide OptionDataValue union; narrow to our HierarchyNode shape for assertions.
-        const hierarchy = series[0]?.data as unknown as readonly HierarchyNode[]
+        const hierarchy = treemapHierarchy(series[0])
         expect(hierarchy).toHaveLength(1) // single top-level node: Project
 
         const project = hierarchy[0]
@@ -67,7 +88,7 @@ describe(
           {},
         )
 
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
         expect(series[0]?.breadcrumb?.show).toBe(true)
       },
     )
@@ -86,7 +107,7 @@ describe(
           {},
         )
 
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
         // Regression: ECharts' treemap default itemStyle.borderColor is an
         // opaque white with no dark-theme override, so an explicit
         // transparent border is required to avoid a hardcoded-white
@@ -112,7 +133,7 @@ describe(
           {},
         )
 
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
         expect(series[0]?.upperLabel?.show).toBe(true)
       },
     )
@@ -134,7 +155,7 @@ describe(
           {},
         )
 
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
         const levels = series[0]?.levels
         expect(levels).toBeDefined()
         expect(levels?.length).toBeGreaterThanOrEqual(2)
@@ -160,10 +181,9 @@ describe(
           'treemap',
           {},
         )
-        const series = option.series as readonly TreemapSeriesOption[]
+        const series = treemapSeriesList(option)
 
-        // eslint-disable-next-line no-restricted-syntax -- ECharts series data is a wide OptionDataValue union; narrow to our HierarchyNode shape for assertions.
-        const hierarchy = series?.[0]?.data as unknown as readonly HierarchyNode[]
+        const hierarchy = treemapHierarchy(series[0])
         expect(hierarchy).toHaveLength(1)
         expect(hierarchy[0]?.value).toBeUndefined()
       },

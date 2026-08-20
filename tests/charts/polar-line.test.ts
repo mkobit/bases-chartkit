@@ -1,6 +1,47 @@
 import { describe, it, expect } from 'bun:test'
 import { createPolarLineChartOption } from '../../src/charts/transformers/polar-line'
-import type { LineSeriesOption } from 'echarts'
+import type { EChartsOption, LineSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so filtering on the
+// literal `type` narrows each element to LineSeriesOption with no cast.
+function lineSeriesList(option: EChartsOption): readonly LineSeriesOption[] {
+  const rawSeries = Array.isArray(option.series)
+    ? option.series
+    : option.series === undefined ? [] : [option.series]
+  return rawSeries.flatMap(series => series.type === 'line' ? [series] : [])
+}
+
+// EChartsOption['angleAxis'] is a `type`-discriminated union (only the
+// 'category' member has `.data`) -- polar-line.ts always sets it to
+// 'category', so this checks the real discriminant rather than asserting it.
+function firstCategoryAngleAxis(option: EChartsOption) {
+  const angleAxis = Array.isArray(option.angleAxis) ? option.angleAxis[0] : option.angleAxis
+  if (angleAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category angleAxis, got ${String(angleAxis?.type)}`)
+  }
+  return angleAxis
+}
+
+// `.name` is common to every radiusAxis union member, so no discriminant check
+// is needed -- this just resolves the single-vs-array shape without a cast.
+function firstRadiusAxis(option: EChartsOption) {
+  const radiusAxis = Array.isArray(option.radiusAxis) ? option.radiusAxis[0] : option.radiusAxis
+  if (radiusAxis === undefined) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a radiusAxis to be defined')
+  }
+  return radiusAxis
+}
+
+function firstTitle(option: EChartsOption) {
+  const title = Array.isArray(option.title) ? option.title[0] : option.title
+  if (title === undefined) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a title to be defined')
+  }
+  return title
+}
 
 describe(
   'createPolarLineChartOption',
@@ -45,16 +86,14 @@ describe(
         expect(option.angleAxis).toBeDefined()
         expect(option.radiusAxis).toBeDefined()
 
-        // Use explicit cast or optional chain checks
-        const angleAxis = option.angleAxis as { type?: string
-          data?: unknown[] }
+        const angleAxis = firstCategoryAngleAxis(option)
         expect(angleAxis.type).toBe('category')
         expect(angleAxis.data).toEqual(['North',
           'East',
           'South',
           'West'])
 
-        const series = option.series as LineSeriesOption[]
+        const series = lineSeriesList(option)
         expect(series).toHaveLength(1)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('line')
@@ -75,7 +114,7 @@ describe(
           { seriesProp: 'category' },
         )
 
-        const series = option.series as LineSeriesOption[]
+        const series = lineSeriesList(option)
         expect(series).toHaveLength(2)
 
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -100,7 +139,7 @@ describe(
           },
         )
 
-        const series = option.series as LineSeriesOption[]
+        const series = lineSeriesList(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].smooth).toBe(true)
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -121,7 +160,7 @@ describe(
           },
         )
 
-        const series = option.series as LineSeriesOption[]
+        const series = lineSeriesList(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].stack).toBe('total')
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -155,8 +194,7 @@ describe(
           },
         )
 
-        const title = option.title as { text?: string
-          subtext?: string }
+        const title = firstTitle(option)
         expect(title.text).toBe('Compass readings')
         expect(title.subtext).toBe('Angle is direction; radius is value.')
       },
@@ -175,8 +213,8 @@ describe(
           },
         )
 
-        const angleAxis = option.angleAxis as { name?: string }
-        const radiusAxis = option.radiusAxis as { name?: string }
+        const angleAxis = firstCategoryAngleAxis(option)
+        const radiusAxis = firstRadiusAxis(option)
         expect(angleAxis.name).toBe('Direction')
         expect(radiusAxis.name).toBe('Reading')
       },
@@ -191,8 +229,8 @@ describe(
           'value',
         )
 
-        const angleAxis = option.angleAxis as { name?: string }
-        const radiusAxis = option.radiusAxis as { name?: string }
+        const angleAxis = firstCategoryAngleAxis(option)
+        const radiusAxis = firstRadiusAxis(option)
         expect(angleAxis.name).toBe('angle')
         expect(radiusAxis.name).toBe('value')
       },
