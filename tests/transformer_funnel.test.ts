@@ -1,6 +1,33 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { FunnelSeriesOption } from 'echarts'
+import type { EChartsOption, FunnelSeriesOption } from 'echarts'
+
+interface FunnelDatum {
+  readonly name?: string
+  readonly value?: number
+}
+
+function isFunnelDatum(value: unknown): value is FunnelDatum {
+  return typeof value === 'object' && value !== null && 'name' in value && 'value' in value
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows `series` to FunnelSeriesOption -- no cast needed.
+function firstFunnelSeries(option: EChartsOption): FunnelSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'funnel') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a funnel series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// FunnelSeriesOption['data'] is a loose library union; this runtime guard
+// narrows each entry to our { name, value } shape rather than asserting it.
+function funnelData(option: EChartsOption): readonly FunnelDatum[] {
+  const data = firstFunnelSeries(option).data
+  return Array.isArray(data) ? data.flatMap(d => isFunnelDatum(d) ? [d] : []) : []
+}
 
 describe(
   'Transformer: Funnel',
@@ -31,10 +58,10 @@ describe(
         }
         expect(option.series).toHaveLength(1)
 
-        const series = option.series[0] as FunnelSeriesOption
+        const series = firstFunnelSeries(option)
         expect(series.type).toBe('funnel')
 
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
@@ -69,8 +96,7 @@ describe(
           return
         }
 
-        const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
@@ -108,8 +134,7 @@ describe(
           return
         }
 
-        const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
@@ -150,8 +175,7 @@ describe(
           return
         }
 
-        const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
@@ -189,8 +213,7 @@ describe(
           return
         }
 
-        const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
@@ -224,8 +247,7 @@ describe(
           return
         }
 
-        const series = option.series[0] as FunnelSeriesOption
-        const seriesData = series.data as { name?: string, value?: number }[] | undefined
+        const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()
         if (!seriesData) {
           return
