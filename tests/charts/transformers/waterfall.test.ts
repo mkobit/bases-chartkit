@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'bun:test'
+import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { createWaterfallChartOption } from '../../../src/charts/transformers/waterfall'
+
+// Waterfall builds only bar series; checking the literal `type` discriminant
+// narrows the series union with no cast.
+function waterfallSeries(option: EChartsOption): readonly BarSeriesOption[] {
+  const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
+  return series.flatMap(s => s.type === 'bar' ? [s] : [])
+}
+function seriesNamed(series: readonly BarSeriesOption[], name: string): BarSeriesOption {
+  const found = series.find(s => s.name === name)
+  if (found === undefined) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a "${name}" series`)
+  }
+  return found
+}
 
 describe(
   'createWaterfallChartOption',
@@ -29,21 +45,25 @@ describe(
         // Check X Axis
         expect(option.xAxis).toBeDefined()
         const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+        if (xAxis?.type !== 'category') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a category xAxis, got ${String(xAxis?.type)}`)
+        }
         expect(xAxis).toBeDefined()
 
-        expect((xAxis as any).data).toEqual(['A',
+        expect(xAxis.data).toEqual(['A',
           'B',
           'C',
           'D'])
 
         // Check Series
         expect(option.series).toBeDefined()
-        const series = option.series as any[]
+        const series = waterfallSeries(option)
         expect(series).toHaveLength(3)
 
-        const baseSeries = series.find(s => s.name === '_base')
-        const increaseSeries = series.find(s => s.name === 'Increase')
-        const decreaseSeries = series.find(s => s.name === 'Decrease')
+        const baseSeries = seriesNamed(series, '_base')
+        const increaseSeries = seriesNamed(series, 'Increase')
+        const decreaseSeries = seriesNamed(series, 'Decrease')
 
         expect(baseSeries).toBeDefined()
         expect(increaseSeries).toBeDefined()
@@ -68,9 +88,9 @@ describe(
           10])
 
         // Check Styling
-        expect(baseSeries.itemStyle.color).toBe('transparent')
-        expect(increaseSeries.itemStyle.color).toBe('#14b143')
-        expect(decreaseSeries.itemStyle.color).toBe('#ef232a')
+        expect(baseSeries.itemStyle?.color).toBe('transparent')
+        expect(increaseSeries.itemStyle?.color).toBe('#14b143')
+        expect(decreaseSeries.itemStyle?.color).toBe('#ef232a')
       },
     )
 
@@ -94,13 +114,17 @@ describe(
 
         expect(option.xAxis).toBeDefined()
         const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+        if (xAxis?.type !== 'category') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a category xAxis, got ${String(xAxis?.type)}`)
+        }
         expect(xAxis).toBeDefined()
 
-        expect((xAxis as any).data).toEqual(['A',
+        expect(xAxis.data).toEqual(['A',
           'C'])
 
-        const series = option.series as any[]
-        const baseSeries = series.find(s => s.name === '_base')
+        const series = waterfallSeries(option)
+        const baseSeries = seriesNamed(series, '_base')
 
         expect(baseSeries.data).toEqual([0,
           50])
@@ -116,7 +140,7 @@ describe(
           'value',
         )
         expect(option.series).toBeDefined()
-        expect((option.series as any[])[0].data).toHaveLength(0)
+        expect(waterfallSeries(option)[0]?.data).toHaveLength(0)
       },
     )
 
@@ -129,17 +153,17 @@ describe(
           'category',
           'value',
         )
-        const series = option.series as any[]
-        const baseSeries = series.find(s => s.name === '_base')
+        const series = waterfallSeries(option)
+        const baseSeries = seriesNamed(series, '_base')
 
         // One connector per adjacent pair (n-1), each a flat segment at the
         // shared boundary height, spanning the two category indices.
-        expect(baseSeries.markLine.data).toEqual([
+        expect(baseSeries.markLine?.data).toEqual([
           [{ coord: [0, 100] }, { coord: [1, 100] }],
           [{ coord: [1, 80] }, { coord: [2, 80] }],
           [{ coord: [2, 110] }, { coord: [3, 110] }],
         ])
-        expect(baseSeries.markLine.silent).toBe(true)
+        expect(baseSeries.markLine?.silent).toBe(true)
       },
     )
 
@@ -151,7 +175,7 @@ describe(
           'category',
           'value',
         )
-        const series = option.series as any[]
+        const series = waterfallSeries(option)
         expect(series.find(s => s.name === 'Total')).toBeUndefined()
         expect(series).toHaveLength(3)
       },
@@ -181,11 +205,11 @@ describe(
           'value',
           { totalProp: 'total' },
         )
-        const series = option.series as any[]
-        const baseSeries = series.find(s => s.name === '_base')
-        const increaseSeries = series.find(s => s.name === 'Increase')
-        const decreaseSeries = series.find(s => s.name === 'Decrease')
-        const totalSeries = series.find(s => s.name === 'Total')
+        const series = waterfallSeries(option)
+        const baseSeries = seriesNamed(series, '_base')
+        const increaseSeries = seriesNamed(series, 'Increase')
+        const decreaseSeries = seriesNamed(series, 'Decrease')
+        const totalSeries = seriesNamed(series, 'Total')
 
         expect(totalSeries).toBeDefined()
         // Total bars sit at index 0 and 3, drawn from a zero base.
@@ -195,7 +219,7 @@ describe(
         expect(increaseSeries.data).toEqual(['-', 200, '-', '-'])
         expect(decreaseSeries.data).toEqual(['-', '-', 50, '-'])
         // Connectors follow the reset sums: 1000 -> 1200 -> 1150 -> 1150.
-        expect(baseSeries.markLine.data).toEqual([
+        expect(baseSeries.markLine?.data).toEqual([
           [{ coord: [0, 1000] }, { coord: [1, 1000] }],
           [{ coord: [1, 1200] }, { coord: [2, 1200] }],
           [{ coord: [2, 1150] }, { coord: [3, 1150] }],
@@ -214,8 +238,8 @@ describe(
           'value',
           { totalProp: 'total' },
         )
-        const series = option.series as any[]
-        const totalSeries = series.find(s => s.name === 'Total')
+        const series = waterfallSeries(option)
+        const totalSeries = seriesNamed(series, 'Total')
         expect(totalSeries.data).toEqual([42])
       },
     )

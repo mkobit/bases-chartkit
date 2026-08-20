@@ -32,7 +32,7 @@ export type ChartDataset<T> = readonly T[]
  * Arbitrary for a generic chart data point with specific keys.
  */
 export function chartDataPointArbitrary(keys: readonly string[]): fc.Arbitrary<ChartDataPoint> {
-  const pairs = keys.map(key => [
+  const pairs = keys.map((key): readonly [string, fc.Arbitrary<unknown>] => [
     key,
     fc.oneof(
       fc.integer(),
@@ -40,7 +40,7 @@ export function chartDataPointArbitrary(keys: readonly string[]): fc.Arbitrary<C
       fc.string(),
       fc.constant(null),
     ),
-  ] as readonly [string, fc.Arbitrary<unknown>])
+  ])
 
   const keyArbs = Object.fromEntries(pairs)
   return fc.record(keyArbs)
@@ -49,19 +49,24 @@ export function chartDataPointArbitrary(keys: readonly string[]): fc.Arbitrary<C
 /**
  * Arbitrary for a dataset (array of points).
  */
+// A predicate typed on the parameter union narrows the string-keys branch (and,
+// by exclusion, the Arbitrary<T> branch) with no cast at the call site.
+function isStringKeyArray<T>(value: fc.Arbitrary<T> | readonly string[]): value is readonly string[] {
+  return Array.isArray(value) || Object.prototype.toString.call(value) === '[object Array]'
+}
+
 export function chartDatasetArbitrary<T>(
   pointArbitrary: fc.Arbitrary<T> | readonly string[],
   minLength = 0,
   maxLength = 20,
 ): fc.Arbitrary<ChartDataset<T>> {
-  // Array.isArray(readonly array) is strict in TS, but runtime works.
-  // Casting pointArbitrary to any[] or readonly string[] for the check is tricky if generics involved.
-  // But Array.isArray(pointArbitrary) acts as type guard if T matches.
-  /* eslint-disable no-restricted-syntax -- fast-check Arbitrary<T> narrowing through a generic; TS can't prove the type guard on the array branch. */
-  const arb = (Array.isArray(pointArbitrary) || Object.prototype.toString.call(pointArbitrary) === '[object Array]')
-    ? chartDataPointArbitrary(pointArbitrary as readonly string[]) as unknown as fc.Arbitrary<T>
-    : pointArbitrary as fc.Arbitrary<T>
-  /* eslint-enable no-restricted-syntax -- re-enable after the narrowed cast above */
+  const arb: fc.Arbitrary<T> = isStringKeyArray(pointArbitrary)
+    // chartDataPointArbitrary yields Arbitrary<ChartDataPoint>; callers that pass
+    // string keys use T = ChartDataPoint, but the generic can't prove that, so
+    // this single bridge across the unrelated generic instantiations is unavoidable.
+    // eslint-disable-next-line no-restricted-syntax -- fast-check generic bridge: the string-keys branch produces Arbitrary<ChartDataPoint> for T = ChartDataPoint, unprovable through the generic signature.
+    ? chartDataPointArbitrary(pointArbitrary) as unknown as fc.Arbitrary<T>
+    : pointArbitrary
 
   return fc.array(
     arb,
