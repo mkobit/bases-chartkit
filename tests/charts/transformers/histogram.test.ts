@@ -1,6 +1,19 @@
 import { describe, it, expect } from 'bun:test'
 import { createHistogramChartOption } from '../../../src/charts/transformers/histogram'
-import type { BarSeriesOption } from 'echarts'
+import type { BarSeriesOption, EChartsOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows the first series to BarSeriesOption with no cast. The
+// `| undefined` is preserved (via `?.`) so the existing per-assertion
+// strictNullChecks `@ts-expect-error`s stay accurate.
+function firstBarSeries(option: EChartsOption): BarSeriesOption | undefined {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series !== undefined && series.type !== 'bar') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a bar series, got ${String(series.type)}`)
+  }
+  return series
+}
 
 describe(
   'createHistogramChartOption',
@@ -25,7 +38,7 @@ describe(
         expect(option.series).toBeDefined()
         expect(option.series).toHaveLength(1)
 
-        const series = (option.series as BarSeriesOption[])[0]
+        const series = firstBarSeries(option)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.type).toBe('bar')
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -62,7 +75,7 @@ describe(
           'value',
           { binCount: 2 },
         )
-        const series = (option.series as BarSeriesOption[])[0]
+        const series = firstBarSeries(option)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.data).toHaveLength(2)
@@ -85,7 +98,7 @@ describe(
           'value',
           { binWidth: 3 },
         )
-        const series = (option.series as BarSeriesOption[])[0]
+        const series = firstBarSeries(option)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.data).toHaveLength(3)
@@ -109,7 +122,7 @@ describe(
           singleData,
           'value',
         )
-        const series = (option.series as BarSeriesOption[])[0]
+        const series = firstBarSeries(option)
 
         // n=3, k=ceil(log2(3)+1) = ceil(1.58+1) = 3
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -155,7 +168,7 @@ describe(
           'value',
           { binCount: 2 },
         )
-        const series = (option.series as BarSeriesOption[])[0]
+        const series = firstBarSeries(option)
 
         // n=2 (1, 2). range=1. width=0.5
         // Bin 0: 1 - 1.5. (1) -> 1

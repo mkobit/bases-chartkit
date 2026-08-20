@@ -1,6 +1,24 @@
 import { describe, it, expect } from 'bun:test'
 import { createLinesChartOption } from '../../../src/charts/transformers/lines'
-import type { LinesSeriesOption } from 'echarts'
+import type { EChartsOption, LinesSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union; keeping only the
+// members whose literal `type` is 'lines' narrows to LinesSeriesOption[] with
+// no cast.
+function linesSeriesArray(option: EChartsOption): readonly LinesSeriesOption[] {
+  const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
+  return series.flatMap(s => s.type === 'lines' ? [s] : [])
+}
+
+// A single 'lines' datum carries its segment endpoints as a coords tuple list;
+// DataItemOption['data'] is a broad library union, so a runtime guard + flatMap
+// recovers the shape without casting.
+interface LinesDatum {
+  readonly coords: readonly (readonly number[])[]
+}
+function isLinesDatum(value: unknown): value is LinesDatum {
+  return typeof value === 'object' && value !== null && 'coords' in value && Array.isArray(value.coords) && value.coords.every(coords => Array.isArray(coords) && coords.every(coordinate => typeof coordinate === 'number'))
+}
 
 describe(
   'createLinesChartOption',
@@ -24,6 +42,13 @@ describe(
     ]
 
     it(
+      'should reject data with non-numeric coordinates',
+      () => {
+        expect(isLinesDatum({ coords: [[1, 'invalid']] })).toBe(false)
+      },
+    )
+
+    it(
       'should create lines chart options',
       () => {
         const option = createLinesChartOption(
@@ -37,7 +62,7 @@ describe(
           },
         )
 
-        const series = option.series as readonly LinesSeriesOption[]
+        const series = linesSeriesArray(option)
         expect(series).toHaveLength(2) // A, B
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('lines')
@@ -48,7 +73,8 @@ describe(
 
         // Check coords
         // @ts-expect-error - suppress strictNullChecks in tests
-        const data0 = series[0].data as readonly { readonly coords: readonly (readonly number[])[] }[]
+        const rawLinesData = series[0].data
+        const data0 = Array.isArray(rawLinesData) ? rawLinesData.flatMap(d => isLinesDatum(d) ? [d] : []) : []
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(data0[0].coords).toEqual([[10,
           10],

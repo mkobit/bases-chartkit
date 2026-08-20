@@ -1,6 +1,45 @@
 import { describe, it, expect } from 'bun:test'
 import { createParetoChartOption } from '../../../src/charts/transformers/pareto'
-import type { DatasetComponentOption, BarSeriesOption, LineSeriesOption, YAXisComponentOption, XAXisComponentOption } from 'echarts'
+import type { BarSeriesOption, EChartsOption, LineSeriesOption, YAXisComponentOption, XAXisComponentOption } from 'echarts'
+
+// Pareto's dataset source rows are { name, value, cumulative }; DatasetOption's
+// source is a broad library union with no discriminant, so a runtime guard +
+// flatMap recovers the shape without a cast.
+interface ParetoRow {
+  readonly name: string
+  readonly value: number
+  readonly cumulative: number
+}
+function isParetoRow(value: unknown): value is ParetoRow {
+  return typeof value === 'object' && value !== null
+    && 'name' in value && typeof value.name === 'string'
+    && 'value' in value && typeof value.value === 'number'
+    && 'cumulative' in value && typeof value.cumulative === 'number'
+}
+function paretoSource(option: EChartsOption): readonly ParetoRow[] {
+  const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+  const source = dataset?.source
+  return Array.isArray(source) ? source.flatMap(row => isParetoRow(row) ? [row] : []) : []
+}
+
+// EChartsOption's axis/series fields can each be a single option or an array;
+// splitting that (and, for series, checking the literal `type` discriminant)
+// narrows without any cast.
+function paretoYAxes(option: EChartsOption): readonly YAXisComponentOption[] {
+  return Array.isArray(option.yAxis) ? option.yAxis : option.yAxis === undefined ? [] : [option.yAxis]
+}
+function paretoXAxis(option: EChartsOption): XAXisComponentOption {
+  const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+  if (xAxis === undefined) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected an xAxis')
+  }
+  return xAxis
+}
+function paretoSeries(option: EChartsOption): readonly (BarSeriesOption | LineSeriesOption)[] {
+  const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
+  return series.flatMap(s => (s.type === 'bar' || s.type === 'line') ? [s] : [])
+}
 
 describe(
   'createParetoChartOption',
@@ -24,10 +63,7 @@ describe(
           'category',
           'value',
         )
-        const dataset = option.dataset as DatasetComponentOption
-        const source = dataset.source as { name: string
-          value: number
-          cumulative: number }[]
+        const source = paretoSource(option)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(source[0].name).toBe('B')
@@ -56,10 +92,7 @@ describe(
           'category',
           'value',
         )
-        const dataset = option.dataset as DatasetComponentOption
-        const source = dataset.source as { name: string
-          value: number
-          cumulative: number }[]
+        const source = paretoSource(option)
 
         // Total = 100
         // B: 40 -> 40%
@@ -86,8 +119,7 @@ describe(
           'category',
           'value',
         )
-        // Cast to specific array type to satisfy linter and typescript
-        const yAxis = option.yAxis as YAXisComponentOption[]
+        const yAxis = paretoYAxes(option)
 
         expect(yAxis).toHaveLength(2)
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -109,17 +141,25 @@ describe(
           'category',
           'value',
         )
-        const series = option.series as (BarSeriesOption | LineSeriesOption)[]
+        const series = paretoSeries(option)
 
         expect(series).toHaveLength(2)
 
-        const barSeries = series[0] as BarSeriesOption
+        const barSeries = series[0]
+        if (barSeries?.type !== 'bar') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a bar series, got ${String(barSeries?.type)}`)
+        }
         expect(barSeries.type).toBe('bar')
         expect(barSeries.yAxisIndex).toBe(0)
         expect(barSeries.encode).toEqual({ x: 'name',
           y: 'value' })
 
-        const lineSeries = series[1] as LineSeriesOption
+        const lineSeries = series[1]
+        if (lineSeries?.type !== 'line') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a line series, got ${String(lineSeries?.type)}`)
+        }
         expect(lineSeries.type).toBe('line')
         expect(lineSeries.yAxisIndex).toBe(1)
         expect(lineSeries.encode).toEqual({ x: 'name',
@@ -140,10 +180,8 @@ describe(
           },
         )
 
-        // Cast to XAXisComponentOption (can be array or object, but here it's object)
-        const xAxis = option.xAxis as XAXisComponentOption
-        // Cast to YAXisComponentOption[]
-        const yAxis = option.yAxis as YAXisComponentOption[]
+        const xAxis = paretoXAxis(option)
+        const yAxis = paretoYAxes(option)
 
         expect(xAxis.name).toBe('Cat')
         // @ts-expect-error - suppress strictNullChecks in tests
@@ -159,7 +197,7 @@ describe(
           'category',
           'value',
         )
-        const xAxis = option.xAxis as XAXisComponentOption
+        const xAxis = paretoXAxis(option)
 
         expect(xAxis.nameLocation).toBe('middle')
       },
@@ -182,10 +220,7 @@ describe(
           'category',
           'value',
         )
-        const dataset = option.dataset as DatasetComponentOption
-        const source = dataset.source as { name: string
-          value: number
-          cumulative: number }[]
+        const source = paretoSource(option)
 
         expect(source).toHaveLength(2)
         // @ts-expect-error - suppress strictNullChecks in tests
