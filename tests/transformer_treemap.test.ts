@@ -23,6 +23,8 @@ function treemapSeriesList(option: EChartsOption): readonly TreemapSeriesOption[
 function isHierarchyNode(value: unknown): value is HierarchyNode {
   return typeof value === 'object' && value !== null
     && 'name' in value && typeof value.name === 'string'
+    && (!('value' in value) || typeof value.value === 'number')
+    && (!('children' in value) || (Array.isArray(value.children) && value.children.every(isHierarchyNode)))
 }
 
 function treemapHierarchy(series: TreemapSeriesOption | undefined): readonly HierarchyNode[] {
@@ -33,6 +35,13 @@ function treemapHierarchy(series: TreemapSeriesOption | undefined): readonly Hie
 describe(
   'Treemap Transformer',
   () => {
+    it(
+      'should reject hierarchy nodes with malformed children',
+      () => {
+        expect(isHierarchyNode({ name: 'Project', children: [{ name: 123 }] })).toBe(false)
+      },
+    )
+
     it(
       'should build nested hierarchy from slash-separated path property',
       () => {
