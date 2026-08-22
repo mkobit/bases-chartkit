@@ -1,6 +1,20 @@
 import { describe, it, expect } from 'bun:test'
 import { createThemeRiverChartOption } from '../../../src/charts/transformers/theme-river'
-import type { SingleAxisComponentOption, ThemeRiverSeriesOption, TitleComponentOption } from 'echarts'
+import type { EChartsOption, ThemeRiverSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union; filtering on the
+// literal `type` narrows each element to ThemeRiverSeriesOption -- no cast.
+function themeRiverSeries(option: EChartsOption): readonly ThemeRiverSeriesOption[] {
+  const list = Array.isArray(option.series) ? option.series : []
+  return list.flatMap(s => s.type === 'themeRiver' ? [s] : [])
+}
+
+// ThemeRiver series data are [date, value, theme] tuples typed loosely by
+// ECharts; a runtime Array check narrows them to indexable rows, no cast.
+function themeRiverRows(option: EChartsOption): readonly (readonly unknown[])[] {
+  const data = themeRiverSeries(option)[0]?.data
+  return Array.isArray(data) ? data.flatMap(row => Array.isArray(row) ? [row] : []) : []
+}
 
 describe(
   'createThemeRiverChartOption',
@@ -27,7 +41,7 @@ describe(
             themeProp: 'topic' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
+        const series = themeRiverSeries(option)
         expect(series).toHaveLength(1)
         expect(series[0]?.data).toEqual([
           ['2023-01-01', 10, 'Tech'],
@@ -47,9 +61,8 @@ describe(
           { themeProp: 'topic' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
-        const item = (series[0]?.data as any)[0]
-        expect(item[1]).toBe(0)
+        const item = themeRiverRows(option)[0]
+        expect(item?.[1]).toBe(0)
       },
     )
 
@@ -63,7 +76,7 @@ describe(
             themeProp: 'topic' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
+        const series = themeRiverSeries(option)
         expect(series[0]?.data).toHaveLength(3)
       },
     )
@@ -83,7 +96,7 @@ describe(
             themeProp: 'topic' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
+        const series = themeRiverSeries(option)
         expect(series[0]?.data).toHaveLength(3)
       },
     )
@@ -98,8 +111,7 @@ describe(
             themeProp: 'topic' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
-        expect((series[0]?.data as any)[0][0]).toBe('2023-01-01')
+        expect(themeRiverRows(option)[0]?.[0]).toBe('2023-01-01')
       },
     )
 
@@ -112,9 +124,8 @@ describe(
           { valueProp: 'mentions' },
         )
 
-        const series = option.series as ThemeRiverSeriesOption[]
-        const themes = (series[0]?.data as any).map((row: unknown[]) => row[2])
-        expect(themes.every((t: string) => t === 'mentions')).toBe(true)
+        const themes = themeRiverRows(option).map(row => row[2])
+        expect(themes.every(t => t === 'mentions')).toBe(true)
       },
     )
 
@@ -130,9 +141,9 @@ describe(
             description: 'Band thickness is mention count.' },
         )
 
-        const title = option.title as TitleComponentOption
-        expect(title.text).toBe('News topics over time')
-        expect(title.subtext).toBe('Band thickness is mention count.')
+        const title = Array.isArray(option.title) ? option.title[0] : option.title
+        expect(title?.text).toBe('News topics over time')
+        expect(title?.subtext).toBe('Band thickness is mention count.')
       },
     )
 
@@ -160,9 +171,9 @@ describe(
             themeProp: 'topic' },
         )
 
-        const singleAxis = option.singleAxis as SingleAxisComponentOption
-        expect(singleAxis.orient).toBe('horizontal')
-        expect(singleAxis.type).toBe('time')
+        const singleAxis = Array.isArray(option.singleAxis) ? option.singleAxis[0] : option.singleAxis
+        expect(singleAxis?.orient).toBe('horizontal')
+        expect(singleAxis?.type).toBe('time')
       },
     )
 
@@ -177,8 +188,8 @@ describe(
             flipAxis: true },
         )
 
-        const singleAxis = option.singleAxis as SingleAxisComponentOption
-        expect(singleAxis.orient).toBe('vertical')
+        const singleAxis = Array.isArray(option.singleAxis) ? option.singleAxis[0] : option.singleAxis
+        expect(singleAxis?.orient).toBe('vertical')
       },
     )
   },

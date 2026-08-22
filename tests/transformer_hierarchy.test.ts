@@ -1,11 +1,42 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { SunburstSeriesOption, TreeSeriesOption } from 'echarts'
+import type { EChartsOption, SunburstSeriesOption, TreeSeriesOption } from 'echarts'
 
 interface HierarchyNode {
   readonly name: string
   readonly value?: number
   readonly children?: readonly HierarchyNode[]
+}
+
+function isHierarchyNode(value: unknown): value is HierarchyNode {
+  return typeof value === 'object' && value !== null && 'name' in value && typeof value.name === 'string'
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows `series` to the concrete series -- no cast needed.
+function firstSunburstSeries(option: EChartsOption): SunburstSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'sunburst') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a sunburst series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+function firstTreeSeries(option: EChartsOption): TreeSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'tree') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a tree series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// ECharts series.data is a loose OptionDataItem union; this runtime guard
+// narrows the roots to our HierarchyNode shape rather than asserting it.
+function hierarchyRoots(series: SunburstSeriesOption | TreeSeriesOption): readonly HierarchyNode[] {
+  const data = series.data
+  return Array.isArray(data) ? data.flatMap((node: unknown) => isHierarchyNode(node) ? [node] : []) : []
 }
 
 describe(
@@ -45,11 +76,10 @@ describe(
               return
             }
 
-            const series = option.series[0] as SunburstSeriesOption
+            const series = firstSunburstSeries(option)
             expect(series.type).toBe('sunburst')
 
-            // eslint-disable-next-line no-restricted-syntax -- ECharts series.data is `OptionDataItem[]`; narrow to our shape for assertions.
-            const hierarchy = series.data as unknown as readonly HierarchyNode[]
+            const hierarchy = hierarchyRoots(series)
             expect(hierarchy).toHaveLength(2) // A and D
 
             const nodeA = hierarchy.find(n => n.name === 'A')
@@ -90,9 +120,7 @@ describe(
               return
             }
 
-            const series = option.series[0] as SunburstSeriesOption
-            // eslint-disable-next-line no-restricted-syntax -- ECharts series.data narrowed for assertions.
-            const hierarchy = series.data as unknown as readonly HierarchyNode[]
+            const hierarchy = hierarchyRoots(firstSunburstSeries(option))
 
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(hierarchy[0].children[0].value).toBeUndefined()
@@ -124,10 +152,7 @@ describe(
               return
             }
 
-            const series = option.series[0] as TreeSeriesOption
-
-            // eslint-disable-next-line no-restricted-syntax -- ECharts series.data narrowed for assertions.
-            const dataRoot = series.data as unknown as readonly HierarchyNode[]
+            const dataRoot = hierarchyRoots(firstTreeSeries(option))
             // Should be wrapped in "Root" because there are two top-level nodes (A and C)
             expect(dataRoot).toHaveLength(1)
             // @ts-expect-error - suppress strictNullChecks in tests
@@ -157,10 +182,7 @@ describe(
               return
             }
 
-            const series = option.series[0] as TreeSeriesOption
-
-            // eslint-disable-next-line no-restricted-syntax -- ECharts series.data narrowed for assertions.
-            const dataRoot = series.data as unknown as readonly HierarchyNode[]
+            const dataRoot = hierarchyRoots(firstTreeSeries(option))
             // Should be just A, no wrapper
             expect(dataRoot).toHaveLength(1)
             // @ts-expect-error - suppress strictNullChecks in tests
