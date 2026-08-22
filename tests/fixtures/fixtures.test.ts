@@ -11,6 +11,17 @@ import {
 import { ObsidianFileBuilder } from './obsidian_builder'
 import * as R from 'remeda'
 
+// TimePoint.date is a `PlainDate | ZonedDateTime` union; the fixed daily
+// generator always produces PlainDate, so this checks the real runtime type
+// (instanceof) instead of asserting it.
+function asPlainDate(date: Temporal.PlainDate | Temporal.ZonedDateTime | undefined): Temporal.PlainDate {
+  if (!(date instanceof Temporal.PlainDate)) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a PlainDate, got ${String(date)}`)
+  }
+  return date
+}
+
 describe(
   'Chart Data Generators',
   () => {
@@ -75,8 +86,12 @@ describe(
               pairs,
               ([current,
                 next]) => {
-                const t1 = current.date as Temporal.ZonedDateTime
-                const t2 = next.date as Temporal.ZonedDateTime
+                const t1 = current.date
+                const t2 = next.date
+                if (!(t1 instanceof Temporal.ZonedDateTime) || !(t2 instanceof Temporal.ZonedDateTime)) {
+                  // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+                  throw new Error(`expected ZonedDateTime dates, got ${String(t1)} and ${String(t2)}`)
+                }
                 expect(Temporal.ZonedDateTime.compare(
                   t1,
                   t2,
@@ -118,16 +133,9 @@ describe(
 
         expect(data).toHaveLength(3)
 
-        const p0 = data[0]
-        const p1 = data[1]
-        const p2 = data[2]
-
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const d0 = p0.date as Temporal.PlainDate
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const d1 = p1.date as Temporal.PlainDate
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const d2 = p2.date as Temporal.PlainDate
+        const d0 = asPlainDate(data[0]?.date)
+        const d1 = asPlainDate(data[1]?.date)
+        const d2 = asPlainDate(data[2]?.date)
 
         expect(d0.toString()).toBe('2023-01-01')
         expect(d1.toString()).toBe('2023-01-02')
@@ -196,9 +204,12 @@ describe(
         // Verify it's actually a Temporal object
         const created = file.frontmatter.created
         expect(created).toBeInstanceOf(Temporal.PlainDate)
-        // Use type narrowing via assignment or expectation instead of if
-        const createdDate = created as Temporal.PlainDate
-        expect(createdDate.year).toBe(2023)
+        // Real runtime narrowing (instanceof) instead of an unverified cast.
+        if (!(created instanceof Temporal.PlainDate)) {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a PlainDate, got ${String(created)}`)
+        }
+        expect(created.year).toBe(2023)
       },
     )
 

@@ -1,7 +1,64 @@
 import { describe, it, expect } from 'bun:test'
 import { Temporal } from 'temporal-polyfill'
 import { createGanttChartOption } from '../../../src/charts/transformers/gantt'
-import type { BarSeriesOption } from 'echarts'
+import type { BarSeriesOption, EChartsOption } from 'echarts'
+
+interface GanttDurationDatum {
+  readonly value: number
+}
+
+function isGanttDurationDatum(value: unknown): value is GanttDurationDatum {
+  return typeof value === 'object' && value !== null && 'value' in value && typeof value.value === 'number'
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows each entry to BarSeriesOption -- no cast needed.
+function barSeriesList(option: EChartsOption): readonly BarSeriesOption[] {
+  const series = option.series
+  const list = Array.isArray(series) ? series : series ? [series] : []
+  return list.flatMap(s => s.type === 'bar' ? [s] : [])
+}
+
+// EChartsOption['xAxis']/['yAxis'] are `type`-discriminated unions -- gantt.ts
+// always sets a 'value' xAxis and a 'category' yAxis, so these check the real
+// discriminant (which also unlocks `.min`/`.max`/`.data`) rather than asserting.
+function valueXAxis(option: EChartsOption) {
+  const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+  if (xAxis?.type !== 'value') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a value xAxis, got ${String(xAxis?.type)}`)
+  }
+  return xAxis
+}
+
+function categoryYAxis(option: EChartsOption) {
+  const yAxis = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis
+  if (yAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category yAxis, got ${String(yAxis?.type)}`)
+  }
+  return yAxis
+}
+
+// A value axis label formatter is `AxisLabelValueFormatter | string`; the
+// typeof-function check narrows off the string form so it can be called.
+function xAxisFormatter(option: EChartsOption) {
+  const formatter = valueXAxis(option).axisLabel?.formatter
+  if (typeof formatter !== 'function') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected an xAxis axisLabel formatter function, got ${typeof formatter}`)
+  }
+  return formatter
+}
+
+function legendComponent(option: EChartsOption) {
+  const legend = Array.isArray(option.legend) ? option.legend[0] : option.legend
+  if (!legend) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a legend component')
+  }
+  return legend
+}
 
 describe(
   'createGanttChartOption',
@@ -40,7 +97,7 @@ describe(
         // Should have 2 series (start + duration) for the default group
         expect(option.series).toHaveLength(2)
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         const startSeries = series[0]
         const durationSeries = series[1]
 
@@ -92,7 +149,7 @@ describe(
         // 2 groups (Dev, Test) -> 2 * 2 series = 4 series
         expect(option.series).toHaveLength(4)
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         const names = series.map(s => s.name)
 
         expect(names).toContain('Dev')
@@ -113,15 +170,15 @@ describe(
           },
         )
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         const durationSeries = series[1]
 
         // Task 1: 01-01 to 01-05 = 4 days difference in ms?
         // Wait, 01-05 usually means start of day.
         // 2023-01-05 - 2023-01-01 = 4 * 24 * 3600 * 1000
 
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        const data0 = (durationSeries.data as { value?: number, itemStyle?: unknown }[])[0]
+        const rawData = durationSeries?.data
+        const data0 = (Array.isArray(rawData) ? rawData.flatMap(row => isGanttDurationDatum(row) ? [row] : []) : [])[0]
 
         expect(data0?.value).toBeGreaterThan(0)
 
@@ -161,7 +218,7 @@ describe(
           },
         )
 
-        const yAxis = option.yAxis as { data?: string[] }
+        const yAxis = categoryYAxis(option)
         expect(yAxis.data).toContain('Planning')
       },
     )
@@ -181,7 +238,7 @@ describe(
           },
         )
 
-        const xAxis = option.xAxis as { min?: number, max?: number }
+        const xAxis = valueXAxis(option)
         expect(xAxis.min).toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
         expect(xAxis.max).toBe(Temporal.PlainDate.from('2023-01-10').toZonedDateTime('UTC').epochMilliseconds)
       },
@@ -205,11 +262,13 @@ describe(
           },
         )
 
-        const xAxis = option.xAxis as { type?: string, axisLabel?: { formatter?: (value: number) => string } }
+        const xAxis = valueXAxis(option)
         expect(xAxis.type).toBe('value')
 
-        const formatted = xAxis.axisLabel?.formatter?.(
+        const formatted = xAxisFormatter(option)(
           Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
+          0,
+          undefined,
         )
         expect(formatted).toBe('2023-01-01')
       },
@@ -232,9 +291,8 @@ describe(
           },
         )
 
-        const xAxis = option.xAxis as { axisLabel?: { formatter?: (value: number) => string } }
         const epochMs = Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds
-        const formatted = xAxis.axisLabel?.formatter?.(epochMs)
+        const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
 
         expect(formatted).toBe('2023-Q1')
       },
@@ -253,9 +311,8 @@ describe(
           },
         )
 
-        const xAxis = option.xAxis as { axisLabel?: { formatter?: (value: number) => string } }
         const epochMs = Temporal.PlainDate.from('2023-03-05').toZonedDateTime('UTC').epochMilliseconds
-        const formatted = xAxis.axisLabel?.formatter?.(epochMs)
+        const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
 
         expect(formatted).toBe('Mar 05')
       },
@@ -290,7 +347,7 @@ describe(
           },
         )
 
-        const legend = option.legend as { data?: string[] }
+        const legend = legendComponent(option)
         expect(legend.data).toEqual(['Dev', 'Test'])
         expect(legend.data).not.toContain('_start')
       },
@@ -308,7 +365,7 @@ describe(
           },
         )
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         const durationSeries = series[1]
 
         // @ts-expect-error - suppress strictNullChecks/type errors
@@ -328,7 +385,7 @@ describe(
           },
         )
 
-        const yAxis = option.yAxis as { data?: string[] }
+        const yAxis = categoryYAxis(option)
 
         expect(yAxis.data).not.toContain('Invalid')
 

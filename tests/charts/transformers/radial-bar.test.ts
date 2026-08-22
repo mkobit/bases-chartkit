@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'bun:test'
 import { createRadialBarChartOption } from '../../../src/charts/transformers/radial-bar'
-import type { BarSeriesOption } from 'echarts'
+import type { BarSeriesOption, EChartsOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows each entry to BarSeriesOption -- no cast needed.
+function barSeriesList(option: EChartsOption): readonly BarSeriesOption[] {
+  const series = option.series
+  const list = Array.isArray(series) ? series : series ? [series] : []
+  return list.flatMap(s => s.type === 'bar' ? [s] : [])
+}
 
 describe(
   'createRadialBarChartOption',
@@ -42,7 +50,7 @@ describe(
         }))
         expect(option.radiusAxis).toBeDefined()
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         expect(series).toHaveLength(1)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('bar')
@@ -64,7 +72,7 @@ describe(
           { seriesProp: 'group' },
         )
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         expect(series).toHaveLength(2) // G1, G2
         expect(series.map(s => s.name)).toEqual(expect.arrayContaining(['G1',
           'G2']))
@@ -86,7 +94,7 @@ describe(
           },
         )
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         expect(series).toHaveLength(2)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].stack).toBe('total')
@@ -104,7 +112,7 @@ describe(
           'value',
         )
 
-        const series = option.series as BarSeriesOption[]
+        const series = barSeriesList(option)
         expect(series).toHaveLength(0)
       },
     )

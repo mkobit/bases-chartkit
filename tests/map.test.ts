@@ -3,7 +3,27 @@ import { createMapChartOption } from '../src/charts/transformers/map'
 import type { MapTransformerOptions } from '../src/charts/transformers/map'
 import type { BasesData } from '../src/charts/transformers/base'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
-import type { MapSeriesOption, VisualMapComponentOption } from 'echarts'
+import type { ContinuousVisualMapComponentOption, EChartsOption, MapSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows each entry to MapSeriesOption -- no cast needed.
+function mapSeriesList(option: EChartsOption): readonly MapSeriesOption[] {
+  const series = option.series
+  const list = Array.isArray(series) ? series : series ? [series] : []
+  return list.flatMap(s => s.type === 'map' ? [s] : [])
+}
+
+// map.ts always sets visualMap.type explicitly (defaulting to 'continuous'
+// when options.visualMapType is omitted, as in every test below), so this
+// checks the real discriminant rather than asserting it.
+function firstContinuousVisualMap(option: EChartsOption): ContinuousVisualMapComponentOption {
+  const visualMap = Array.isArray(option.visualMap) ? option.visualMap[0] : option.visualMap
+  if (visualMap?.type !== 'continuous') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a continuous visualMap, got ${String(visualMap?.type)}`)
+  }
+  return visualMap
+}
 
 describe(
   'Map Chart Transformer',
@@ -39,7 +59,7 @@ describe(
 
         expect(result.series).toBeDefined()
 
-        const series = result.series as MapSeriesOption[]
+        const series = mapSeriesList(result)
         expect(series).toHaveLength(1)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].type).toBe('map')
@@ -47,8 +67,7 @@ describe(
         expect(series[0].map).toBe(mapName)
 
         // @ts-expect-error - suppress strictNullChecks in tests
-        const mapData = series[0].data as { name: string
-          value: number }[]
+        const mapData = series[0].data
         expect(mapData).toHaveLength(3)
         expect(mapData).toContainEqual({ name: 'USA',
           value: 330 })
@@ -107,7 +126,7 @@ describe(
 
         expect(result.visualMap).toBeDefined()
 
-        const visualMap = result.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(result)
         // Min should be min value (38), Max should be max value (330)
         expect(visualMap.min).toBe(38)
         expect(visualMap.max).toBe(330)
@@ -129,7 +148,7 @@ describe(
           options,
         )
 
-        const visualMap = result.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(result)
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
     )
@@ -151,11 +170,10 @@ describe(
             valueProp: 'Population' },
         )
 
-        const series = result.series as MapSeriesOption[]
+        const series = mapSeriesList(result)
 
         // @ts-expect-error - suppress strictNullChecks in tests
-        const mapData = series[0].data as { name: string
-          value: number }[]
+        const mapData = series[0].data
 
         expect(mapData).toContainEqual({ name: 'A',
           value: 0 })
