@@ -1,6 +1,7 @@
 import type { EChartsOption, DatasetComponentOption, BarSeriesOption, ScatterSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 import { THEME_TOKENS } from './palette'
 import * as R from 'remeda'
 

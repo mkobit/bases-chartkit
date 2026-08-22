@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import type { EChartsOption } from 'echarts'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import { isRecord } from '../src/charts/transformers/utils'
+import { isRecord } from '../src/charts/transformers/bases-values'
 
 // The dispatch layer (`transformDataToChartOption`) routes a `chartType`
 // string to its per-chart transformer, then folds in an optional shared

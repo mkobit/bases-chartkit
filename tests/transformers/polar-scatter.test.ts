@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { createPolarScatterChartOption } from '../../src/charts/transformers/polar-scatter'
 import type { BasesData } from '../../src/charts/transformers/base'
-import { formatCompactVisualMapLabel } from '../../src/charts/transformers/utils'
+import { formatCompactVisualMapLabel } from '../../src/charts/transformers/visual-map'
 import type { ContinuousVisualMapComponentOption, EChartsOption, ScatterSeriesOption } from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union, so this needs no

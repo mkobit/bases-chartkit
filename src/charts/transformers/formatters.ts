@@ -1,5 +1,6 @@
 import { Temporal } from 'temporal-polyfill'
-import { parseDateToEpochMs, safeToString } from './utils'
+import { safeToString } from './bases-values'
+import { parseDateToEpochMs } from './dates'
 
 const MONTH_NAMES_SHORT: readonly string[] = [
   'Jan',

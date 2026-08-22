@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createEffectScatterChartOption } from '../../../src/charts/transformers/effect-scatter'
-import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
+import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/visual-map'
 import type { ContinuousVisualMapComponentOption, EChartsOption, EffectScatterSeriesOption } from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union, so checking the

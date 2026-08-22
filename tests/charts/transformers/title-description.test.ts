@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
-import { getTitleOption } from '../../../src/charts/transformers/utils'
+import { getTitleOption } from '../../../src/charts/transformers/title'
 
 describe('Chart titles and explainability descriptions', () => {
   describe('getTitleOption', () => {

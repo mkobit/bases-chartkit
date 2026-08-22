@@ -1,6 +1,8 @@
 import type { EChartsOption, BarSeriesOption, LineSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions } from './utils'
+import { getAxisLabelOverlapOptions } from './axis-labels'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 import * as R from 'remeda'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- named alias kept for API consistency with other transformer options types, even though pareto adds no fields today

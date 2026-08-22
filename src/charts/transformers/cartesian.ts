@@ -1,6 +1,9 @@
 import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions, isRecord, asTooltipFormatter } from './utils'
+import { getAxisLabelOverlapOptions } from './axis-labels'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
 import * as R from 'remeda'
 

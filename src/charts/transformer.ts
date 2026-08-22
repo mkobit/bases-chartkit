@@ -1,5 +1,6 @@
 import type { EChartsOption } from 'echarts'
-import { getTitleOption, isRecord } from './transformers/utils'
+import { isRecord } from './transformers/bases-values'
+import { getTitleOption } from './transformers/title'
 
 import type {
   PieTransformerOptions,

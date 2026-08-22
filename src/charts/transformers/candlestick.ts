@@ -1,6 +1,8 @@
 import type { EChartsOption, CandlestickSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getAxisLabelOverlapOptions, isRecord, asTooltipFormatter } from './utils'
+import { getAxisLabelOverlapOptions } from './axis-labels'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { asTooltipFormatter } from './tooltip'
 import * as R from 'remeda'
 
 // Bull-green / bear-red, the near-universal candlestick convention. Shared by

@@ -1,6 +1,8 @@
 import type { EChartsOption, MapSeriesOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, formatCompactVisualMapLabel } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { formatCompactVisualMapLabel } from './visual-map'
 import * as R from 'remeda'
 
 export interface MapTransformerOptions extends BaseTransformerOptions {

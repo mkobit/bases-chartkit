@@ -1,6 +1,6 @@
 import type { EChartsOption, SunburstSeriesOption, TreeSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
 import * as R from 'remeda'
 
 export interface SunburstTransformerOptions extends BaseTransformerOptions {

@@ -1,6 +1,6 @@
 import type { EChartsOption, GaugeSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue } from './utils'
+import { getNestedValue } from './bases-values'
 import * as R from 'remeda'
 
 export type GaugeAggregation = 'sum' | 'avg' | 'min' | 'max' | 'last'

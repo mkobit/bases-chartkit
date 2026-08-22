@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'bun:test'
 import { Temporal } from 'temporal-polyfill'
+import { getAxisLabelOverlapOptions, MANY_CATEGORIES_THRESHOLD } from '../src/charts/transformers/axis-labels'
 import {
   safeToString,
   isRecord,
   getNestedValue,
-  getLegendOption,
-  formatCompactVisualMapLabel,
-  parseDateToEpochMs,
-} from '../src/charts/transformers/utils'
+} from '../src/charts/transformers/bases-values'
+import { parseDateToEpochMs } from '../src/charts/transformers/dates'
+import { getLegendOption } from '../src/charts/transformers/legend'
+import { asTooltipFormatter } from '../src/charts/transformers/tooltip'
+import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
 import type { BaseTransformerOptions } from '../src/charts/transformers/base'
 
 // Narrow a plain object to BaseTransformerOptions with a runtime guard so a
@@ -17,7 +19,7 @@ function isBaseTransformerOptions(value: unknown): value is BaseTransformerOptio
   return typeof value === 'object' && value !== null
 }
 
-describe('Transformer Utils', () => {
+describe('Transformer Modules', () => {
   describe('safeToString', () => {
     it('should handle strings natively', () => {
       expect(safeToString('hello')).toBe('hello')
@@ -360,6 +362,45 @@ describe('Transformer Utils', () => {
       expect(parseDateToEpochMs('not-a-date')).toBeNull()
       expect(parseDateToEpochMs(null)).toBeNull()
       expect(parseDateToEpochMs(undefined)).toBeNull()
+    })
+  })
+
+  describe('getAxisLabelOverlapOptions', () => {
+    it('should not thin labels for small category counts when not compact', () => {
+      const options = getAxisLabelOverlapOptions(5, false, undefined, false)
+      expect(options.interval).toBe(0)
+      expect(options.rotate).toBe(0)
+    })
+
+    it('should auto-thin and rotate labels when category count exceeds threshold', () => {
+      const options = getAxisLabelOverlapOptions(MANY_CATEGORIES_THRESHOLD + 1, false, undefined, false)
+      expect(options.interval).toBe('auto')
+      expect(options.rotate).toBe(45)
+    })
+
+    it('should auto-thin labels when compact is true', () => {
+      const options = getAxisLabelOverlapOptions(3, true, undefined, false)
+      expect(options.interval).toBe('auto')
+      expect(options.rotate).toBe(45)
+    })
+
+    it('should not rotate auto-thinned labels when flipAxis is true', () => {
+      const options = getAxisLabelOverlapOptions(20, false, undefined, true)
+      expect(options.interval).toBe('auto')
+      expect(options.rotate).toBe(0)
+    })
+
+    it('should honor explicit rotate parameter', () => {
+      const options = getAxisLabelOverlapOptions(20, false, 90, false)
+      expect(options.rotate).toBe(90)
+    })
+  })
+
+  describe('asTooltipFormatter', () => {
+    it('should return the formatter function directly', () => {
+      const fn = (params: { name: string }): string => `item: ${params.name}`
+      const formatter = asTooltipFormatter(fn)
+      expect(typeof formatter).toBe('function')
     })
   })
 })

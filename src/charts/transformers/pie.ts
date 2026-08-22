@@ -1,6 +1,8 @@
 import type { EChartsOption, PieSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord, asTooltipFormatter } from './utils'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
 import * as R from 'remeda'
 

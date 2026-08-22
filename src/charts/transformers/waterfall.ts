@@ -1,7 +1,8 @@
 import type { EChartsOption, BarSeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getLegendOption, getNestedValue, safeToString } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 
 export interface WaterfallTransformerOptions extends BaseTransformerOptions {
   // Property whose truthy value marks a row as an absolute total (bck-h0b):

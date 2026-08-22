@@ -13,7 +13,7 @@ import type { EChartsOption } from 'echarts'
 import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../charts/transformers/base'
 import { ChartModal } from './chart-modal'
 import { t } from '../lang/text'
-import { isRecord } from '../charts/transformers/utils'
+import { isRecord } from '../charts/transformers/bases-values'
 
 export abstract class BaseChartView extends BasesView {
   readonly scrollEl: HTMLElement

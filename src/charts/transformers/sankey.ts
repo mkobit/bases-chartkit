@@ -1,6 +1,6 @@
 import type { EChartsOption, SankeySeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
 import * as R from 'remeda'
 
 export interface SankeyTransformerOptions extends BaseTransformerOptions {

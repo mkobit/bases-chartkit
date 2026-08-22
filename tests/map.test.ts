@@ -2,7 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { createMapChartOption } from '../src/charts/transformers/map'
 import type { MapTransformerOptions } from '../src/charts/transformers/map'
 import type { BasesData } from '../src/charts/transformers/base'
-import { formatCompactVisualMapLabel } from '../src/charts/transformers/utils'
+import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
 import type { ContinuousVisualMapComponentOption, EChartsOption, MapSeriesOption } from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union, so checking the
