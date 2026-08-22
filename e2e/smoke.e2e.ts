@@ -24,6 +24,20 @@ test.describe('plugin lifecycle', () => {
     ).toBe(true)
   })
 
+  test('provides declarative setting definitions', async ({ obsidianPage: { page } }) => {
+    await expect.poll(async () =>
+      evaluateObsidian(
+        page,
+        (app, args: { pluginId: string }) => {
+          const tab = app.setting.pluginTabs.find(t => t.id === args.pluginId)
+          const defs = tab?.getSettingDefinitions?.()
+          return Array.isArray(defs) && defs.length > 0
+        },
+        { pluginId: PLUGIN_ID },
+      ),
+    ).toBe(true)
+  })
+
   test('can create a markdown file in the vault', async ({ obsidianPage: { page } }) => {
     const filename = 'test-chart.md'
 
