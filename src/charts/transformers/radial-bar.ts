@@ -1,6 +1,7 @@
 import type { EChartsOption, BarSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 import * as R from 'remeda'
 
 export interface RadialBarTransformerOptions extends BaseTransformerOptions {

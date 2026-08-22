@@ -1,7 +1,10 @@
 import type { EChartsOption, SingleAxisComponentOption, ThemeRiverSeriesOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getTitleOption, parseDateToEpochMs } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { parseDateToEpochMs } from './dates'
+import { getLegendOption } from './legend'
+import { getTitleOption } from './title'
 import * as R from 'remeda'
 
 export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {

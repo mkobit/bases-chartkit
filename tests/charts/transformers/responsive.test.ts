@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createCartesianChartOption } from '../../../src/charts/transformers/cartesian'
-import { getLegendOption } from '../../../src/charts/transformers/utils'
+import { getLegendOption } from '../../../src/charts/transformers/legend'
 
 describe('Responsive Chart Features', () => {
   const mockData = [

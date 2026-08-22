@@ -1,6 +1,8 @@
 import type { EChartsOption, LineSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getTitleOption } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { getTitleOption } from './title'
 import * as R from 'remeda'
 
 export interface PolarLineTransformerOptions extends BaseTransformerOptions {

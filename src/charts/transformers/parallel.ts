@@ -1,6 +1,7 @@
 import type { EChartsOption, ParallelSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString, getLegendOption } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 import * as R from 'remeda'
 
 export interface ParallelTransformerOptions extends BaseTransformerOptions {

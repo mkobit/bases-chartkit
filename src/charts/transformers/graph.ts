@@ -1,6 +1,7 @@
 import type { EChartsOption, GraphSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
 import { getCategoricalColor } from './palette'
 import * as R from 'remeda'
 

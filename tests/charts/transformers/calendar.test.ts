@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
-import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
+import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../../../src/charts/transformers/palette'
 import type { CalendarComponentOption, ContinuousVisualMapComponentOption, EChartsOption, HeatmapSeriesOption, SeriesOption } from 'echarts'
 

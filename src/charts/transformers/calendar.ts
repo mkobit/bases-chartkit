@@ -2,7 +2,8 @@ import type { EChartsOption, CalendarComponentOption, HeatmapSeriesOption, Visua
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, formatCompactVisualMapLabel } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { formatCompactVisualMapLabel } from './visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from './palette'
 
 export interface CalendarTransformerOptions extends BaseTransformerOptions {

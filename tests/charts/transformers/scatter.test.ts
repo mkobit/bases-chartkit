@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import type { EChartsOption, VisualMapComponentOption, XAXisComponentOption } from 'echarts'
 import { createScatterChartOption } from '../../../src/charts/transformers/scatter'
-import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
+import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/visual-map'
 
 // EChartsOption['xAxis'] / ['visualMap'] can each be a single option or an
 // array; splitting that narrows to the component option without any cast.

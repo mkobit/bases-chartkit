@@ -1,7 +1,8 @@
 import type { EChartsOption, BarSeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BasesData, BaseTransformerOptions } from './base'
-import { getLegendOption, getNestedValue } from './utils'
+import { getNestedValue } from './bases-values'
+import { getLegendOption } from './legend'
 
 export interface HistogramTransformerOptions extends BaseTransformerOptions {
   readonly binCount?: number

@@ -1,6 +1,10 @@
 import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, getAxisLabelOverlapOptions, formatCompactVisualMapLabel, isRecord, asTooltipFormatter } from './utils'
+import { getAxisLabelOverlapOptions } from './axis-labels'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { asTooltipFormatter } from './tooltip'
+import { formatCompactVisualMapLabel } from './visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from './palette'
 import * as R from 'remeda'
 

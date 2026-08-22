@@ -1,7 +1,7 @@
 import type { EChartsOption, SeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from '../base'
-import { getNestedValue, safeToString } from '../utils'
+import { getNestedValue, safeToString } from '../bases-values'
 
 import { getCategoricalColor, getParamKey } from '../palette'
 

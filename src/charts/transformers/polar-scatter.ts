@@ -1,6 +1,9 @@
 import type { EChartsOption, ScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { safeToString, getNestedValue, getLegendOption, isRecord, formatCompactVisualMapLabel, asTooltipFormatter } from './utils'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { getLegendOption } from './legend'
+import { asTooltipFormatter } from './tooltip'
+import { formatCompactVisualMapLabel } from './visual-map'
 import * as R from 'remeda'
 
 export interface PolarScatterTransformerOptions extends BaseTransformerOptions {

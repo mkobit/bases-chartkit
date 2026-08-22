@@ -1,4 +1,4 @@
-import { isRecord } from './utils'
+import { isRecord } from './bases-values'
 
 /**
  * A vibrant 10-color categorical palette optimized for light and dark themes.

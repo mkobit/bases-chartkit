@@ -2,7 +2,10 @@ import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getLegendOption, getNestedValue, parseDateToEpochMs, safeToString, asTooltipFormatter } from './utils'
+import { getNestedValue, safeToString } from './bases-values'
+import { parseDateToEpochMs } from './dates'
+import { getLegendOption } from './legend'
+import { asTooltipFormatter } from './tooltip'
 import { formatDateValue, formatDurationMs, formatValue } from './formatters'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
