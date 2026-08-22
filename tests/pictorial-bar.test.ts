@@ -1,6 +1,30 @@
 import { describe, it, expect } from 'bun:test'
 import { createPictorialBarChartOption } from '../src/charts/transformers/pictorial-bar'
-import type { PictorialBarSeriesOption } from 'echarts'
+import type { EChartsOption, PictorialBarSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so this needs no
+// cast -- checking the literal `type` narrows the element to PictorialBarSeriesOption.
+function pictorialBarSeriesAt(option: EChartsOption, index: number): PictorialBarSeriesOption {
+  const all = option.series
+  const series = Array.isArray(all) ? all[index] : all
+  if (series?.type !== 'pictorialBar') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a pictorialBar series at ${index}, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// pictorial-bar.ts sets yAxis.type to 'category' under flipAxis (only that
+// member has `.type` narrowed for `.data` access), so this checks the real
+// discriminant.
+function firstCategoryYAxis(option: EChartsOption) {
+  const yAxis = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis
+  if (yAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category yAxis, got ${String(yAxis?.type)}`)
+  }
+  return yAxis
+}
 
 describe(
   'createPictorialBarChartOption',
@@ -32,18 +56,15 @@ describe(
           expect(option.dataset).toHaveProperty('source')
         }
 
-        const series = option.series as PictorialBarSeriesOption[]
-        expect(series).toBeDefined()
-        expect(series.length).toBe(1)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].type).toBe('pictorialBar')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbol).toBe('circle') // Default
+        expect(option.series).toBeDefined()
+        expect(option.series).toHaveLength(1)
+        const series = pictorialBarSeriesAt(option, 0)
+        expect(series.type).toBe('pictorialBar')
+        expect(series.symbol).toBe('circle') // Default
         // Default must repeat: a single non-repeating symbol is stretched by
         // ECharts to fill the whole bar's bounding box, which looks identical
         // to a plain bar (see obsidian-bases-charts-fs4.7).
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbolRepeat).toBe(true)
+        expect(series.symbolRepeat).toBe(true)
       },
     )
 
@@ -62,15 +83,11 @@ describe(
           },
         )
 
-        const series = option.series as PictorialBarSeriesOption[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbol).toBe('rect')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbolRepeat).toBe(true)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbolClip).toBe(true)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].symbolSize).toBe('50%')
+        const series = pictorialBarSeriesAt(option, 0)
+        expect(series.symbol).toBe('rect')
+        expect(series.symbolRepeat).toBe(true)
+        expect(series.symbolClip).toBe(true)
+        expect(series.symbolSize).toBe('50%')
       },
     )
 
@@ -86,9 +103,7 @@ describe(
             symbolRepeat: 'true',
           },
         )
-        const seriesTrue = optionTrue.series as PictorialBarSeriesOption[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(seriesTrue[0].symbolRepeat).toBe(true)
+        expect(pictorialBarSeriesAt(optionTrue, 0).symbolRepeat).toBe(true)
 
         // Test "false" string
         const optionFalse = createPictorialBarChartOption(
@@ -99,9 +114,7 @@ describe(
             symbolRepeat: 'false',
           },
         )
-        const seriesFalse = optionFalse.series as PictorialBarSeriesOption[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(seriesFalse[0].symbolRepeat).toBe(false)
+        expect(pictorialBarSeriesAt(optionFalse, 0).symbolRepeat).toBe(false)
 
         // Test "fixed" string
         const optionFixed = createPictorialBarChartOption(
@@ -112,9 +125,7 @@ describe(
             symbolRepeat: 'fixed',
           },
         )
-        const seriesFixed = optionFixed.series as PictorialBarSeriesOption[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(seriesFixed[0].symbolRepeat).toBe('fixed')
+        expect(pictorialBarSeriesAt(optionFixed, 0).symbolRepeat).toBe('fixed')
       },
     )
 
@@ -142,12 +153,9 @@ describe(
           },
         )
 
-        const series = option.series as PictorialBarSeriesOption[]
-        expect(series.length).toBe(2) // G1 and G2
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].type).toBe('pictorialBar')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[1].type).toBe('pictorialBar')
+        expect(option.series).toHaveLength(2) // G1 and G2
+        expect(pictorialBarSeriesAt(option, 0).type).toBe('pictorialBar')
+        expect(pictorialBarSeriesAt(option, 1).type).toBe('pictorialBar')
       },
     )
 
@@ -163,16 +171,15 @@ describe(
           },
         )
 
-        const series = option.series as PictorialBarSeriesOption[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].encode).toEqual({ x: 'y',
+        const series = pictorialBarSeriesAt(option, 0)
+        expect(series.encode).toEqual({ x: 'y',
           y: 'x',
           tooltip: ['x',
             'y',
             's'] })
 
         // yAxis should be category
-        const yAxis = option.yAxis as any
+        const yAxis = firstCategoryYAxis(option)
 
         expect(yAxis.type).toBe('category')
       },

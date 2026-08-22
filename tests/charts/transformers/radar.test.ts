@@ -1,6 +1,49 @@
 import { describe, it, expect } from 'bun:test'
 import { createRadarChartOption } from '../../../src/charts/transformers/radar'
-import type { RadarSeriesOption } from 'echarts'
+import type { EChartsOption, RadarSeriesOption } from 'echarts'
+
+interface RadarDatum {
+  readonly value: readonly number[]
+}
+
+function isRadarDatum(value: unknown): value is RadarDatum {
+  return typeof value === 'object' && value !== null && 'value' in value && Array.isArray(value.value)
+}
+
+// EChartsOption['radar'] is a single component option (not a discriminated
+// union), so unwrap the array form and access `.indicator` directly.
+function radarComponent(option: EChartsOption) {
+  const radar = Array.isArray(option.radar) ? option.radar[0] : option.radar
+  if (!radar) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a radar component')
+  }
+  return radar
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows each entry to RadarSeriesOption -- no cast needed.
+function radarSeriesList(option: EChartsOption): readonly RadarSeriesOption[] {
+  const series = option.series
+  const list = Array.isArray(series) ? series : series ? [series] : []
+  return list.flatMap(s => s.type === 'radar' ? [s] : [])
+}
+
+// RadarSeriesOption['data'] is a generic library union with no discriminant TS
+// can check -- filter to the real datum shape via a runtime guard.
+function firstSeriesData(option: EChartsOption): readonly RadarDatum[] {
+  const data = radarSeriesList(option)[0]?.data
+  return Array.isArray(data) ? data.flatMap(row => isRadarDatum(row) ? [row] : []) : []
+}
+
+function legendComponent(option: EChartsOption) {
+  const legend = Array.isArray(option.legend) ? option.legend[0] : option.legend
+  if (!legend) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a legend component')
+  }
+  return legend
+}
 
 describe(
   'createRadarChartOption',
@@ -34,7 +77,7 @@ describe(
               { metricProps: ['Strength', 'Intelligence', 'Agility'] },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'Strength', min: 0, max: 51 },
               { name: 'Intelligence', min: 0, max: 93 },
@@ -53,7 +96,7 @@ describe(
               { metricProps: ['Strength', 'Intelligence', 'Agility'] },
             )
 
-            const series = option.series as RadarSeriesOption[]
+            const series = radarSeriesList(option)
             expect(series).toHaveLength(1)
             expect(series[0]?.data).toEqual([
               { value: [51, 40, 35],
@@ -85,7 +128,7 @@ describe(
               },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'STR', min: 0, max: 51 },
               { name: 'INT', min: 0, max: 93 },
@@ -105,9 +148,8 @@ describe(
               { metricProps: ['Strength', 'Intelligence', 'Agility'] },
             )
 
-            const series = option.series as RadarSeriesOption[]
-            const data = series[0]?.data as any
-            expect(data[0].value).toEqual([10, 0, 0])
+            const data = firstSeriesData(option)
+            expect(data[0]?.value).toEqual([10, 0, 0])
           },
         )
 
@@ -127,7 +169,7 @@ describe(
               { metricProps: ['Small', 'Large'] },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'Small', min: 0, max: 20 },
               { name: 'Large', min: 0, max: 10_000 },
@@ -146,7 +188,7 @@ describe(
               { metricProps: ['Profit'] },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'Profit', min: -50, max: 30 },
             ])
@@ -164,7 +206,7 @@ describe(
               { metricProps: ['Flat'] },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'Flat', min: 0, max: 10 },
             ])
@@ -201,14 +243,13 @@ describe(
               { seriesProp: 'student' },
             )
 
-            const radar = option.radar as { indicator?: { name: string, min: number, max: number }[] }
+            const radar = radarComponent(option)
             expect(radar.indicator).toEqual([
               { name: 'Math', min: 0, max: 90 },
               { name: 'Science', min: 0, max: 95 },
             ])
 
-            const series = option.series as RadarSeriesOption[]
-            const seriesData = series[0]?.data as any
+            const seriesData = radarSeriesList(option)[0]?.data
             expect(seriesData).toEqual([
               { value: [90, 80],
                 name: 'A' },
@@ -231,7 +272,7 @@ describe(
                 legend: true },
             )
 
-            const legend = option.legend as { data?: string[] }
+            const legend = legendComponent(option)
             expect(legend.data).toEqual(['A', 'B'])
           },
         )

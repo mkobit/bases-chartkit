@@ -1,6 +1,53 @@
 import { describe, it, expect } from 'bun:test'
-import type { CandlestickSeriesOption } from 'echarts'
+import type { CandlestickSeriesOption, EChartsOption } from 'echarts'
 import { transformDataToChartOption } from '../src/charts/transformer'
+
+interface CandlestickSourceRow {
+  readonly x: string
+  readonly open: number
+  readonly close: number
+  readonly low: number
+  readonly high: number
+}
+
+function isCandlestickSourceRow(value: unknown): value is CandlestickSourceRow {
+  return typeof value === 'object' && value !== null
+    && 'x' in value && typeof value.x === 'string'
+    && 'open' in value && typeof value.open === 'number'
+    && 'close' in value && typeof value.close === 'number'
+    && 'low' in value && typeof value.low === 'number'
+    && 'high' in value && typeof value.high === 'number'
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so this needs no
+// cast -- checking the literal `type` narrows `series` to CandlestickSeriesOption.
+function firstCandlestickSeries(option: EChartsOption): CandlestickSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'candlestick') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a candlestick series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// candlestick.ts always sets xAxis.type to 'category' (only that member has
+// `.data`/`.axisLabel`), so this checks the real discriminant.
+function firstCategoryXAxis(option: EChartsOption) {
+  const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+  if (xAxis?.type !== 'category') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a category xAxis, got ${String(xAxis?.type)}`)
+  }
+  return xAxis
+}
+
+// DatasetOption['source'] is a generic library union with no discriminant TS
+// can check -- this is a genuine runtime shape check, not an unverified cast.
+function firstDatasetSource(option: EChartsOption): readonly CandlestickSourceRow[] {
+  const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+  const source = dataset?.source
+  return Array.isArray(source) ? source.flatMap(row => isCandlestickSourceRow(row) ? [row] : []) : []
+}
 
 describe(
   'Transformer - Candlestick Chart',
@@ -42,25 +89,18 @@ describe(
         // Basic Structure
         expect(option).toHaveProperty('series')
 
-        const series = option.series as readonly CandlestickSeriesOption[]
-        expect(Array.isArray(series)).toBe(true)
-        expect(series.length).toBe(1)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].type).toBe('candlestick')
+        expect(Array.isArray(option.series)).toBe(true)
+        expect(option.series).toHaveLength(1)
+        const series = firstCandlestickSeries(option)
+        expect(series.type).toBe('candlestick')
 
         // Data Verification (using Dataset)
         // Check dataset presence
         expect(option.dataset).toBeDefined()
         expect(Array.isArray(option.dataset)).toBe(true)
         expect(option.dataset).not.toHaveLength(0)
-        if (!option.dataset || !Array.isArray(option.dataset) || option.dataset.length === 0) {
-          // Fails the test implicitly if reached, or handled by expect above
-          return
-        }
 
-        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const source = dataset[0].source
+        const source = firstDatasetSource(option)
 
         expect(source).toHaveLength(3)
         // Normalized data structure
@@ -71,8 +111,7 @@ describe(
           high: 115 })
 
         // Encode Verification
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series[0].encode).toEqual({
+        expect(series.encode).toEqual({
           x: 'x',
           y: ['open',
             'close',
@@ -86,7 +125,7 @@ describe(
 
         // Axis Verification
         expect(option.xAxis).toBeDefined()
-        expect((option.xAxis as any).data).toEqual(['2023-10-01',
+        expect(firstCategoryXAxis(option).data).toEqual(['2023-10-01',
           '2023-10-02',
           '2023-10-03'])
       },
@@ -131,12 +170,7 @@ describe(
         expect(option.dataset).not.toHaveLength(0)
         expect(option.dataset).not.toHaveLength(0)
 
-        if (!option.dataset || !Array.isArray(option.dataset) || option.dataset.length === 0) {
-          return
-        }
-        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const source = dataset[0].source
+        const source = firstDatasetSource(option)
 
         // Should ignore invalid rows (open: null and low: undefined should cause rows to be skipped)
         expect(source).toHaveLength(1)
@@ -147,13 +181,19 @@ describe(
           high: 115 })
 
         // Check xAxis data sync
-        expect((option.xAxis as any).data).toEqual(['2023-10-01'])
+        expect(firstCategoryXAxis(option).data).toEqual(['2023-10-01'])
       },
     )
 
     const invokeTooltip = (option: ReturnType<typeof transformDataToChartOption>, row: Record<string, unknown>): string => {
-      const formatter = (option.tooltip as any).formatter as (params: unknown) => string
-      return formatter([{ value: row, marker: '' }])
+      const tooltip = Array.isArray(option.tooltip) ? option.tooltip[0] : option.tooltip
+      const formatter = tooltip?.formatter
+      if (typeof formatter !== 'function') {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+        throw new Error(`expected tooltip.formatter to be a function, got ${typeof formatter}`)
+      }
+      // eslint-disable-next-line no-restricted-syntax -- library callback type bridge: ECharts' TooltipFormatterCallback params are a huge CallbackDataParams union (and its return is string|HTMLElement) this test's minimal { value, marker } array can't model; see heatmap_chart.test.ts's label-formatter test for the same pattern.
+      return (formatter as unknown as (params: readonly { readonly value: unknown, readonly marker: string }[]) => string)([{ value: row, marker: '' }])
     }
 
     it(
@@ -217,7 +257,7 @@ describe(
           { openProp: 'open', closeProp: 'close', lowProp: 'low', highProp: 'high' },
         )
 
-        expect((option.xAxis as any).axisLabel.interval).toBe('auto')
+        expect(firstCategoryXAxis(option).axisLabel?.interval).toBe('auto')
       },
     )
 
@@ -236,12 +276,7 @@ describe(
         expect(option.dataset).toBeDefined()
         expect(Array.isArray(option.dataset)).toBe(true)
 
-        if (!option.dataset || !Array.isArray(option.dataset) || option.dataset.length === 0) {
-          return
-        }
-        const dataset = option.dataset as readonly { readonly source: readonly any[] }[]
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const source = dataset[0].source
+        const source = firstDatasetSource(option)
 
         expect(source).toHaveLength(3)
         expect(source[0]).toEqual({ x: '2023-10-01',

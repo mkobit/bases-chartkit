@@ -2,7 +2,16 @@ import { describe, it, expect } from 'bun:test'
 import type { SankeyTransformerOptions } from '../src/charts/transformer'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import { hasSankeyCycle, sankeyLinkSignature } from '../src/charts/transformers/sankey'
-import type { SankeySeriesOption } from 'echarts'
+import type { EChartsOption, SankeySeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows the first entry to SankeySeriesOption -- no cast
+// needed. Kept `| undefined` so the possibly-empty-index checks below stay
+// real rather than asserted away.
+function firstSankeySeries(option: EChartsOption): SankeySeriesOption | undefined {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  return series?.type === 'sankey' ? series : undefined
+}
 
 describe(
   'Sankey Transformer',
@@ -38,13 +47,13 @@ describe(
         )
 
         expect(result.series).toHaveLength(1)
-        const series = (result.series as readonly SankeySeriesOption[])[0]
+        const series = firstSankeySeries(result)
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.type).toBe('sankey')
 
         // Nodes should include A, B, C, D
         // @ts-expect-error - suppress strictNullChecks in tests
-        const nodeNames = (series.data as readonly { readonly name: string }[]).map(n => n.name).sort()
+        const nodeNames = series.data.map(n => n.name).sort()
         expect(nodeNames).toEqual(['A',
           'B',
           'C',
@@ -93,7 +102,7 @@ describe(
           'sankey',
           options,
         )
-        const series = (result.series as readonly SankeySeriesOption[])[0]
+        const series = firstSankeySeries(result)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toEqual(expect.arrayContaining([
@@ -123,7 +132,7 @@ describe(
           'target',
           'sankey',
         )
-        const series = (result.series as readonly SankeySeriesOption[])[0]
+        const series = firstSankeySeries(result)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toHaveLength(1)
@@ -153,7 +162,7 @@ describe(
           'sankey',
           { valueProp: 'value' },
         )
-        const series = (result.series as readonly SankeySeriesOption[])[0]
+        const series = firstSankeySeries(result)
 
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series.links).toHaveLength(1)
@@ -162,7 +171,7 @@ describe(
           target: 'B',
           value: 5 })
         // @ts-expect-error - suppress strictNullChecks in tests
-        const nodeNames = (series.data as readonly { readonly name: string }[]).map(n => n.name).sort()
+        const nodeNames = series.data.map(n => n.name).sort()
         expect(nodeNames).toEqual(['A',
           'B'])
       },

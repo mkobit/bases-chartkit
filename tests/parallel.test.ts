@@ -1,24 +1,28 @@
 import { describe, it, expect } from 'bun:test'
 import { createParallelChartOption } from '../src/charts/transformers/parallel'
+import type { EChartsOption, ParallelSeriesOption } from 'echarts'
 
-// Define a minimal interface for the test expectations to avoid "unsafe member access" errors
-interface TestParallelAxis {
-  readonly name: string
-  readonly type: string
-  readonly data?: readonly string[]
+// EChartsOption['parallelAxis'] is a single-interface component option (not a
+// discriminated union), so this just narrows array-or-single, no cast.
+function parallelAxisAt(option: EChartsOption, index: number) {
+  const axes = option.parallelAxis
+  const axis = Array.isArray(axes) ? axes[index] : axes
+  if (!axis) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a parallelAxis at ${index}`)
+  }
+  return axis
 }
 
-interface TestSeries {
-  readonly name: string
-  readonly type: string
-  readonly data: readonly unknown[]
-}
-
-interface TestOption {
-  readonly parallel?: unknown
-  readonly parallelAxis?: readonly TestParallelAxis[]
-  readonly series?: readonly TestSeries[]
-  readonly title?: { readonly text: string }
+// EChartsOption['series'] is a `type`-discriminated union, so filtering on the
+// literal `type` narrows the elements to ParallelSeriesOption with no cast.
+function parallelSeriesArray(option: EChartsOption): readonly ParallelSeriesOption[] {
+  const all = option.series
+  if (!Array.isArray(all)) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a series array, got ${typeof all}`)
+  }
+  return all.flatMap(s => s.type === 'parallel' ? [s] : [])
 }
 
 describe(
@@ -42,27 +46,21 @@ describe(
         const option = createParallelChartOption(
           data,
           dimensions,
-        ) as TestOption
+        )
 
         expect(option.parallel).toBeDefined()
 
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
-        // Use type assertions or early returns (in test logic, direct assertion is better)
         expect(axes).toHaveLength(3)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].name).toBe('price')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].type).toBe('value')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[1].name).toBe('rating')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[2].name).toBe('volume')
+        expect(parallelAxisAt(option, 0).name).toBe('price')
+        expect(parallelAxisAt(option, 0).type).toBe('value')
+        expect(parallelAxisAt(option, 1).name).toBe('rating')
+        expect(parallelAxisAt(option, 2).name).toBe('volume')
 
         expect(Array.isArray(option.series)).toBe(true)
         expect(option.series).toHaveLength(1) // Default series
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(option.series[0].data).toHaveLength(2)
+        expect(parallelSeriesArray(option)[0]?.data).toHaveLength(2)
       },
     )
 
@@ -80,22 +78,23 @@ describe(
         const option = createParallelChartOption(
           data,
           dimensions,
-        ) as TestOption
+        )
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].name).toBe('name')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].type).toBe('category')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].data).toEqual(expect.arrayContaining(['A',
+        const nameAxis = parallelAxisAt(option, 0)
+        expect(nameAxis.name).toBe('name')
+        expect(nameAxis.type).toBe('category')
+        // Only the 'category' member of the ParallelAxisOption union has `.data`.
+        if (nameAxis.type !== 'category') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error(`expected a category parallelAxis, got ${String(nameAxis.type)}`)
+        }
+        expect(nameAxis.data).toEqual(expect.arrayContaining(['A',
           'B']))
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[1].name).toBe('value')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[1].type).toBe('value')
+        expect(parallelAxisAt(option, 1).name).toBe('value')
+        expect(parallelAxisAt(option, 1).type).toBe('value')
       },
     )
 
@@ -120,13 +119,12 @@ describe(
           data,
           dimensions,
           options,
-        ) as TestOption
+        )
 
         expect(option.series).toHaveLength(2)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const s1 = option.series.find(s => s.name === 'G1')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const s2 = option.series.find(s => s.name === 'G2')
+        const series = parallelSeriesArray(option)
+        const s1 = series.find(s => s.name === 'G1')
+        const s2 = series.find(s => s.name === 'G2')
 
         expect(s1).toBeDefined()
         expect(s1?.data).toHaveLength(2)
@@ -141,17 +139,15 @@ describe(
         const option = createParallelChartOption(
           [],
           'price',
-        ) as TestOption
+        )
         expect(option.parallel).toBeDefined()
 
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
         expect(axes).toHaveLength(1)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].name).toBe('price')
+        expect(parallelAxisAt(option, 0).name).toBe('price')
         // Defaults to category if no data to infer value
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].type).toBe('category')
+        expect(parallelAxisAt(option, 0).type).toBe('category')
       },
     )
 
@@ -178,18 +174,15 @@ describe(
           data,
           dimensions,
           options,
-        ) as TestOption
+        )
 
         const axes = option.parallelAxis
         expect(axes).toBeDefined()
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].name).toBe('Strength')
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[1].name).toBe('Agility')
+        expect(parallelAxisAt(option, 0).name).toBe('Strength')
+        expect(parallelAxisAt(option, 1).name).toBe('Agility')
 
         // Data is still keyed by the raw property path, not the label.
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(option.series[0].data[0]).toEqual([51, 35])
+        expect(parallelSeriesArray(option)[0]?.data?.[0]).toEqual([51, 35])
       },
     )
 
@@ -200,11 +193,9 @@ describe(
         const option = createParallelChartOption(
           data,
           'price',
-        ) as TestOption
+        )
 
-        const axes = option.parallelAxis
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(axes[0].name).toBe('price')
+        expect(parallelAxisAt(option, 0).name).toBe('price')
       },
     )
 
@@ -214,9 +205,10 @@ describe(
         const option = createParallelChartOption(
           [],
           '',
-        ) as TestOption
-        expect(option.title).toBeDefined()
-        expect(option.title?.text).toContain('No dimensions')
+        )
+        const title = Array.isArray(option.title) ? option.title[0] : option.title
+        expect(title).toBeDefined()
+        expect(title?.text).toContain('No dimensions')
       },
     )
   },
