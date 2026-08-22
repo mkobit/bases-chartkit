@@ -10,6 +10,13 @@ import {
 } from '../src/charts/transformers/utils'
 import type { BaseTransformerOptions } from '../src/charts/transformers/base'
 
+// Narrow a plain object to BaseTransformerOptions with a runtime guard so a
+// deliberately malformed legendPosition can reach getLegendOption without a
+// cast (its parameter type only permits the valid position literals).
+function isBaseTransformerOptions(value: unknown): value is BaseTransformerOptions {
+  return typeof value === 'object' && value !== null
+}
+
 describe('Transformer Utils', () => {
   describe('safeToString', () => {
     it('should handle strings natively', () => {
@@ -266,8 +273,13 @@ describe('Transformer Utils', () => {
       })
 
       it('should fall back to top for unknown user-specified positions', () => {
-        // eslint-disable-next-line no-restricted-syntax -- intentionally malformed input to verify invalid-position fallback.
-        const result = getLegendOption({ legend: true, legendPosition: 'unknown-position' } as unknown as BaseTransformerOptions)
+        // intentionally malformed input to verify invalid-position fallback.
+        const malformed: unknown = { legend: true, legendPosition: 'unknown-position' }
+        if (!isBaseTransformerOptions(malformed)) {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error('expected an options object')
+        }
+        const result = getLegendOption(malformed)
         expect(result).toBeDefined()
         if (result) {
           expect(result.top).toBe(0)

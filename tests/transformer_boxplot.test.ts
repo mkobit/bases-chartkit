@@ -1,6 +1,17 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { BoxplotSeriesOption } from 'echarts'
+import type { EChartsOption, BoxplotSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows `series` to BoxplotSeriesOption -- no cast needed.
+function firstBoxplotSeries(option: EChartsOption): BoxplotSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[0] : option.series
+  if (series?.type !== 'boxplot') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a boxplot series, got ${String(series?.type)}`)
+  }
+  return series
+}
 
 describe(
   'Transformer: Boxplot',
@@ -47,7 +58,7 @@ describe(
         }
         expect(option.series).toHaveLength(1)
 
-        const series = option.series[0] as BoxplotSeriesOption
+        const series = firstBoxplotSeries(option)
         expect(series.type).toBe('boxplot')
         expect(series.data).toHaveLength(2) // Two categories
 
@@ -91,13 +102,13 @@ describe(
         if (!Array.isArray(option.series)) {
           return
         }
-        const series = option.series[0] as BoxplotSeriesOption
+        const series = firstBoxplotSeries(option)
 
         expect(series.data).toHaveLength(1)
         // Boxplot with 1 value: min=max=q1=q3=median=100
         // Expected data item to be array of 5 numbers
         // @ts-expect-error - suppress strictNullChecks in tests
-        const item = series.data[0] as readonly number[]
+        const item = series.data[0]
         expect(item).toEqual([100,
           100,
           100,

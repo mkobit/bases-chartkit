@@ -1,6 +1,23 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
-import type { BarSeriesOption } from 'echarts'
+import type { EChartsOption, BarSeriesOption } from 'echarts'
+
+// EChartsOption['series'] is a `type`-discriminated union, so checking the
+// literal `type` narrows the entry to BarSeriesOption -- no cast needed.
+function barSeriesAt(option: EChartsOption, index: number): BarSeriesOption {
+  const series = Array.isArray(option.series) ? option.series[index] : option.series
+  if (series?.type !== 'bar') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a bar series at index ${index}, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+// tooltip.formatter is a broad union (string | callback | ...); a runtime
+// typeof check narrows it to a callable with no cast.
+function isTooltipFormatter(value: unknown): value is (params: unknown) => string {
+  return typeof value === 'function'
+}
 
 describe(
   'Transformer: Waterfall',
@@ -31,9 +48,9 @@ describe(
         }
         expect(option.series).toHaveLength(3)
 
-        const baseSeries = option.series[0] as BarSeriesOption
-        const riseSeries = option.series[1] as BarSeriesOption
-        const fallSeries = option.series[2] as BarSeriesOption
+        const baseSeries = barSeriesAt(option, 0)
+        const riseSeries = barSeriesAt(option, 1)
+        const fallSeries = barSeriesAt(option, 2)
 
         expect(baseSeries.name).toBe('_base')
         expect(riseSeries.name).toBe('Increase')
@@ -83,9 +100,9 @@ describe(
           return
         }
 
-        const baseSeries = option.series[0] as BarSeriesOption
-        const riseSeries = option.series[1] as BarSeriesOption
-        const fallSeries = option.series[2] as BarSeriesOption
+        const baseSeries = barSeriesAt(option, 0)
+        const riseSeries = barSeriesAt(option, 1)
+        const fallSeries = barSeriesAt(option, 2)
 
         // Q1: +100 -> base: 0, rise: 100, fall: '-' (sum=100)
         // Q2: -20 -> base: 80, rise: '-', fall: 20 (sum=80)
@@ -122,9 +139,9 @@ describe(
           return
         }
 
-        const baseSeries = option.series[0] as BarSeriesOption
-        const riseSeries = option.series[1] as BarSeriesOption
-        const fallSeries = option.series[2] as BarSeriesOption
+        const baseSeries = barSeriesAt(option, 0)
+        const riseSeries = barSeriesAt(option, 1)
+        const fallSeries = barSeriesAt(option, 2)
 
         expect(baseSeries.data).toEqual([])
         expect(riseSeries.data).toEqual([])
@@ -155,9 +172,9 @@ describe(
           return
         }
 
-        const baseSeries = option.series[0] as BarSeriesOption
-        const riseSeries = option.series[1] as BarSeriesOption
-        const fallSeries = option.series[2] as BarSeriesOption
+        const baseSeries = barSeriesAt(option, 0)
+        const riseSeries = barSeriesAt(option, 1)
+        const fallSeries = barSeriesAt(option, 2)
 
         expect(baseSeries.data).toEqual([0])
         expect(riseSeries.data).toEqual([42])
@@ -190,9 +207,9 @@ describe(
           return
         }
 
-        const baseSeries = option.series[0] as BarSeriesOption
-        const riseSeries = option.series[1] as BarSeriesOption
-        const fallSeries = option.series[2] as BarSeriesOption
+        const baseSeries = barSeriesAt(option, 0)
+        const riseSeries = barSeriesAt(option, 1)
+        const fallSeries = barSeriesAt(option, 2)
 
         // 0 >= 0 is true, so isRising is true.
         // base: prevSum (0), rise: 0, fall: '-'
@@ -224,7 +241,11 @@ describe(
 
         expect(option.tooltip).toBeDefined()
         // @ts-expect-error - suppress strictNullChecks in tests
-        const formatter = option.tooltip.formatter as (params: unknown) => string
+        const formatter = option.tooltip.formatter
+        if (!isTooltipFormatter(formatter)) {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+          throw new Error('expected a tooltip formatter function')
+        }
 
         const incResult = formatter([{ name: 'Inc', seriesName: 'Increase', value: 100 }])
         expect(incResult).toContain('Inc<br/>Increase:')
