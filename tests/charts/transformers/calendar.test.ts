@@ -2,7 +2,60 @@ import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../../../src/charts/transformers/utils'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../../../src/charts/transformers/palette'
-import type { CalendarComponentOption, VisualMapComponentOption } from 'echarts'
+import type { CalendarComponentOption, ContinuousVisualMapComponentOption, EChartsOption, HeatmapSeriesOption, SeriesOption } from 'echarts'
+
+// A calendar series datum is a `[date, value]` pair; ECharts types the series
+// data as a wide OptionDataValue union with no discriminant TS can check, so
+// this is a genuine runtime shape check rather than an unverified cast.
+type CalendarCell = readonly [string, number]
+
+function isCalendarCell(value: unknown): value is CalendarCell {
+  return Array.isArray(value) && value.length === 2
+    && typeof value[0] === 'string' && typeof value[1] === 'number'
+}
+
+function seriesList(option: EChartsOption): readonly SeriesOption[] {
+  return Array.isArray(option.series)
+    ? option.series
+    : option.series === undefined ? [] : [option.series]
+}
+
+// EChartsOption['series'] is a `type`-discriminated union, so this needs no
+// cast -- checking the literal `type` narrows the element to HeatmapSeriesOption.
+function firstHeatmapSeries(option: EChartsOption): HeatmapSeriesOption {
+  const series = seriesList(option)[0]
+  if (series?.type !== 'heatmap') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a heatmap series, got ${String(series?.type)}`)
+  }
+  return series
+}
+
+function heatmapCells(series: HeatmapSeriesOption): readonly CalendarCell[] {
+  const data = series.data
+  return Array.isArray(data) ? data.flatMap(cell => isCalendarCell(cell) ? [cell] : []) : []
+}
+
+function firstCalendar(option: EChartsOption): CalendarComponentOption {
+  const calendar = Array.isArray(option.calendar) ? option.calendar[0] : option.calendar
+  if (calendar === undefined) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected a calendar to be defined')
+  }
+  return calendar
+}
+
+// calendar.ts always sets visualMap.type explicitly (defaulting to
+// 'continuous' when options.visualMapType is omitted, as in every test below),
+// so this checks the real discriminant rather than asserting it.
+function firstContinuousVisualMap(option: EChartsOption): ContinuousVisualMapComponentOption {
+  const visualMap = Array.isArray(option.visualMap) ? option.visualMap[0] : option.visualMap
+  if (visualMap?.type !== 'continuous') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a continuous visualMap, got ${String(visualMap?.type)}`)
+  }
+  return visualMap
+}
 
 describe(
   'Calendar Transformer',
@@ -31,7 +84,7 @@ describe(
 
         // Check Calendar Component
 
-        const calendar = option.calendar as CalendarComponentOption
+        const calendar = firstCalendar(option)
         expect(calendar).toBeDefined()
 
         expect(calendar.range).toEqual(['2023-01-01',
@@ -47,16 +100,16 @@ describe(
         expect(calendar.right).toBeUndefined()
 
         // Check Series
-        const series = option.series as readonly any[]
-        expect(series).toHaveLength(1)
+        expect(seriesList(option)).toHaveLength(1)
+        const series = firstHeatmapSeries(option)
 
-        expect(series[0]?.type).toBe('heatmap')
+        expect(series.type).toBe('heatmap')
 
-        expect(series[0]?.coordinateSystem).toBe('calendar')
+        expect(series.coordinateSystem).toBe('calendar')
 
         // Check Data
 
-        const seriesData = series[0].data as readonly (readonly [string, number])[]
+        const seriesData = heatmapCells(series)
         expect(seriesData).toHaveLength(3)
         expect(seriesData[0]).toEqual(['2023-01-01',
           5])
@@ -84,9 +137,9 @@ describe(
           { valueProp: 'val' },
         )
 
-        const series = option.series as readonly any[]
+        const series = firstHeatmapSeries(option)
 
-        const seriesData = series[0].data as readonly (readonly [string, number])[]
+        const seriesData = heatmapCells(series)
 
         // invalid-date should be skipped?
         // Let's check logic:
@@ -129,7 +182,7 @@ describe(
           { valueProp: 'val' },
         )
 
-        const visualMap = option.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(option)
 
         expect(visualMap.min).toBe(10)
         expect(visualMap.max).toBe(100)
@@ -154,7 +207,7 @@ describe(
           { valueProp: 'val' },
         )
 
-        const visualMap = option.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(option)
 
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
       },
@@ -178,7 +231,7 @@ describe(
           { valueProp: 'val' },
         )
 
-        const visualMap = option.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(option)
         expect(visualMap.inRange?.color).toEqual([...DEFAULT_SEQUENTIAL_COLOR_GRADIENT])
       },
     )
@@ -205,7 +258,7 @@ describe(
             visualMapColor: override },
         )
 
-        const visualMap = option.visualMap as VisualMapComponentOption
+        const visualMap = firstContinuousVisualMap(option)
         expect(visualMap.inRange?.color).toEqual(override)
       },
     )
@@ -221,8 +274,7 @@ describe(
           'calendar',
           { valueProp: 'val' },
         )
-        const series = option.series as readonly any[]
-        expect(series).toHaveLength(0)
+        expect(seriesList(option)).toHaveLength(0)
       },
     )
   },
