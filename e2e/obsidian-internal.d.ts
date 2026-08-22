@@ -10,7 +10,10 @@ declare module 'obsidian' {
   }
 
   interface SettingManager {
-    readonly pluginTabs: readonly { readonly id: string }[]
+    readonly pluginTabs: readonly {
+      readonly id: string
+      readonly getSettingDefinitions?: () => readonly unknown[]
+    }[]
   }
 
   interface BasesPluginInstance {
