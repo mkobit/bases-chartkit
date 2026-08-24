@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'bun:test'
 import fc from 'fast-check'
-import { Temporal } from 'temporal-polyfill'
 import {
   chartDataPointArbitrary,
   chartDatasetArbitrary,

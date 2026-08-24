@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import { barChartArbitrary, stackedBarChartArbitrary } from '../generators/bar'
 import { bulletChartArbitrary } from '../generators/bullet'
 import { boxplotChartArbitrary, histogramChartArbitrary, paretoChartArbitrary, waterfallChartArbitrary } from '../generators/distribution'

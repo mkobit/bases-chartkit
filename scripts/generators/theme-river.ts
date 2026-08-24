@@ -1,6 +1,5 @@
 import * as fc from 'fast-check'
 import * as R from 'remeda'
-import { Temporal } from 'temporal-polyfill'
 import { NEWS_TOPICS } from './themes'
 
 // Fixed rather than Temporal.Now.plainDateISO() -- same ANCHOR_DATE fix as

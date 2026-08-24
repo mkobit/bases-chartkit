@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import { safeToString } from './bases-values'
 import { parseDateToEpochMs } from './dates'
 

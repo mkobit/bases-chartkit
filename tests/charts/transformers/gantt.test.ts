@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'bun:test'
-import { Temporal } from 'temporal-polyfill'
 import { createGanttChartOption } from '../../../src/charts/transformers/gantt'
 import type { BarSeriesOption, EChartsOption } from 'echarts'
 

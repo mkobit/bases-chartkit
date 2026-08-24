@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import type { FrontmatterValue } from './schema'
 
 export const serializeFrontmatter = (fm: Readonly<Record<string, FrontmatterValue>>): string => {
@@ -25,7 +24,7 @@ export const serializeFrontmatter = (fm: Readonly<Record<string, FrontmatterValu
       || value instanceof Temporal.PlainDateTime
       || value instanceof Temporal.ZonedDateTime
     ) {
-      return [`${key}: ${value.toString()}`]
+      return [`${key}: ${String(value)}`]
     }
     return []
   })

@@ -5,7 +5,6 @@ import ObsidianLauncher from 'obsidian-launcher'
 import * as path from 'node:path'
 import * as net from 'node:net'
 import * as fs from 'node:fs/promises'
-import { Temporal } from 'temporal-polyfill'
 import { applyViewMode } from '../../shared/appearance'
 import type { ViewMode } from '../../shared/appearance'
 import { evaluateObsidian } from '../helpers/evaluate'
@@ -45,7 +44,7 @@ export async function waitForCDP(port: number, proc: ChildProcess): Promise<void
   }).toPass({ intervals: [1000], timeout: 30_000 })
 }
 
-const SIGTERM_GRACE_PERIOD = Temporal.Duration.from({ seconds: 5 })
+const SIGTERM_GRACE_PERIOD_MS = 5000
 
 export async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
   const exited = proc.exitCode !== null || proc.signalCode !== null
@@ -58,7 +57,7 @@ export async function stopObsidian(proc: ChildProcess, configDir: string, vault:
 
   const outcome = await Promise.race([
     exited.then(() => 'exited' as const),
-    new Promise<'timed-out'>((resolve) => { setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD.total('milliseconds')) }),
+    new Promise<'timed-out'>((resolve) => { setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD_MS) }),
   ])
 
   if (outcome === 'timed-out' && proc.pid !== undefined) {

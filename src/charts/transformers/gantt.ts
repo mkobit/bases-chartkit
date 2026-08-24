@@ -1,5 +1,4 @@
 import type { BarSeriesOption, EChartsOption } from 'echarts'
-import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'

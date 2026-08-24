@@ -1,6 +1,5 @@
 import * as fc from 'fast-check'
 import * as R from 'remeda'
-import { Temporal } from 'temporal-polyfill'
 import { REGIONS } from './themes'
 
 // Fixed rather than Temporal.Now.plainDateISO() -- a wall-clock anchor made

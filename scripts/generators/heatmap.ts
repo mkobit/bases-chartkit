@@ -1,6 +1,5 @@
 import * as fc from 'fast-check'
 import * as R from 'remeda'
-import { Temporal } from 'temporal-polyfill'
 import { WEEK_DAYS } from './themes'
 
 const HOURS = [
