@@ -1,5 +1,4 @@
 import type { EChartsOption, SingleAxisComponentOption, ThemeRiverSeriesOption } from 'echarts'
-import { Temporal } from 'temporal-polyfill'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { parseDateToEpochMs } from './dates'

@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import type { FrontmatterValue } from './schema'
 
 export const serializeFrontmatter = (fm: Readonly<Record<string, FrontmatterValue>>): string => {

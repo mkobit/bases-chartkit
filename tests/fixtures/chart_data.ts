@@ -1,5 +1,4 @@
 import fc from 'fast-check'
-import { Temporal } from 'temporal-polyfill'
 import * as R from 'remeda'
 
 /**

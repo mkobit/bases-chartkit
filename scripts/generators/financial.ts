@@ -1,5 +1,4 @@
 import * as fc from 'fast-check'
-import { Temporal } from 'temporal-polyfill'
 
 // Fixed rather than Temporal.Now.plainDateISO() -- a wall-clock anchor made
 // this arbitrary non-deterministic across days despite the seeded sampling,

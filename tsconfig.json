@@ -30,7 +30,8 @@
 		"types": [
 			"bun",
 			"node",
-			"@playwright/test"
+			"@playwright/test",
+			"temporal-spec/global"
 		]
 	},
 	"include": [

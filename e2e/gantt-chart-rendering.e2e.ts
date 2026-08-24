@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import { test, expect } from './fixtures/obsidian'
 import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 import { formatDurationMs } from '../src/charts/transformers/formatters'

@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'bun:test'
-import { Temporal } from 'temporal-polyfill'
 import { getAxisLabelOverlapOptions, MANY_CATEGORIES_THRESHOLD } from '../src/charts/transformers/axis-labels'
 import {
   safeToString,

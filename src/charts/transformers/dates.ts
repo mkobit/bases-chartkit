@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill'
 import { isRecord, safeToString } from './bases-values'
 
 // Duck-types a native Date (or anything Date-shaped) without importing the
