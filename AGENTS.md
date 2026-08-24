@@ -10,17 +10,21 @@ The project enforces strict Functional Programming principles via `eslint`.
 -   **Localization**: Use `i18next` with keys from `src/lang/locales/en.json`. See `src/lang/AGENTS.md`.
 -   **Vault generation**: See `scripts/vault-gen/AGENTS.md` for layout, demo-data richness, and variant view set conventions.
 
-## Commands
-| Command | Description |
-| :--- | :--- |
-| `bun run build` | Full production build (Type check + Build). |
-| `bun test` | Run unit tests. |
-| `bun run test:e2e` | Run end-to-end tests via Playwright (pops a real Obsidian window, one instance reused per worker, on Linux/WSLg). |
-| `bun run test:e2e:headless` | Same, under `xvfb-run` — no window ever appears, matches CI. Use this for local runs. |
-| `bun run vault:dev` | Launch sandboxed Linux Obsidian against the in-repo `bases-chartkit-example-vault/` (requires `bun run build` first). |
-| `bun run vault:install` | Install the built plugin into the in-repo example vault without launching. |
-| `bun run clean` | Remove generated/build/test-output dirs (`main.js`, `test-results/`, `playwright-report/`, `.test-output/`, `.obsidian-cache/`, `coverage/`). |
-| `bun run openspec:validate` | Runs as a PR check on changes under `openspec/**`. Validates OpenSpec specs and changes. |
+## Commands & Task Workflows
+The repository supports both `mise run` (for task DAG resolution, parallel checks, and source/output caching) and direct `bun run` scripts.
+
+| Command | `mise` Equivalent | Description |
+| :--- | :--- | :--- |
+| `bun run build` | `mise run build` | Full production build with incremental source/output caching. |
+| `bun test` | `mise run test` | Run unit tests. |
+| `bun run test:e2e` | - | Run end-to-end tests via Playwright (pops a real Obsidian window, on Linux/WSLg). |
+| `bun run test:e2e:headless` | `mise run test:e2e:headless` | Run Playwright E2E tests headlessly under `xvfb-run` matching CI. |
+| `bun run vault:dev` | `mise run vault:dev` | Launch sandboxed Linux Obsidian against `bases-chartkit-example-vault/`. |
+| `bun run vault:install` | - | Install the built plugin into the example vault without launching. |
+| `bun run clean` | `mise run clean` | Remove generated build/test output artifacts. |
+| `bun run openspec:validate` | `mise run openspec:validate` | Validate OpenSpec specifications and changes. |
+| - | `mise run check` | Run all verification checks (typecheck, lint, budgets, specs, unit tests) in parallel. |
+| - | `mise tasks ls` | List all available tasks and descriptions. |
 
 ## Dependency installation handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.

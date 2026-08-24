@@ -5,3 +5,58 @@ bun = "1.4.0"
 [settings]
 locked = true
 http_retries = 5
+
+[tasks.typecheck]
+description = "Typecheck TypeScript files without emitting code"
+run = "bun run typecheck"
+
+[tasks.lint]
+description = "Run ESLint checks"
+run = "bun run lint"
+
+[tasks."check:eslint-disable-budget"]
+description = "Check ESLint disable directives budget"
+run = "bun run check:eslint-disable-budget"
+
+[tasks."check:test-cast-budget"]
+description = "Check test type cast budget"
+run = "bun run check:test-cast-budget"
+
+[tasks."openspec:validate"]
+description = "Validate OpenSpec specifications and changes"
+run = "bun run openspec:validate"
+
+[tasks.test]
+description = "Run unit tests"
+run = "bun run test"
+
+[tasks."test:e2e:headless"]
+description = "Run Playwright E2E tests headlessly with Virtual Framebuffer"
+run = "bun run test:e2e:headless"
+
+[tasks.check]
+description = "Run all verification, linting, budget, specification, and unit test checks in parallel"
+depends = [
+  "typecheck",
+  "lint",
+  "check:eslint-disable-budget",
+  "check:test-cast-budget",
+  "openspec:validate",
+  "test"
+]
+
+[tasks.build]
+description = "Build production artifact after passing type check"
+depends = ["typecheck"]
+sources = ["src/**/*", "tsconfig.json", "package.json", "esbuild.config.mjs"]
+outputs = ["main.js"]
+run = "bun esbuild.config.mjs production"
+
+[tasks.clean]
+description = "Clean generated build and test artifacts"
+run = "bun run clean"
+
+[tasks."vault:dev"]
+description = "Launch sandboxed Obsidian against example vault"
+depends = ["build"]
+run = "bun run vault:dev"

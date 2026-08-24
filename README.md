@@ -85,12 +85,13 @@ In this plugin, a **theme** refers to an Apache ECharts visual theme definition 
 
 ## Development
 
-This project uses [Bun](https://bun.sh/) and Node.js.
+This project uses [Bun](https://bun.sh/) and [mise](https://mise.jdx.dev/).
 
 ### Prerequisites
 
 - Node.js (v22 recommended)
 - Bun
+- mise (optional, recommended for task workflows)
 
 ### Setup
 
@@ -100,6 +101,16 @@ Install dependencies:
 bun install
 ```
 
+### Task Workflows (mise)
+
+This project uses `mise` task definitions in `mise.toml` for task DAG resolution, parallel checks, and build caching:
+
+- `mise run check`: Runs all verification checks (typecheck, lint, budgets, specs, unit tests) in parallel.
+- `mise run build`: Builds the production artifact (`main.js`) with source/output caching.
+- `mise run test`: Runs unit tests.
+- `mise run vault:dev`: Launches sandboxed Obsidian against the example vault (automatically building first).
+- `mise tasks ls`: Lists all available tasks and descriptions.
+
 ### Building
 
 To build the plugin in watch mode (for development):
@@ -108,10 +119,12 @@ To build the plugin in watch mode (for development):
 bun run dev
 ```
 
-To build for production:
+To build for production (via `bun` or `mise`):
 
 ```bash
 bun run build
+# or
+mise run build
 ```
 
 ### Automated testing
@@ -130,6 +143,8 @@ For more details, see [`e2e/AGENTS.md`](e2e/AGENTS.md).
 To test the plugin against a real Obsidian instance using the canonical in-repo `bases-chartkit-example-vault/`:
 
 ```bash
+mise run vault:dev
+# or
 bun run build      # generate main.js / styles.css
 bun run vault:dev  # downloads sandboxed Obsidian (one-time, cached) and launches it
 ```
