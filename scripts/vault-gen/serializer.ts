@@ -24,7 +24,7 @@ export const serializeFrontmatter = (fm: Readonly<Record<string, FrontmatterValu
       || value instanceof Temporal.PlainDateTime
       || value instanceof Temporal.ZonedDateTime
     ) {
-      return [`${key}: ${value.toString()}`]
+      return [`${key}: ${String(value)}`]
     }
     return []
   })

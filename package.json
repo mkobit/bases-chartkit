@@ -51,6 +51,7 @@
 		"eslint-plugin-yml": "^3.5.0",
 		"fast-check": "^4.8.0",
 		"globals": "17.7.0",
+		"jiti": "^2.7.0",
 		"obsidian-launcher": "^3.0.4",
 		"temporal-spec": "^1.0.1",
 		"tslib": "2.8.1",

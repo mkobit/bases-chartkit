@@ -108,7 +108,7 @@ export class ObsidianFileBuilder {
     if (val instanceof Temporal.PlainDate
       || val instanceof Temporal.ZonedDateTime
       || val instanceof Temporal.Instant) {
-      return val.toString()
+      return String(val)
     }
 
     if (Array.isArray(val)) {
