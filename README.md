@@ -106,9 +106,11 @@ bun install
 This project uses `mise` task definitions in `mise.toml` for task DAG resolution, parallel checks, and build caching:
 
 - `mise run check`: Runs all verification checks (typecheck, lint, budgets, specs, unit tests) in parallel.
-- `mise run build`: Builds the production artifact (`main.js`) with source/output caching.
+- `mise run build`: Builds the production artifact (`main.js`) after typecheck, with source/output caching.
 - `mise run test`: Runs unit tests.
-- `mise run vault:dev`: Launches sandboxed Obsidian against the example vault (automatically building first).
+- `mise run test:coverage`: Runs unit tests with coverage reporting.
+- `mise run vault:dev`: Installs the plugin into the example vault and launches sandboxed Obsidian.
+- `mise run ci`: Runs the full check suite, production build, and headless E2E tests locally.
 - `mise tasks ls`: Lists all available tasks and descriptions.
 
 ### Building

@@ -8,31 +8,105 @@ http_retries = 5
 
 [tasks.typecheck]
 description = "Typecheck TypeScript files without emitting code"
+sources = ["src/**/*", "tests/**/*", "scripts/**/*", "tsconfig.json", "package.json", "bun.lock"]
 run = "bun run typecheck"
 
 [tasks.lint]
 description = "Run ESLint checks"
+sources = ["src/**/*", "tests/**/*", "scripts/**/*", "eslint.config.mts", "package.json", "bun.lock"]
 run = "bun run lint"
 
 [tasks."check:eslint-disable-budget"]
 description = "Check ESLint disable directives budget"
+sources = ["src/**/*", "tests/**/*", "scripts/check-eslint-disable-budget.ts", "eslint.config.mts", "package.json", "bun.lock"]
 run = "bun run check:eslint-disable-budget"
 
 [tasks."check:test-cast-budget"]
 description = "Check test type cast budget"
+sources = ["tests/**/*", "scripts/check-test-cast-budget.ts", "package.json", "bun.lock"]
 run = "bun run check:test-cast-budget"
 
 [tasks."openspec:validate"]
 description = "Validate OpenSpec specifications and changes"
+sources = ["openspec/**/*", "package.json", "bun.lock"]
 run = "bun run openspec:validate"
 
 [tasks.test]
 description = "Run unit tests"
+sources = ["src/**/*", "tests/**/*", "package.json", "bun.lock"]
 run = "bun run test"
+
+[tasks."test:coverage"]
+description = "Run unit tests with coverage reporting"
+sources = ["src/**/*", "tests/**/*", "package.json", "bun.lock"]
+outputs = ["coverage/**"]
+run = "bun run test:coverage"
+
+[tasks.build]
+description = "Build production artifact after passing type check"
+depends = ["typecheck"]
+sources = ["src/**/*", "tsconfig.json", "package.json", "bun.lock", "esbuild.config.mjs"]
+outputs = ["main.js"]
+run = "bun run build:bundle"
+
+[tasks."vault:generate"]
+description = "Generate example vault contents from generators and specs"
+sources = [
+  "scripts/vault-gen/**/*",
+  "scripts/generators/**/*",
+  "scripts/generate-example-vault.ts",
+  "package.json",
+  "bun.lock"
+]
+outputs = ["bases-chartkit-example-vault/**"]
+run = "bun run vault:generate"
+
+[tasks."vault:install"]
+description = "Install built plugin into example vault"
+depends = ["build"]
+run = "bun run vault:install"
+
+[tasks."vault:dev"]
+description = "Launch sandboxed Obsidian against example vault"
+depends = ["vault:install"]
+run = "bun run vault:dev"
+
+[tasks."test:e2e"]
+description = "Run Playwright E2E tests interactively"
+depends = ["build"]
+run = "bun run test:e2e"
 
 [tasks."test:e2e:headless"]
 description = "Run Playwright E2E tests headlessly with Virtual Framebuffer"
+depends = ["build"]
+outputs = ["playwright-report/**"]
 run = "bun run test:e2e:headless"
+
+[tasks."docs:collect-views"]
+description = "Extract flattened chart views from example vault for survey testing"
+sources = ["bases-chartkit-example-vault/**", "scripts/collect-chart-views.ts", "package.json", "bun.lock"]
+outputs = [".test-output/chart-views.json"]
+run = "bun run docs:collect-views"
+
+[tasks."docs:screenshots"]
+description = "Capture documentation screenshots across chart view types"
+depends = ["build", "docs:collect-views"]
+run = "bun run docs:screenshots"
+
+[tasks."docs:screenshots:headless"]
+description = "Capture documentation screenshots headlessly with Virtual Framebuffer"
+depends = ["build", "docs:collect-views"]
+run = "bun run docs:screenshots:headless"
+
+[tasks."docs:screenshots:dark"]
+description = "Capture dark mode documentation screenshots across chart view types"
+depends = ["build", "docs:collect-views"]
+run = "bun run docs:screenshots:dark"
+
+[tasks."docs:screenshots:dark:headless"]
+description = "Capture dark mode documentation screenshots headlessly with Virtual Framebuffer"
+depends = ["build", "docs:collect-views"]
+run = "bun run docs:screenshots:dark:headless"
 
 [tasks.check]
 description = "Run all verification, linting, budget, specification, and unit test checks in parallel"
@@ -45,18 +119,11 @@ depends = [
   "test"
 ]
 
-[tasks.build]
-description = "Build production artifact after passing type check"
-depends = ["typecheck"]
-sources = ["src/**/*", "tsconfig.json", "package.json", "esbuild.config.mjs"]
-outputs = ["main.js"]
-run = "bun esbuild.config.mjs production"
+[tasks.ci]
+description = "Run complete verification check suite, production build, and headless e2e tests"
+depends = ["check", "build", "test:e2e:headless"]
 
 [tasks.clean]
 description = "Clean generated build and test artifacts"
 run = "bun run clean"
 
-[tasks."vault:dev"]
-description = "Launch sandboxed Obsidian against example vault"
-depends = ["build"]
-run = "bun run vault:dev"

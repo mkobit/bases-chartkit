@@ -17,13 +17,17 @@ The repository supports both `mise run` (for task DAG resolution, parallel check
 | :--- | :--- | :--- |
 | `bun run build` | `mise run build` | Full production build with incremental source/output caching. |
 | `bun test` | `mise run test` | Run unit tests. |
-| `bun run test:e2e` | - | Run end-to-end tests via Playwright (pops a real Obsidian window, on Linux/WSLg). |
+| `bun run test:coverage` | `mise run test:coverage` | Run unit tests with coverage reporting. |
+| `bun run test:e2e` | `mise run test:e2e` | Run end-to-end tests via Playwright (pops a real Obsidian window, on Linux/WSLg). |
 | `bun run test:e2e:headless` | `mise run test:e2e:headless` | Run Playwright E2E tests headlessly under `xvfb-run` matching CI. |
 | `bun run vault:dev` | `mise run vault:dev` | Launch sandboxed Linux Obsidian against `bases-chartkit-example-vault/`. |
-| `bun run vault:install` | - | Install the built plugin into the example vault without launching. |
+| `bun run vault:install` | `mise run vault:install` | Install the built plugin into the example vault without launching. |
+| `bun run vault:generate` | `mise run vault:generate` | Generate example vault contents from generators and specs. |
+| `bun run docs:screenshots` | `mise run docs:screenshots` | Capture documentation screenshots across chart view types. |
 | `bun run clean` | `mise run clean` | Remove generated build/test output artifacts. |
 | `bun run openspec:validate` | `mise run openspec:validate` | Validate OpenSpec specifications and changes. |
 | - | `mise run check` | Run all verification checks (typecheck, lint, budgets, specs, unit tests) in parallel. |
+| - | `mise run ci` | Run full check suite, build, and headless E2E pipeline locally. |
 | - | `mise tasks ls` | List all available tasks and descriptions. |
 
 ## Dependency installation handling
