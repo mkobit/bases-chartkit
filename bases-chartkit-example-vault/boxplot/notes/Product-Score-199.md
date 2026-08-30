@@ -1,4 +1,5 @@
 ---
 Product: "Cold Brew"
-Score: 57
+Channel: "In-Store"
+Score: 39
 ---

@@ -1,4 +1,5 @@
 ---
 Product: "Matcha Latte"
-Score: 69
+Channel: "Online"
+Score: 81
 ---

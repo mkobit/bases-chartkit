@@ -1,4 +1,5 @@
 ---
 Product: "Taro Smoothie"
-Score: 95
+Channel: "Online"
+Score: 24
 ---

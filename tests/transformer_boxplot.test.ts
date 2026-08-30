@@ -116,5 +116,51 @@ describe(
           100])
       },
     )
+
+    it(
+      'should transform grouped multi-series boxplot with transparent itemStyle on every series',
+      () => {
+        const data = [
+          { cat: 'A', group: 'G1', val: 10 },
+          { cat: 'A', group: 'G1', val: 20 },
+          { cat: 'A', group: 'G1', val: 30 },
+          { cat: 'A', group: 'G2', val: 40 },
+          { cat: 'A', group: 'G2', val: 50 },
+          { cat: 'A', group: 'G2', val: 60 },
+          { cat: 'B', group: 'G1', val: 5 },
+          { cat: 'B', group: 'G1', val: 15 },
+          { cat: 'B', group: 'G1', val: 25 },
+          { cat: 'B', group: 'G2', val: 35 },
+          { cat: 'B', group: 'G2', val: 45 },
+          { cat: 'B', group: 'G2', val: 55 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'cat',
+          'val',
+          'boxplot',
+          { seriesProp: 'group' },
+        )
+
+        expect(Array.isArray(option.series)).toBe(true)
+        if (!Array.isArray(option.series)) {
+          return
+        }
+        expect(option.series).toHaveLength(2)
+
+        for (const series of option.series) {
+          expect(series.type).toBe('boxplot')
+          if (series.type !== 'boxplot') {
+            continue
+          }
+          expect(series.itemStyle).toEqual({ color: 'transparent' })
+        }
+
+        const seriesNames = option.series.map(s => s.name)
+        expect(seriesNames).toContain('G1')
+        expect(seriesNames).toContain('G2')
+      },
+    )
   },
 )

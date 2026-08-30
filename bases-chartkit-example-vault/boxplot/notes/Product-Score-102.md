@@ -1,4 +1,5 @@
 ---
 Product: "Walnut Brownie"
-Score: 89
+Channel: "Online"
+Score: 35
 ---

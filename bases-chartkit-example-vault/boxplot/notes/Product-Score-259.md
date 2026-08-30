@@ -1,4 +1,5 @@
 ---
 Product: "Oolong Tea"
-Score: 2
+Channel: "In-Store"
+Score: 76
 ---

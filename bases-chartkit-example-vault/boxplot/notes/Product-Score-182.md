@@ -1,4 +1,5 @@
 ---
-Product: "Taro Smoothie"
-Score: 24
+Product: "Cold Brew"
+Channel: "In-Store"
+Score: 48
 ---

@@ -1,4 +1,5 @@
 ---
-Product: "Cold Brew"
-Score: 82
+Product: "Oolong Tea"
+Channel: "In-Store"
+Score: 33
 ---

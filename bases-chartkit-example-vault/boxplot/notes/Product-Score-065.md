@@ -1,4 +1,5 @@
 ---
-Product: "Walnut Brownie"
-Score: 79
+Product: "Milk Tea"
+Channel: "Online"
+Score: 72
 ---

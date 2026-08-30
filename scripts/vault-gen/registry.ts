@@ -338,7 +338,7 @@ const parallelSpec = defineChartExampleSpec<RadarSample>({
 })
 
 interface BoxplotSample {
-  readonly data: ReadonlyArray<{ readonly category: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly category: string, readonly channel: string, readonly value: number }>
 }
 
 const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
@@ -349,6 +349,7 @@ const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
   notePrefix: 'Product-Score',
   toRows: sample => sample.data.map(row => ({
     Product: row.category,
+    Channel: row.channel,
     Score: row.value,
   })),
   variants: [
@@ -359,6 +360,17 @@ const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
       propBindings: {
         xAxisProp: 'note.Product',
         yAxisProp: 'note.Score',
+      },
+      literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'Basic.base',
+      viewName: 'Product score distribution by channel',
+      viewType: 'boxplot-chart',
+      propBindings: {
+        xAxisProp: 'note.Product',
+        yAxisProp: 'note.Score',
+        seriesProp: 'note.Channel',
       },
       literalOptions: { showLegend: true },
     },

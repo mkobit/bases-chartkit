@@ -1,4 +1,5 @@
 ---
-Product: "Espresso"
-Score: 50
+Product: "Walnut Brownie"
+Channel: "Online"
+Score: 86
 ---

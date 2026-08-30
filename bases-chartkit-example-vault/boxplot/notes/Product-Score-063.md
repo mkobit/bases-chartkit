@@ -1,4 +1,5 @@
 ---
 Product: "Milk Tea"
-Score: 72
+Channel: "Online"
+Score: 24
 ---
