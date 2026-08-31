@@ -1,4 +1,5 @@
 ---
 Product: "Walnut Brownie"
-Score: 106
+Channel: "In-Store"
+Score: 56
 ---

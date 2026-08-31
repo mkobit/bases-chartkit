@@ -1,4 +1,5 @@
 ---
 Product: "Oolong Tea"
-Score: 64
+Channel: "Online"
+Score: 6
 ---

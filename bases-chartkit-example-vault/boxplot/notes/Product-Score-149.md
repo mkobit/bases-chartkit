@@ -1,4 +1,5 @@
 ---
 Product: "Taro Smoothie"
-Score: 91
+Channel: "In-Store"
+Score: 38
 ---

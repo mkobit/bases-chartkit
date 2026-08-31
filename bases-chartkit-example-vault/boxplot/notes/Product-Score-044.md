@@ -1,4 +1,5 @@
 ---
-Product: "Milk Tea"
-Score: 91
+Product: "Matcha Latte"
+Channel: "Online"
+Score: 82
 ---

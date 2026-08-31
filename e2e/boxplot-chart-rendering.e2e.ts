@@ -140,4 +140,44 @@ test.describe('boxplot chart rendering', () => {
     expect(tooltipText).toContain('max')
     expect(tooltipText).toContain(String(max))
   })
+
+  // Regression test (bck-uif): multi-series / grouped boxplot via seriesProp
+  // must apply transparent itemStyle fill uniformly across every series, not
+  // just the first.
+  test('grouped boxplot series all have transparent fill across all series', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => {
+          resolve()
+        })
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'boxplot/Basic.base', viewName: 'Product score distribution by channel' })
+
+    await expect.poll(
+      async () => {
+        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
+        return option?.series?.length ?? 0
+      },
+      { timeout: 30_000 },
+    ).toBeGreaterThan(1)
+
+    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    expect(option).not.toBeNull()
+    if (option === null) {
+      return
+    }
+
+    const boxplotSeriesList = option.series.filter(s => s.type === 'boxplot')
+    expect(boxplotSeriesList.length).toBeGreaterThan(1)
+
+    for (const s of boxplotSeriesList) {
+      expect(s.itemStyle?.color).toBe('transparent')
+    }
+  })
 })

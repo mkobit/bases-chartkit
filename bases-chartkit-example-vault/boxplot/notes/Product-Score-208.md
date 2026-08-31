@@ -1,4 +1,5 @@
 ---
 Product: "Cold Brew"
-Score: 68
+Channel: "Online"
+Score: 54
 ---

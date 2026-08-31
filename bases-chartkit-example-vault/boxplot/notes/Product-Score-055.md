@@ -1,4 +1,5 @@
 ---
 Product: "Milk Tea"
-Score: 52
+Channel: "In-Store"
+Score: 20
 ---

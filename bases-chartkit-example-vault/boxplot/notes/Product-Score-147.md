@@ -1,4 +1,5 @@
 ---
-Product: "Espresso"
-Score: 35
+Product: "Taro Smoothie"
+Channel: "In-Store"
+Score: 38
 ---

@@ -9,11 +9,22 @@ export const boxplotChartArbitrary = themeSubset(PRODUCT_NAMES, 5)
   .chain((categories) => {
     return fc.record({
       categories: fc.constant(categories),
-      // Generate multiple points per category to form a distribution with distinct category medians
+      // Generate multiple points per category and channel to form a distribution with distinct category medians
       values: fc.array(
-        fc.array(fc.integer({ min: 10,
-          max: 90 }), { minLength: 25,
-          maxLength: 60 }),
+        fc.record({
+          inStore: fc.array(
+            fc.integer({ min: 10,
+              max: 90 }),
+            { minLength: 15,
+              maxLength: 30 },
+          ),
+          online: fc.array(
+            fc.integer({ min: 10,
+              max: 90 }),
+            { minLength: 15,
+              maxLength: 30 },
+          ),
+        }),
         { minLength: categories.length,
           maxLength: categories.length },
       ),
@@ -21,13 +32,24 @@ export const boxplotChartArbitrary = themeSubset(PRODUCT_NAMES, 5)
   })
   .map((data) => {
     const flattenedData = data.categories.flatMap((cat, catIndex) => {
-      const vals = data.values[catIndex]
+      const channelVals = data.values[catIndex]
       // Add a category offset so each product exhibits a distinct median & spread
       const offset = (catIndex % 3) * 15 - 10
-      return vals
-        ? vals.map(val => ({ category: cat,
-          value: Math.max(0, val + offset) }))
+      const inStoreRows = channelVals
+        ? channelVals.inStore.map(val => ({
+          category: cat,
+          channel: 'In-Store',
+          value: Math.max(0, val + offset),
+        }))
         : []
+      const onlineRows = channelVals
+        ? channelVals.online.map(val => ({
+          category: cat,
+          channel: 'Online',
+          value: Math.max(0, val + offset + 5),
+        }))
+        : []
+      return [...inStoreRows, ...onlineRows]
     })
     return {
       type: 'boxplot',

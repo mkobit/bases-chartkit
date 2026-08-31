@@ -1,4 +1,6 @@
 properties:
+  note.Channel:
+    displayName: Channel
   note.Product:
     displayName: Product
   note.Score:
@@ -8,6 +10,15 @@ views:
     name: Product score distribution
     xAxisProp: note.Product
     yAxisProp: note.Score
+    showLegend: true
+    filters:
+      and:
+        - file.folder == "boxplot/notes"
+  - type: boxplot-chart
+    name: Product score distribution by channel
+    xAxisProp: note.Product
+    yAxisProp: note.Score
+    seriesProp: note.Channel
     showLegend: true
     filters:
       and:
