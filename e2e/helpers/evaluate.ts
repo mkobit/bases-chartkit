@@ -19,7 +19,8 @@ import { expect } from '@playwright/test'
  * cost. 100s leaves headroom under playwright.config.ts's 120_000ms
  * per-test timeout for the rest of each test's setup/assertions.
  */
-export const VAULT_INDEXED_POLL_TIMEOUT_MS = 100_000
+export const VAULT_INDEXED_POLL_TIMEOUT = Temporal.Duration.from({ seconds: 100 })
+export const VAULT_INDEXED_POLL_TIMEOUT_MS = VAULT_INDEXED_POLL_TIMEOUT.total('milliseconds')
 
 // Unified runner: evaluates `fn` inside the Obsidian renderer. When `args` is
 // omitted the function receives only `app`. Args must be JSON-serializable
@@ -299,7 +300,13 @@ export async function getSeriesDataCount(
  * `timeoutMs` if 'finished' never fires (e.g. it already fired before this
  * attached), so a stuck render can't hang the caller indefinitely.
  */
-export async function waitForChartFinished(page: Page, timeoutMs = 1500): Promise<void> {
+export const CHART_FINISHED_FALLBACK_TIMEOUT = Temporal.Duration.from({ milliseconds: 1500 })
+export const CHART_FINISHED_FALLBACK_TIMEOUT_MS = CHART_FINISHED_FALLBACK_TIMEOUT.total('milliseconds')
+
+export async function waitForChartFinished(
+  page: Page,
+  timeoutMs = CHART_FINISHED_FALLBACK_TIMEOUT_MS,
+): Promise<void> {
   return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
     interface EChartsInstanceLike {
       readonly on: (event: string, handler: () => void) => void

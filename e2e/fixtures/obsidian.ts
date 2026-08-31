@@ -33,18 +33,26 @@ export function findFreePort(): Promise<number> {
   })
 }
 
+const CDP_CONNECT_TIMEOUT = Temporal.Duration.from({ seconds: 30 })
+const CDP_POLL_INTERVAL = Temporal.Duration.from({ seconds: 1 })
+
 export async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
   await expect(async () => {
     if (proc.exitCode !== null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- see comment in original file
       throw new Error(`Obsidian process exited early with code ${proc.exitCode}`)
     }
-    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 30_000 })
+    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, {
+      timeout: CDP_CONNECT_TIMEOUT.total('milliseconds'),
+    })
     await browser.close()
-  }).toPass({ intervals: [1000], timeout: 30_000 })
+  }).toPass({
+    intervals: [CDP_POLL_INTERVAL.total('milliseconds')],
+    timeout: CDP_CONNECT_TIMEOUT.total('milliseconds'),
+  })
 }
 
-const SIGTERM_GRACE_PERIOD_MS = 5000
+const SIGTERM_GRACE_PERIOD = Temporal.Duration.from({ seconds: 5 })
 
 export async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
   const exited = proc.exitCode !== null || proc.signalCode !== null
@@ -57,7 +65,9 @@ export async function stopObsidian(proc: ChildProcess, configDir: string, vault:
 
   const outcome = await Promise.race([
     exited.then(() => 'exited' as const),
-    new Promise<'timed-out'>((resolve) => { setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD_MS) }),
+    new Promise<'timed-out'>((resolve) => {
+      setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD.total('milliseconds'))
+    }),
   ])
 
   if (outcome === 'timed-out' && proc.pid !== undefined) {
