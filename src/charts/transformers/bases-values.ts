@@ -59,15 +59,16 @@ export function getNestedValue(obj: unknown, path: string): unknown {
   if (typeof obj !== 'object' || obj === null) {
     return undefined
   }
-  // Bases formula results (`formula.<name>`) are computed lazily and are NOT
-  // reachable by dot-walking the entry the way `note.*`/`file.*` fields are --
-  // they're only exposed via the entry's own getValue(propertyId) evaluator,
-  // which also runs the formula. Verified live (bck-g79): dot-walking
-  // formula.* yields undefined -> a bogus "Unknown" category, while
-  // entry.getValue('formula.FormattedDate') returns the evaluated value. Gated
-  // to the `formula.` prefix so note.*/file.* keep their existing direct-access
-  // path (and its handling of genuinely-absent props) unchanged.
-  if (path.startsWith('formula.') && isRecord(obj) && isRecordWithGetValueAccessor(obj)) {
+  // Bases formula results (`formula.<name>`) and file properties (`file.<prop>`)
+  // are resolved via the entry's own getValue(propertyId) evaluator.
+  // Formula results are computed lazily, and file properties (such as file.size,
+  // file.ctime, file.mtime, file.folder) live in TFile stats/parents rather
+  // than top-level file.* fields.
+  if (
+    (path.startsWith('formula.') || path.startsWith('file.'))
+    && isRecord(obj)
+    && isRecordWithGetValueAccessor(obj)
+  ) {
     return obj.getValue(path)
   }
   return path.split('.').reduce(
