@@ -299,7 +299,7 @@ export async function getSeriesDataCount(
  * `timeoutMs` if 'finished' never fires (e.g. it already fired before this
  * attached), so a stuck render can't hang the caller indefinitely.
  */
-export async function waitForChartFinished(page: Page, timeoutMs = 1500): Promise<void> {
+export async function waitForChartFinished(page: Page, timeoutMs = 1_500): Promise<void> {
   return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
     interface EChartsInstanceLike {
       readonly on: (event: string, handler: () => void) => void

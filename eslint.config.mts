@@ -273,7 +273,13 @@ export default tseslint.config(
       }],
 
       // Unicorn Rules
-      'unicorn/numeric-separators-style': 'error',
+      'unicorn/numeric-separators-style': ['error', {
+        onlyIfContainsSeparator: true,
+        number: {
+          minimumDigits: 0,
+          groupLength: 3,
+        },
+      }],
 
       // Ensure strictness explicitly (reinforcing 'strict' config)
       'functional/no-let': 'error',
