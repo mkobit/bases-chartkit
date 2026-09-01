@@ -4,7 +4,9 @@ This document provides a reference for every chart type supported by the plugin,
 
 ## area
 ![area example](images/chart-types/area-basic--sales-area-chart.png)
-Displays quantitative data over an interval, similar to a line chart but with the area beneath the line filled in to emphasize magnitude. Set `seriesProp` to split into one area per series; enable `stack` to stack those series into a cumulative band.
+Displays quantitative data over an interval, similar to a line chart but with the area beneath the line filled in to emphasize magnitude.
+Set `seriesProp` to split into one area per series; enable `stack` to stack those series into a cumulative band.
+Bases formulas defined under the top-level `formulas` block can be bound to axes via `formula.<name>`.
 ```yaml
 properties:
   note.Date:
@@ -13,6 +15,8 @@ properties:
     displayName: Region
   note.Revenue:
     displayName: Revenue
+formulas:
+  FormattedDate: 'Date.format("MMMM DD, YYYY")'
 views:
   - type: area-chart
     name: Sales by region (area)
@@ -25,6 +29,11 @@ views:
     yAxisProp: note.Revenue
     seriesProp: note.Region
     stack: true
+  - type: area-chart
+    name: Sales by region (formatted dates)
+    xAxisProp: formula.FormattedDate
+    yAxisProp: note.Revenue
+    seriesProp: note.Region
 ```
 
 ## bar

@@ -172,7 +172,25 @@ describe('Transformer Modules', () => {
       expect(getNestedValue(entry, 'formula.FormattedDate')).toBe('January 01, 2024')
     })
 
-    it('should not use getValue for note.*/file.* ids, preserving the direct-access path', () => {
+    it('should resolve file.* ids through the entry getValue(propertyId) evaluator when available', () => {
+      // Mimics a Bases entry: file properties (size, ctime, mtime, folder)
+      // live in TFile stats/parents and are resolved via getValue (bck-g79).
+      const entry = {
+        getValue(id: string): unknown {
+          if (id === 'file.size') {
+            return 2048
+          }
+          if (id === 'file.name') {
+            return 'Report.md'
+          }
+          return null
+        },
+      }
+      expect(getNestedValue(entry, 'file.size')).toBe(2048)
+      expect(getNestedValue(entry, 'file.name')).toBe('Report.md')
+    })
+
+    it('should not use getValue for note.* ids, preserving the direct-access path', () => {
       // note.* must keep dot-walking so absent-prop handling is unchanged; the
       // flag proves getValue isn't consulted for a note.* id.
       let getValueCalled = false
