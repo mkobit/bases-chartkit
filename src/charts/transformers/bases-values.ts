@@ -65,9 +65,9 @@ export function getNestedValue(obj: unknown, path: string): unknown {
   // file.ctime, file.mtime, file.folder) live in TFile stats/parents rather
   // than top-level file.* fields.
   if (
-    (path.startsWith('formula.') || path.startsWith('file.')) &&
-    isRecord(obj) &&
-    isRecordWithGetValueAccessor(obj)
+    (path.startsWith('formula.') || path.startsWith('file.'))
+    && isRecord(obj)
+    && isRecordWithGetValueAccessor(obj)
   ) {
     return obj.getValue(path)
   }
