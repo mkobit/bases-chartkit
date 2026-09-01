@@ -119,8 +119,7 @@ interface CaptureResult {
 // `await` would otherwise block indefinitely with nothing left to catch it
 // short of the whole-test timeout. Racing against this per-view timeout
 // keeps one stuck view from stalling the rest of the sweep.
-const PER_VIEW_TIMEOUT = Temporal.Duration.from({ seconds: 45 })
-const PER_VIEW_TIMEOUT_MS = PER_VIEW_TIMEOUT.total('milliseconds')
+const PER_VIEW_TIMEOUT_MS = 45_000
 
 function timeoutAfter(ms: number, label: string): Promise<never> {
   return new Promise((_resolve, reject) => {

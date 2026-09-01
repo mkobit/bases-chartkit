@@ -6,7 +6,7 @@ This repository contains a bare-bones Obsidian plugin built with strict TypeScri
 The project enforces strict Functional Programming principles via `eslint`.
 -   **No Mutation / Loops**: Use `const` exclusively. Use declarative transforms (e.g., `map`, `filter`).
 -   **Data Transformation**: Prefer **[Remeda](https://remedajs.com/)** (`remeda`) for complex data pipelines.
--   **Date/Time**: Use the `Temporal` API for logic. Avoid `Date`. Express time/timeout constants as `Temporal.Duration` (e.g. `Temporal.Duration.from({ seconds: 5 })`) and convert via `.total('milliseconds')` at the API boundary. Use `moment` only for Obsidian UI formatting.
+-   **Date/Time**: Use the `Temporal` API for logic. Avoid `Date`. Use `moment` only for Obsidian UI formatting.
 -   **Localization**: Use `i18next` with keys from `src/lang/locales/en.json`. See `src/lang/AGENTS.md`.
 -   **Vault generation**: See `scripts/vault-gen/AGENTS.md` for layout, demo-data richness, and variant view set conventions.
 
