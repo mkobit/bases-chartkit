@@ -21,6 +21,15 @@ description = "Check ESLint disable directives budget"
 sources = ["src/**/*", "tests/**/*", "scripts/check-eslint-disable-budget.ts", "eslint.config.mts", "package.json", "bun.lock"]
 run = "bun run check:eslint-disable-budget"
 
+[tasks."check:sbx-env"]
+description = "Validate Docker Sandbox environment files and kit specifications"
+sources = [".sbx/**/*", "scripts/check-sbx-env.ts", "scripts/sbx-schemas.ts", "package.json", "bun.lock"]
+run = "bun run check:sbx-env"
+
+[tasks.validate-sbx]
+description = "Validate Docker Sandbox environment files"
+depends = ["check:sbx-env"]
+
 [tasks."check:test-cast-budget"]
 description = "Check test type cast budget"
 sources = ["tests/**/*", "scripts/check-test-cast-budget.ts", "package.json", "bun.lock"]
@@ -114,6 +123,7 @@ depends = [
   "typecheck",
   "lint",
   "check:eslint-disable-budget",
+  "check:sbx-env",
   "check:test-cast-budget",
   "openspec:validate",
   "test"

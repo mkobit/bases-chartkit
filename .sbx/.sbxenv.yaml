@@ -1,0 +1,17 @@
+schemaVersion: "1"
+name: bases-chartkit-codex
+agent: codex
+workspace:
+  path: ..
+  clone: true
+kits:
+  - ./kit
+ports:
+  - sandbox: 6080
+    host: 6080
+  - sandbox: 5900
+    host: 5900
+  - sandbox: 9222
+    host: 9222
+  - sandbox: 5173
+    host: 5173
