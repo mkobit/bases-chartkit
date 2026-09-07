@@ -1,0 +1,18 @@
+schemaVersion: "1"
+name: bases-chartkit-agy
+agent: agy
+workspace:
+  path: ..
+  clone: true
+kits:
+  - "git+https://github.com/shelajev/agy-sbx-kit.git#ref=3e7016f108f3cf09922cf351b55a49e38d97f9f2"
+  - ./kit
+ports:
+  - sandbox: 6080
+    host: 6080
+  - sandbox: 5900
+    host: 5900
+  - sandbox: 9222
+    host: 9222
+  - sandbox: 5173
+    host: 5173

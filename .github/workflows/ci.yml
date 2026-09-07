@@ -68,6 +68,9 @@ jobs:
             - name: Lint
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run lint
+            - name: Validate Docker Sandbox environments
+              if: (success() || failure()) && steps.setup.outcome == 'success'
+              run: bun run check:sbx-env
             - name: Check eslint-disable budget
               if: (success() || failure()) && steps.setup.outcome == 'success'
               run: bun run check:eslint-disable-budget
