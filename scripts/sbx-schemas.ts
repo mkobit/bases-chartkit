@@ -305,7 +305,7 @@ export const kitSpecV1Schema = z
 
 export const kitSpecSchema = z.union([kitSpecV2Schema, kitSpecV1Schema])
 
-// --- Environment File (.sbxenv.yaml) ---
+// --- Environment File (sbxenv.yaml) ---
 
 export const sbxEnvPortSchema = z
   .object({

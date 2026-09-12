@@ -101,6 +101,23 @@ Install dependencies:
 bun install
 ```
 
+### Docker Sandboxes Setup (Optional)
+
+To work within the Docker Sandbox environment, you can run commands directly using the tracked environment files. For example:
+
+```sh
+sbx env exec .sbx/sbxenv.yaml -- mise run check
+```
+
+You may append a personal, untracked host configuration layer (e.g., `~/.local/share/sbx/personal/personal.sbxenv.yaml`):
+
+```sh
+sbx env run .sbx/sbxenv.yaml
+sbx env run .sbx/sbxenv.yaml ~/.local/share/sbx/personal/personal.sbxenv.yaml
+sbx env exec .sbx/sbxenv.yaml ~/.local/share/sbx/personal/personal.sbxenv.yaml -- mise run check
+```
+*For AGY, substitute `.sbx/sbxenv.agy.yaml`.*
+
 ### Task Workflows (mise)
 
 This project uses `mise` task definitions in `mise.toml` for task DAG resolution, parallel checks, and build caching:
