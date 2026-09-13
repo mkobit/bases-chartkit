@@ -21,6 +21,25 @@ updates:
     cooldown:
       default-days: 14
     groups:
+      typescript:
+        patterns:
+          - "typescript"
+      linters:
+        patterns:
+          - "eslint*"
+          - "@eslint*"
+          - "@stylistic*"
+          - "typescript-eslint*"
+          - "@typescript-eslint*"
+          - "*eslint*"
       bun-ecosystem:
         patterns:
           - "*"
+        exclude-patterns:
+          - "typescript"
+          - "eslint*"
+          - "@eslint*"
+          - "@stylistic*"
+          - "typescript-eslint*"
+          - "@typescript-eslint*"
+          - "*eslint*"
