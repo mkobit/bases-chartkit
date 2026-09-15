@@ -177,19 +177,23 @@ test.describe('treemap chart rendering', () => {
       })
     }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
 
-    await expect.poll(
-      () => findHierarchyLeaf(page),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).not.toBeNull()
-
-    // Bases can still be re-rendering (a later setOption call landing as
-    // indexing catches up) even after the poll above finds a leaf -- a
-    // dataIndex captured from an earlier, still-settling tree can point to a
-    // node that no longer exists (or exists at a different index) by the
-    // time the hover below runs. Wait for full indexing first so this read
-    // and hoverChartDataPointAndGetTooltip's own internal wait observe the
-    // same, final tree.
     await waitForVaultIndexed(page)
+
+    // waitForVaultIndexed alone isn't a sufficient settling signal here: a
+    // captured dataIndex right after it resolves could still point to a node
+    // from an earlier tree shape before Bases' own final re-render lands.
+    // Mirror sunburst/tree settling: keep re-deriving the leaf until two
+    // consecutive reads agree on the exact same node (dataIndex, name, value).
+    let previousLeaf: Awaited<ReturnType<typeof findHierarchyLeaf>> = null
+    await expect.poll(async () => {
+      const leaf = await findHierarchyLeaf(page)
+      const stable = leaf !== null && previousLeaf !== null
+        && leaf.dataIndex === previousLeaf.dataIndex
+        && leaf.name === previousLeaf.name
+        && leaf.value === previousLeaf.value
+      previousLeaf = leaf
+      return stable
+    }, { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS, intervals: [100] }).toBe(true)
 
     const leafNode = await findHierarchyLeaf(page)
     if (leafNode === null) {
