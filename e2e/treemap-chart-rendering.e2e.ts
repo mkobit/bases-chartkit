@@ -38,6 +38,7 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
     }
     interface SeriesDataLike {
       readonly tree?: { readonly root: TreeNodeLike }
+      readonly getItemGraphicEl?: (index: number) => unknown
     }
     interface SeriesModelLike {
       readonly getData: () => SeriesDataLike
@@ -85,17 +86,20 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
       .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
       .find((view): view is ChartLike => view !== undefined)
 
-    const root = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData().tree?.root
+    const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
+    const root = seriesData?.tree?.root
     if (!root) {
       return null
     }
 
     // Depth-first, first-child-first: return the first node with no
-    // children of its own and a finite numeric value.
+    // children of its own, a valid non-negative dataIndex, a finite numeric value,
+    // and an already-instantiated graphic element in the series model.
     const findLeaf = (node: TreeNodeLike): HierarchyLeaf | undefined => {
-      if (node.children.length === 0) {
+      if (node.children.length === 0 && node.dataIndex >= 0) {
         const value = node.getValue()
-        return typeof value === 'number' && Number.isFinite(value)
+        const el = seriesData?.getItemGraphicEl?.(node.dataIndex)
+        return typeof value === 'number' && Number.isFinite(value) && el != null
           ? { name: node.name, value, dataIndex: node.dataIndex }
           : undefined
       }
@@ -178,6 +182,11 @@ test.describe('treemap chart rendering', () => {
     }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
 
     await waitForVaultIndexed(page)
+
+    await expect.poll(
+      async () => page.locator('.bases-echarts canvas').count(),
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
 
     // waitForVaultIndexed alone isn't a sufficient settling signal here: a
     // captured dataIndex right after it resolves could still point to a node
