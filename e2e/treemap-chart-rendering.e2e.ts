@@ -99,7 +99,7 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
       if (node.children.length === 0 && node.dataIndex >= 0) {
         const value = node.getValue()
         const el = seriesData?.getItemGraphicEl?.(node.dataIndex)
-        return typeof value === 'number' && Number.isFinite(value) && el != null
+        return typeof value === 'number' && Number.isFinite(value) && el !== null && el !== undefined
           ? { name: node.name, value, dataIndex: node.dataIndex }
           : undefined
       }
