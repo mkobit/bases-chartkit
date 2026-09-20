@@ -6,10 +6,12 @@ import type { EChartsOption } from 'echarts'
 export class ChartModal extends Modal {
   private chart: echarts.ECharts | null = null
   private readonly option: EChartsOption
+  private readonly theme?: string
 
-  constructor(app: App, option: EChartsOption) {
+  constructor(app: App, option: EChartsOption, theme?: string) {
     super(app)
     this.option = option
+    this.theme = theme
   }
 
   onOpen() {
@@ -23,7 +25,7 @@ export class ChartModal extends Modal {
 
     // Wait for layout paint
     window.requestAnimationFrame(() => {
-      this.chart = echarts.init(chartEl)
+      this.chart = echarts.init(chartEl, this.theme)
       this.chart.setOption(this.option)
 
       activeWindow.addEventListener('resize', this.handleResize)

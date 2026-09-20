@@ -14,6 +14,12 @@ import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../cha
 import { ChartModal } from './chart-modal'
 import { t } from '../lang/text'
 import { isRecord } from '../charts/transformers/bases-values'
+import {
+  extractObsidianCssTokens,
+  buildEChartsThemeFromObsidian,
+  resolveTheme,
+  OBSIDIAN_AUTO_THEME_NAME,
+} from '../charts/obsidian-theme'
 
 export abstract class BaseChartView extends BasesView {
   readonly scrollEl: HTMLElement
@@ -169,6 +175,10 @@ export abstract class BaseChartView extends BasesView {
   }
 
   protected getCommonTransformerOptions(): BaseTransformerOptions {
+    const resolvedTheme = this.getTheme()
+    const isDarkMode = resolvedTheme === 'dark'
+      || ((resolvedTheme === OBSIDIAN_AUTO_THEME_NAME || resolvedTheme === undefined) && this.isDarkMode())
+
     const options: BaseTransformerOptions = {
       title: this.getStringOption(BaseChartView.TITLE_KEY),
       description: this.getStringOption(BaseChartView.DESCRIPTION_KEY),
@@ -190,7 +200,7 @@ export abstract class BaseChartView extends BasesView {
       // isDarkMode() signal) so a selected custom theme -- which getTheme()
       // prioritizes over the OS dark-mode fallback -- isn't overridden by an
       // unrelated dark/light mismatch here.
-      isDarkMode: this.getTheme() === 'dark',
+      isDarkMode,
     }
 
     if (this.isFullScreenGeneration) {
@@ -213,7 +223,7 @@ export abstract class BaseChartView extends BasesView {
     this.isFullScreenGeneration = false
 
     if (option) {
-      new ChartModal(this.app, option).open()
+      new ChartModal(this.app, option, this.getTheme()).open()
     }
   }
 
@@ -296,16 +306,18 @@ export abstract class BaseChartView extends BasesView {
   }
 
   private getTheme(): string | undefined {
-    const chartTheme = this.getStringOption(BaseChartView.THEME_KEY)
-    if (chartTheme && chartTheme !== 'default') {
-      return chartTheme
+    const tokens = extractObsidianCssTokens(this.containerEl)
+    if (tokens) {
+      const theme = buildEChartsThemeFromObsidian(tokens)
+      echarts.registerTheme(OBSIDIAN_AUTO_THEME_NAME, theme)
     }
 
-    if (this.plugin.settings.selectedTheme) {
-      return this.plugin.settings.selectedTheme
-    }
-
-    return this.isDarkMode() ? 'dark' : undefined
+    return resolveTheme(
+      this.getStringOption(BaseChartView.THEME_KEY),
+      this.plugin.settings.selectedTheme,
+      tokens !== null,
+      this.isDarkMode(),
+    )
   }
 
   private isDarkMode(): boolean {
