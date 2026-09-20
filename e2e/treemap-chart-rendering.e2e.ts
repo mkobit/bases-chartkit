@@ -38,7 +38,6 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
     }
     interface SeriesDataLike {
       readonly tree?: { readonly root: TreeNodeLike }
-      readonly getItemGraphicEl?: (index: number) => unknown
     }
     interface SeriesModelLike {
       readonly getData: () => SeriesDataLike
@@ -93,13 +92,11 @@ async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<Hierarchy
     }
 
     // Depth-first, first-child-first: return the first node with no
-    // children of its own, a valid non-negative dataIndex, a finite numeric value,
-    // and an already-instantiated graphic element in the series model.
+    // children of its own, a non-empty name, a valid dataIndex, and a finite numeric value.
     const findLeaf = (node: TreeNodeLike): HierarchyLeaf | undefined => {
-      if (node.children.length === 0 && node.dataIndex >= 0) {
+      if (node.children.length === 0 && node.dataIndex >= 0 && node.name.length > 0) {
         const value = node.getValue()
-        const el = seriesData?.getItemGraphicEl?.(node.dataIndex)
-        return typeof value === 'number' && Number.isFinite(value) && el !== null && el !== undefined
+        return typeof value === 'number' && Number.isFinite(value)
           ? { name: node.name, value, dataIndex: node.dataIndex }
           : undefined
       }

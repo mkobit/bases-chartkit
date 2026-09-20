@@ -54,4 +54,15 @@ export class TreemapChartView extends BaseChartView {
       this.getCommonTransformerOptions(),
     )
   }
+
+  // ECharts' `treemap` series keeps internal view-state and tree layout diffing
+  // between `setOption` calls. When Bases' query resolves asynchronously,
+  // the first render often mounts with an empty result set before the real
+  // data arrives; the follow-up render with populated data then diffs against
+  // that empty root state, freezing the chart on a blank view. `clear()`
+  // drops that stale view-state so every render starts from a clean slate.
+  protected executeRender(): void {
+    this.chart?.clear()
+    super.executeRender()
+  }
 }
