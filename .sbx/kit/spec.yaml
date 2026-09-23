@@ -89,6 +89,7 @@ setup:
     - command: |
         curl -fsSL https://mise.run | MISE_VERSION=v2026.8.14 MISE_INSTALL_PATH=/usr/local/bin/mise sh
         echo 'if command -v mise >/dev/null 2>&1; then eval "$(mise activate bash)"; fi' | sudo tee /etc/profile.d/mise.sh > /dev/null
+        printf '%s\n' 'export PATH="/home/agent/.local/share/mise/shims:/home/agent/.local/bin:$PATH"' >> /etc/sandbox-persistent.sh
       description: "Install mise into /usr/local/bin and configure profile"
     - command: "mise settings set paranoid false && mise settings set yes true && mise use -g bun@1.4.2 && mise use -g github:gastownhall/beads@1.1.0"
       user: "1000"
