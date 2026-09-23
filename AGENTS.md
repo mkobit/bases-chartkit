@@ -45,3 +45,7 @@ This is separate from in-session task tracking (`TaskCreate`) and cross-session 
 ## Git
 `main` is protected — direct pushes are rejected (GH013); open a PR instead.
 Confirm with the user before `git push`, PR merges, or other shared-state/hard-to-reverse actions.
+
+## Docker Sandbox execution
+When running tests or checks locally within the Docker Sandbox, they can be executed by invoking the environment file explicitly. For example, to run the standard gate checks you should use:
+`sbx env exec .sbx/sbxenv.yaml -- mise run check`
