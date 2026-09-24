@@ -3,7 +3,6 @@ import { Notice, PluginSettingTab } from 'obsidian'
 import { t } from './lang/text'
 import type BarePlugin from './main'
 import { validateTheme } from './theme-validation'
-
 export type { CustomTheme, BarePluginSettings } from './settings-model'
 export { DEFAULT_SETTINGS } from './settings-model'
 
