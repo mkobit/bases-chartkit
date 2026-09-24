@@ -1,7 +1,7 @@
 import type { EChartsOption, TreemapSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { buildHierarchy, type HierarchyNode } from './hierarchy'
-import { THEME_TOKENS } from './palette'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 
 export type TreemapTransformerOptions = BaseTransformerOptions
 
@@ -57,11 +57,15 @@ export function createTreemapChartOption(
     // derived from tile geometry/color rather than a hardcoded background, so
     // they hold up in both light and dark themes.
     levels: [
-      { itemStyle: { gapWidth: 5 } },
-      { itemStyle: { gapWidth: 3 },
-        colorSaturation: [0.3, 0.5] },
-      { itemStyle: { gapWidth: 1 },
-        colorSaturation: [0.35, 0.6] },
+      { itemStyle: { gapWidth: STYLE_TOKENS.gap.treemapLevels[0] } },
+      {
+        itemStyle: { gapWidth: STYLE_TOKENS.gap.treemapLevels[1] },
+        colorSaturation: [...STYLE_TOKENS.treemapSaturations[0]],
+      },
+      {
+        itemStyle: { gapWidth: STYLE_TOKENS.gap.treemapLevels[2] },
+        colorSaturation: [...STYLE_TOKENS.treemapSaturations[1]],
+      },
     ],
     // ECharts' treemap defaultOption hardcodes itemStyle.borderColor to an
     // opaque white design token with no dark-theme override (dark.js's
@@ -75,7 +79,7 @@ export function createTreemapChartOption(
     // background rect removes that artifact in both themes instead of
     // picking one theme's background color to hardcode instead.
     itemStyle: {
-      borderColor: THEME_TOKENS.transparent,
+      borderColor: COLOR_TOKENS.chrome.transparent,
     },
   }
 

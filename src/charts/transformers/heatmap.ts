@@ -6,6 +6,7 @@ import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from './palette'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface HeatmapTransformerOptions extends BaseTransformerOptions {
@@ -139,9 +140,9 @@ export function createHeatmapChartOption(
       // high cells -- this is the "numbers are confusing" legibility fix; the
       // sequential ramp above already lets color carry magnitude so the number
       // is now confirmation, not the sole signal.
-      color: '#1a1a19',
-      textBorderColor: 'rgba(255, 255, 255, 0.85)',
-      textBorderWidth: 2,
+      color: COLOR_TOKENS.chrome.labelInk,
+      textBorderColor: COLOR_TOKENS.chrome.labelHalo,
+      textBorderWidth: STYLE_TOKENS.strokeWidth.medium,
       formatter: (params) => {
         const val = isHeatmapCell(params.value) ? params.value.value : undefined
         return val === undefined || Number.isNaN(val) ? '' : safeToString(val)

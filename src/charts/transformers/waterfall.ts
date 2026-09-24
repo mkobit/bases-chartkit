@@ -3,6 +3,7 @@ import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 
 export interface WaterfallTransformerOptions extends BaseTransformerOptions {
   // Property whose truthy value marks a row as an absolute total (bck-h0b):
@@ -21,9 +22,9 @@ interface WaterfallDataPoint {
 // Neutral connector/total colors chosen per theme so the dashed link lines and
 // the total bars stay legible on both light and dark Obsidian backgrounds.
 const connectorColor = (isDarkMode: boolean): string =>
-  isDarkMode ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.25)'
+  isDarkMode ? COLOR_TOKENS.chrome.connectors.dark : COLOR_TOKENS.chrome.connectors.light
 const totalBarColor = (isDarkMode: boolean): string =>
-  isDarkMode ? '#7aa0c4' : '#5470c6'
+  isDarkMode ? COLOR_TOKENS.chrome.totalBar.dark : COLOR_TOKENS.chrome.totalBar.light
 
 interface TooltipParam {
   readonly seriesName?: string
@@ -161,13 +162,13 @@ export function createWaterfallChartOption(
     type: 'bar',
     stack: 'total',
     itemStyle: {
-      borderColor: 'transparent',
-      color: 'transparent',
+      borderColor: COLOR_TOKENS.chrome.transparent,
+      color: COLOR_TOKENS.chrome.transparent,
     },
     emphasis: {
       itemStyle: {
-        borderColor: 'transparent',
-        color: 'transparent',
+        borderColor: COLOR_TOKENS.chrome.transparent,
+        color: COLOR_TOKENS.chrome.transparent,
       },
     },
     data: [...baseData],
@@ -183,7 +184,7 @@ export function createWaterfallChartOption(
             lineStyle: {
               color: connectorColor(isDarkMode),
               type: 'dashed',
-              width: 1,
+              width: STYLE_TOKENS.strokeWidth.thin,
             },
             data: [...connectorData],
           },
@@ -219,7 +220,7 @@ export function createWaterfallChartOption(
       },
       data: [...riseData],
       itemStyle: {
-        color: options?.upColor ?? '#14b143',
+        color: options?.upColor ?? COLOR_TOKENS.status.up,
       },
     },
     {
@@ -232,7 +233,7 @@ export function createWaterfallChartOption(
       },
       data: [...fallData],
       itemStyle: {
-        color: options?.downColor ?? '#ef232a',
+        color: options?.downColor ?? COLOR_TOKENS.status.down,
       },
     },
     ...totalSeries,
@@ -274,7 +275,9 @@ export function createWaterfallChartOption(
           : (fallParam && fallParam.value !== '-' ? -Number(fallParam.value) : 0)
 
         const type = isRising ? 'Increase' : 'Decrease'
-        const color = isRising ? (options?.upColor ?? '#14b143') : (options?.downColor ?? '#ef232a')
+        const color = isRising
+          ? (options?.upColor ?? COLOR_TOKENS.status.up)
+          : (options?.downColor ?? COLOR_TOKENS.status.down)
         const displayValue = isRising ? value : -Math.abs(value)
 
         return `${name}<br/>${type}: <span style="color:${color}">${displayValue}</span>`

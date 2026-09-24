@@ -4,7 +4,7 @@ import prepareBoxplotData from 'echarts/extension/dataTool/prepareBoxplotData'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
-import { THEME_TOKENS } from './palette'
+import { COLOR_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface BoxplotTransformerOptions extends BaseTransformerOptions {
@@ -99,7 +99,7 @@ export function createBoxplotChartOption(
       // palette-colored outline as the only visible box style, which reads
       // correctly in both light and dark themes without duplicating the
       // white block on a near-black background.
-      const itemStyle = { color: THEME_TOKENS.transparent }
+      const itemStyle = { color: COLOR_TOKENS.chrome.transparent }
 
       return !isBoxplotResult(result)
         ? {

@@ -4,6 +4,7 @@ import type { BaseTransformerOptions, BasesData } from '../base'
 import { getNestedValue, safeToString } from '../bases-values'
 
 import { getCategoricalColor, getParamKey } from '../palette'
+import { COLOR_TOKENS, STYLE_TOKENS } from '../tokens'
 
 export interface WordCloudTransformerOptions extends BaseTransformerOptions {
   readonly shape?: 'circle' | 'cardioid' | 'diamond' | 'triangle-forward' | 'triangle' | 'pentagon' | 'star'
@@ -59,8 +60,8 @@ export function createWordCloudChartOption(
     emphasis: {
       focus: 'self',
       textStyle: {
-        shadowBlur: 10,
-        shadowColor: '#333',
+        shadowBlur: STYLE_TOKENS.shadowBlur.standard,
+        shadowColor: COLOR_TOKENS.chrome.shadows.darkMuted,
       },
     },
     data: normalizedData,

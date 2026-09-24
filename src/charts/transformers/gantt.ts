@@ -6,6 +6,7 @@ import { parseDateToEpochMs } from './dates'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatDateValue, formatDurationMs, formatValue } from './formatters'
+import { COLOR_TOKENS } from './tokens'
 
 export interface GanttTransformerOptions extends BaseTransformerOptions {
   readonly taskProp: string
@@ -142,7 +143,7 @@ export function createGanttChartOption(
           ? '-'
           : {
               value: item.start,
-              itemStyle: { color: 'transparent' },
+              itemStyle: { color: COLOR_TOKENS.chrome.transparent },
             }
       })
 
@@ -166,13 +167,13 @@ export function createGanttChartOption(
           type: 'bar',
           stack: stackId,
           itemStyle: {
-            borderColor: 'transparent',
-            color: 'transparent',
+            borderColor: COLOR_TOKENS.chrome.transparent,
+            color: COLOR_TOKENS.chrome.transparent,
           },
           emphasis: {
             itemStyle: {
-              borderColor: 'transparent',
-              color: 'transparent',
+              borderColor: COLOR_TOKENS.chrome.transparent,
+              color: COLOR_TOKENS.chrome.transparent,
             },
           },
           data: startSeriesData,
