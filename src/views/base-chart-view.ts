@@ -7,14 +7,13 @@ import {
   ExtraButtonComponent,
   Platform,
 } from 'obsidian'
-import * as R from 'remeda'
 import * as echarts from 'echarts'
 import type BarePlugin from '../main'
 import type { EChartsOption } from 'echarts'
 import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../charts/transformers/base'
 import { ChartModal } from './chart-modal'
 import { t } from '../lang/text'
-import { isRecord } from '../charts/transformers/bases-values'
+import { applyOptionOverride } from '../charts/option-override'
 import {
   extractObsidianCssTokens,
   buildEChartsThemeFromObsidian,
@@ -286,34 +285,7 @@ export abstract class BaseChartView extends BasesView {
   }
 
   private applyOptionOverride(option: EChartsOption | null): EChartsOption | null {
-    if (!option) {
-      return null
-    }
-    const rawOverride = this.config.get(BaseChartView.ECHARTS_OPTION_KEY)
-    if (!rawOverride) {
-      return option
-    }
-
-    try {
-      // JSON.parse's return type is (unsoundly) `any` -- a user-typed override
-      // string can parse to an array, number, or other non-record JSON value
-      // just as easily as an object. Route it through the same isRecord guard
-      // as the non-string branch below instead of casting straight to
-      // Record<string, unknown>, so a non-object override falls back to the
-      // un-overridden option instead of feeding a bogus shape into mergeDeep.
-      const parsed: unknown = typeof rawOverride === 'string' ? JSON.parse(rawOverride) : rawOverride
-      const parsedOverride = isRecord(parsed) ? parsed : null
-
-      if (!parsedOverride) {
-        return option
-      }
-
-      const optionRec: Record<string, unknown> = option
-      return R.mergeDeep(optionRec, parsedOverride)
-    }
-    catch {
-      return option
-    }
+    return applyOptionOverride(option, this.config.get(BaseChartView.ECHARTS_OPTION_KEY))
   }
 
   protected abstract getChartOption(data: BasesData): EChartsOption | null

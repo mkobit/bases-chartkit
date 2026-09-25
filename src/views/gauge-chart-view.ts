@@ -4,40 +4,7 @@ import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
 import { t } from '../lang/text'
-
-const AGGREGATIONS = ['sum', 'avg', 'min', 'max', 'last'] as const
-type Aggregation = typeof AGGREGATIONS[number]
-
-function isAggregation(value: unknown): value is Aggregation {
-  return typeof value === 'string' && AGGREGATIONS.some(a => a === value)
-}
-
-interface GaugeColorBand {
-  readonly threshold: number
-  readonly color: string
-}
-
-// Parses the comma-separated "threshold:color" list (e.g.
-// "30:#67e0e3,70:#37a2da,100:#fd666d") into color-band definitions, mirroring
-// the comma-separated list convention BaseChartView already uses for
-// visualMapColor. Invalid pairs (non-numeric threshold, missing color) are
-// dropped rather than breaking the whole list.
-function parseColorBands(raw: unknown): ReadonlyArray<GaugeColorBand> | undefined {
-  if (typeof raw !== 'string' || !raw.trim()) {
-    return undefined
-  }
-
-  const bands = raw
-    .split(',')
-    .map((pair): GaugeColorBand | null => {
-      const [thresholdStr, color] = pair.split(':').map(s => s.trim())
-      const threshold = Number(thresholdStr)
-      return (color && !Number.isNaN(threshold)) ? { threshold, color } : null
-    })
-    .filter((band): band is GaugeColorBand => band !== null)
-
-  return bands.length > 0 ? bands : undefined
-}
+import { isAggregation, parseColorBands } from '../charts/transformers/gauge'
 
 export class GaugeChartView extends BaseChartView {
   public static readonly AGGREGATION_KEY = 'aggregation'
