@@ -31,7 +31,8 @@
 			"title": "Title",
 			"title_placeholder": "Optional chart title",
 			"description": "Description",
-			"description_placeholder": "Optional chart description / caption"
+			"description_placeholder": "Optional chart description / caption",
+			"fullscreen": "Full screen"
 		},
 		"axis": {
 			"x_label": "X-axis label",
@@ -358,6 +359,9 @@
 				}
 			}
 		}
+	},
+	"commands": {
+		"open_fullscreen_chart": "Open active chart in full screen"
 	},
 	"settings": {
 		"default_height": {

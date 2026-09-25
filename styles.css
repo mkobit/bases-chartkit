@@ -23,6 +23,29 @@
     touch-action: pan-y;
 }
 
+/* Chart Toolbar */
+.bases-chart-toolbar {
+    position: absolute;
+    top: var(--size-2-2, 8px);
+    right: var(--size-2-2, 8px);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: var(--size-2-1, 4px);
+    opacity: 0.6;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.bases-chart-toolbar:hover,
+.bases-echarts-container:hover .bases-chart-toolbar,
+.bases-chart-toolbar:focus-within {
+    opacity: 1;
+}
+
+.is-mobile .bases-chart-toolbar {
+    opacity: 1;
+}
+
 /* Full Screen Modal */
 .bases-chart-modal {
     width: 100%;
