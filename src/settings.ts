@@ -4,28 +4,8 @@ import { t } from './lang/text'
 import type BarePlugin from './main'
 import { validateTheme } from './theme-validation'
 
-export interface CustomTheme {
-  name: string
-  json: string
-}
-
-export interface BarePluginSettings {
-  upColor: string
-  downColor: string
-  mySetting: string
-  defaultHeight: string
-  customThemes: CustomTheme[]
-  selectedTheme: string
-}
-
-export const DEFAULT_SETTINGS: BarePluginSettings = {
-  upColor: '#14b143',
-  downColor: '#ef232a',
-  mySetting: 'default',
-  defaultHeight: '100%',
-  customThemes: [],
-  selectedTheme: '',
-}
+export type { CustomTheme, BarePluginSettings } from './settings-model'
+export { DEFAULT_SETTINGS } from './settings-model'
 
 export class SettingTab extends PluginSettingTab {
   plugin: BarePlugin
@@ -63,23 +43,23 @@ export class SettingTab extends PluginSettingTab {
     if (typeof value === 'string') {
       switch (key) {
         case 'defaultHeight': {
-          this.plugin.settings.defaultHeight = value
+          this.plugin.settings = { ...this.plugin.settings, defaultHeight: value }
           break
         }
         case 'upColor': {
-          this.plugin.settings.upColor = value
+          this.plugin.settings = { ...this.plugin.settings, upColor: value }
           break
         }
         case 'downColor': {
-          this.plugin.settings.downColor = value
+          this.plugin.settings = { ...this.plugin.settings, downColor: value }
           break
         }
         case 'selectedTheme': {
-          this.plugin.settings.selectedTheme = value
+          this.plugin.settings = { ...this.plugin.settings, selectedTheme: value }
           break
         }
         case 'mySetting': {
-          this.plugin.settings.mySetting = value
+          this.plugin.settings = { ...this.plugin.settings, mySetting: value }
           break
         }
         default: {
@@ -144,9 +124,10 @@ export class SettingTab extends PluginSettingTab {
               .setIcon('trash')
               .setTooltip(t('settings.custom_themes.delete_tooltip'))
               .onClick(async () => {
-                this.plugin.settings.customThemes.splice(index, 1)
-                if (this.plugin.settings.selectedTheme === theme.name) {
-                  this.plugin.settings.selectedTheme = ''
+                this.plugin.settings = {
+                  ...this.plugin.settings,
+                  customThemes: this.plugin.settings.customThemes.filter((_, i) => i !== index),
+                  selectedTheme: this.plugin.settings.selectedTheme === theme.name ? '' : this.plugin.settings.selectedTheme,
                 }
                 await this.plugin.saveSettings()
                 this.update()
@@ -203,10 +184,16 @@ export class SettingTab extends PluginSettingTab {
                     return
                   }
 
-                  this.plugin.settings.customThemes.push({
-                    name: this.newThemeName.trim(),
-                    json: this.newThemeJson.trim(),
-                  })
+                  this.plugin.settings = {
+                    ...this.plugin.settings,
+                    customThemes: [
+                      ...this.plugin.settings.customThemes,
+                      {
+                        name: this.newThemeName.trim(),
+                        json: this.newThemeJson.trim(),
+                      },
+                    ],
+                  }
                   this.newThemeName = ''
                   this.newThemeJson = ''
                   await this.plugin.saveSettings()
