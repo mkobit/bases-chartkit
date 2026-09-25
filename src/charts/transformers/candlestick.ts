@@ -3,13 +3,14 @@ import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { getNestedValue, isRecord, safeToString } from './bases-values'
 import { asTooltipFormatter } from './tooltip'
+import { COLOR_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 // Bull-green / bear-red, the near-universal candlestick convention. Shared by
 // the candle body (itemStyle) and the tooltip's colored change line so the two
 // always agree on which direction a day moved.
-const DEFAULT_UP_COLOR = '#14b143'
-const DEFAULT_DOWN_COLOR = '#ef232a'
+const DEFAULT_UP_COLOR = COLOR_TOKENS.status.up
+const DEFAULT_DOWN_COLOR = COLOR_TOKENS.status.down
 
 export interface CandlestickTransformerOptions extends BaseTransformerOptions {
   readonly openProp?: string

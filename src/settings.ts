@@ -3,6 +3,7 @@ import { Notice, PluginSettingTab } from 'obsidian'
 import { t } from './lang/text'
 import type BarePlugin from './main'
 import { validateTheme } from './theme-validation'
+import { COLOR_TOKENS } from './charts/transformers/tokens'
 
 export interface CustomTheme {
   name: string
@@ -19,8 +20,8 @@ export interface BarePluginSettings {
 }
 
 export const DEFAULT_SETTINGS: BarePluginSettings = {
-  upColor: '#14b143',
-  downColor: '#ef232a',
+  upColor: COLOR_TOKENS.status.up,
+  downColor: COLOR_TOKENS.status.down,
   mySetting: 'default',
   defaultHeight: '100%',
   customThemes: [],

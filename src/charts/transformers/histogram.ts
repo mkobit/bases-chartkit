@@ -3,6 +3,7 @@ import * as R from 'remeda'
 import type { BasesData, BaseTransformerOptions } from './base'
 import { getNestedValue } from './bases-values'
 import { getLegendOption } from './legend'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 
 export interface HistogramTransformerOptions extends BaseTransformerOptions {
   readonly binCount?: number
@@ -103,11 +104,11 @@ export function createHistogramChartOption(
   const series: BarSeriesOption = {
     name: options?.yAxisLabel ?? 'Frequency',
     type: 'bar',
-    barCategoryGap: 0,
+    barCategoryGap: STYLE_TOKENS.gap.histogramCategory,
     large: true,
     data: [...seriesData],
     itemStyle: {
-      color: '#5470c6',
+      color: COLOR_TOKENS.palettes.categorical[0],
     },
   }
 

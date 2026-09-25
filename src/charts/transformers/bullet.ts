@@ -2,7 +2,7 @@ import type { EChartsOption, DatasetComponentOption, BarSeriesOption, ScatterSer
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
-import { THEME_TOKENS } from './palette'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface BulletTransformerOptions extends BaseTransformerOptions {
@@ -118,14 +118,14 @@ export function createBulletChartOption(
   const rangeColors: Readonly<{ low: string
     mid: string
     high: string }> = isDarkMode
-    ? THEME_TOKENS.bulletRanges.dark
-    : THEME_TOKENS.bulletRanges.light
+    ? COLOR_TOKENS.chrome.bulletRanges.dark
+    : COLOR_TOKENS.chrome.bulletRanges.light
 
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
     stack: 'range',
     silent: true,
-    barWidth: '80%',
+    barWidth: STYLE_TOKENS.barWidth.bulletRange,
     z: 0,
     itemStyle: { color },
     // r1/r2/r3 are stacked *deltas* between the configured range
@@ -166,7 +166,7 @@ export function createBulletChartOption(
           y: 'x' }
       : { x: 'x',
           y: 'y' },
-    barWidth: hasRanges ? '40%' : '60%',
+    barWidth: hasRanges ? STYLE_TOKENS.barWidth.bulletValue : STYLE_TOKENS.barWidth.bulletSoloValue,
     z: 2,
     ...(hasRanges ? { barGap: '-100%' } : {}),
   }
@@ -187,7 +187,7 @@ export function createBulletChartOption(
           4],
     z: 3,
     itemStyle: {
-      color: isDarkMode ? THEME_TOKENS.targetMarker.dark : THEME_TOKENS.targetMarker.light,
+      color: isDarkMode ? COLOR_TOKENS.chrome.targetMarker.dark : COLOR_TOKENS.chrome.targetMarker.light,
     },
   }
 

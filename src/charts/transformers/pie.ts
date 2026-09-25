@@ -4,6 +4,7 @@ import { getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface PieTransformerOptions extends BaseTransformerOptions {
@@ -101,9 +102,9 @@ export function createPieChartOption(
     ...(options?.roseType ? { roseType: options.roseType } : {}),
     emphasis: {
       itemStyle: {
-        shadowBlur: 10,
+        shadowBlur: STYLE_TOKENS.shadowBlur.standard,
         shadowOffsetX: 0,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: COLOR_TOKENS.chrome.shadows.standard,
       },
     },
   }
