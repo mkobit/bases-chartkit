@@ -63,4 +63,58 @@ test.describe('chart rendering', () => {
     expect(option).not.toBeNull()
     expect(option?.series?.[0]?.type).toBe('bar')
   })
+
+  test('exposes fullscreen toolbar affordance and command', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => {
+          resolve()
+        })
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'bar/Basic.base', viewName: 'Department spend' })
+
+    await expect.poll(
+      async () => page.locator('.bases-echarts canvas').count(),
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const fullscreenButton = page.locator('.bases-chart-toolbar .clickable-icon')
+    await expect(fullscreenButton).toHaveCount(1)
+
+    // Click toolbar affordance to open fullscreen chart modal
+    await fullscreenButton.click()
+    await expect.poll(
+      async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(),
+      { timeout: 5_000 },
+    ).toBeGreaterThan(0)
+
+    // Close modal
+    await page.keyboard.press('Escape')
+    await expect.poll(
+      async () => page.locator('.bases-chart-modal').count(),
+      { timeout: 5_000 },
+    ).toBe(0)
+
+    // Trigger fullscreen via registered command
+    await evaluateObsidian(page, (app) => {
+      app.commands.executeCommandById('bases-chartkit:open-active-chart-fullscreen')
+    })
+    await expect.poll(
+      async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(),
+      { timeout: 5_000 },
+    ).toBeGreaterThan(0)
+
+    // Close modal
+    await page.keyboard.press('Escape')
+    await expect.poll(
+      async () => page.locator('.bases-chart-modal').count(),
+      { timeout: 5_000 },
+    ).toBe(0)
+  })
 })

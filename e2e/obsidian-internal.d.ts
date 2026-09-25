@@ -30,7 +30,12 @@ declare module 'obsidian' {
     }
   }
 
+  interface CommandsManager {
+    readonly executeCommandById: (commandId: string) => boolean
+  }
+
   interface App {
+    readonly commands: CommandsManager
     readonly plugins: PluginsRegistry
     readonly setting: SettingManager
     readonly internalPlugins: InternalPluginsRegistry

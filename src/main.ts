@@ -1,4 +1,4 @@
-import { Notice, Plugin } from 'obsidian'
+import { Notice, Plugin, View } from 'obsidian'
 import type { BarePluginSettings } from './settings'
 import { DEFAULT_SETTINGS, SettingTab } from './settings'
 import { BarChartView } from './views/bar-chart-view'
@@ -40,14 +40,70 @@ import { initializeI18n } from './lang/i18n'
 import { t } from './lang/text'
 import * as echarts from 'echarts'
 import { parseTheme } from './theme-validation'
+import type { BaseChartView } from './views/base-chart-view'
 
 export default class BarePlugin extends Plugin {
   public settings: BarePluginSettings = DEFAULT_SETTINGS
+  public readonly chartViews = new Set<BaseChartView>()
+  public activeChartView: BaseChartView | null = null
+
+  public registerChartView(view: BaseChartView): void {
+    this.chartViews.add(view)
+  }
+
+  public unregisterChartView(view: BaseChartView): void {
+    this.chartViews.delete(view)
+    if (this.activeChartView === view) {
+      this.activeChartView = null
+    }
+  }
+
+  public setActiveChartView(view: BaseChartView): void {
+    this.activeChartView = view
+  }
+
+  public getActiveChartView(): BaseChartView | null {
+    const activeView = this.app.workspace.getActiveViewOfType(View)
+    const activeLeafContainer = activeView?.containerEl
+    if (activeLeafContainer) {
+      if (this.activeChartView && activeLeafContainer.contains(this.activeChartView.containerEl)) {
+        return this.activeChartView
+      }
+      const matchInActiveLeaf = Array.from(this.chartViews).find(view =>
+        activeLeafContainer.contains(view.containerEl),
+      )
+      if (matchInActiveLeaf) {
+        return matchInActiveLeaf
+      }
+    }
+    if (this.activeChartView && this.chartViews.has(this.activeChartView)) {
+      return this.activeChartView
+    }
+    if (this.chartViews.size === 1) {
+      return this.chartViews.values().next().value ?? null
+    }
+    return null
+  }
 
   async onload() {
     await this.loadSettings()
     this.applyTheme()
     await initializeI18n()
+
+    this.addCommand({
+      id: 'open-active-chart-fullscreen',
+      name: t('commands.open_fullscreen_chart'),
+      checkCallback: (checking: boolean) => {
+        const activeView = this.getActiveChartView()
+        if (!activeView) {
+          return false
+        }
+        if (!checking) {
+          activeView.openFullScreen()
+        }
+        return true
+      },
+    })
 
     this.registerBasesView(
       'treemap-chart',

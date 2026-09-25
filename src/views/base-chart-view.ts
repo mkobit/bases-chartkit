@@ -4,6 +4,7 @@ import type {
   BasesOptions } from 'obsidian'
 import {
   BasesView,
+  ExtraButtonComponent,
   Platform,
 } from 'obsidian'
 import * as R from 'remeda'
@@ -24,6 +25,7 @@ import {
 export abstract class BaseChartView extends BasesView {
   readonly scrollEl: HTMLElement
   readonly containerEl: HTMLElement
+  readonly toolbarEl: HTMLElement
   readonly chartEl: HTMLElement
   readonly plugin: BarePlugin
   protected chart: echarts.ECharts | null = null
@@ -69,10 +71,28 @@ export abstract class BaseChartView extends BasesView {
     this.plugin = plugin
     this.scrollEl.classList.add('bases-chart-scroll-container')
     this.containerEl = this.scrollEl.createDiv({ cls: 'bases-echarts-container' })
+    this.toolbarEl = this.containerEl.createDiv({ cls: 'bases-chart-toolbar' })
+    // BasesView extends Component (not ItemView), so Obsidian provides no
+    // supported API for registering actions directly on the Bases pane toolbar.
+    // Instead, chart views expose an in-view toolbar affordance and an Obsidian command.
+    new ExtraButtonComponent(this.toolbarEl)
+      .setIcon('expand')
+      .setTooltip(t('views.common.fullscreen'))
+      .onClick(() => {
+        this.openFullScreen()
+      })
     this.chartEl = this.containerEl.createDiv({ cls: 'bases-echarts' })
   }
 
   onload(): void {
+    this.plugin.registerChartView(this)
+    this.registerDomEvent(this.containerEl, 'focusin', () => {
+      this.plugin.setActiveChartView(this)
+    })
+    this.registerDomEvent(this.containerEl, 'click', () => {
+      this.plugin.setActiveChartView(this)
+    })
+
     this.registerEvent(this.app.workspace.on(
       'css-change',
       this.updateChartTheme,
@@ -86,6 +106,7 @@ export abstract class BaseChartView extends BasesView {
   }
 
   onunload() {
+    this.plugin.unregisterChartView(this)
     this.resizeObserver?.disconnect()
     this.resizeObserver = null
     this.chart?.dispose()
@@ -214,7 +235,10 @@ export abstract class BaseChartView extends BasesView {
     return options
   }
 
-  private openFullScreen() {
+  public openFullScreen(): void {
+    if (!this.chartEl || !this.config || !this.data?.data) {
+      return
+    }
     this.isFullScreenGeneration = true
     // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
     const data = this.data.data as unknown as BasesData
