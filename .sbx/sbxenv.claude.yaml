@@ -1,11 +1,10 @@
 schemaVersion: "1"
-name: bases-chartkit-agy
-agent: antigravity
+name: bases-chartkit-claude
+agent: claude
 workspace:
   path: ..
   clone: false
 kits:
-  - "git+https://github.com/docker/sbx-kits-contrib.git#ref=21e1928b5fe0036163307ea8047e48390f2d6fec&dir=antigravity"
   - ./kit
 ports:
   - sandbox: 6080

@@ -13,7 +13,7 @@ const FORBIDDEN_KEYS = [
 ] as const
 
 const REQUIRED_PORTS = [6080, 9222, 5173] as const
-const filesToCheck = ['.sbx/sbxenv.yaml', '.sbx/sbxenv.agy.yaml'] as const
+const filesToCheck = ['.sbx/sbxenv.yaml', '.sbx/sbxenv.agy.yaml', '.sbx/sbxenv.claude.yaml'] as const
 const kitSpecFile = '.sbx/kit/spec.yaml'
 const kitDir = '.sbx/kit'
 
@@ -90,12 +90,6 @@ function checkFile(file: string): boolean {
     console.error(`Validation failed for ${file}:`, z.treeifyError(result.error))
     return false
   }
-
-  if (result.data.workspace && !result.data.workspace.clone) {
-    console.error(`File ${file} must have workspace.clone: true`)
-    return false
-  }
-
   const hasKit = result.data.kit === './kit' || (result.data.kits !== undefined && result.data.kits.includes('./kit'))
   if (!hasKit) {
     console.error(`File ${file} must reference "./kit" in kit or kits`)
