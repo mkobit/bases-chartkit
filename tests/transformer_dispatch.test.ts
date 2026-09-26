@@ -56,6 +56,14 @@ describe(
     )
 
     it(
+      'routes "combo" to a combo series',
+      () => {
+        const option = transformDataToChartOption(cartesianData, 'cat', 'val', 'combo')
+        expect(seriesTypeAt(option, 0)).toBe('bar')
+      },
+    )
+
+    it(
       'defaults to a bar chart when chartType is omitted',
       () => {
         const option = transformDataToChartOption(cartesianData, 'cat', 'val')

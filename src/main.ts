@@ -36,6 +36,7 @@ import { PolarLineChartView } from './views/polar-line-chart-view'
 import { PolarScatterChartView } from './views/polar-scatter-chart-view'
 import { MapChartView } from './views/map-chart-view'
 import { WordCloudChartView } from './views/word-cloud-chart-view'
+import { ComboChartView } from './views/combo-chart-view'
 import { initializeI18n } from './lang/i18n'
 import { t } from './lang/text'
 import * as echarts from 'echarts'
@@ -214,6 +215,20 @@ export default class BarePlugin extends Plugin {
           this,
         ),
         options: () => StackedBarChartView.getViewOptions(),
+      },
+    )
+
+    this.registerBasesView(
+      'combo-chart',
+      {
+        name: t('views.combo.name'),
+        icon: 'layers',
+        factory: (controller, containerEl) => new ComboChartView(
+          controller,
+          containerEl,
+          this,
+        ),
+        options: () => ComboChartView.getViewOptions(),
       },
     )
 
