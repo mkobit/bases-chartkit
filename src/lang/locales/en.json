@@ -126,6 +126,24 @@
 		"stacked_bar": {
 			"name": "Stacked bar chart"
 		},
+		"combo": {
+			"name": "Combo chart",
+			"primary_type": "Primary series type",
+			"primary_stack": "Stack primary series",
+			"overlay_prop": "Overlay property",
+			"overlay_prop_placeholder": "Select overlay metric property",
+			"overlay_type": "Overlay series type",
+			"overlay_dual_axis": "Overlay on secondary Y-axis",
+			"overlay_y_label": "Overlay Y-axis label",
+			"overlay_y_label_placeholder": "Override overlay Y-axis label",
+			"overlay_y_format": "Overlay Y-axis format",
+			"overlay_y_format_placeholder": "e.g. %, currency:USD, compact",
+			"types": {
+				"bar": "Bar",
+				"line": "Line",
+				"scatter": "Scatter"
+			}
+		},
 		"area": {
 			"name": "Area chart",
 			"smooth": "Smooth line",

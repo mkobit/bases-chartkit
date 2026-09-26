@@ -9,6 +9,7 @@ export const REGISTERED_CHART_VIEW_TYPES = [
   'bullet-chart',
   'calendar-chart',
   'candlestick-chart',
+  'combo-chart',
   'effect-scatter-chart',
   'funnel-chart',
   'gantt-chart',
