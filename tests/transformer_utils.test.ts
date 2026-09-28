@@ -4,6 +4,8 @@ import {
   safeToString,
   isRecord,
   getNestedValue,
+  extractFilePath,
+  extractRowMetadata,
 } from '../src/charts/transformers/bases-values'
 import { parseDateToEpochMs } from '../src/charts/transformers/dates'
 import { getLegendOption } from '../src/charts/transformers/legend'
@@ -418,6 +420,83 @@ describe('Transformer Modules', () => {
       const fn = (params: { name: string }): string => `item: ${params.name}`
       const formatter = asTooltipFormatter(fn)
       expect(typeof formatter).toBe('function')
+    })
+  })
+
+  describe('extractFilePath', () => {
+    it('should return undefined for non-records or empty objects', () => {
+      expect(extractFilePath(null)).toBeUndefined()
+      expect(extractFilePath(undefined)).toBeUndefined()
+      expect(extractFilePath('file.md')).toBeUndefined()
+      expect(extractFilePath(42)).toBeUndefined()
+      expect(extractFilePath({})).toBeUndefined()
+    })
+
+    it('should extract direct filePath property', () => {
+      expect(extractFilePath({ filePath: 'notes/test.md' })).toBe('notes/test.md')
+    })
+
+    it('should extract nested file.path property', () => {
+      expect(extractFilePath({ file: { path: 'notes/nested.md' } })).toBe('notes/nested.md')
+    })
+
+    it('should extract flattened "file.path" property', () => {
+      expect(extractFilePath({ 'file.path': 'notes/flat.md' })).toBe('notes/flat.md')
+    })
+
+    it('should extract file string property', () => {
+      expect(extractFilePath({ file: 'notes/direct.md' })).toBe('notes/direct.md')
+    })
+
+    it('should extract file.path from getValue accessor', () => {
+      const itemWithString = {
+        getValue: (id: string) => (id === 'file.path' ? 'notes/accessed.md' : undefined),
+      }
+      expect(extractFilePath(itemWithString)).toBe('notes/accessed.md')
+
+      const itemWithRenderable = {
+        getValue: (id: string) =>
+          id === 'file.path'
+            ? {
+                renderTo: () => undefined,
+                toString: () => 'notes/rendered.md',
+              }
+            : undefined,
+      }
+      expect(extractFilePath(itemWithRenderable)).toBe('notes/rendered.md')
+    })
+
+    it('should return undefined for empty string path properties', () => {
+      expect(extractFilePath({ filePath: '' })).toBeUndefined()
+      expect(extractFilePath({ file: { path: '' } })).toBeUndefined()
+      expect(extractFilePath({ 'file.path': '' })).toBeUndefined()
+      expect(extractFilePath({ file: '' })).toBeUndefined()
+    })
+  })
+
+  describe('extractRowMetadata', () => {
+    it('should use fallback index when rowIndex is absent', () => {
+      const meta = extractRowMetadata({ value: 10 }, 3)
+      expect(meta.rowIndex).toBe(3)
+      expect(meta.filePath).toBeUndefined()
+    })
+
+    it('should preserve explicit rowIndex if present', () => {
+      const meta = extractRowMetadata({ rowIndex: 7, value: 10 }, 0)
+      expect(meta.rowIndex).toBe(7)
+      expect(meta.filePath).toBeUndefined()
+    })
+
+    it('should attach filePath when extractable from item', () => {
+      const meta = extractRowMetadata({ filePath: 'notes/task.md' }, 2)
+      expect(meta.rowIndex).toBe(2)
+      expect(meta.filePath).toBe('notes/task.md')
+    })
+
+    it('should attach filePath and preserve explicit rowIndex', () => {
+      const meta = extractRowMetadata({ rowIndex: 5, file: { path: 'notes/deep.md' } }, 0)
+      expect(meta.rowIndex).toBe(5)
+      expect(meta.filePath).toBe('notes/deep.md')
     })
   })
 })

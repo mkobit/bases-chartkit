@@ -1,6 +1,7 @@
 export type ChartType = 'bar' | 'line' | 'lines' | 'pie' | 'scatter' | 'effectScatter' | 'bubble' | 'radar' | 'funnel' | 'gauge' | 'heatmap' | 'candlestick' | 'treemap' | 'boxplot' | 'sankey' | 'graph' | 'sunburst' | 'tree' | 'themeRiver' | 'calendar' | 'parallel' | 'rose' | 'pictorialBar' | 'gantt' | 'waterfall' | 'pareto' | 'histogram' | 'bullet' | 'radialBar' | 'polarLine' | 'polarScatter' | 'map' | 'wordCloud' | 'combo'
 
 export type BasesData = ReadonlyArray<Readonly<Record<string, unknown>>>
+export type { RowMetadata } from './bases-values'
 
 export interface VisualMapOptions {
   readonly visualMapMin?: number

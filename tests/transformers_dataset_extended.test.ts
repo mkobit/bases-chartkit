@@ -8,6 +8,8 @@ interface ScatterDatasetSource {
   readonly y: number
   readonly s: string
   readonly size?: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 interface CandlestickDatasetSource {
@@ -16,6 +18,8 @@ interface CandlestickDatasetSource {
   readonly close: number
   readonly low: number
   readonly high: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 function isScatterDatasetSource(value: unknown): value is ScatterDatasetSource {
@@ -122,7 +126,8 @@ describe(
             expect(source[0]).toEqual({ x: 'A',
               y: 10,
               s: 'G1',
-              size: 5 })
+              size: 5,
+              rowIndex: 0 })
 
             // Expect G1 and G2 series
             expect(option.series).toHaveLength(2)
@@ -185,7 +190,8 @@ describe(
               open: 10,
               close: 20,
               low: 5,
-              high: 25 }])
+              high: 25,
+              rowIndex: 0 }])
 
             expect(firstCandlestickSeries(option).encode).toEqual({ x: 'x',
               y: ['open',

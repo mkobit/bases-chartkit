@@ -8,6 +8,8 @@ interface CandlestickSourceRow {
   readonly close: number
   readonly low: number
   readonly high: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 function isCandlestickSourceRow(value: unknown): value is CandlestickSourceRow {
@@ -108,7 +110,8 @@ describe(
           open: 100,
           close: 110,
           low: 95,
-          high: 115 })
+          high: 115,
+          rowIndex: 0 })
 
         // Encode Verification
         expect(series.encode).toEqual({
@@ -178,7 +181,8 @@ describe(
           open: 100,
           close: 110,
           low: 95,
-          high: 115 })
+          high: 115,
+          rowIndex: 0 })
 
         // Check xAxis data sync
         expect(firstCategoryXAxis(option).data).toEqual(['2023-10-01'])
@@ -283,7 +287,8 @@ describe(
           open: 100,
           close: 110,
           low: 95,
-          high: 115 })
+          high: 115,
+          rowIndex: 0 })
       },
     )
   },

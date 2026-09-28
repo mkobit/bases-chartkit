@@ -6,6 +6,8 @@ interface HierarchyNode {
   readonly name: string
   readonly value?: number
   readonly children?: readonly HierarchyNode[]
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 function isHierarchyNode(value: unknown): value is HierarchyNode {
@@ -93,6 +95,44 @@ describe(
             expect(nodeB).toBeDefined()
             // @ts-expect-error - suppress strictNullChecks in tests
             expect(nodeB.value).toBe(10)
+          },
+        )
+
+        it(
+          'should propagate rowIndex and filePath to single leaf nodes',
+          () => {
+            const data = [
+              { path: 'A/B', val: 10, file: { path: 'notes/b.md' } },
+              { path: 'A/C', val: 5, rowIndex: 99, filePath: 'notes/c.md' },
+            ]
+
+            const option = transformDataToChartOption(
+              data,
+              'path',
+              '',
+              'sunburst',
+              {
+                valueProp: 'val',
+              },
+            )
+
+            const series = firstSunburstSeries(option)
+            const hierarchy = hierarchyRoots(series)
+            expect(hierarchy).toHaveLength(1)
+
+            const nodeA = hierarchy[0]
+            expect(nodeA?.name).toBe('A')
+            expect(nodeA?.children).toHaveLength(2)
+            expect(nodeA?.rowIndex).toBeUndefined()
+            expect(nodeA?.filePath).toBeUndefined()
+
+            const nodeB = nodeA?.children?.find(n => n.name === 'B')
+            expect(nodeB?.rowIndex).toBe(0)
+            expect(nodeB?.filePath).toBe('notes/b.md')
+
+            const nodeC = nodeA?.children?.find(n => n.name === 'C')
+            expect(nodeC?.rowIndex).toBe(99)
+            expect(nodeC?.filePath).toBe('notes/c.md')
           },
         )
 

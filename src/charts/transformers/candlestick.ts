@@ -1,7 +1,7 @@
 import type { EChartsOption, CandlestickSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
-import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
 import { asTooltipFormatter } from './tooltip'
 import * as R from 'remeda'
 
@@ -24,6 +24,8 @@ type CandlestickRow = Readonly<{
   close: number
   low: number
   high: number
+  rowIndex: number
+  filePath?: string
 }>
 
 function isCandlestickRow(val: unknown): val is CandlestickRow {
@@ -98,7 +100,7 @@ export function createCandlestickChartOption(
 
   const normalizedData: ReadonlyArray<CandlestickRow> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item, index) => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -125,6 +127,7 @@ export function createCandlestickChartOption(
         && closeRaw !== null && closeRaw !== undefined
         && lowRaw !== null && lowRaw !== undefined
         && highRaw !== null && highRaw !== undefined
+      const meta = extractRowMetadata(item, index)
 
       return rawValuesValid
         ? (() => {
@@ -142,6 +145,8 @@ export function createCandlestickChartOption(
                   close: closeVal,
                   low: lowVal,
                   high: highVal,
+                  rowIndex: meta.rowIndex,
+                  ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
                 }
               : null
           })()

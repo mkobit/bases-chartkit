@@ -1,7 +1,7 @@
 import type { EChartsOption, SeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from '../base'
-import { getNestedValue, safeToString } from '../bases-values'
+import { extractRowMetadata, getNestedValue, safeToString } from '../bases-values'
 
 import { getCategoricalColor, getParamKey } from '../palette'
 
@@ -18,6 +18,8 @@ export interface WordCloudTransformerOptions extends BaseTransformerOptions {
 interface WordCloudDataPoint {
   readonly name: string
   readonly value: number
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 export function createWordCloudChartOption(
@@ -28,12 +30,15 @@ export function createWordCloudChartOption(
 ): EChartsOption {
   const normalizedData: ReadonlyArray<WordCloudDataPoint> = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item, index) => {
       const name = safeToString(getNestedValue(item, nameProp))
       const value = Number(getNestedValue(item, valueProp))
+      const meta = extractRowMetadata(item, index)
       return {
         name: name || 'Unknown',
         value: Number.isNaN(value) ? 0 : value,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     }),
     R.filter(item => item.value > 0),

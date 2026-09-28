@@ -1,6 +1,6 @@
 import type { EChartsOption, SunburstSeriesOption, TreeSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
 import * as R from 'remeda'
 
 export interface SunburstTransformerOptions extends BaseTransformerOptions {
@@ -13,11 +13,15 @@ export interface HierarchyNode {
   readonly name: string
   readonly value?: number
   readonly children?: readonly HierarchyNode[]
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 interface PathItem {
   readonly parts: readonly string[]
   readonly value: number | undefined
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 function asSunburstData(data: readonly HierarchyNode[]): SunburstSeriesOption['data'] {
@@ -40,7 +44,8 @@ export function buildHierarchy(
 ): readonly HierarchyNode[] {
   const paths: readonly PathItem[] = R.pipe(
     data,
-    R.map((item) => {
+    R.map((item, index) => {
+      const meta = extractRowMetadata(item, index)
       const pathRaw = getNestedValue(
         item,
         pathProp,
@@ -64,8 +69,12 @@ export function buildHierarchy(
                     : Number.NaN
                   const value = Number.isNaN(valNum) ? undefined : valNum
 
-                  return { parts,
-                    value }
+                  return {
+                    parts,
+                    value,
+                    rowIndex: meta.rowIndex,
+                    ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
+                  }
                 })()
           })()
     }),
@@ -94,12 +103,26 @@ export function buildHierarchy(
 
         const childrenItems: readonly PathItem[] = group
           .filter(item => item.parts.length > 1)
-          .map(item => ({ parts: item.parts.slice(1),
-            value: item.value }))
+          .map(item => ({
+            parts: item.parts.slice(1),
+            value: item.value,
+            rowIndex: item.rowIndex,
+            ...(item.filePath !== undefined ? { filePath: item.filePath } : {}),
+          }))
 
         const children = childrenItems.length > 0 ? buildLevel(childrenItems) : undefined
 
-        const node: HierarchyNode = { name }
+        const singleLeaf = leafItems.length === 1 && !children ? leafItems[0] : undefined
+
+        const node: HierarchyNode = {
+          name,
+          ...(singleLeaf !== undefined
+            ? {
+                rowIndex: singleLeaf.rowIndex,
+                ...(singleLeaf.filePath !== undefined ? { filePath: singleLeaf.filePath } : {}),
+              }
+            : {}),
+        }
 
         const nodeWithValue = (leafValue !== undefined && leafValue > 0)
           ? { ...node,

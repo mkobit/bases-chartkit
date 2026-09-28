@@ -5,6 +5,8 @@ import type { EChartsOption } from 'echarts'
 interface WordCloudDatum {
   readonly name: string
   readonly value: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 interface WordCloudSeries {
@@ -103,6 +105,35 @@ describe(
         expect(series[0]?.rotationRange).toEqual([-45,
           45])
         expect(series[0]?.rotationStep).toBe(15)
+      },
+    )
+
+    it(
+      'should propagate rowIndex and filePath to word cloud data items',
+      () => {
+        const data = [
+          { word: 'Hello', count: 10, file: { path: 'notes/hello.md' } },
+          { word: 'World', count: 20, rowIndex: 55, filePath: 'notes/world.md' },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'word',
+          'count',
+          'wordCloud',
+        )
+
+        const series = wordCloudSeries(option)
+        const seriesData = series[0]?.data ?? []
+        expect(seriesData).toHaveLength(2)
+
+        const itemHello = seriesData.find(d => d.name === 'Hello')
+        expect(itemHello?.rowIndex).toBe(0)
+        expect(itemHello?.filePath).toBe('notes/hello.md')
+
+        const itemWorld = seriesData.find(d => d.name === 'World')
+        expect(itemWorld?.rowIndex).toBe(55)
+        expect(itemWorld?.filePath).toBe('notes/world.md')
       },
     )
   },

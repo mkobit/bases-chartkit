@@ -15,6 +15,8 @@ interface CartesianRow {
   readonly x: string
   readonly y: number | null
   readonly s: string
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 function isCartesianRow(value: unknown): value is CartesianRow {
   return typeof value === 'object' && value !== null && 'x' in value && typeof value.x === 'string' && 'y' in value && (typeof value.y === 'number' || value.y === null) && 's' in value && typeof value.s === 'string'
@@ -207,6 +209,30 @@ describe(
         expect(yAxis?.type).toBe('category')
         const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
         expect(xAxis?.type).toBe('value')
+      },
+    )
+
+    it(
+      'should propagate rowIndex and filePath to normalized dataset rows',
+      () => {
+        const dataWithMeta = [
+          { date: '2023-01-01', value: 10, file: { path: 'notes/entry-1.md' } },
+          { date: '2023-01-02', value: 20, rowIndex: 42, filePath: 'notes/entry-2.md' },
+        ]
+
+        const option = createCartesianChartOption(
+          dataWithMeta,
+          'date',
+          'value',
+          'bar',
+        )
+
+        const rows = cartesianSource(option)
+        expect(rows).toHaveLength(2)
+        expect(rows[0]?.rowIndex).toBe(0)
+        expect(rows[0]?.filePath).toBe('notes/entry-1.md')
+        expect(rows[1]?.rowIndex).toBe(42)
+        expect(rows[1]?.filePath).toBe('notes/entry-2.md')
       },
     )
   },

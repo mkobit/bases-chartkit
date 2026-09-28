@@ -4,6 +4,8 @@ import type { BarSeriesOption, EChartsOption } from 'echarts'
 
 interface GanttDurationDatum {
   readonly value: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 function isGanttDurationDatum(value: unknown): value is GanttDurationDatum {
@@ -389,6 +391,37 @@ describe(
         expect(yAxis.data).not.toContain('Invalid')
 
         expect(yAxis.data).not.toContain('Negative')
+      },
+    )
+
+    it(
+      'should attach rowIndex and filePath to duration series data items',
+      () => {
+        const testData = [
+          { task: 'Task A', start: '2023-01-01', end: '2023-01-05', file: { path: 'notes/a.md' } },
+          { task: 'Task B', start: '2023-01-06', end: '2023-01-10', rowIndex: 88, filePath: 'notes/b.md' },
+        ]
+
+        const option = createGanttChartOption(
+          testData,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+          },
+        )
+
+        const series = barSeriesList(option)
+        const durationSeries = series[1]
+        expect(durationSeries).toBeDefined()
+        const durationData = Array.isArray(durationSeries?.data)
+          ? durationSeries.data.flatMap(d => (isGanttDurationDatum(d) ? [d] : []))
+          : []
+        expect(durationData).toHaveLength(2)
+        expect(durationData[0]?.rowIndex).toBe(0)
+        expect(durationData[0]?.filePath).toBe('notes/a.md')
+        expect(durationData[1]?.rowIndex).toBe(88)
+        expect(durationData[1]?.filePath).toBe('notes/b.md')
       },
     )
   },

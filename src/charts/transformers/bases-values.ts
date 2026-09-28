@@ -84,3 +84,44 @@ export function getNestedValue(obj: unknown, path: string): unknown {
     obj,
   )
 }
+
+export function extractFilePath(item: unknown): string | undefined {
+  if (!isRecord(item)) {
+    return undefined
+  }
+  if (typeof item.filePath === 'string' && item.filePath.length > 0) {
+    return item.filePath
+  }
+  if (isRecord(item.file) && typeof item.file.path === 'string' && item.file.path.length > 0) {
+    return item.file.path
+  }
+  if (typeof item['file.path'] === 'string' && item['file.path'].length > 0) {
+    return item['file.path']
+  }
+  if (typeof item.file === 'string' && item.file.length > 0) {
+    return item.file
+  }
+  if (isRecordWithGetValueAccessor(item)) {
+    const val = item.getValue('file.path')
+    if (typeof val === 'string' && val.length > 0) {
+      return val
+    }
+    const rendered = safeToString(val)
+    if (rendered.length > 0 && rendered !== 'null') {
+      return rendered
+    }
+  }
+  const nested = getNestedValue(item, 'file.path')
+  return typeof nested === 'string' && nested.length > 0 ? nested : undefined
+}
+
+export interface RowMetadata {
+  readonly rowIndex: number
+  readonly filePath?: string
+}
+
+export function extractRowMetadata(item: unknown, index: number): RowMetadata {
+  const rowIndex = isRecord(item) && typeof item.rowIndex === 'number' ? item.rowIndex : index
+  const filePath = extractFilePath(item)
+  return filePath !== undefined ? { rowIndex, filePath } : { rowIndex }
+}

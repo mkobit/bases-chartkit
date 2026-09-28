@@ -1,6 +1,6 @@
 import type { EChartsOption, DatasetComponentOption, BarSeriesOption, ScatterSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { THEME_TOKENS } from './palette'
 import * as R from 'remeda'
@@ -20,6 +20,8 @@ type BulletDataPoint = {
   readonly r1: number
   readonly r2: number
   readonly r3: number
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 export function createBulletChartOption(
@@ -38,7 +40,7 @@ export function createBulletChartOption(
 
   const normalizedData: ReadonlyArray<BulletDataPoint> = R.map(
     data,
-    (item): BulletDataPoint => {
+    (item, index): BulletDataPoint => {
       const catVal = getNestedValue(
         item,
         categoryProp,
@@ -87,6 +89,7 @@ export function createBulletChartOption(
         0,
         r3Safe - r2Safe,
       )
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: catVal === undefined || catVal === null ? 'Unknown' : safeToString(catVal),
@@ -95,6 +98,8 @@ export function createBulletChartOption(
         r1: s1,
         r2: s2,
         r3: s3,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )

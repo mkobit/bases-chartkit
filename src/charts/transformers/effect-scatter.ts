@@ -1,6 +1,6 @@
 import type { EChartsOption, EffectScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
@@ -17,6 +17,8 @@ interface ScatterDataPoint {
   readonly y: number | null
   readonly s: string
   readonly size?: number
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 function isScatterDataPoint(val: unknown): val is ScatterDataPoint {
@@ -66,7 +68,7 @@ export function createEffectScatterChartOption(
 
   const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
-    (item): ScatterDataPoint => {
+    (item, index): ScatterDataPoint => {
       const xRaw = getNestedValue(
         item,
         xProp,
@@ -87,12 +89,15 @@ export function createEffectScatterChartOption(
             sizeProp,
           ))
         : undefined
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: xRaw === undefined || xRaw === null ? 'Unknown' : safeToString(xRaw),
         y: Number.isNaN(yRaw) ? null : yRaw,
         s: seriesProp && sRaw !== undefined && sRaw !== null ? safeToString(sRaw) : yAxisLabel,
         ...(sizeProp ? { size: Number.isNaN(sizeRaw) ? 0 : sizeRaw } : {}),
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )
