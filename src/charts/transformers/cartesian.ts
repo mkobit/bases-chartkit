@@ -1,7 +1,7 @@
 import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
-import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
@@ -19,6 +19,8 @@ interface CartesianDataPoint {
   readonly x: string
   readonly y: number | null
   readonly s: string
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 function isCartesianDataPoint(val: unknown): val is CartesianDataPoint {
@@ -82,7 +84,7 @@ export function createCartesianChartOption(
 
   const normalizedData: ReadonlyArray<CartesianDataPoint> = R.map(
     data,
-    (item): CartesianDataPoint => {
+    (item, index): CartesianDataPoint => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -97,11 +99,14 @@ export function createCartesianChartOption(
             seriesProp,
           )
         : undefined
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
         s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )

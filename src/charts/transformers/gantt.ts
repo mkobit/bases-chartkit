@@ -1,7 +1,7 @@
 import type { BarSeriesOption, EChartsOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
 import { parseDateToEpochMs } from './dates'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
@@ -21,6 +21,7 @@ interface GanttDataPoint {
   readonly duration: number
   readonly seriesName: string
   readonly dataIndex: number
+  readonly filePath?: string
 }
 
 export interface GanttTooltipParam {
@@ -31,6 +32,8 @@ export interface GanttTooltipParam {
     readonly value: number
     readonly start: number
     readonly end: number
+    readonly rowIndex?: number
+    readonly filePath?: string
   }
 }
 
@@ -69,6 +72,7 @@ export function createGanttChartOption(
   const validData: readonly GanttDataPoint[] = R.pipe(
     data,
     items => items.map((item, idx) => {
+      const meta = extractRowMetadata(item, idx)
       const task = safeToString(getNestedValue(
         item,
         taskProp,
@@ -99,7 +103,8 @@ export function createGanttChartOption(
             end,
             duration: end - start,
             seriesName,
-            dataIndex: idx,
+            dataIndex: meta.rowIndex,
+            ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
           }
       return point
     }),
@@ -155,6 +160,8 @@ export function createGanttChartOption(
               start: item.start,
               end: item.end,
               seriesName: sName,
+              rowIndex: item.dataIndex,
+              ...(item.filePath !== undefined ? { filePath: item.filePath } : {}),
             }
       })
 

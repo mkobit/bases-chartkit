@@ -1,6 +1,6 @@
 import type { EChartsOption, LineSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { getTitleOption } from './title'
 import * as R from 'remeda'
@@ -16,6 +16,8 @@ interface PolarLineDataPoint {
   readonly x: string
   readonly y: number | null
   readonly s: string
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 export function createPolarLineChartOption(
@@ -33,7 +35,7 @@ export function createPolarLineChartOption(
 
   const normalizedData: ReadonlyArray<PolarLineDataPoint> = R.map(
     data,
-    (item): PolarLineDataPoint => {
+    (item, index): PolarLineDataPoint => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -48,11 +50,14 @@ export function createPolarLineChartOption(
             seriesProp,
           )
         : undefined
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
         s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )

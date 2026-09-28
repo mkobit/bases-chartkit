@@ -1,7 +1,7 @@
 import type { EChartsOption, PictorialBarSeriesOption, DatasetComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
-import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import * as R from 'remeda'
@@ -19,6 +19,8 @@ interface PictorialBarDataPoint {
   readonly x: string
   readonly y: number | null
   readonly s: string
+  readonly rowIndex: number
+  readonly filePath?: string
 }
 
 function isPictorialBarDataPoint(val: unknown): val is PictorialBarDataPoint {
@@ -74,7 +76,7 @@ export function createPictorialBarChartOption(
 
   const normalizedData: ReadonlyArray<PictorialBarDataPoint> = R.map(
     data,
-    (item): PictorialBarDataPoint => {
+    (item, index): PictorialBarDataPoint => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -89,11 +91,14 @@ export function createPictorialBarChartOption(
             seriesProp,
           )
         : undefined
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
         s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )

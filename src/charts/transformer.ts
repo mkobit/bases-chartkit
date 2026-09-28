@@ -484,7 +484,7 @@ export function transformDataToChartOption(
   return rawOption
 }
 
-export { type ChartType, type BaseTransformerOptions, type BasesData } from './transformers/base'
+export { type ChartType, type BaseTransformerOptions, type BasesData, type RowMetadata } from './transformers/base'
 export { type CartesianTransformerOptions } from './transformers/cartesian'
 export { type LinesTransformerOptions } from './transformers/lines'
 export { type PieTransformerOptions } from './transformers/pie'

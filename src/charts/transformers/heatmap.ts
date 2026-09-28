@@ -1,7 +1,7 @@
 import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
-import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
@@ -13,11 +13,15 @@ export interface HeatmapTransformerOptions extends BaseTransformerOptions {
   readonly valueLabel?: string
 }
 
-type HeatmapCell = Readonly<{
+export type HeatmapDataPoint = Readonly<{
   x: string
   y: string
   value: number
+  rowIndex: number
+  filePath?: string
 }>
+
+type HeatmapCell = HeatmapDataPoint
 
 function isHeatmapCell(val: unknown): val is HeatmapCell {
   return isRecord(val) && 'x' in val && 'y' in val && 'value' in val
@@ -59,7 +63,7 @@ export function createHeatmapChartOption(
 
   const normalizedData: ReadonlyArray<HeatmapCell> = R.map(
     data,
-    (item): HeatmapCell => {
+    (item, index): HeatmapCell => {
       const xValRaw = getNestedValue(
         item,
         xProp,
@@ -74,11 +78,14 @@ export function createHeatmapChartOption(
             valueProp,
           ))
         : Number.NaN
+      const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: yValRaw === undefined || yValRaw === null ? 'Unknown' : safeToString(yValRaw),
         value: Number.isNaN(valNum) ? 0 : valNum,
+        rowIndex: meta.rowIndex,
+        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
     },
   )

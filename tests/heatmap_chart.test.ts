@@ -8,6 +8,8 @@ interface HeatmapSourceItem {
   readonly x: string
   readonly y: string
   readonly value: number
+  readonly rowIndex?: number
+  readonly filePath?: string
 }
 
 function isHeatmapSourceItem(value: unknown): value is HeatmapSourceItem {
@@ -15,6 +17,12 @@ function isHeatmapSourceItem(value: unknown): value is HeatmapSourceItem {
     && 'x' in value && typeof value.x === 'string'
     && 'y' in value && typeof value.y === 'string'
     && 'value' in value && typeof value.value === 'number'
+}
+
+function heatmapSource(option: EChartsOption): readonly HeatmapSourceItem[] {
+  const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+  const source = dataset?.source
+  return Array.isArray(source) ? source.flatMap(row => isHeatmapSourceItem(row) ? [row] : []) : []
 }
 
 // EChartsOption['xAxis']/['yAxis'] are `type`-discriminated unions (only the
@@ -126,7 +134,8 @@ describe(
         expect(source).toHaveLength(4)
         expect(source[0]).toEqual({ x: 'Mon',
           y: 'Morning',
-          value: 5 })
+          value: 5,
+          rowIndex: 0 })
       },
     )
 
@@ -355,6 +364,28 @@ describe(
         const xAxis = firstCategoryXAxis(option)
 
         expect(xAxis.axisLabel?.interval).toBe(0)
+      },
+    )
+
+    it(
+      'propagates rowIndex and filePath to normalized heatmap cells',
+      () => {
+        const option = transformDataToChartOption(
+          [
+            { x: 'Mon', y: '1', val: 10, file: { path: 'notes/day1.md' } },
+            { x: 'Tue', y: '2', val: 20, rowIndex: 12, filePath: 'notes/day2.md' },
+          ],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const rows = heatmapSource(option)
+        expect(rows).toHaveLength(2)
+        expect(rows[0]?.rowIndex).toBe(0)
+        expect(rows[0]?.filePath).toBe('notes/day1.md')
+        expect(rows[1]?.rowIndex).toBe(12)
+        expect(rows[1]?.filePath).toBe('notes/day2.md')
       },
     )
   },
