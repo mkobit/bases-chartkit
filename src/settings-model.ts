@@ -1,3 +1,5 @@
+import { COLOR_TOKENS } from './charts/transformers/tokens'
+
 export interface CustomTheme {
   readonly name: string
   readonly json: string
@@ -13,8 +15,8 @@ export interface BarePluginSettings {
 }
 
 export const DEFAULT_SETTINGS: BarePluginSettings = {
-  upColor: '#14b143',
-  downColor: '#ef232a',
+  upColor: COLOR_TOKENS.status.up,
+  downColor: COLOR_TOKENS.status.down,
   mySetting: 'default',
   defaultHeight: '100%',
   customThemes: [],

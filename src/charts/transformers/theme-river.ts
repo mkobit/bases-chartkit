@@ -4,6 +4,7 @@ import { getNestedValue, safeToString } from './bases-values'
 import { parseDateToEpochMs } from './dates'
 import { getLegendOption } from './legend'
 import { getTitleOption } from './title'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface ThemeRiverTransformerOptions extends BaseTransformerOptions {
@@ -92,8 +93,8 @@ export function createThemeRiverChartOption(
     label: { show: true },
     emphasis: {
       itemStyle: {
-        shadowBlur: 20,
-        shadowColor: 'rgba(0, 0, 0, 0.8)',
+        shadowBlur: STYLE_TOKENS.shadowBlur.deep,
+        shadowColor: COLOR_TOKENS.chrome.shadows.deep,
       },
     },
   }
@@ -125,8 +126,8 @@ export function createThemeRiverChartOption(
       axisPointer: {
         type: 'line',
         lineStyle: {
-          color: 'rgba(0,0,0,0.2)',
-          width: 1,
+          color: COLOR_TOKENS.chrome.shadows.subtle,
+          width: STYLE_TOKENS.strokeWidth.thin,
           type: 'solid',
         },
       },

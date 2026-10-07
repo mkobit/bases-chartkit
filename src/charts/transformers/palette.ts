@@ -1,22 +1,15 @@
 import { isRecord } from './bases-values'
+import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
+
+export { COLOR_TOKENS, STYLE_TOKENS }
+export type { ColorTokens, StyleTokens } from './tokens'
 
 /**
  * A vibrant 10-color categorical palette optimized for light and dark themes.
  * Provides default distinct colors when ECharts theme palette is not directly accessible
  * (e.g. wordcloud extension or fallback mapping).
  */
-export const DEFAULT_CATEGORICAL_PALETTE: readonly string[] = [
-  '#5470c6', // Blue
-  '#91cc75', // Green
-  '#fac858', // Yellow
-  '#ee6666', // Red
-  '#73c0de', // Cyan
-  '#3ba272', // Dark Green
-  '#fc8452', // Orange
-  '#9a60b4', // Purple
-  '#ea7ccc', // Pink
-  '#48b5b7', // Teal
-] as const
+export const DEFAULT_CATEGORICAL_PALETTE: readonly string[] = COLOR_TOKENS.palettes.categorical
 
 /**
  * Deterministic color picker for strings or keys (e.g. word cloud items, node names).
@@ -28,7 +21,7 @@ export function getCategoricalColor(key: string | number): string {
     0,
   )
   const idx = Math.abs(hash) % DEFAULT_CATEGORICAL_PALETTE.length
-  return DEFAULT_CATEGORICAL_PALETTE[idx] ?? DEFAULT_CATEGORICAL_PALETTE[0] ?? '#5470c6'
+  return DEFAULT_CATEGORICAL_PALETTE[idx] ?? DEFAULT_CATEGORICAL_PALETTE[0] ?? COLOR_TOKENS.palettes.categorical[0]
 }
 
 /**
@@ -57,27 +50,13 @@ export function getParamKey(params: unknown): string {
  * per-theme via the existing visualMapColor option; the heatmap and calendar
  * transformers fall back here only when unset.
  */
-export const DEFAULT_SEQUENTIAL_COLOR_GRADIENT: readonly string[] = [
-  '#cde2fb',
-  '#9ec5f4',
-  '#6da7ec',
-  '#3987e5',
-  '#256abf',
-  '#184f95',
-  '#0d366b',
-] as const
+export const DEFAULT_SEQUENTIAL_COLOR_GRADIENT: readonly string[] = COLOR_TOKENS.palettes.sequential
 
 /**
  * Centralized theme design tokens for light and dark mode chrome, range bands, and borders.
  */
 export const THEME_TOKENS = {
-  bulletRanges: {
-    dark: { low: '#404040', mid: '#595959', high: '#737373' },
-    light: { low: '#e0e0e0', mid: '#bdbdbd', high: '#9e9e9e' },
-  },
-  targetMarker: {
-    dark: '#fff',
-    light: '#000',
-  },
-  transparent: 'transparent',
+  bulletRanges: COLOR_TOKENS.chrome.bulletRanges,
+  targetMarker: COLOR_TOKENS.chrome.targetMarker,
+  transparent: COLOR_TOKENS.chrome.transparent,
 } as const

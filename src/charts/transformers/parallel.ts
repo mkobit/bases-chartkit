@@ -2,6 +2,7 @@ import type { EChartsOption, ParallelSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface ParallelTransformerOptions extends BaseTransformerOptions {
@@ -122,7 +123,7 @@ export function createParallelChartOption(
               name: name,
               type: 'parallel' as const,
               lineStyle: {
-                width: 2,
+                width: STYLE_TOKENS.strokeWidth.medium,
               },
               // ECharts wants a fresh mutable row array per line; build it here
               // at the option boundary from the readonly pipeline rows.

@@ -2,6 +2,7 @@ import type { EChartsOption, LinesSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
 
 export interface LinesTransformerOptions extends BaseTransformerOptions {
@@ -106,7 +107,7 @@ export function createLinesChartOption(
             coordinateSystem: 'cartesian2d',
             data: [...seriesData],
             lineStyle: {
-              width: 2,
+              width: STYLE_TOKENS.strokeWidth.medium,
               opacity: 0.6,
             },
           }

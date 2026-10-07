@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  COLOR_TOKENS,
   DEFAULT_CATEGORICAL_PALETTE,
   DEFAULT_SEQUENTIAL_COLOR_GRADIENT,
   getCategoricalColor,
   getParamKey,
+  STYLE_TOKENS,
   THEME_TOKENS,
 } from '../../../src/charts/transformers/palette'
 
@@ -35,5 +37,11 @@ describe('palette module', () => {
     expect(THEME_TOKENS.targetMarker.dark).toBe('#fff')
     expect(THEME_TOKENS.targetMarker.light).toBe('#000')
     expect(THEME_TOKENS.transparent).toBe('transparent')
+  })
+
+  it('re-exports COLOR_TOKENS and STYLE_TOKENS', () => {
+    expect(DEFAULT_CATEGORICAL_PALETTE).toBe(COLOR_TOKENS.palettes.categorical)
+    expect(DEFAULT_SEQUENTIAL_COLOR_GRADIENT).toBe(COLOR_TOKENS.palettes.sequential)
+    expect(STYLE_TOKENS.strokeWidth.medium).toBe(2)
   })
 })

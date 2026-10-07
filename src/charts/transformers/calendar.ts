@@ -4,6 +4,7 @@ import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { formatCompactVisualMapLabel } from './visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from './palette'
+import { STYLE_TOKENS } from './tokens'
 
 export interface CalendarTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string
@@ -117,7 +118,7 @@ export function createCalendarChartOption(
           range: [minDate,
             maxDate],
           itemStyle: {
-            borderWidth: 0.5,
+            borderWidth: STYLE_TOKENS.strokeWidth.hairline,
           },
           yearLabel: { show: false },
         }
