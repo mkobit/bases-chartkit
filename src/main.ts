@@ -90,6 +90,10 @@ export default class BarePlugin extends Plugin {
     await this.loadSettings()
     this.applyTheme()
     await initializeI18n()
+    this.registerHoverLinkSource('bases-chartkit', {
+      display: this.manifest.name,
+      defaultMod: true,
+    })
 
     this.addCommand({
       id: 'open-active-chart-fullscreen',

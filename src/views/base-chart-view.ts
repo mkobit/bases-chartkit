@@ -1,11 +1,16 @@
 import type {
   BasesPropertyId,
   QueryController,
-  BasesOptions } from 'obsidian'
+  BasesOptions,
+  HoverParent,
+  HoverPopover,
+  UserEvent,
+} from 'obsidian'
 import {
   BasesView,
   ExtraButtonComponent,
   Platform,
+  Keymap,
 } from 'obsidian'
 import * as echarts from 'echarts'
 import type BarePlugin from '../main'
@@ -20,8 +25,17 @@ import {
   resolveTheme,
   OBSIDIAN_AUTO_THEME_NAME,
 } from '../charts/obsidian-theme'
+import {
+  extractTargetFilePath,
+  extractRawMouseEvent,
+} from '../charts/interactivity'
 
-export abstract class BaseChartView extends BasesView {
+function isUserEvent(value: unknown): value is UserEvent {
+  return typeof value === 'object' && value !== null
+}
+
+export abstract class BaseChartView extends BasesView implements HoverParent {
+  public hoverPopover: HoverPopover | null = null
   readonly scrollEl: HTMLElement
   readonly containerEl: HTMLElement
   readonly toolbarEl: HTMLElement
@@ -110,6 +124,7 @@ export abstract class BaseChartView extends BasesView {
     this.resizeObserver = null
     this.chart?.dispose()
     this.chart = null
+    this.hoverPopover = null
   }
 
   private triggerResize(): void {
@@ -234,13 +249,23 @@ export abstract class BaseChartView extends BasesView {
     return options
   }
 
+  protected getBasesData(): BasesData | undefined {
+    if (!this.data?.data) {
+      return undefined
+    }
+    // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
+    return this.data.data as unknown as BasesData
+  }
+
   public openFullScreen(): void {
-    if (!this.chartEl || !this.config || !this.data?.data) {
+    if (!this.chartEl || !this.config) {
+      return
+    }
+    const data = this.getBasesData()
+    if (!data) {
       return
     }
     this.isFullScreenGeneration = true
-    // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- Obsidian's `BasesView.data.data` and our internal `BasesData` share the same name + shape but are declared in separate modules. TODO(cast-audit): rename internal type to remove the bridge.
-    const data = this.data.data as unknown as BasesData
     const rawOption = this.getChartOption(data)
     const option = this.applyOptionOverride(rawOption)
     this.isFullScreenGeneration = false
@@ -260,20 +285,75 @@ export abstract class BaseChartView extends BasesView {
     this.executeRender()
   }
 
+  private initChart(): echarts.ECharts {
+    const chart = echarts.init(
+      this.chartEl,
+      this.getTheme(),
+    )
+    this.setupInteractivity(chart)
+    return chart
+  }
+
+  private setupInteractivity(chart: echarts.ECharts): void {
+    chart.on('click', (params: unknown) => {
+      this.handleChartClick(params)
+    })
+    chart.on('mouseover', (params: unknown) => {
+      this.handleChartHover(params)
+    })
+  }
+
+  protected handleChartClick(params: unknown): void {
+    const rawEvent = extractRawMouseEvent(params)
+    if (!rawEvent || !isUserEvent(rawEvent)) {
+      return
+    }
+    const mod = Keymap.isModEvent(rawEvent)
+    if (!mod) {
+      return
+    }
+    const data = this.getBasesData()
+    const filePath = extractTargetFilePath(params, data)
+    if (!filePath) {
+      return
+    }
+    if (rawEvent instanceof MouseEvent) {
+      rawEvent.preventDefault()
+    }
+    void this.app.workspace.openLinkText(filePath, '', mod)
+  }
+
+  protected handleChartHover(params: unknown): void {
+    const rawEvent = extractRawMouseEvent(params)
+    if (!rawEvent || !isUserEvent(rawEvent) || !Keymap.isModifier(rawEvent, 'Mod')) {
+      return
+    }
+    const data = this.getBasesData()
+    const filePath = extractTargetFilePath(params, data)
+    if (!filePath) {
+      return
+    }
+    const targetEl = (rawEvent instanceof MouseEvent && rawEvent.target instanceof HTMLElement ? rawEvent.target : undefined) ?? this.chartEl
+    this.app.workspace.trigger('hover-link', {
+      event: rawEvent,
+      source: 'bases-chartkit',
+      hoverParent: this,
+      targetEl,
+      linktext: filePath,
+      sourcePath: '',
+    })
+  }
+
   protected executeRender(): void {
     const height = this.getStringOption(BaseChartView.HEIGHT_KEY) || this.plugin.settings.defaultHeight
     this.chartEl.style.height = height
 
     this.chart
       ? this.chart.resize()
-      : (this.chart = echarts.init(
-          this.chartEl,
-          this.getTheme(),
-        ))
+      : (this.chart = this.initChart())
 
-    // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- see openFullScreen above for the BasesData bridge.
-    const data = this.data.data as unknown as BasesData
-    const rawOption = this.getChartOption(data)
+    const data = this.getBasesData()
+    const rawOption = data ? this.getChartOption(data) : null
     const option = this.applyOptionOverride(rawOption)
 
     option
@@ -293,10 +373,7 @@ export abstract class BaseChartView extends BasesView {
   private readonly updateChartTheme = (): void => {
     this.chart && (
       this.chart.dispose(),
-      this.chart = echarts.init(
-        this.chartEl,
-        this.getTheme(),
-      ),
+      this.chart = this.initChart(),
       this.renderChart()
     )
   }
