@@ -3,6 +3,7 @@ import {
   extractTargetFilePath,
   extractRawMouseEvent,
   resolveModClickLeaf,
+  resolveSourceNoteFile,
 } from '../../src/charts/interactivity'
 import type { RawMouseEventData } from '../../src/charts/interactivity'
 
@@ -121,6 +122,47 @@ describe('Chart interactivity', () => {
       const fakeEvent: RawMouseEventData = { button: 0, metaKey: false, ctrlKey: false }
       const isModEvent = (_evt?: RawMouseEventData | null) => false
       expect(resolveModClickLeaf(fakeEvent, isModEvent)).toBeNull()
+    })
+  })
+
+  describe('resolveSourceNoteFile', () => {
+    it('returns file from vault.getAbstractFileByPath when present', () => {
+      const mockFile = { path: 'Notes/Task.md', name: 'Task.md' }
+      const app = {
+        vault: {
+          getAbstractFileByPath: (path: string) => (path === 'Notes/Task.md' ? mockFile : null),
+        },
+        metadataCache: {
+          getFirstLinkpathDest: () => null,
+        },
+      }
+      expect(resolveSourceNoteFile(app, 'Notes/Task.md')).toBe(mockFile)
+    })
+
+    it('falls back to metadataCache.getFirstLinkpathDest when vault lookup returns null', () => {
+      const mockFile = { path: 'Notes/Alias.md', name: 'Alias.md' }
+      const app = {
+        vault: {
+          getAbstractFileByPath: () => null,
+        },
+        metadataCache: {
+          getFirstLinkpathDest: (linkpath: string, sourcePath: string) =>
+            linkpath === 'Alias' && sourcePath === '' ? mockFile : null,
+        },
+      }
+      expect(resolveSourceNoteFile(app, 'Alias')).toBe(mockFile)
+    })
+
+    it('returns null when neither vault nor metadataCache finds the file', () => {
+      const app = {
+        vault: {
+          getAbstractFileByPath: () => null,
+        },
+        metadataCache: {
+          getFirstLinkpathDest: () => null,
+        },
+      }
+      expect(resolveSourceNoteFile(app, 'Missing.md')).toBeNull()
     })
   })
 })

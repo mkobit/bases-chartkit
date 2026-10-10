@@ -65,3 +65,23 @@ export function resolveModClickLeaf<T>(
 ): T | boolean | null {
   return !evt ? null : (isModEvent(evt) || null)
 }
+
+export interface FileLookupApp<TFile = unknown> {
+  readonly vault: {
+    readonly getAbstractFileByPath: (path: string) => TFile | null
+  }
+  readonly metadataCache: {
+    readonly getFirstLinkpathDest: (linkpath: string, sourcePath: string) => TFile | null
+  }
+}
+
+/**
+ * Resolves a note file reference using vault path lookup with metadata cache linkpath fallback.
+ */
+export function resolveSourceNoteFile<TFile = unknown>(
+  app: FileLookupApp<TFile>,
+  filePath: string,
+): TFile | null {
+  return app.vault.getAbstractFileByPath(filePath)
+    ?? app.metadataCache.getFirstLinkpathDest(filePath, '')
+}
