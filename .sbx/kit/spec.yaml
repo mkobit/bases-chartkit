@@ -100,3 +100,19 @@ setup:
     - command: ["bash", "-c", "Xvfb :99 -screen 0 1920x1080x24 -listen tcp -ac & sleep 1 && fluxbox & sleep 1 && x11vnc -display :99 -forever -shared -rfbport 5900 -nopw & websockify --web /usr/share/novnc 6080 localhost:5900"]
       background: true
       description: "Launch virtual display, window manager, and noVNC streaming server"
+    - command:
+        - sh
+        - -c
+        - |
+          set -e
+          target="$HOME/.gemini/antigravity-cli/antigravity-oauth-token"
+          src=$(ls -1 /home/*/.gemini/antigravity-cli/antigravity-oauth-token 2>/dev/null | grep -v "^/home/agent/" | head -n 1 || true)
+          if [ -n "$src" ] && [ -f "$src" ]; then
+            if [ ! -f "$target" ] || [ "$src" -nt "$target" ]; then
+              mkdir -p "$(dirname "$target")"
+              cp "$src" "$target"
+              chmod 600 "$target"
+            fi
+          fi
+      user: "1000"
+      description: "Seed host AGY OAuth token into agent home if mounted"
