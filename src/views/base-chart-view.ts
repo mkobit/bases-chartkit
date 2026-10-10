@@ -9,8 +9,9 @@ import type {
 import {
   BasesView,
   ExtraButtonComponent,
-  Platform,
   Keymap,
+  Menu,
+  Platform,
 } from 'obsidian'
 import * as echarts from 'echarts'
 import type BarePlugin from '../main'
@@ -28,6 +29,7 @@ import {
 import {
   extractTargetFilePath,
   extractRawMouseEvent,
+  resolveSourceNoteFile,
 } from '../charts/interactivity'
 
 function isUserEvent(value: unknown): value is UserEvent {
@@ -301,6 +303,9 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     chart.on('mouseover', (params: unknown) => {
       this.handleChartHover(params)
     })
+    chart.on('contextmenu', (params: unknown) => {
+      this.handleChartContextMenu(params)
+    })
   }
 
   protected handleChartClick(params: unknown): void {
@@ -342,6 +347,30 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       linktext: filePath,
       sourcePath: '',
     })
+  }
+
+  protected handleChartContextMenu(params: unknown): void {
+    const rawEvent = extractRawMouseEvent(params)
+    if (!rawEvent || !isUserEvent(rawEvent)) {
+      return
+    }
+    const data = this.getBasesData()
+    const filePath = extractTargetFilePath(params, data)
+    if (!filePath) {
+      return
+    }
+    if (rawEvent instanceof MouseEvent) {
+      rawEvent.preventDefault()
+    }
+    const file = resolveSourceNoteFile(this.app, filePath)
+    if (!file) {
+      return
+    }
+    const menu = new Menu()
+    this.app.workspace.trigger('file-menu', menu, file, 'bases-chartkit')
+    if (rawEvent instanceof MouseEvent) {
+      menu.showAtMouseEvent(rawEvent)
+    }
   }
 
   protected executeRender(): void {
