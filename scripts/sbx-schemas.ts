@@ -323,6 +323,18 @@ export const sbxEnvWorkspaceSchema = z
   })
   .strict()
 
+export const sbxEnvAdditionalWorkspaceSchema = z
+  .object({
+    path: z.string().min(1),
+    readOnly: z.boolean().optional(),
+  })
+  .strict()
+
+export const sbxEnvArgSchema = z
+  .object({
+    default: z.string().optional(),
+  })
+  .strict()
 export const sbxEnvV1Schema = z
   .object({
     schemaVersion: z.union([z.literal('1'), z.literal(1)]).optional(),
@@ -333,6 +345,8 @@ export const sbxEnvV1Schema = z
     kits: z.array(z.string()).optional(),
     ports: z.array(sbxEnvPortSchema).optional(),
     env: z.record(z.string(), z.string()).optional(),
+    args: z.record(z.string(), sbxEnvArgSchema).optional(),
+    additionalWorkspaces: z.array(sbxEnvAdditionalWorkspaceSchema).optional(),
     setup_commands: z.array(z.string()).optional(),
   })
   .strict()

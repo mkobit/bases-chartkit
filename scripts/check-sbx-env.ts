@@ -8,7 +8,6 @@ const FORBIDDEN_KEYS = [
   'secrets',
   'bindings',
   'registries',
-  'additionalWorkspaces',
   'localWorkspaces',
 ] as const
 

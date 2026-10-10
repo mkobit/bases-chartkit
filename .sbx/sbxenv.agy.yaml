@@ -16,3 +16,9 @@ ports:
     host: 9222
   - sandbox: 5173
     host: 5173
+args:
+  hostGeminiDir:
+    default: /home/mkobit/.gemini/antigravity-cli
+additionalWorkspaces:
+  - path: ${{ env.args.hostGeminiDir }}
+    readOnly: true
