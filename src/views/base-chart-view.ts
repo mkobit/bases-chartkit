@@ -26,10 +26,13 @@ import {
   resolveTheme,
   OBSIDIAN_AUTO_THEME_NAME,
 } from '../charts/obsidian-theme'
+import * as R from 'remeda'
 import {
   extractTargetFilePath,
+  extractTargetFilePaths,
   extractRawMouseEvent,
   resolveSourceNoteFile,
+  populateDisambiguationMenu,
 } from '../charts/interactivity'
 
 function isUserEvent(value: unknown): value is UserEvent {
@@ -318,14 +321,25 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       return
     }
     const data = this.getBasesData()
-    const filePath = extractTargetFilePath(params, data)
-    if (!filePath) {
+    const filePaths = extractTargetFilePaths(params, data)
+    if (filePaths.length === 0) {
       return
     }
     if (rawEvent instanceof MouseEvent) {
       rawEvent.preventDefault()
     }
-    void this.app.workspace.openLinkText(filePath, '', mod)
+    const singlePath = filePaths[0]
+    if (filePaths.length === 1 && singlePath !== undefined) {
+      void this.app.workspace.openLinkText(singlePath, '', mod)
+      return
+    }
+    const menu = new Menu()
+    populateDisambiguationMenu(menu, filePaths, (filePath) => {
+      void this.app.workspace.openLinkText(filePath, '', mod)
+    })
+    if (rawEvent instanceof MouseEvent) {
+      menu.showAtMouseEvent(rawEvent)
+    }
   }
 
   protected handleChartHover(params: unknown): void {
@@ -355,19 +369,40 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       return
     }
     const data = this.getBasesData()
-    const filePath = extractTargetFilePath(params, data)
-    if (!filePath) {
+    const filePaths = extractTargetFilePaths(params, data)
+    if (filePaths.length === 0) {
       return
     }
     if (rawEvent instanceof MouseEvent) {
       rawEvent.preventDefault()
     }
-    const file = resolveSourceNoteFile(this.app, filePath)
-    if (!file) {
+    const singlePath = filePaths[0]
+    if (filePaths.length === 1 && singlePath !== undefined) {
+      const file = resolveSourceNoteFile(this.app, singlePath)
+      if (!file) {
+        return
+      }
+      const menu = new Menu()
+      this.app.workspace.trigger('file-menu', menu, file, 'bases-chartkit')
+      if (rawEvent instanceof MouseEvent) {
+        menu.showAtMouseEvent(rawEvent)
+      }
       return
     }
+
     const menu = new Menu()
-    this.app.workspace.trigger('file-menu', menu, file, 'bases-chartkit')
+    populateDisambiguationMenu(menu, filePaths, (filePath) => {
+      void this.app.workspace.openLinkText(filePath, '', false)
+    })
+    const files = R.pipe(
+      filePaths,
+      R.map(p => resolveSourceNoteFile(this.app, p)),
+      R.filter((f): f is NonNullable<typeof f> => f !== null),
+    )
+    if (files.length > 0) {
+      menu.addSeparator()
+      this.app.workspace.trigger('files-menu', menu, files, 'bases-chartkit')
+    }
     if (rawEvent instanceof MouseEvent) {
       menu.showAtMouseEvent(rawEvent)
     }

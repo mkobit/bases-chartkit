@@ -1,11 +1,61 @@
 import { describe, it, expect } from 'bun:test'
 import {
   extractTargetFilePath,
+  extractTargetFilePaths,
   extractRawMouseEvent,
   resolveModClickLeaf,
   resolveSourceNoteFile,
+  formatDisambiguationLabel,
+  buildDisambiguationChoices,
+  populateDisambiguationMenu,
 } from '../../src/charts/interactivity'
-import type { RawMouseEventData } from '../../src/charts/interactivity'
+import type {
+  RawMouseEventData,
+  DisambiguationMenuItemLike,
+  DisambiguationMenuLike,
+} from '../../src/charts/interactivity'
+
+class MockMenuItem implements DisambiguationMenuItemLike {
+  public title = ''
+  public icon = ''
+  public triggerClick: () => void = () => {}
+
+  setTitle(title: string) {
+    this.title = title
+    return this
+  }
+
+  setIcon(icon: string) {
+    this.icon = icon
+    return this
+  }
+
+  onClick(cb: (evt?: unknown) => unknown) {
+    this.triggerClick = () => {
+      cb()
+    }
+    return this
+  }
+}
+
+class MockMenu implements DisambiguationMenuLike {
+  public items: readonly MockMenuItem[] = []
+
+  addItem(cb: (item: DisambiguationMenuItemLike) => unknown) {
+    const item = new MockMenuItem()
+    cb(item)
+    this.items = [...this.items, item]
+    return this
+  }
+}
+
+class SelectionTracker {
+  public selected: readonly string[] = []
+
+  record(path: string) {
+    this.selected = [...this.selected, path]
+  }
+}
 
 describe('Chart interactivity', () => {
   describe('extractTargetFilePath', () => {
@@ -76,6 +126,115 @@ describe('Chart interactivity', () => {
       expect(extractTargetFilePath(undefined)).toBeUndefined()
       expect(extractTargetFilePath('string')).toBeUndefined()
       expect(extractTargetFilePath({ data: { filePath: '' } })).toBeUndefined()
+    })
+  })
+
+  describe('extractTargetFilePaths', () => {
+    it('extracts multiple filePaths directly from params.data.filePaths', () => {
+      const params = {
+        data: {
+          name: 'Cluster A',
+          value: 120,
+          filePaths: ['Notes/Task A.md', 'Notes/Task B.md'],
+        },
+      }
+      expect(extractTargetFilePaths(params)).toEqual(['Notes/Task A.md', 'Notes/Task B.md'])
+    })
+
+    it('filters empty strings, non-strings, and duplicates from filePaths preserving order', () => {
+      const params = {
+        data: {
+          filePaths: ['Notes/First.md', '', 'Notes/Second.md', 'Notes/First.md'],
+        },
+      }
+      expect(extractTargetFilePaths(params)).toEqual(['Notes/First.md', 'Notes/Second.md'])
+    })
+
+    it('resolves file paths from rowIndices mapped to data array', () => {
+      const data = [
+        { filePath: 'Notes/Zero.md' },
+        { filePath: 'Notes/One.md' },
+        { filePath: 'Notes/Two.md' },
+      ]
+      const params = {
+        data: {
+          rowIndices: [2, 0, 2],
+        },
+      }
+      expect(extractTargetFilePaths(params, data)).toEqual(['Notes/Two.md', 'Notes/Zero.md'])
+    })
+
+    it('filters out-of-range or missing file paths from rowIndices', () => {
+      const data = [
+        { filePath: 'Notes/Zero.md' },
+        { otherProp: 'No file path here' },
+      ]
+      const params = {
+        data: {
+          rowIndices: [0, 1, 99],
+        },
+      }
+      expect(extractTargetFilePaths(params, data)).toEqual(['Notes/Zero.md'])
+    })
+
+    it('prefers filePaths over rowIndices when both are present', () => {
+      const data = [
+        { filePath: 'Notes/DataZero.md' },
+      ]
+      const params = {
+        data: {
+          filePaths: ['Notes/Direct.md'],
+          rowIndices: [0],
+        },
+      }
+      expect(extractTargetFilePaths(params, data)).toEqual(['Notes/Direct.md'])
+    })
+
+    it('falls back to rowIndices when filePaths is empty', () => {
+      const data = [
+        { filePath: 'Notes/DataZero.md' },
+      ]
+      const params = {
+        data: {
+          filePaths: [],
+          rowIndices: [0],
+        },
+      }
+      expect(extractTargetFilePaths(params, data)).toEqual(['Notes/DataZero.md'])
+    })
+
+    it('falls back to params.data.filePath as single-element list', () => {
+      const params = {
+        data: {
+          filePath: 'Notes/Single.md',
+        },
+      }
+      expect(extractTargetFilePaths(params)).toEqual(['Notes/Single.md'])
+    })
+
+    it('falls back to extractTargetFilePath for nested file or rowIndex/dataIndex', () => {
+      const nestedParams = {
+        data: {
+          file: { path: 'Notes/Nested.md' },
+        },
+      }
+      expect(extractTargetFilePaths(nestedParams)).toEqual(['Notes/Nested.md'])
+
+      const data = [{ filePath: 'Notes/Indexed.md' }]
+      const indexedParams = {
+        data: [1, 2],
+        dataIndex: 0,
+      }
+      expect(extractTargetFilePaths(indexedParams, data)).toEqual(['Notes/Indexed.md'])
+    })
+
+    it('returns empty array for invalid, missing, or empty parameters', () => {
+      expect(extractTargetFilePaths(null)).toEqual([])
+      expect(extractTargetFilePaths(undefined)).toEqual([])
+      expect(extractTargetFilePaths('not-an-object')).toEqual([])
+      expect(extractTargetFilePaths({ data: { filePath: '' } })).toEqual([])
+      expect(extractTargetFilePaths({ data: { filePaths: ['', ''] } })).toEqual([])
+      expect(extractTargetFilePaths({ data: { name: 'Folder', children: [] } })).toEqual([])
     })
   })
 
@@ -163,6 +322,71 @@ describe('Chart interactivity', () => {
         },
       }
       expect(resolveSourceNoteFile(app, 'Missing.md')).toBeNull()
+    })
+  })
+
+  describe('Disambiguation selector logic', () => {
+    describe('formatDisambiguationLabel', () => {
+      it('extracts filename from path containing folders', () => {
+        expect(formatDisambiguationLabel('Folder/Subfolder/Project Note.md')).toBe('Project Note.md')
+      })
+
+      it('returns plain filename if no slash is present', () => {
+        expect(formatDisambiguationLabel('Project Note.md')).toBe('Project Note.md')
+      })
+
+      it('returns empty string if empty path provided', () => {
+        expect(formatDisambiguationLabel('')).toBe('')
+      })
+    })
+
+    describe('buildDisambiguationChoices', () => {
+      it('builds choices with filenames when filenames are unique', () => {
+        const paths = ['Folder A/Task 1.md', 'Folder B/Task 2.md']
+        expect(buildDisambiguationChoices(paths)).toEqual([
+          { title: 'Task 1.md', filePath: 'Folder A/Task 1.md' },
+          { title: 'Task 2.md', filePath: 'Folder B/Task 2.md' },
+        ])
+      })
+
+      it('falls back to full paths when filenames collide', () => {
+        const paths = ['Work/Meeting.md', 'Personal/Meeting.md']
+        expect(buildDisambiguationChoices(paths)).toEqual([
+          { title: 'Work/Meeting.md', filePath: 'Work/Meeting.md' },
+          { title: 'Personal/Meeting.md', filePath: 'Personal/Meeting.md' },
+        ])
+      })
+
+      it('deduplicates paths and filters empty strings', () => {
+        const paths = ['Notes/A.md', '', 'Notes/A.md']
+        expect(buildDisambiguationChoices(paths)).toEqual([
+          { title: 'A.md', filePath: 'Notes/A.md' },
+        ])
+      })
+    })
+
+    describe('populateDisambiguationMenu', () => {
+      it('populates menu items with title, icon, and onSelect callbacks', () => {
+        const menu = new MockMenu()
+        const tracker = new SelectionTracker()
+        const paths = ['Folder/Note A.md', 'Folder/Note B.md']
+
+        populateDisambiguationMenu(menu, paths, (filePath) => {
+          tracker.record(filePath)
+        })
+
+        expect(menu.items).toHaveLength(2)
+        expect(menu.items[0]?.title).toBe('Note A.md')
+        expect(menu.items[0]?.icon).toBe('file-text')
+        expect(menu.items[1]?.title).toBe('Note B.md')
+        expect(menu.items[1]?.icon).toBe('file-text')
+
+        menu.items[0]?.triggerClick()
+        expect(tracker.selected).toEqual(['Folder/Note A.md'])
+
+        menu.items[1]?.triggerClick()
+        expect(tracker.selected).toEqual(['Folder/Note A.md', 'Folder/Note B.md'])
+      })
     })
   })
 })
