@@ -4,7 +4,7 @@ inputs:
   bun-version:
     description: 'Bun version'
     required: false
-    default: "1.4.2"
+    default: "1.4.3"
 runs:
   using: "composite"
   steps:
