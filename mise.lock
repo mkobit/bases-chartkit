@@ -52,73 +52,72 @@ checksum = "sha256:78c221c2376f79731ccf4e4af0b3bb46d81fefa3296c5abee09ad8a1b21e6
 url = "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-windows-x64-baseline.zip"
 
 [[tools."github:gastownhall/beads"]]
-version = "1.1.0"
+version = "1.3.1"
 backend = "github:gastownhall/beads"
-specifiers = ["1.1.0"]
+specifiers = ["1.3.1"]
 
 [tools."github:gastownhall/beads"."platforms.linux-arm64"]
-checksum = "sha256:e64eb6f5f998c9eae3ef9ec786f5f1c907ab3ed04fe220ebf265ca9952e21b2f"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110939"
+checksum = "sha256:c3b32c71a6c0cd6358a12c28272b17e6818db991da192f87df52339c222e423a"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014963"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.linux-arm64-musl"]
-checksum = "sha256:e64eb6f5f998c9eae3ef9ec786f5f1c907ab3ed04fe220ebf265ca9952e21b2f"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110939"
+checksum = "sha256:c3b32c71a6c0cd6358a12c28272b17e6818db991da192f87df52339c222e423a"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014963"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.linux-x64"]
-checksum = "sha256:b0f3dd607c3fb989ee08d0a6854fba80d0402971eb108f9af6170bc14d491a34"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110983"
+checksum = "sha256:3219443a9734b89b93fb16ee8d65844759fa1b3cd3cf139c606b7353cfb0715c"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014936"
 provenance = "github-attestations"
-provenance_verified = true
 
 [tools."github:gastownhall/beads"."platforms.linux-x64-baseline"]
-checksum = "sha256:b0f3dd607c3fb989ee08d0a6854fba80d0402971eb108f9af6170bc14d491a34"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110983"
+checksum = "sha256:3219443a9734b89b93fb16ee8d65844759fa1b3cd3cf139c606b7353cfb0715c"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014936"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.linux-x64-musl"]
-checksum = "sha256:b0f3dd607c3fb989ee08d0a6854fba80d0402971eb108f9af6170bc14d491a34"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110983"
+checksum = "sha256:3219443a9734b89b93fb16ee8d65844759fa1b3cd3cf139c606b7353cfb0715c"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014936"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.linux-x64-musl-baseline"]
-checksum = "sha256:b0f3dd607c3fb989ee08d0a6854fba80d0402971eb108f9af6170bc14d491a34"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110983"
+checksum = "sha256:3219443a9734b89b93fb16ee8d65844759fa1b3cd3cf139c606b7353cfb0715c"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014936"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.macos-arm64"]
-checksum = "sha256:c42e24d83b258f7ba9f52a6d2d5f6b055869dfe7807165055988b12e7ea8c564"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466113119"
+checksum = "sha256:508ba807996e2b9c992c538a6f405f2fc7d2e16cf8b4e5b0d1bf9fe860367007"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602046065"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.macos-x64"]
-checksum = "sha256:5d7d30fdadcf012b7e0c1933a62cdfaef106e2561509b904e50a6733621cf8da"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466113178"
+checksum = "sha256:13bddb0b4774503d97d57e94204acc2b7c6b775fecc22fa38bc1b831718e234d"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602046126"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.macos-x64-baseline"]
-checksum = "sha256:5d7d30fdadcf012b7e0c1933a62cdfaef106e2561509b904e50a6733621cf8da"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466113178"
+checksum = "sha256:13bddb0b4774503d97d57e94204acc2b7c6b775fecc22fa38bc1b831718e234d"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602046126"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.windows-x64"]
-checksum = "sha256:12b1d37344d3b1543301e21a2b9ed3ab6ae009f0418441f3de5f762b40769a6b"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_windows_amd64.zip"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110961"
+checksum = "sha256:48cd82e1d3e311c9bf9a5d6d67ad1a8542ae13d4e20c5bfb527656c5e666af76"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_windows_amd64.zip"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014845"
 provenance = "github-attestations"
 
 [tools."github:gastownhall/beads"."platforms.windows-x64-baseline"]
-checksum = "sha256:12b1d37344d3b1543301e21a2b9ed3ab6ae009f0418441f3de5f762b40769a6b"
-url = "https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_windows_amd64.zip"
-url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/466110961"
+checksum = "sha256:48cd82e1d3e311c9bf9a5d6d67ad1a8542ae13d4e20c5bfb527656c5e666af76"
+url = "https://github.com/gastownhall/beads/releases/download/v1.3.1/beads_1.3.1_windows_amd64.zip"
+url_api = "https://api.github.com/repos/gastownhall/beads/releases/assets/602014845"
 provenance = "github-attestations"

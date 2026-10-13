@@ -45,3 +45,5 @@ build_output.log
 .dolt/
 *.db
 .beads-credential-key
+*.gate.lock*
+
