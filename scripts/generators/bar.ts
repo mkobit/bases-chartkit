@@ -1,6 +1,6 @@
 import * as fc from 'fast-check'
 import * as R from 'remeda'
-import { DEPARTMENTS, QUARTERS, REGIONS, themeSubset } from './themes'
+import { DEPARTMENTS, REGIONS, themeSubset } from './themes'
 
 /**
  * Arbitrary for a basic Bar chart dataset.
@@ -30,29 +30,40 @@ export const barChartArbitrary = themeSubset(
     })),
   }))
 
+const STACKED_BAR_QUARTERS = [
+  'Q1 2024',
+  'Q2 2024',
+  'Q3 2024',
+  'Q4 2024',
+  'Q1 2025',
+  'Q2 2025',
+  'Q3 2025',
+  'Q4 2025',
+] as const
+
 // Every Quarter x Region combination, generated once (order fixed by
-// QUARTERS/REGIONS) so sampled revenue values can be paired onto it via
-// R.zip below -- mirrors the Day x Hour cross-product technique in
-// heatmap.ts, but avoids that file's positional `values[index]` indexing,
-// which would type as `number | undefined` under this repo's
+// STACKED_BAR_QUARTERS/REGIONS, quarter-major) so sampled revenue values can be
+// paired onto it via R.zip below -- mirrors the Day x Hour cross-product
+// technique in heatmap.ts, but avoids that file's positional `values[index]`
+// indexing, which would type as `number | undefined` under this repo's
 // noUncheckedIndexedAccess and fail to satisfy FrontmatterValue.
-const QUARTER_REGION_COMBINATIONS = QUARTERS.flatMap(quarter =>
+const QUARTER_REGION_COMBINATIONS = STACKED_BAR_QUARTERS.flatMap(quarter =>
   REGIONS.map(region => ({ quarter, region })))
 
 /**
  * Arbitrary for a Stacked Bar chart dataset.
- * Generates a Quarter x Region revenue cross-product -- every quarter has a
- * revenue figure for every region, enough series to show real stacking.
+ * Generates an 8-quarter x 4-region revenue cross-product -- every quarter has
+ * a revenue figure for every region, spanning two years with organic variance.
  */
 export const stackedBarChartArbitrary = fc.record({
-  maxRevenue: fc.integer({ min: 20_000,
-    max: 100_000 }),
+  maxRevenue: fc.integer({ min: 30_000,
+    max: 80_000 }),
 })
   .chain((config) => {
     return fc.record({
       combinations: fc.constant(QUARTER_REGION_COMBINATIONS),
       revenues: fc.array(
-        fc.integer({ min: 5000,
+        fc.integer({ min: 10_000,
           max: config.maxRevenue }),
         { minLength: QUARTER_REGION_COMBINATIONS.length,
           maxLength: QUARTER_REGION_COMBINATIONS.length },
@@ -61,9 +72,18 @@ export const stackedBarChartArbitrary = fc.record({
   })
   .map(data => ({
     type: 'stacked-bar',
-    data: R.zip(data.combinations, data.revenues).map(([combo, revenue]) => ({
-      quarter: combo.quarter,
-      region: combo.region,
-      revenue,
-    })),
+    data: R.zip(data.combinations, data.revenues).map(([combo, rawRevenue], idx) => {
+      const regionIndex = REGIONS.indexOf(combo.region)
+      const quarterIndex = Math.floor(idx / REGIONS.length)
+      // Phase-shifted wave per region gives seasonal variance so the stacked
+      // bars ebb and flow across quarters rather than reading as uniform noise.
+      const wave = Math.round(5000 * Math.sin((quarterIndex + regionIndex * 2) / 2))
+      const revenue = Math.max(3000, rawRevenue + wave)
+
+      return {
+        quarter: combo.quarter,
+        region: combo.region,
+        revenue,
+      }
+    }),
   }))

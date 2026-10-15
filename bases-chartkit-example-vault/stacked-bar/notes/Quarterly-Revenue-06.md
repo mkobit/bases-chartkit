@@ -1,5 +1,5 @@
 ---
-Quarter: "Q2"
+Quarter: "Q2 2024"
 Region: "East"
-Revenue: 84568
+Revenue: 41661
 ---

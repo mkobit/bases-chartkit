@@ -41,6 +41,10 @@ function cartesianLineSeries(option: EChartsOption): readonly LineSeriesOption[]
   const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
   return series.flatMap(s => s.type === 'line' ? [s] : [])
 }
+function cartesianBarSeries(option: EChartsOption): readonly BarSeriesOption[] {
+  const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
+  return series.flatMap(s => s.type === 'bar' ? [s] : [])
+}
 
 describe(
   'Cartesian Chart Transformer (Dataset Architecture)',
@@ -172,6 +176,49 @@ describe(
         expect(series).toHaveLength(2)
         expect(series.every(s => s.stack === 'total')).toBe(true)
         expect(series.every(s => s.areaStyle !== undefined)).toBe(true)
+      },
+    )
+
+    it(
+      'should stack bar series when stack is enabled (stacked-bar path)',
+      () => {
+        const option = createCartesianChartOption(
+          data,
+          'date',
+          'value',
+          'bar',
+          { seriesProp: 'category',
+            stack: true },
+        )
+
+        const series = cartesianBarSeries(option)
+        expect(series).toHaveLength(2)
+        expect(series.every(s => s.stack === 'total')).toBe(true)
+      },
+    )
+
+    it(
+      'should configure flipped axis and stacked series on stacked-bar chart',
+      () => {
+        const option = createCartesianChartOption(
+          data,
+          'date',
+          'value',
+          'bar',
+          { seriesProp: 'category',
+            stack: true,
+            flipAxis: true },
+        )
+
+        const series = cartesianBarSeries(option)
+        expect(series).toHaveLength(2)
+        expect(series.every(s => s.stack === 'total')).toBe(true)
+        expect(series.every(s => s.encode?.x === 'y' && s.encode?.y === 'x')).toBe(true)
+
+        const yAxis = Array.isArray(option.yAxis) ? option.yAxis[0] : option.yAxis
+        expect(yAxis?.type).toBe('category')
+        const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+        expect(xAxis?.type).toBe('value')
       },
     )
 

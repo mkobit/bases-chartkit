@@ -178,6 +178,39 @@ const stackedBarSpec = defineChartExampleSpec<StackedBarSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Revenue by quarter (vintage theme)',
+      viewType: 'stacked-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Quarter',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Revenue by quarter (flipped axis)',
+      viewType: 'stacked-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Quarter',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
+    {
+      fileName: 'RotatedLabels.base',
+      viewName: 'Revenue by quarter (rotated labels)',
+      viewType: 'stacked-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Quarter',
+        yAxisProp: 'note.Revenue',
+        seriesProp: 'note.Region',
+      },
+      literalOptions: { showLegend: true, xAxisLabelRotate: 45 },
+    },
   ],
 })
 
