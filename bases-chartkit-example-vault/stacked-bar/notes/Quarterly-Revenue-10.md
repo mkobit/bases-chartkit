@@ -1,5 +1,5 @@
 ---
-Quarter: "Q3"
+Quarter: "Q3 2024"
 Region: "East"
-Revenue: 53486
+Revenue: 64920
 ---

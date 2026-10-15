@@ -1,5 +1,5 @@
 ---
-Quarter: "Q2"
+Quarter: "Q2 2024"
 Region: "South"
-Revenue: 98496
+Revenue: 60108
 ---

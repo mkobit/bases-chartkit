@@ -96,4 +96,63 @@ test.describe('stacked-bar chart rendering', () => {
     expect(tooltipText).toContain(`Quarter: ${firstRegionRow.x}`)
     expect(tooltipText).toContain(`${region}: ${firstRegionRow.y.toLocaleString('en-US')}`)
   })
+
+  test('the flipped-axis variant renders the category axis on y and the value axis on x with stacked bars', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'stacked-bar/FlippedAxis.base', viewName: 'Revenue by quarter (flipped axis)' })
+
+    await expect.poll(
+      async () => {
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const option = asOptionLike<{
+      readonly xAxis?: readonly { readonly type?: string }[]
+      readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+      readonly series?: readonly { readonly stack?: string }[]
+    }>(await getChartOption(page))
+    expect(option?.xAxis?.[0]?.type).toBe('value')
+    expect(option?.yAxis?.[0]?.type).toBe('category')
+    expect(option?.series?.length).toBeGreaterThan(0)
+    expect(option?.series?.every(s => s.stack === 'total')).toBe(true)
+  })
+
+  test('the rotated-labels variant applies xAxisLabelRotate to category labels', async ({ obsidianPage: { page } }) => {
+    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
+      await new Promise<void>((resolve) => {
+        app.workspace.onLayoutReady(() => resolve())
+      })
+      const leaf = app.workspace.getLeaf('tab')
+      await leaf.setViewState({
+        type: 'bases',
+        state: { file: args.path, viewName: args.viewName },
+        active: true,
+      })
+    }, { path: 'stacked-bar/RotatedLabels.base', viewName: 'Revenue by quarter (rotated labels)' })
+
+    await expect.poll(
+      async () => {
+        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
+        return option?.dataset?.[0]?.source?.length ?? 0
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+    ).toBeGreaterThan(0)
+
+    const option = asOptionLike<{
+      readonly xAxis?: readonly { readonly axisLabel?: { readonly rotate?: number } }[]
+    }>(await getChartOption(page))
+    expect(option?.xAxis?.[0]?.axisLabel?.rotate).toBe(45)
+  })
 })

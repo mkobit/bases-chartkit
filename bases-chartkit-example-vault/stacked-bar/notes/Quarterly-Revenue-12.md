@@ -1,5 +1,5 @@
 ---
-Quarter: "Q4"
+Quarter: "Q4 2024"
 Region: "North"
-Revenue: 88021
+Revenue: 31646
 ---
