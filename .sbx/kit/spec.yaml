@@ -97,7 +97,7 @@ setup:
     - command: "mkdir -p -m 0700 /tmp/runtime-agent && chown -R 1000:1000 /tmp/runtime-agent"
       description: "Initialize runtime directory for Obsidian CLI IPC sockets"
   startup:
-    - command: ["bash", "-c", "Xvfb :99 -screen 0 1920x1080x24 -listen tcp -ac & sleep 1 && fluxbox & sleep 1 && x11vnc -display :99 -forever -shared -rfbport 5900 -nopw & websockify --web /usr/share/novnc 6080 localhost:5900"]
+    - command: ["bash", "-c", "sudo /etc/init.d/dbus start >/dev/null 2>&1 || true; rm -f /tmp/.X99-lock /tmp/.X11-unix/X99; Xvfb :99 -screen 0 1920x1080x24 -listen tcp -ac & sleep 1 && fluxbox & sleep 1 && x11vnc -display :99 -forever -shared -rfbport 5900 -nopw & websockify --web /usr/share/novnc 6080 localhost:5900"]
       background: true
       description: "Launch virtual display, window manager, and noVNC streaming server"
     - command:
