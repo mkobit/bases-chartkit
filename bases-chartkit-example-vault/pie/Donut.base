@@ -1,0 +1,18 @@
+properties:
+  note.Region:
+    displayName: Region
+  note.Revenue:
+    displayName: Revenue
+views:
+  - type: pie-chart
+    name: Sales by region (donut)
+    xAxisProp: note.Region
+    yAxisProp: note.Revenue
+    showLegend: true
+    innerRadius: "40%"
+    outerRadius: "70%"
+    padAngle: 5
+    borderRadius: 8
+    filters:
+      and:
+        - file.folder == "pie/notes"

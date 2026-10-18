@@ -33,6 +33,12 @@ function pieDatasetSource(option: EChartsOption): readonly PieSourceRow[] {
   return Array.isArray(source) ? source.flatMap(row => isPieSourceRow(row) ? [row] : []) : []
 }
 
+function optionTheme(option: EChartsOption): unknown {
+  return typeof option === 'object' && option !== null && 'theme' in option
+    ? option.theme
+    : undefined
+}
+
 describe(
   'Transformer: Pie',
   () => {
@@ -298,6 +304,179 @@ describe(
         expect(optionWithLegend.legend).toBeDefined()
         // @ts-ignore
         expect(optionWithLegend.legend.type).toBe('scroll')
+      },
+    )
+
+    it(
+      'should configure donut styling with default donut radius',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { donut: true },
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.radius).toEqual(['40%',
+          '70%'])
+      },
+    )
+
+    it(
+      'should configure custom innerRadius and outerRadius',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { innerRadius: '35%',
+            outerRadius: '65%' },
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.radius).toEqual(['35%',
+          '65%'])
+      },
+    )
+
+    it(
+      'should configure radius directly as string or tuple',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const tupleOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { radius: ['25%',
+            '50%'] },
+        )
+        expect(firstPieSeries(tupleOption).radius).toEqual(['25%',
+          '50%'])
+
+        const stringOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { radius: '60%' },
+        )
+        expect(firstPieSeries(stringOption).radius).toBe('60%')
+      },
+    )
+
+    it(
+      'should configure padAngle when provided',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { padAngle: 5 },
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.padAngle).toBe(5)
+      },
+    )
+
+    it(
+      'should configure borderRadius on itemStyle when provided',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { borderRadius: 8 },
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.itemStyle?.borderRadius).toBe(8)
+      },
+    )
+
+    it(
+      'should set theme option when provided',
+      () => {
+        const data = [
+          { name: 'A',
+            value: 10 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'pie',
+          { theme: 'Vintage' },
+        )
+
+        expect(optionTheme(option)).toBe('Vintage')
+      },
+    )
+
+    it(
+      'should sum multiple occurrences of duplicate categories across arbitrary order',
+      () => {
+        const data = [
+          { cat: 'Alpha',
+            val: 10 },
+          { cat: 'Beta',
+            val: 20 },
+          { cat: 'Alpha',
+            val: 30 },
+          { cat: 'Gamma',
+            val: 5 },
+          { cat: 'Beta',
+            val: 15 },
+          { cat: 'Alpha',
+            val: 5 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'cat',
+          'val',
+          'pie',
+        )
+
+        const source = pieDatasetSource(option)
+        expect(source).toHaveLength(3)
+        expect(source[0]).toEqual({ name: 'Alpha',
+          value: 45 })
+        expect(source[1]).toEqual({ name: 'Beta',
+          value: 35 })
+        expect(source[2]).toEqual({ name: 'Gamma',
+          value: 5 })
       },
     )
   },

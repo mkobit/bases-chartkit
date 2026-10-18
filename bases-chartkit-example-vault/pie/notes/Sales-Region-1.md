@@ -1,4 +1,4 @@
 ---
-Region: "Direct"
-Revenue: 14988
+Region: "Email"
+Revenue: 3682
 ---
