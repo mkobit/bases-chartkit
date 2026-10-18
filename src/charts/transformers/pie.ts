@@ -9,6 +9,13 @@ import * as R from 'remeda'
 
 export interface PieTransformerOptions extends BaseTransformerOptions {
   readonly roseType?: 'radius' | 'area'
+  readonly innerRadius?: string | number
+  readonly outerRadius?: string | number
+  readonly radius?: string | number | readonly (string | number)[]
+  readonly donut?: boolean
+  readonly padAngle?: number
+  readonly borderRadius?: number
+  readonly theme?: string
 }
 
 interface PieDataPoint {
@@ -48,6 +55,27 @@ function formatTooltip(param: PieTooltipParam, valueFormat?: string): string {
   return `${marker}${param.name}: ${value} (${param.percent}%)`
 }
 
+function resolveRadius(
+  options?: PieTransformerOptions,
+): PieSeriesOption['radius'] {
+  if (options?.radius !== undefined) {
+    if (typeof options.radius === 'string' || typeof options.radius === 'number') {
+      return options.radius
+    }
+    return [...options.radius]
+  }
+  if (options?.innerRadius !== undefined || options?.outerRadius !== undefined) {
+    return [options.innerRadius ?? (options.donut ? '40%' : 0), options.outerRadius ?? '70%']
+  }
+  if (options?.donut) {
+    return ['40%', '70%']
+  }
+  if (options?.roseType) {
+    return [20, '75%']
+  }
+  return '50%'
+}
+
 export function createPieChartOption(
   data: BasesData,
   nameProp: string,
@@ -84,7 +112,6 @@ export function createPieChartOption(
   )
 
   const dataset: DatasetComponentOption = {
-
     source: normalizedData,
   }
 
@@ -95,11 +122,16 @@ export function createPieChartOption(
       itemName: 'name',
       value: 'value',
     },
-    radius: options?.roseType
-      ? [20,
-          '75%']
-      : '50%',
+    radius: resolveRadius(options),
     ...(options?.roseType ? { roseType: options.roseType } : {}),
+    ...(options?.padAngle !== undefined ? { padAngle: options.padAngle } : {}),
+    ...(options?.borderRadius !== undefined
+      ? {
+          itemStyle: {
+            borderRadius: options.borderRadius,
+          },
+        }
+      : {}),
     emphasis: {
       itemStyle: {
         shadowBlur: STYLE_TOKENS.shadowBlur.standard,
@@ -117,6 +149,7 @@ export function createPieChartOption(
       formatter: asTooltipFormatter((param: PieTooltipParam) => formatTooltip(param, options?.valueFormat)),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
+    ...(options?.theme ? { theme: options.theme } : {}),
   }
 
   return opt

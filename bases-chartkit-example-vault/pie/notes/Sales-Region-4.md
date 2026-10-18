@@ -1,4 +1,4 @@
 ---
-Region: "Organic Social"
-Revenue: 6157
+Region: "Affiliate"
+Revenue: 505
 ---

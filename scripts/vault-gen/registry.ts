@@ -870,6 +870,32 @@ const pieSpec = defineChartExampleSpec<PieSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'Donut.base',
+      viewName: 'Sales by region (donut)',
+      viewType: 'pie-chart',
+      propBindings: {
+        xAxisProp: 'note.Region',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: {
+        showLegend: true,
+        innerRadius: '40%',
+        outerRadius: '70%',
+        padAngle: 5,
+        borderRadius: 8,
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Sales by region (vintage theme)',
+      viewType: 'pie-chart',
+      propBindings: {
+        xAxisProp: 'note.Region',
+        yAxisProp: 'note.Revenue',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
   ],
 })
 
