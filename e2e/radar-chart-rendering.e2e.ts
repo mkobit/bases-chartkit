@@ -42,10 +42,17 @@ test.describe('radar chart rendering', () => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- verified with `tsc --noEmit` directly: removing this produces TS2532 'Object is possibly undefined' under noUncheckedIndexedAccess. The lint rule's own type analysis disagrees with tsc here.
     const indicatorNames = option.radar[0]!.indicator.map(indicator => indicator.name)
 
-    // radar/Basic.base declares display names ("Strength", "Intelligence",
-    // "Agility") for the underlying note.Strength/note.Intelligence/note.Agility
-    // properties. Buggy code shows the raw 'note.X' paths instead.
-    expect(indicatorNames).toEqual(['Strength', 'Intelligence', 'Agility'])
+    // radar/Basic.base declares display names for the underlying
+    // note.Strength..note.Charisma properties.
+    // Buggy code shows the raw 'note.X' paths instead.
+    expect(indicatorNames).toEqual([
+      'Strength',
+      'Dexterity',
+      'Constitution',
+      'Intelligence',
+      'Wisdom',
+      'Charisma',
+    ])
   })
 
   // Regression coverage for bck-0zd/bck-44j: radar is the exemplar for
@@ -74,16 +81,22 @@ test.describe('radar chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    // Character-3.md ({ Name: "Draven", Strength: 15, Intelligence: 16,
-    // Agility: 12 }) resolves to dataIndex 0.
+    // Character-0.md ({ Name: "Gandalf", Strength: 17, Dexterity: 6,
+    // Constitution: 16, Intelligence: 15, Wisdom: 4, Charisma: 16 })
+    // resolves to dataIndex 0.
     const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
 
-    expect(tooltipText).toContain('Draven')
+    expect(tooltipText).toContain('Gandalf')
     expect(tooltipText).toContain('Strength')
-    expect(tooltipText).toContain('15')
-    expect(tooltipText).toContain('Intelligence')
+    expect(tooltipText).toContain('17')
+    expect(tooltipText).toContain('Dexterity')
+    expect(tooltipText).toContain('6')
+    expect(tooltipText).toContain('Constitution')
     expect(tooltipText).toContain('16')
-    expect(tooltipText).toContain('Agility')
-    expect(tooltipText).toContain('12')
+    expect(tooltipText).toContain('Intelligence')
+    expect(tooltipText).toContain('15')
+    expect(tooltipText).toContain('Wisdom')
+    expect(tooltipText).toContain('4')
+    expect(tooltipText).toContain('Charisma')
   })
 })

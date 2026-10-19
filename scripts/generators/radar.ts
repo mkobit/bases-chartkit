@@ -1,47 +1,82 @@
 import * as fc from 'fast-check'
 import * as R from 'remeda'
-import { FANTASY_CHARACTER_NAMES, themeSubset } from './themes'
 
-const CLASSES = ['Warrior', 'Wizard', 'Rogue', 'Ranger', 'Cleric', 'Bard']
-const INDICATORS = ['Strength', 'Intelligence', 'Agility', 'Wisdom', 'Charisma'] as const
+const CLASSES = [
+  'Warrior',
+  'Wizard',
+  'Rogue',
+  'Ranger',
+  'Cleric',
+  'Bard',
+  'Paladin',
+  'Druid',
+  'Monk',
+  'Sorcerer',
+  'Barbarian',
+  'Warlock',
+] as const
+
+const CHARACTER_NAMES = [
+  'Conan',
+  'Gandalf',
+  'Locke',
+  'Elowen',
+  'Draven',
+  'Tamsin',
+  'Aric',
+  'Lyra',
+  'Boran',
+  'Thorne',
+  'Kaelen',
+  'Morrigan',
+] as const
+
+export const INDICATORS = [
+  'Strength',
+  'Dexterity',
+  'Constitution',
+  'Intelligence',
+  'Wisdom',
+  'Charisma',
+] as const
 
 /**
- * Arbitrary for Radar chart data.
- * Each row is one character (wide format: one note per entity, each
- * indicator its own field) -- matches how the radar-chart view actually
- * reads data (xAxisProp = entity/series name, metricProps = indicator
- * fields on that same note), not a long "one row per indicator" shape.
+ * Arbitrary for radar chart data.
+ * Each row is one character in wide format.
+ * Natural stat variance models standard fantasy attribute rolls.
  */
-export const radarChartArbitrary = themeSubset(
-  FANTASY_CHARACTER_NAMES,
-  4,
-).chain((names) => {
-  return fc.tuple(
-    ...names.map(() => fc.tuple(
-      fc.constantFrom(...CLASSES),
-      fc.integer({ min: 3, max: 18 }),
-      fc.integer({ min: 3, max: 18 }),
-      fc.integer({ min: 3, max: 18 }),
-      fc.integer({ min: 3, max: 18 }),
-      fc.integer({ min: 3, max: 18 }),
-    )),
-  ).map((rolls) => {
-    const data = R.pipe(
-      R.zip(names, rolls),
-      R.map(([name, [characterClass, strength, intelligence, agility, wisdom, charisma]]) => ({
-        name,
-        class: characterClass,
-        [INDICATORS[0]]: strength,
-        [INDICATORS[1]]: intelligence,
-        [INDICATORS[2]]: agility,
-        [INDICATORS[3]]: wisdom,
-        [INDICATORS[4]]: charisma,
-      })),
-    )
+export const radarChartArbitrary = fc
+  .subarray([...CHARACTER_NAMES], { minLength: 8, maxLength: 12 })
+  .chain((names) => {
+    return fc.tuple(
+      ...names.map(() => fc.tuple(
+        fc.constantFrom(...CLASSES),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+      )),
+    ).map((rolls) => {
+      const data = R.pipe(
+        R.zip(names, rolls),
+        R.map(([name, [characterClass, strength, dexterity, constitution, intelligence, wisdom, charisma]]) => ({
+          name,
+          class: characterClass,
+          Strength: strength,
+          Dexterity: dexterity,
+          Constitution: constitution,
+          Intelligence: intelligence,
+          Wisdom: wisdom,
+          Charisma: charisma,
+          Agility: dexterity,
+        })),
+      )
 
-    return {
-      type: 'radar',
-      data,
-    }
+      return {
+        type: 'radar',
+        data,
+      }
+    })
   })
-})

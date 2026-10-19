@@ -8,6 +8,11 @@ export interface RadarTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly metricProps?: readonly string[]
   readonly metricLabels?: Readonly<Record<string, string>>
+  readonly shape?: 'polygon' | 'circle'
+  readonly areaStyle?: boolean | { readonly opacity?: number }
+  readonly fillArea?: boolean
+  readonly areaOpacity?: number
+  readonly theme?: string
 }
 
 interface IndicatorRange {
@@ -24,6 +29,18 @@ interface RadarIndicator {
   readonly name: string
   readonly min: number
   readonly max: number
+}
+
+function getAreaStyleOption(
+  options?: RadarTransformerOptions,
+): { readonly opacity?: number } | undefined {
+  if (typeof options?.areaStyle === 'object' && options.areaStyle !== null) {
+    return options.areaStyle
+  }
+  if (options?.areaStyle === true || options?.fillArea === true) {
+    return options.areaOpacity !== undefined ? { opacity: options.areaOpacity } : {}
+  }
+  return undefined
 }
 
 // ECharts scales each radar axis independently, defaulting an unspecified
@@ -92,15 +109,19 @@ function createWideFormatRadarOption(
     return { name: options?.metricLabels?.[prop] ?? prop, min, max }
   })
 
+  const areaStyle = getAreaStyleOption(options)
+
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
     data: seriesData.map(d => ({ name: d.name,
       value: [...d.value] })),
+    ...(areaStyle !== undefined ? { areaStyle } : {}),
   }
 
   return {
     radar: {
       indicator: [...radarIndicators],
+      ...(options?.shape ? { shape: options.shape } : {}),
     },
     series: [seriesItem],
     tooltip: {
@@ -197,15 +218,19 @@ function createLongFormatRadarOption(
     return { name, min, max }
   })
 
+  const areaStyle = getAreaStyleOption(options)
+
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
     data: seriesData.map(d => ({ name: d.name,
       value: [...d.value] })),
+    ...(areaStyle !== undefined ? { areaStyle } : {}),
   }
 
   const opt: EChartsOption = {
     radar: {
       indicator: [...radarIndicators],
+      ...(options?.shape ? { shape: options.shape } : {}),
     },
     series: [seriesItem],
     tooltip: {

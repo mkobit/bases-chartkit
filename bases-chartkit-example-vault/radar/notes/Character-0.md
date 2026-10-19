@@ -1,9 +1,10 @@
 ---
-Name: "Conan"
-Class: "Wizard"
-Strength: 15
-Intelligence: 12
-Agility: 17
-Wisdom: 6
+Name: "Gandalf"
+Class: "Bard"
+Strength: 17
+Dexterity: 6
+Constitution: 16
+Intelligence: 15
+Wisdom: 4
 Charisma: 16
 ---

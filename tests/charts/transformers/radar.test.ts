@@ -212,6 +212,161 @@ describe(
             ])
           },
         )
+
+        it(
+          'should support all 6 fantasy attributes with per-indicator ranges and series data',
+          () => {
+            const charactersWithSixStats = [
+              {
+                Name: 'Paladin',
+                Strength: 18,
+                Dexterity: 10,
+                Constitution: 16,
+                Intelligence: 12,
+                Wisdom: 14,
+                Charisma: 17,
+              },
+              {
+                Name: 'Rogue',
+                Strength: 8,
+                Dexterity: 18,
+                Constitution: 12,
+                Intelligence: 14,
+                Wisdom: 10,
+                Charisma: 16,
+              },
+            ]
+
+            const option = createRadarChartOption(
+              charactersWithSixStats,
+              'Name',
+              '',
+              {
+                metricProps: [
+                  'Strength',
+                  'Dexterity',
+                  'Constitution',
+                  'Intelligence',
+                  'Wisdom',
+                  'Charisma',
+                ],
+              },
+            )
+
+            const radar = radarComponent(option)
+            expect(radar.indicator).toEqual([
+              { name: 'Strength', min: 0, max: 18 },
+              { name: 'Dexterity', min: 0, max: 18 },
+              { name: 'Constitution', min: 0, max: 16 },
+              { name: 'Intelligence', min: 0, max: 14 },
+              { name: 'Wisdom', min: 0, max: 14 },
+              { name: 'Charisma', min: 0, max: 17 },
+            ])
+
+            const series = radarSeriesList(option)
+            expect(series[0]?.data).toEqual([
+              {
+                value: [18, 10, 16, 12, 14, 17],
+                name: 'Paladin',
+              },
+              {
+                value: [8, 18, 12, 14, 10, 16],
+                name: 'Rogue',
+              },
+            ])
+          },
+        )
+
+        it(
+          'should support filled area styling when areaStyle is boolean',
+          () => {
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                areaStyle: true,
+              },
+            )
+
+            const series = radarSeriesList(option)
+            expect(series[0]?.areaStyle).toEqual({})
+          },
+        )
+
+        it(
+          'should support filled area styling with custom opacity object',
+          () => {
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                areaStyle: { opacity: 0.4 },
+              },
+            )
+
+            const series = radarSeriesList(option)
+            expect(series[0]?.areaStyle).toEqual({ opacity: 0.4 })
+          },
+        )
+
+        it(
+          'should support fillArea boolean option with areaOpacity',
+          () => {
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                fillArea: true,
+                areaOpacity: 0.25,
+              },
+            )
+
+            const series = radarSeriesList(option)
+            expect(series[0]?.areaStyle).toEqual({ opacity: 0.25 })
+          },
+        )
+
+        it(
+          'should support circular grid shape option',
+          () => {
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                shape: 'circle',
+              },
+            )
+
+            const radar = radarComponent(option)
+            expect(radar.shape).toBe('circle')
+          },
+        )
+
+        it(
+          'should support theme option in options',
+          () => {
+            const option = createRadarChartOption(
+              characters,
+              'Name',
+              '',
+              {
+                metricProps: ['Strength', 'Intelligence', 'Agility'],
+                theme: 'Vintage',
+              },
+            )
+
+            expect(option.radar).toBeDefined()
+            expect(option.series).toBeDefined()
+          },
+        )
       },
     )
 
@@ -274,6 +429,60 @@ describe(
 
             const legend = legendComponent(option)
             expect(legend.data).toEqual(['A', 'B'])
+          },
+        )
+
+        it(
+          'should support all 6 attributes in long format',
+          () => {
+            const sixStatData = [
+              { attribute: 'Strength', val: 18, character: 'Paladin' },
+              { attribute: 'Dexterity', val: 12, character: 'Paladin' },
+              { attribute: 'Constitution', val: 16, character: 'Paladin' },
+              { attribute: 'Intelligence', val: 10, character: 'Paladin' },
+              { attribute: 'Wisdom', val: 14, character: 'Paladin' },
+              { attribute: 'Charisma', val: 17, character: 'Paladin' },
+            ]
+
+            const option = createRadarChartOption(
+              sixStatData,
+              'attribute',
+              'val',
+              { seriesProp: 'character' },
+            )
+
+            const radar = radarComponent(option)
+            expect(radar.indicator).toHaveLength(6)
+            expect(radar.indicator?.map(i => i.name)).toEqual([
+              'Strength',
+              'Dexterity',
+              'Constitution',
+              'Intelligence',
+              'Wisdom',
+              'Charisma',
+            ])
+          },
+        )
+
+        it(
+          'should support circular shape and area styling in long format',
+          () => {
+            const option = createRadarChartOption(
+              data,
+              'subject',
+              'score',
+              {
+                seriesProp: 'student',
+                shape: 'circle',
+                areaStyle: { opacity: 0.35 },
+              },
+            )
+
+            const radar = radarComponent(option)
+            expect(radar.shape).toBe('circle')
+
+            const series = radarSeriesList(option)
+            expect(series[0]?.areaStyle).toEqual({ opacity: 0.35 })
           },
         )
       },
