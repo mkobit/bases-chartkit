@@ -25,6 +25,19 @@ function parallelSeriesArray(option: EChartsOption): readonly ParallelSeriesOpti
   return all.flatMap(s => s.type === 'parallel' ? [s] : [])
 }
 
+function parallelComponent(option: EChartsOption) {
+  const p = option.parallel
+  return Array.isArray(p) ? p[0] : p
+}
+
+function optionTheme(option: EChartsOption): string | undefined {
+  if (typeof option === 'object' && option !== null && 'theme' in option) {
+    const val = Reflect.get(option, 'theme')
+    return typeof val === 'string' ? val : undefined
+  }
+  return undefined
+}
+
 describe(
   'createParallelChartOption',
   () => {
@@ -209,6 +222,129 @@ describe(
         const title = Array.isArray(option.title) ? option.title[0] : option.title
         expect(title).toBeDefined()
         expect(title?.text).toContain('No dimensions')
+      },
+    )
+
+    describe(
+      'options and data variants',
+      () => {
+        it(
+          'should support smooth option on series and lineStyle',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const option = createParallelChartOption(data, 'a, b', { smooth: true })
+            const series = parallelSeriesArray(option)[0]
+            expect(series?.smooth).toBe(true)
+            expect(Reflect.get(series?.lineStyle ?? {}, 'smooth')).toBe(true)
+          },
+        )
+
+        it(
+          'should support layout horizontal and vertical options',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const verticalOption = createParallelChartOption(data, 'a, b', { layout: 'vertical' })
+            expect(parallelComponent(verticalOption)?.layout).toBe('vertical')
+
+            const horizontalOption = createParallelChartOption(data, 'a, b', { layout: 'horizontal' })
+            expect(parallelComponent(horizontalOption)?.layout).toBe('horizontal')
+          },
+        )
+
+        it(
+          'should map flipAxis boolean to layout',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const flippedOption = createParallelChartOption(data, 'a, b', { flipAxis: true })
+            expect(parallelComponent(flippedOption)?.layout).toBe('vertical')
+
+            const unflippedOption = createParallelChartOption(data, 'a, b', { flipAxis: false })
+            expect(parallelComponent(unflippedOption)?.layout).toBe('horizontal')
+          },
+        )
+
+        it(
+          'should support lineOpacity and lineWidth on series lineStyle',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const option = createParallelChartOption(data, 'a, b', { lineOpacity: 0.4, lineWidth: 3 })
+            const series = parallelSeriesArray(option)[0]
+            expect(series?.lineStyle?.opacity).toBe(0.4)
+            expect(series?.lineStyle?.width).toBe(3)
+          },
+        )
+
+        it(
+          'should support theme option on returned chart option',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const option = createParallelChartOption(data, 'a, b', { theme: 'Vintage' })
+            expect(optionTheme(option)).toBe('Vintage')
+          },
+        )
+
+        it(
+          'should support parallelAxisDefault options merge',
+          () => {
+            const data = [{ a: 1, b: 2 }]
+            const option = createParallelChartOption(data, 'a, b', {
+              parallelAxisDefault: { nameGap: 35 },
+            })
+            const parallel = parallelComponent(option)
+            expect(parallel?.parallelAxisDefault?.nameGap).toBe(35)
+          },
+        )
+
+        it(
+          'should support 6-stat fantasy character attributes with realistic rolls',
+          () => {
+            const data = [
+              {
+                Name: 'Gandalf',
+                Class: 'Wizard',
+                Strength: 10,
+                Dexterity: 14,
+                Constitution: 12,
+                Intelligence: 18,
+                Wisdom: 16,
+                Charisma: 15,
+              },
+              {
+                Name: 'Conan',
+                Class: 'Barbarian',
+                Strength: 18,
+                Dexterity: 15,
+                Constitution: 17,
+                Intelligence: 9,
+                Wisdom: 11,
+                Charisma: 10,
+              },
+            ]
+            const dimensions = 'Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma'
+            const option = createParallelChartOption(data, dimensions, { seriesProp: 'Class' })
+
+            const axes = option.parallelAxis
+            expect(axes).toBeDefined()
+            expect(axes).toHaveLength(6)
+            expect(parallelAxisAt(option, 0).name).toBe('Strength')
+            expect(parallelAxisAt(option, 1).name).toBe('Dexterity')
+            expect(parallelAxisAt(option, 2).name).toBe('Constitution')
+            expect(parallelAxisAt(option, 3).name).toBe('Intelligence')
+            expect(parallelAxisAt(option, 4).name).toBe('Wisdom')
+            expect(parallelAxisAt(option, 5).name).toBe('Charisma')
+
+            const series = parallelSeriesArray(option)
+            expect(series).toHaveLength(2)
+
+            const wizard = series.find(s => s.name === 'Wizard')
+            expect(wizard).toBeDefined()
+            expect(wizard?.data?.[0]).toEqual([10, 14, 12, 18, 16, 15])
+
+            const barbarian = series.find(s => s.name === 'Barbarian')
+            expect(barbarian).toBeDefined()
+            expect(barbarian?.data?.[0]).toEqual([18, 15, 17, 9, 11, 10])
+          },
+        )
       },
     )
   },

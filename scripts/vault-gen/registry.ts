@@ -1,3 +1,5 @@
+import * as fc from 'fast-check'
+import * as R from 'remeda'
 import { barChartArbitrary, stackedBarChartArbitrary } from '../generators/bar'
 import { bulletChartArbitrary } from '../generators/bullet'
 import { boxplotChartArbitrary, histogramChartArbitrary, paretoChartArbitrary, waterfallChartArbitrary } from '../generators/distribution'
@@ -370,24 +372,108 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
   ],
 })
 
-// Reuses radarChartArbitrary/RadarSample as-is -- parallel-coordinates and
-// radar plot the exact same wide-format character rows (name/class/
-// Strength/Intelligence/Agility), just bound differently: xProp takes the
-// same comma-separated multi-property convention as radar's metricProps,
-// and seriesProp groups by Class instead of radar's per-name xAxisProp.
-// No new data-generation logic needed.
-const parallelSpec = defineChartExampleSpec<RadarSample>({
+const PARALLEL_CLASSES = [
+  'Warrior',
+  'Wizard',
+  'Rogue',
+  'Ranger',
+  'Cleric',
+  'Bard',
+  'Paladin',
+  'Druid',
+  'Monk',
+  'Sorcerer',
+  'Barbarian',
+  'Warlock',
+] as const
+
+const PARALLEL_CHARACTER_NAMES = [
+  'Conan',
+  'Gandalf',
+  'Locke',
+  'Elowen',
+  'Draven',
+  'Tamsin',
+  'Aric',
+  'Lyra',
+  'Boran',
+  'Thorne',
+  'Kaelen',
+  'Morrigan',
+  'Alis',
+  'Baelor',
+  'Corin',
+  'Faelan',
+  'Giselle',
+  'Hawke',
+  'Iselda',
+  'Jareth',
+  'Kallista',
+  'Lorcan',
+  'Mira',
+  'Nyx',
+] as const
+
+interface ParallelSample {
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly class: string
+    readonly Strength: number
+    readonly Dexterity: number
+    readonly Constitution: number
+    readonly Intelligence: number
+    readonly Wisdom: number
+    readonly Charisma: number
+  }>
+}
+
+const parallelChartArbitrary: fc.Arbitrary<ParallelSample> = fc
+  .subarray([...PARALLEL_CHARACTER_NAMES], { minLength: 16, maxLength: 24 })
+  .chain((names) => {
+    return fc.tuple(
+      ...names.map(() => fc.tuple(
+        fc.constantFrom(...PARALLEL_CLASSES),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+        fc.integer({ min: 3, max: 18 }),
+      )),
+    ).map((rolls) => {
+      const data = R.pipe(
+        R.zip(names, rolls),
+        R.map(([name, [characterClass, strength, dexterity, constitution, intelligence, wisdom, charisma]]) => ({
+          name,
+          class: characterClass,
+          Strength: strength,
+          Dexterity: dexterity,
+          Constitution: constitution,
+          Intelligence: intelligence,
+          Wisdom: wisdom,
+          Charisma: charisma,
+        })),
+      )
+
+      return {
+        data,
+      }
+    })
+  })
+
+const parallelSpec = defineChartExampleSpec<ParallelSample>({
   chartType: 'parallel',
   echartsExampleUrl: echartsExample('parallel-simple'),
   description: 'Character attribute comparison grouped by class -- demonstrates a parallel-coordinates chart, reusing radarChartArbitrary.',
-  arbitrary: radarChartArbitrary,
+  arbitrary: parallelChartArbitrary,
   notePrefix: 'Character',
   toRows: sample => sample.data.map(row => ({
     Name: row.name,
     Class: row.class,
     Strength: row.Strength,
+    Dexterity: row.Dexterity,
+    Constitution: row.Constitution,
     Intelligence: row.Intelligence,
-    Agility: row.Agility,
     Wisdom: row.Wisdom,
     Charisma: row.Charisma,
   })),
@@ -397,10 +483,32 @@ const parallelSpec = defineChartExampleSpec<RadarSample>({
       viewName: 'Character stats (parallel)',
       viewType: 'parallel-chart',
       propBindings: {
-        xProp: 'note.Strength, note.Intelligence, note.Agility',
+        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
         seriesProp: 'note.Class',
       },
       literalOptions: { showLegend: true },
+      filters: ['note.Class != null'],
+    },
+    {
+      fileName: 'Smooth.base',
+      viewName: 'Character stats (smooth curves)',
+      viewType: 'parallel-chart',
+      propBindings: {
+        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        seriesProp: 'note.Class',
+      },
+      literalOptions: { showLegend: true, smooth: true },
+      filters: ['note.Class != null'],
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Character stats (vintage theme)',
+      viewType: 'parallel-chart',
+      propBindings: {
+        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        seriesProp: 'note.Class',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
       filters: ['note.Class != null'],
     },
   ],
