@@ -1,0 +1,28 @@
+properties:
+  note.Charisma:
+    displayName: Charisma
+  note.Class:
+    displayName: Class
+  note.Constitution:
+    displayName: Constitution
+  note.Dexterity:
+    displayName: Dexterity
+  note.Intelligence:
+    displayName: Intelligence
+  note.Name:
+    displayName: Name
+  note.Strength:
+    displayName: Strength
+  note.Wisdom:
+    displayName: Wisdom
+views:
+  - type: radar-chart
+    name: Character stats radar (filled area)
+    xAxisProp: note.Name
+    metricProps: note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma
+    showLegend: true
+    areaStyle: true
+    filters:
+      and:
+        - file.folder == "radar/notes"
+        - note.Class != null

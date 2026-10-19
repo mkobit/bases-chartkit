@@ -297,10 +297,12 @@ interface RadarSample {
     readonly name: string
     readonly class: string
     readonly Strength: number
+    readonly Dexterity: number
+    readonly Constitution: number
     readonly Intelligence: number
-    readonly Agility: number
     readonly Wisdom: number
     readonly Charisma: number
+    readonly Agility: number
   }>
 }
 
@@ -314,8 +316,9 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
     Name: row.name,
     Class: row.class,
     Strength: row.Strength,
+    Dexterity: row.Dexterity,
+    Constitution: row.Constitution,
     Intelligence: row.Intelligence,
-    Agility: row.Agility,
     Wisdom: row.Wisdom,
     Charisma: row.Charisma,
   })),
@@ -326,9 +329,42 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
       viewType: 'radar-chart',
       propBindings: {
         xAxisProp: 'note.Name',
-        metricProps: 'note.Strength, note.Intelligence, note.Agility',
+        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
       },
       literalOptions: { showLegend: true },
+      filters: ['note.Class != null'],
+    },
+    {
+      fileName: 'FilledArea.base',
+      viewName: 'Character stats radar (filled area)',
+      viewType: 'radar-chart',
+      propBindings: {
+        xAxisProp: 'note.Name',
+        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+      },
+      literalOptions: { showLegend: true, areaStyle: true },
+      filters: ['note.Class != null'],
+    },
+    {
+      fileName: 'Circular.base',
+      viewName: 'Character stats radar (circular grid)',
+      viewType: 'radar-chart',
+      propBindings: {
+        xAxisProp: 'note.Name',
+        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+      },
+      literalOptions: { showLegend: true, shape: 'circle' },
+      filters: ['note.Class != null'],
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Character stats radar (vintage theme)',
+      viewType: 'radar-chart',
+      propBindings: {
+        xAxisProp: 'note.Name',
+        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
       filters: ['note.Class != null'],
     },
   ],

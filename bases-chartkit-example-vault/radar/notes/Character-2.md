@@ -1,9 +1,10 @@
 ---
 Name: "Elowen"
-Class: "Wizard"
-Strength: 10
-Intelligence: 5
-Agility: 3
-Wisdom: 4
-Charisma: 7
+Class: "Bard"
+Strength: 7
+Dexterity: 3
+Constitution: 16
+Intelligence: 12
+Wisdom: 8
+Charisma: 8
 ---
