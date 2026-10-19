@@ -1,0 +1,26 @@
+properties:
+  note.Charisma:
+    displayName: Charisma
+  note.Class:
+    displayName: Class
+  note.Constitution:
+    displayName: Constitution
+  note.Dexterity:
+    displayName: Dexterity
+  note.Intelligence:
+    displayName: Intelligence
+  note.Strength:
+    displayName: Strength
+  note.Wisdom:
+    displayName: Wisdom
+views:
+  - type: parallel-chart
+    name: Character stats (smooth curves)
+    xProp: note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma
+    seriesProp: note.Class
+    showLegend: true
+    smooth: true
+    filters:
+      and:
+        - file.folder == "parallel/notes"
+        - note.Class != null

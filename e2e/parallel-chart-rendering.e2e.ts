@@ -42,8 +42,8 @@ test.describe('parallel chart rendering', () => {
     // vertexIndex 1 targets an interior axis vertex (bck-44x: exercises the
     // isPolyline branch reading the exact rendered vertex, not a bounding-rect
     // center that lands between axes). The xProp axis order is
-    // Strength, Intelligence, Agility -- so vertex 1 is each row's Intelligence
-    // crossing, and each series data row is that axis-value triple.
+    // Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma -- so vertex 1 is each row's Dexterity
+    // crossing, and each series data row is that 6-attribute value tuple.
     const interiorVertexIndex = 1
 
     // Series order is R.groupBy first-occurrence order of `Class`, which
@@ -59,13 +59,11 @@ test.describe('parallel chart rendering', () => {
     )
     expect(rows.length).toBeGreaterThan(0)
 
-    // At the Intelligence axis x-coordinate every polyline sits exactly at its
-    // own Intelligence value's y, so two characters that share that value
+    // At the Dexterity axis x-coordinate every polyline sits exactly at its
+    // own Dexterity value's y, so two characters that share that value
     // share the identical vertex pixel -- hovering it is inherently ambiguous
-    // and z-order alone decides which line's trigger:'item' tooltip fires
-    // (bck-npq: Gandalf/Rogue and Draven/Warrior both have Intelligence 8, so
-    // the hover flaked onto the Warrior row 'Warrior 13 8 6'). Pick a row whose
-    // interior-axis value is UNIQUE across all characters, so no other line
+    // and z-order alone decides which line's trigger:'item' tooltip fires.
+    // Pick a row whose interior-axis value is UNIQUE across all characters, so no other line
     // touches that vertex and the resolved tooltip is deterministic.
     const interiorValueCounts = R.countBy(rows, row => String(row.values[interiorVertexIndex]))
     const target = rows.find(row => interiorValueCounts[String(row.values[interiorVertexIndex])] === 1)

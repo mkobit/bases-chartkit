@@ -1,16 +1,22 @@
 properties:
-  note.Agility:
-    displayName: Agility
+  note.Charisma:
+    displayName: Charisma
   note.Class:
     displayName: Class
+  note.Constitution:
+    displayName: Constitution
+  note.Dexterity:
+    displayName: Dexterity
   note.Intelligence:
     displayName: Intelligence
   note.Strength:
     displayName: Strength
+  note.Wisdom:
+    displayName: Wisdom
 views:
   - type: parallel-chart
     name: Character stats (parallel)
-    xProp: note.Strength, note.Intelligence, note.Agility
+    xProp: note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma
     seriesProp: note.Class
     showLegend: true
     filters:

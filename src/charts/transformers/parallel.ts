@@ -8,6 +8,12 @@ import * as R from 'remeda'
 export interface ParallelTransformerOptions extends BaseTransformerOptions {
   readonly seriesProp?: string
   readonly dimensionLabels?: Readonly<Record<string, string>>
+  readonly layout?: 'horizontal' | 'vertical'
+  readonly smooth?: boolean
+  readonly lineOpacity?: number
+  readonly lineWidth?: number
+  readonly theme?: string
+  readonly parallelAxisDefault?: Readonly<Record<string, unknown>>
 }
 
 type ParallelAxisSpec = Readonly<{
@@ -34,6 +40,8 @@ export function createParallelChartOption(
       }
     : (() => {
         const seriesProp = options?.seriesProp
+        const layout: 'horizontal' | 'vertical' | undefined = options?.layout
+          ?? (options?.flipAxis !== undefined ? (options.flipAxis ? 'vertical' : 'horizontal') : undefined)
 
         // Use standard map to avoid remeda type issues with indexed map in strict mode
         const parallelAxis: readonly ParallelAxisSpec[] = dims.map((dim, index): ParallelAxisSpec => {
@@ -122,8 +130,11 @@ export function createParallelChartOption(
             return {
               name: name,
               type: 'parallel' as const,
+              ...(options?.smooth ? { smooth: true } : {}),
               lineStyle: {
-                width: STYLE_TOKENS.strokeWidth.medium,
+                width: options?.lineWidth ?? STYLE_TOKENS.strokeWidth.medium,
+                ...(options?.lineOpacity !== undefined ? { opacity: options.lineOpacity } : {}),
+                ...(options?.smooth ? { smooth: true } : {}),
               },
               // ECharts wants a fresh mutable row array per line; build it here
               // at the option boundary from the readonly pipeline rows.
@@ -155,10 +166,12 @@ export function createParallelChartOption(
             right: '13%',
             bottom: '10%',
             top: '20%',
+            ...(layout ? { layout } : {}),
             parallelAxisDefault: {
               type: 'value',
               nameLocation: 'end',
               nameGap: 20,
+              ...(options?.parallelAxisDefault ?? {}),
             },
           },
           // ECharts wants fresh mutable axis (and per-axis data) arrays, same
@@ -177,6 +190,7 @@ export function createParallelChartOption(
                 },
               }
             : {}),
+          ...(options?.theme ? { theme: options.theme } : {}),
         }
 
         return option
