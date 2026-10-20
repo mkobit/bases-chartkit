@@ -14,13 +14,22 @@ export class PictorialBarChartView extends BaseChartView {
     const xProp = this.getStringOption(BaseChartView.X_AXIS_PROP_KEY) ?? ''
     const yProp = this.getStringOption(BaseChartView.Y_AXIS_PROP_KEY) ?? ''
 
+    const rawRepeat = this.config.get('symbolRepeat')
+    const symbolRepeat = typeof rawRepeat === 'boolean'
+      ? rawRepeat
+      : this.getLiteralOption('symbolRepeat', ['fixed', 'true', 'false'] as const)
+    const rawSymbolSize = this.config.get('symbolSize')
+    const symbolSize = typeof rawSymbolSize === 'number' || typeof rawSymbolSize === 'string'
+      ? rawSymbolSize
+      : undefined
+
     const options: PictorialBarTransformerOptions = {
       ...this.getCommonTransformerOptions(),
       seriesProp: this.getStringOption(BaseChartView.SERIES_PROP_KEY),
       symbol: this.getStringOption('symbol'),
-      symbolRepeat: this.getLiteralOption('symbolRepeat', ['fixed', 'true', 'false'] as const),
+      symbolRepeat,
       symbolClip: this.getBooleanOption('symbolClip'),
-      symbolSize: this.getStringOption('symbolSize'),
+      symbolSize,
     }
 
     return transformDataToChartOption(

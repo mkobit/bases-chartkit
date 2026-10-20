@@ -10,6 +10,17 @@ views:
     yAxisProp: note.Spend
     showLegend: true
     symbol: "rect"
+    symbolClip: true
+    filters:
+      and:
+        - file.folder == "pictorial-bar/notes"
+  - type: pictorial-bar-chart
+    name: Department spend (rounded rectangles)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    symbol: "roundRect"
+    symbolClip: true
     filters:
       and:
         - file.folder == "pictorial-bar/notes"
