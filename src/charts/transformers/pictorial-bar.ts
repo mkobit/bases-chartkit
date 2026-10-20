@@ -43,7 +43,7 @@ interface PictorialBarTooltipRow {
   readonly row: PictorialBarDataPoint
 }
 
-function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>): string {
+export function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>): string {
   const list: ReadonlyArray<PictorialBarTooltipParam> = Array.isArray(params) ? params : [params]
   const validRows: ReadonlyArray<PictorialBarTooltipRow> = list
     .map((p): PictorialBarTooltipRow | null => (isPictorialBarDataPoint(p.value) ? { param: p, row: p.value } : null))
@@ -54,8 +54,9 @@ function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<Pictoria
   }
   const lines = validRows.map(({ param, row }) => {
     const marker = param.marker ?? ''
+    const seriesLabel = param.seriesName || row.s
     const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
-    return `${marker}${param.seriesName ?? ''}: ${yText}`
+    return `${marker}${seriesLabel ? `${seriesLabel}: ` : ''}${yText}`
   }).join('<br/>')
   return `<b>${first.row.x}</b><br/>${lines}`
 }
@@ -150,13 +151,16 @@ export function createPictorialBarChartOption(
     // fill the entire bar's bounding box by ECharts, which for most symbols
     // (especially 'rect') is visually indistinguishable from a plain bar.
     const rawRepeat = options?.symbolRepeat
-    const symbolRepeat = rawRepeat === undefined
+    const symbolRepeat = rawRepeat === undefined || rawRepeat === true || rawRepeat === 'true'
       ? true
-      : rawRepeat === 'true'
-        ? true
-        : rawRepeat === 'false'
-          ? false
-          : rawRepeat
+      : rawRepeat === false || rawRepeat === 'false'
+        ? false
+        : rawRepeat
+
+    // Symbol clipping ensures repeated/fixed symbols accurately encode and
+    // visually convey bar values rather than quantizing to integer symbol counts
+    // (where each block is the same size and different values look identical).
+    const symbolClip = options?.symbolClip ?? true
 
     return {
       name: name,
@@ -177,8 +181,8 @@ export function createPictorialBarChartOption(
               's'] },
       symbol: options?.symbol || 'circle',
       symbolRepeat: symbolRepeat,
-      symbolClip: options?.symbolClip,
-      symbolSize: options?.symbolSize || '100%',
+      symbolClip: symbolClip,
+      symbolSize: options?.symbolSize !== undefined && options?.symbolSize !== '' ? options.symbolSize : '100%',
     }
   })
 

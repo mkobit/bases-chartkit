@@ -1,0 +1,16 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: pictorial-bar-chart
+    name: Department spend (diamond symbols)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    symbol: "diamond"
+    symbolClip: true
+    filters:
+      and:
+        - file.folder == "pictorial-bar/notes"

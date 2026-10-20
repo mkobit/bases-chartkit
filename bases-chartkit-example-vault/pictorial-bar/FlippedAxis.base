@@ -1,0 +1,17 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: pictorial-bar-chart
+    name: Department spend (flipped axis)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    symbol: "rect"
+    symbolClip: true
+    flipAxis: true
+    filters:
+      and:
+        - file.folder == "pictorial-bar/notes"

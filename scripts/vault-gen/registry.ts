@@ -98,7 +98,47 @@ const pictorialBarSpec = defineChartExampleSpec<BarSample>({
         xAxisProp: 'note.Department',
         yAxisProp: 'note.Spend',
       },
-      literalOptions: { showLegend: true, symbol: 'rect' },
+      literalOptions: { showLegend: true, symbol: 'rect', symbolClip: true },
+    },
+    {
+      fileName: 'Basic.base',
+      viewName: 'Department spend (rounded rectangles)',
+      viewType: 'pictorial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, symbol: 'roundRect', symbolClip: true },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Department spend (vintage theme)',
+      viewType: 'pictorial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, symbol: 'roundRect', symbolClip: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Department spend (flipped axis)',
+      viewType: 'pictorial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, symbol: 'rect', symbolClip: true, flipAxis: true },
+    },
+    {
+      fileName: 'DiamondSymbol.base',
+      viewName: 'Department spend (diamond symbols)',
+      viewType: 'pictorial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, symbol: 'diamond', symbolClip: true },
     },
   ],
 })
