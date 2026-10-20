@@ -32,11 +32,19 @@ export class RadialBarChartView extends BaseChartView {
         type: 'toggle',
         key: 'stack',
       },
-      ...BaseChartView.getCommonViewOptions().filter(opt =>
-        opt.key === BaseChartView.LEGEND_KEY
-        || opt.key === BaseChartView.HEIGHT_KEY
-        || opt.key === BaseChartView.LEGEND_POSITION_KEY
-        || opt.key === BaseChartView.LEGEND_ORIENT_KEY),
+      {
+        displayName: t('views.axis.flip'),
+        type: 'toggle',
+        key: BaseChartView.FLIP_AXIS_KEY,
+      },
+      ...BaseChartView.getCommonViewOptions().filter((opt) => {
+        if ('key' in opt) {
+          return opt.key !== BaseChartView.X_AXIS_PROP_KEY
+            && opt.key !== BaseChartView.Y_AXIS_PROP_KEY
+            && opt.key !== BaseChartView.SERIES_PROP_KEY
+        }
+        return true
+      }),
     ]
   }
 
@@ -45,6 +53,7 @@ export class RadialBarChartView extends BaseChartView {
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
     const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
     const isStacked = this.getBooleanOption('stack') ?? false
+    const flipAxis = this.getBooleanOption(BaseChartView.FLIP_AXIS_KEY) ?? false
 
     if (typeof xProp !== 'string' || typeof yProp !== 'string') {
       return null
@@ -59,6 +68,7 @@ export class RadialBarChartView extends BaseChartView {
         ...this.getCommonTransformerOptions(),
         seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
         stack: isStacked,
+        flipAxis,
       },
     )
   }

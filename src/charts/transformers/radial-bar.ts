@@ -7,6 +7,8 @@ import * as R from 'remeda'
 export interface RadialBarTransformerOptions extends BaseTransformerOptions {
   readonly stack?: boolean
   readonly seriesProp?: string
+  readonly flipAxis?: boolean
+  readonly theme?: string
 }
 
 interface RadialBarDataPoint {
@@ -23,6 +25,7 @@ export function createRadialBarChartOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
   const isStacked = options?.stack
+  const flipAxis = options?.flipAxis ?? false
   const yAxisLabel = options?.yAxisLabel ?? yProp
 
   const normalizedData: ReadonlyArray<RadialBarDataPoint> = R.map(
@@ -91,8 +94,11 @@ export function createRadialBarChartOption(
       datasetIndex: datasetIndex,
       // polar bar series read radius/angle encode channels, not x/y —
       // with x/y no bars render even though the angleAxis still draws.
-      encode: { angle: 'x',
-        radius: 'y' },
+      encode: flipAxis
+        ? { angle: 'y',
+            radius: 'x' }
+        : { angle: 'x',
+            radius: 'y' },
       ...(!seriesProp ? { colorBy: 'data' as const } : {}),
       ...(isStacked ? { stack: 'total' } : {}),
     }
@@ -102,18 +108,36 @@ export function createRadialBarChartOption(
     dataset: [...datasets],
     polar: {
     },
-    angleAxis: {
-      type: 'category',
-      data: [...angleAxisData],
-      startAngle: 90,
-    },
-    radiusAxis: {
-    },
+    angleAxis: flipAxis
+      ? {
+          type: 'value',
+          startAngle: 90,
+          axisLabel: {
+            showMinLabel: false,
+          },
+        }
+      : {
+          type: 'category',
+          data: [...angleAxisData],
+          startAngle: 90,
+        },
+    radiusAxis: flipAxis
+      ? {
+          type: 'category',
+          data: [...angleAxisData],
+        }
+      : {
+          type: 'value',
+          axisLabel: {
+            showMinLabel: false,
+          },
+        },
     series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
+    ...(options?.theme ? { theme: options.theme } : {}),
   }
 
   return opt

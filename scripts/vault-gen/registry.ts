@@ -164,6 +164,36 @@ const radialBarSpec = defineChartExampleSpec<BarSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Department spend (vintage theme)',
+      viewType: 'radial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'Department spend (flipped axis)',
+      viewType: 'radial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
+    {
+      fileName: 'Stacked.base',
+      viewName: 'Department spend (stacked)',
+      viewType: 'radial-bar-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, stack: true },
+    },
   ],
 })
 
