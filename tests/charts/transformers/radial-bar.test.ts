@@ -10,6 +10,14 @@ function barSeriesList(option: EChartsOption): readonly BarSeriesOption[] {
   return list.flatMap(s => s.type === 'bar' ? [s] : [])
 }
 
+function optionTheme(option: EChartsOption): string | undefined {
+  if (typeof option === 'object' && option !== null && 'theme' in option) {
+    const val = Reflect.get(option, 'theme')
+    return typeof val === 'string' ? val : undefined
+  }
+  return undefined
+}
+
 describe(
   'createRadialBarChartOption',
   () => {
@@ -48,7 +56,12 @@ describe(
             'B',
             'C']),
         }))
-        expect(option.radiusAxis).toBeDefined()
+        expect(option.radiusAxis).toEqual({
+          type: 'value',
+          axisLabel: {
+            showMinLabel: false,
+          },
+        })
 
         const series = barSeriesList(option)
         expect(series).toHaveLength(1)
@@ -59,6 +72,84 @@ describe(
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(series[0].encode).toEqual({ angle: 'x',
           radius: 'y' })
+      },
+    )
+
+    it(
+      'should hide min tick label on value axis to prevent center 0 artifact',
+      () => {
+        const defaultOption = createRadialBarChartOption(
+          data,
+          'category',
+          'value',
+        )
+        expect(defaultOption.radiusAxis).toEqual({
+          type: 'value',
+          axisLabel: {
+            showMinLabel: false,
+          },
+        })
+
+        const flippedOption = createRadialBarChartOption(
+          data,
+          'category',
+          'value',
+          { flipAxis: true },
+        )
+        expect(flippedOption.angleAxis).toEqual({
+          type: 'value',
+          startAngle: 90,
+          axisLabel: {
+            showMinLabel: false,
+          },
+        })
+      },
+    )
+
+    it(
+      'should handle flipAxis option by swapping category and value axes',
+      () => {
+        const option = createRadialBarChartOption(
+          data,
+          'category',
+          'value',
+          { flipAxis: true },
+        )
+
+        expect(option.radiusAxis).toEqual({
+          type: 'category',
+          data: ['A',
+            'B',
+            'C'],
+        })
+        expect(option.angleAxis).toEqual({
+          type: 'value',
+          startAngle: 90,
+          axisLabel: {
+            showMinLabel: false,
+          },
+        })
+
+        const series = barSeriesList(option)
+        expect(series).toHaveLength(1)
+        expect(series[0]?.encode).toEqual({
+          angle: 'y',
+          radius: 'x',
+        })
+      },
+    )
+
+    it(
+      'should support theme option on returned chart option',
+      () => {
+        const option = createRadialBarChartOption(
+          data,
+          'category',
+          'value',
+          { theme: 'Vintage' },
+        )
+
+        expect(optionTheme(option)).toBe('Vintage')
       },
     )
 
