@@ -31,8 +31,8 @@ test.describe('funnel chart rendering', () => {
 
     await expect.poll(
       async () => {
-        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> }>(await getChartOption(page))
-        return option?.series?.[0]?.data?.length ?? 0
+        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly FunnelDataPointLike[] }> }>(await getChartOption(page))
+        return option?.series?.[0]?.data?.[0]?.value ?? 0
       },
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)

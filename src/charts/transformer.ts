@@ -8,6 +8,9 @@ import type {
 import {
   createPieChartOption,
 } from './transformers/pie'
+import type {
+  FunnelTransformerOptions,
+} from './transformers/funnel'
 import {
   createFunnelChartOption,
 } from './transformers/funnel'
@@ -184,6 +187,7 @@ export type ChartTransformerOptions
     | MapTransformerOptions
     | LinesTransformerOptions
     | PieTransformerOptions
+    | FunnelTransformerOptions
     | ScatterTransformerOptions
     | EffectScatterTransformerOptions
     | RadarTransformerOptions
@@ -258,7 +262,7 @@ const transformerMap: Readonly<Record<
     data,
     xProp,
     yProp,
-    asOptions(options),
+    asOptions<FunnelTransformerOptions>(options),
   ),
   radar: (data, xProp, yProp, options): EChartsOption => createRadarChartOption(
     data,
@@ -488,6 +492,7 @@ export { type ChartType, type BaseTransformerOptions, type BasesData, type RowMe
 export { type CartesianTransformerOptions } from './transformers/cartesian'
 export { type LinesTransformerOptions } from './transformers/lines'
 export { type PieTransformerOptions } from './transformers/pie'
+export { type FunnelTransformerOptions } from './transformers/funnel'
 export { type ScatterTransformerOptions } from './transformers/scatter'
 export { type EffectScatterTransformerOptions } from './transformers/effect-scatter'
 export { type RadarTransformerOptions } from './transformers/radar'

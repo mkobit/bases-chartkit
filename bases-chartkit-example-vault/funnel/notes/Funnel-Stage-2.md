@@ -1,4 +1,4 @@
 ---
-FunnelStage: "Product View"
-Population: 5610
+FunnelStage: "Product Search"
+Population: 6940
 ---

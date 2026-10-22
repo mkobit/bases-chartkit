@@ -1,4 +1,4 @@
 ---
-FunnelStage: "Purchase Completed"
-Population: 2330
+FunnelStage: "Checkout Start"
+Population: 4672
 ---
