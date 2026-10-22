@@ -29,6 +29,12 @@ function funnelData(option: EChartsOption): readonly FunnelDatum[] {
   return Array.isArray(data) ? data.flatMap(d => isFunnelDatum(d) ? [d] : []) : []
 }
 
+function optionTheme(option: EChartsOption): unknown {
+  return typeof option === 'object' && option !== null && 'theme' in option
+    ? option.theme
+    : undefined
+}
+
 describe(
   'Transformer: Funnel',
   () => {
@@ -277,6 +283,163 @@ describe(
         // The return of getLegendOption has properties like orient, type, left/right/top/bottom
         // @ts-expect-error - suppress strictNullChecks in tests
         expect(option.legend.type).toBe('scroll')
+      },
+    )
+
+    it(
+      'should set sort to ascending when flipAxis is true and sort is undefined',
+      () => {
+        const data = [
+          { name: 'Step 1',
+            value: 100 },
+          { name: 'Step 2',
+            value: 60 },
+          { name: 'Step 3',
+            value: 80 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          { flipAxis: true },
+        )
+
+        const series = firstFunnelSeries(option)
+        expect(series.sort).toBe('ascending')
+
+        const seriesData = funnelData(option)
+        expect(seriesData.map(d => d.value)).toEqual([60,
+          80,
+          100])
+      },
+    )
+
+    it(
+      'should respect explicit sort option over flipAxis',
+      () => {
+        const data = [
+          { name: 'Step 2',
+            value: 80 },
+          { name: 'Step 1',
+            value: 100 },
+          { name: 'Step 3',
+            value: 60 },
+        ]
+
+        const noneOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          { flipAxis: true,
+            sort: 'none' },
+        )
+        const noneSeries = firstFunnelSeries(noneOption)
+        expect(noneSeries.sort).toBe('none')
+        expect(funnelData(noneOption).map(d => d.name)).toEqual(['Step 2',
+          'Step 1',
+          'Step 3'])
+
+        const descOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          { flipAxis: true,
+            sort: 'descending' },
+        )
+        const descSeries = firstFunnelSeries(descOption)
+        expect(descSeries.sort).toBe('descending')
+        expect(funnelData(descOption).map(d => d.value)).toEqual([100,
+          80,
+          60])
+      },
+    )
+
+    it(
+      'should pass funnelAlign, gap, and borderRadius to series',
+      () => {
+        const data = [
+          { name: 'Step 1',
+            value: 100 },
+          { name: 'Step 2',
+            value: 50 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          {
+            funnelAlign: 'left',
+            gap: 4,
+            borderRadius: 6,
+          },
+        )
+
+        const series = firstFunnelSeries(option)
+        expect(series.funnelAlign).toBe('left')
+        expect(series.gap).toBe(4)
+        expect(series.itemStyle?.borderRadius).toBe(6)
+      },
+    )
+
+    it(
+      'should include theme in returned option when provided',
+      () => {
+        const data = [
+          { name: 'Step 1',
+            value: 100 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          { theme: 'Vintage' },
+        )
+
+        expect(optionTheme(option)).toBe('Vintage')
+      },
+    )
+
+    it(
+      'should preserve default tooltip formatter when valueFormat is undefined and format with formatValue when defined',
+      () => {
+        const data = [
+          { name: 'Step 1',
+            value: 1500 },
+        ]
+
+        const defaultOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+        )
+        const defaultTooltip = Array.isArray(defaultOption.tooltip) ? defaultOption.tooltip[0] : defaultOption.tooltip
+        expect(defaultTooltip?.formatter).toBe('{b} : {c}%')
+
+        const formattedOption = transformDataToChartOption(
+          data,
+          'name',
+          'value',
+          'funnel',
+          { valueFormat: '{value} users' },
+        )
+        const formattedTooltip = Array.isArray(formattedOption.tooltip) ? formattedOption.tooltip[0] : formattedOption.tooltip
+        expect(typeof formattedTooltip?.formatter).toBe('function')
+        if (typeof formattedTooltip?.formatter === 'function') {
+          const result: unknown = Reflect.apply(formattedTooltip.formatter, undefined, [{
+            name: 'Step 1',
+            value: 1500,
+          }])
+          expect(result).toBe('Step 1 : 1500 users')
+        }
       },
     )
   },

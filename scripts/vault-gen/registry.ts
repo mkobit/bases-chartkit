@@ -1138,6 +1138,26 @@ const funnelSpec = defineChartExampleSpec<FunnelSample>({
       },
       literalOptions: { showLegend: true },
     },
+    {
+      fileName: 'FlippedAxis.base',
+      viewName: 'User journey funnel (flipped axis)',
+      viewType: 'funnel-chart',
+      propBindings: {
+        xAxisProp: 'note.FunnelStage',
+        yAxisProp: 'note.Population',
+      },
+      literalOptions: { showLegend: true, flipAxis: true },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'User journey funnel (vintage theme)',
+      viewType: 'funnel-chart',
+      propBindings: {
+        xAxisProp: 'note.FunnelStage',
+        yAxisProp: 'note.Population',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
+    },
   ],
 })
 
