@@ -12,6 +12,7 @@ This directory contains deterministic generator scripts for `bases-chartkit-exam
 - Avoid monotone or single-color defaults; leverage multi-color palettes, itemStyle gradients, or category groupings.
 - Include natural variance: peaks, valleys, non-monotonic trends, and negative values where applicable.
 - Use realistic Temporal dates (spanning weeks, months, or quarters) rather than tight consecutive days.
+- Consult the `dataviz` skill when you select color palettes, gradients, or axis intervals.
 
 ## Standard variant view set per chart type
 Every chart type spec in `scripts/vault-gen/registry.ts` should aim to provide a set of views exercising key ECharts capabilities:

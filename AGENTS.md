@@ -9,6 +9,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 -   **Date/Time**: Use the `Temporal` API for logic. Avoid `Date`. Use `moment` only for Obsidian UI formatting.
 -   **Localization**: Use `i18next` with keys from `src/lang/locales/en.json`. See `src/lang/AGENTS.md`.
 -   **Vault generation**: See `scripts/vault-gen/AGENTS.md` for layout, demo-data richness, and variant view set conventions.
+-   **Chart transformers**: See `src/charts/AGENTS.md` for visualization and palette guidelines.
 
 ## Commands & Task Workflows
 The repository supports both `mise run` (for task DAG resolution, parallel checks, and source/output caching) and direct `bun run` scripts.
