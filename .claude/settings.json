@@ -48,8 +48,7 @@
       "Bash(git rm *)",
       "Bash(git check-ignore *)",
       "WebFetch(domain:obsidian.md)",
-      "WebFetch(domain:docs.obsidian.md)",
-      "Skill(dataviz)"
+      "WebFetch(domain:docs.obsidian.md)"
     ]
   },
   "hooks": {
