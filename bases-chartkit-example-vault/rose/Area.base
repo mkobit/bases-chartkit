@@ -1,0 +1,17 @@
+properties:
+  note.Department:
+    displayName: Department
+  note.Spend:
+    displayName: Spend
+views:
+  - type: rose-chart
+    name: Department spend (area)
+    xAxisProp: note.Department
+    yAxisProp: note.Spend
+    showLegend: true
+    roseType: "area"
+    padAngle: 2
+    borderRadius: 4
+    filters:
+      and:
+        - file.folder == "rose/notes"
