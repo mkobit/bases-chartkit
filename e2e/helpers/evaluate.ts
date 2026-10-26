@@ -825,6 +825,82 @@ export async function getTooltipText(page: Page): Promise<string | null> {
 }
 
 /**
+ * Checks whether an ECharts graph series force simulation is iterating.
+ *
+ * ECharts graph force layout steps ~510 iterations via `setTimeout(step, 16)` in `GraphView.js`.
+ * It sets `_layouting = true` during active simulation and `_layouting = false` when finished (`friction < 0.01`).
+ * Returns false when the series is not a force graph or when the simulation stops.
+ */
+export async function isGraphLayouting(page: Page, seriesIndex = 0): Promise<boolean> {
+  return evaluateObsidian(page, (app, a: { readonly seriesIndex: number }) => {
+    interface SeriesModelLike {
+      readonly mainType?: string
+      readonly subType?: string
+    }
+    interface GraphViewLike {
+      readonly _layouting?: boolean
+    }
+    interface ChartLike {
+      readonly chart: {
+        readonly getModel: () => {
+          readonly getSeriesByIndex: (idx: number) => SeriesModelLike | undefined
+        }
+        readonly getViewOfSeriesModel: (seriesModel: SeriesModelLike) => GraphViewLike | undefined
+      } | null
+    }
+
+    const isChartView = (obj: unknown): obj is ChartLike => {
+      if (obj === null || typeof obj !== 'object') {
+        return false
+      }
+      if (!('getChartOption' in obj) || !('chart' in obj)) {
+        return false
+      }
+      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+    }
+
+    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
+      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+        return undefined
+      }
+      if (depth > 8 || visited.includes(obj)) {
+        return undefined
+      }
+      if (isChartView(obj)) {
+        return obj
+      }
+      const nextVisited = [...visited, obj]
+      const values: readonly unknown[] = Object.values(obj)
+      return values.reduce<ChartLike | undefined>(
+        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+        undefined,
+      )
+    }
+
+    const leaves = [
+      app.workspace.getLeaf(false),
+      ...app.workspace.getLeavesOfType('bases'),
+    ]
+
+    const chartView = leaves.reduce<ChartLike | undefined>(
+      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
+      undefined,
+    )
+
+    const chart = chartView?.chart
+    if (!chart) {
+      return false
+    }
+    const seriesModel = chart.getModel().getSeriesByIndex(a.seriesIndex)
+    if (!seriesModel || seriesModel.subType !== 'graph') {
+      return false
+    }
+    const view = chart.getViewOfSeriesModel(seriesModel)
+    return view?._layouting === true
+  }, { seriesIndex })
+}
+
+/**
  * Moves the real (OS-level) mouse over a specific data point's rendered
  * shape and returns the tooltip text that appears.
  *
@@ -875,6 +951,17 @@ export async function hoverChartDataPointAndGetTooltip(
     () => getSeriesItemScreenPosition(page, args),
     { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
   ).not.toBeNull()
+
+  // For charts with force simulation (e.g. graph with layout: 'force'), wait
+  // for the physics simulation's step loop to finish completely (~510 steps / ~8s)
+  // before measuring screen positions or hovering.
+  // Otherwise, intermediate oscillation turnarounds satisfy the position-stability
+  // poll below while nodes are still moving, causing the pointer to land on an
+  // adjacent moving node (bck-bpe).
+  await expect.poll(
+    () => isGraphLayouting(page, args.seriesIndex),
+    { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+  ).toBe(false)
 
   let previous: ScreenPosition | null = null
   await expect.poll(async () => {

@@ -14,13 +14,15 @@ test.describe('graph chart rendering', () => {
   // traversal already proven for radar's Group-based shapes.
   //
   // The other real risk here is the 'force' layout's physics simulation, not
-  // the graphic-element model: it is NOT perpetual. chart/graph/forceHelper.js's
-  // step() decays `friction` by *0.992 every iteration starting from the
-  // default 0.6, and GraphView.js stops scheduling further steps once
-  // `friction < 0.01` (~510 iterations). At the default 16ms
-  // `force.layoutAnimation` tick that's roughly 8s to genuinely stop moving --
-  // comfortably inside this helper's 100s stability-poll budget. `roam: true`
-  // (set by transformers/graph.ts) only enables user pan/zoom; it does not
+  // the graphic-element model: it is NOT perpetual.
+  // chart/graph/forceHelper.js's step() decays `friction` by *0.992 every iteration
+  // starting from the default 0.6, and GraphView.js stops scheduling further steps
+  // once `friction < 0.01` (~510 iterations).
+  // At the default 16ms `force.layoutAnimation` tick that's roughly 8s to genuinely stop moving.
+  // hoverChartDataPointAndGetTooltip explicitly polls isGraphLayouting to ensure
+  // the simulation finishes before measuring positions, preventing adjacent node
+  // collision under force layout (bck-bpe).
+  // `roam: true` (set by transformers/graph.ts) only enables user pan/zoom; it does not
   // itself keep the force simulation ticking.
   test('hovering a graph node shows its name in the tooltip', async ({ obsidianPage: { page } }) => {
     await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
