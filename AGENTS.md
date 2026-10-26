@@ -38,13 +38,14 @@ Programmatic tests only confirm that the chart canvas mounts and series data pop
 They do not detect visual defects like solid color fills, missing links, unscaled symbols, or colliding labels.
 Follow these steps before you commit or merge changes to documentation screenshots:
 
-1. Generate candidate screenshots with `bun run docs:screenshots` (or `mise run docs:screenshots`).
-2. Visually inspect changed images in `docs/images/chart-types/` with an image viewer.
-3. Confirm that all series elements render with expected shapes, colors, and layout.
-4. Confirm that all axis labels, legend items, and data titles are readable without overlap.
-5. Compare candidate screenshots against a baseline directory with `bun run docs:screenshots:compare <baselineDir> <candidateDir>`.
-6. Verify that deterministic charts have near-zero pixel differences (under 1%).
-7. Allow known non-deterministic chart differences:
+1. Save baseline screenshots to a temporary directory with `cp -r docs/images/chart-types /tmp/chart-baseline`.
+2. Generate candidate screenshots with `bun run docs:screenshots` (or `mise run docs:screenshots`).
+3. Visually inspect changed images in `docs/images/chart-types/` with an image viewer.
+4. Confirm that all series elements render with expected shapes, colors, and layout.
+5. Confirm that all axis labels, legend items, and data titles are readable without overlap.
+6. Compare candidate screenshots against the baseline directory with `bun run docs:screenshots:compare /tmp/chart-baseline docs/images/chart-types`.
+7. Verify that deterministic charts have near-zero pixel differences (under 1%).
+8. Allow known non-deterministic chart differences:
    - `word-cloud`: uses random word positioning.
    - `graph`: uses iterative physics layout.
    - `effect-scatter`: uses continuous ripple animation.
