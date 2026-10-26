@@ -35,7 +35,7 @@ export interface PieTooltipParam {
   readonly value: unknown
   // PieSeriesModel.getDataParams (node_modules/echarts/lib/chart/pie/PieSeries.js)
   // computes and injects this -- it's not part of the raw dataset row.
-  readonly percent: number
+  readonly percent?: number
   readonly marker?: string
 }
 
@@ -48,11 +48,12 @@ function isPieDataRow(val: unknown): val is PieDataPoint {
 // how it compares to the whole, which is the more common thing a hover is
 // trying to answer. Percent (already computed by ECharts, see PieTooltipParam
 // above) makes that comparison explicit.
-function formatTooltip(param: PieTooltipParam, valueFormat?: string): string {
+export function formatTooltip(param: PieTooltipParam, valueFormat?: string): string {
   const marker = param.marker ?? ''
   const rawValue = isPieDataRow(param.value) ? param.value.value : 0
   const value = valueFormat ? formatValue(rawValue, valueFormat) : rawValue.toLocaleString('en-US')
-  return `${marker}${param.name}: ${value} (${param.percent}%)`
+  const percentSuffix = typeof param.percent === 'number' ? ` (${param.percent}%)` : ''
+  return `${marker}${param.name}: ${value}${percentSuffix}`
 }
 
 function resolveRadius(

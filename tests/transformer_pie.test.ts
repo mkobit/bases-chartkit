@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
+import { formatTooltip } from '../src/charts/transformers/pie'
 import type { EChartsOption, PieSeriesOption } from 'echarts'
 
 interface PieSourceRow {
@@ -477,6 +478,153 @@ describe(
           value: 35 })
         expect(source[2]).toEqual({ name: 'Gamma',
           value: 5 })
+      },
+    )
+
+    it(
+      'should create rose chart with area roseType and default rose radius',
+      () => {
+        const data = [
+          { Department: 'Engineering',
+            Spend: 15000 },
+          { Department: 'Marketing',
+            Spend: 8000 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'Department',
+          'Spend',
+          'rose',
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.roseType).toBe('area')
+        expect(series.radius).toEqual([20,
+          '75%'])
+      },
+    )
+
+    it(
+      'should configure rose chart with area variant options: padAngle and borderRadius',
+      () => {
+        const data = [
+          { Department: 'Engineering',
+            Spend: 15000 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'Department',
+          'Spend',
+          'rose',
+          {
+            roseType: 'area',
+            padAngle: 2,
+            borderRadius: 4,
+          },
+        )
+
+        const series = firstPieSeries(option)
+        expect(series.roseType).toBe('area')
+        expect(series.padAngle).toBe(2)
+        expect(series.itemStyle?.borderRadius).toBe(4)
+      },
+    )
+
+    it(
+      'should configure rose chart with custom theme variant option',
+      () => {
+        const data = [
+          { Department: 'Engineering',
+            Spend: 15000 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'Department',
+          'Spend',
+          'rose',
+          { theme: 'Vintage' },
+        )
+
+        expect(optionTheme(option)).toBe('Vintage')
+      },
+    )
+
+    it(
+      'should clearly distinguish value and percentage in rose/pie tooltip',
+      () => {
+        const formatted = formatTooltip({
+          marker: '● ',
+          name: 'Engineering',
+          value: { name: 'Engineering',
+            value: 15017 },
+          percent: 23.4,
+        })
+
+        expect(formatted).toBe('● Engineering: 15,017 (23.4%)')
+      },
+    )
+
+    it(
+      'should apply valueFormat to value while preserving percentage in tooltip',
+      () => {
+        const formatted = formatTooltip(
+          {
+            marker: '● ',
+            name: 'Engineering',
+            value: { name: 'Engineering',
+              value: 15017 },
+            percent: 23.4,
+          },
+          'currency:USD',
+        )
+
+        expect(formatted).toBe('● Engineering: $15,017.00 (23.4%)')
+      },
+    )
+
+    it(
+      'should handle tooltip without percent or without marker gracefully',
+      () => {
+        const formatted = formatTooltip({
+          name: 'Support',
+          value: { name: 'Support',
+            value: 5000 },
+        })
+
+        expect(formatted).toBe('Support: 5,000')
+      },
+    )
+
+    it(
+      'should format rose chart hover via option tooltip formatter function',
+      () => {
+        const data = [
+          { Department: 'Engineering',
+            Spend: 15000 },
+        ]
+
+        const option = transformDataToChartOption(
+          data,
+          'Department',
+          'Spend',
+          'rose',
+        )
+
+        const tooltip = Array.isArray(option.tooltip) ? option.tooltip[0] : option.tooltip
+        expect(typeof tooltip?.formatter).toBe('function')
+        if (typeof tooltip?.formatter === 'function') {
+          const result: unknown = Reflect.apply(tooltip.formatter, undefined, [{
+            marker: '● ',
+            name: 'Engineering',
+            value: { name: 'Engineering',
+              value: 15000 },
+            percent: 45.2,
+          }])
+          expect(result).toBe('● Engineering: 15,000 (45.2%)')
+        }
       },
     )
   },

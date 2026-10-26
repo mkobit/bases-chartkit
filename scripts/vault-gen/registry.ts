@@ -11,6 +11,8 @@ import { calendarChartArbitrary, heatmapChartArbitrary } from '../generators/hea
 import { sunburstChartArbitrary, treeChartArbitrary, treemapChartArbitrary } from '../generators/hierarchy'
 import { lineChartArbitrary, stackedAreaChartArbitrary } from '../generators/line'
 import { pieChartArbitrary } from '../generators/pie'
+import { roseChartArbitrary } from '../generators/rose'
+import type { RoseSample } from '../generators/rose'
 import { polarLineChartArbitrary } from '../generators/polar'
 import { radarChartArbitrary } from '../generators/radar'
 import { bubbleChartArbitrary } from '../generators/bubble'
@@ -197,11 +199,11 @@ const radialBarSpec = defineChartExampleSpec<BarSample>({
   ],
 })
 
-const roseSpec = defineChartExampleSpec<BarSample>({
+const roseSpec = defineChartExampleSpec<RoseSample>({
   chartType: 'rose',
   echartsExampleUrl: echartsExample('pie-roseType-simple'),
   description: 'Department spend, ranked -- demonstrates a rose chart.',
-  arbitrary: barChartArbitrary,
+  arbitrary: roseChartArbitrary,
   notePrefix: 'Dept-Spend',
   toRows: sample => sample.data.map(row => ({
     Department: row.category,
@@ -219,6 +221,31 @@ const roseSpec = defineChartExampleSpec<BarSample>({
       // legendPosition/legendOrient regression coverage (bck-bjg): rose
       // dropped these until it started spreading getCommonTransformerOptions().
       literalOptions: { showLegend: true, legendPosition: 'right' },
+    },
+    {
+      fileName: 'Area.base',
+      viewName: 'Department spend (area)',
+      viewType: 'rose-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: {
+        showLegend: true,
+        roseType: 'area',
+        padAngle: 2,
+        borderRadius: 4,
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Department spend (vintage theme)',
+      viewType: 'rose-chart',
+      propBindings: {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+      },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
     },
   ],
 })

@@ -551,6 +551,7 @@ export default tseslint.config(
       'functional/no-conditional-statements': 'off',
       'functional/no-expression-statements': 'off',
       'import/no-nodejs-modules': 'off',
+      'obsidianmd/no-nodejs-modules': 'off',
       'no-console': 'off',
       'obsidianmd/rule-custom-message': 'off',
       'functional/no-return-void': 'off',
