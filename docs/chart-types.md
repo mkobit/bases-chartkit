@@ -610,3 +610,8 @@ views:
     xAxisProp: note.Word
     yAxisProp: note.Weight
 ```
+
+## Screenshot verification
+Screenshots in `images/chart-types/` are generated from example vault views with `bun run docs:screenshots`.
+Review all changed chart images visually before you commit.
+See [Screenshot review process](../AGENTS.md#screenshot-review-process) in `AGENTS.md` for guidelines and pixel comparison steps.

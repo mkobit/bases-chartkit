@@ -126,6 +126,7 @@ This project uses `mise` task definitions in `mise.toml` for task DAG resolution
 - `mise run build`: Builds the production artifact (`main.js`) after typecheck, with source/output caching.
 - `mise run test`: Runs unit tests.
 - `mise run test:coverage`: Runs unit tests with coverage reporting.
+- `mise run docs:screenshots:compare`: Compares two directories of PNG screenshots for pixel differences.
 - `mise run vault:dev`: Installs the plugin into the example vault and launches sandboxed Obsidian.
 - `mise run ci`: Runs the full check suite, production build, and headless E2E tests locally.
 - `mise tasks ls`: Lists all available tasks and descriptions.

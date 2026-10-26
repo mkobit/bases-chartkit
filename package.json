@@ -14,6 +14,7 @@
 		"dev": "bun esbuild.config.mjs",
 		"docs:collect-views": "bun scripts/collect-chart-views.ts",
 		"docs:screenshots": "bun run docs:collect-views && bun x playwright test --config=playwright.survey.config.ts",
+		"docs:screenshots:compare": "bun scripts/compare-screenshots.ts",
 		"docs:screenshots:dark": "bun run docs:collect-views && SURVEY_THEME=dark bun x playwright test --config=playwright.survey.config.ts",
 		"docs:screenshots:dark:headless": "bun run docs:collect-views && SURVEY_THEME=dark xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' bun x playwright test --config=playwright.survey.config.ts",
 		"docs:screenshots:headless": "bun run docs:collect-views && xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' bun x playwright test --config=playwright.survey.config.ts",
