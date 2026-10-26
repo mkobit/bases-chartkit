@@ -21,3 +21,7 @@ Every chart type spec in `scripts/vault-gen/registry.ts` should aim to provide a
 3. Theme and visual styling variant: custom color palettes, dark theme backgrounds, or gradient fills.
 4. Feature and option variant: custom tooltips, legend placements (top/bottom/right), dataZoom controls, or markLine/markPoint annotations.
 5. Domain-specific variants: attribute sizing (bubble/effect-scatter), stacking, or multi-series grouping.
+
+## Screenshot updates
+- Changes to vault generation can alter example chart visuals.
+- Regenerate screenshots and follow the review process in [AGENTS.md](../../AGENTS.md#screenshot-review-process) before committing.

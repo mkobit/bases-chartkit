@@ -23,3 +23,9 @@ await evaluateObsidian(page, async (app, args: { filename: string }) => {
 
 ## Typing internal Obsidian APIs
 `e2e/obsidian-internal.d.ts` augments `App` with internal members used by e2e tests (`app.plugins`, `app.setting`, `app.internalPlugins`). When a new test needs a different internal API, add it there — don't use `as unknown as` casts (the e2e lint rule blocks them).
+
+## Screenshot survey verification
+`e2e/survey/chart-types.survey.ts` captures screenshots for all chart views into `docs/images/chart-types/`.
+Programmatic checks cannot verify that rendered visuals match visual requirements.
+Review every changed screenshot visually or with `scripts/compare-screenshots.ts` before committing.
+See the screenshot review process in [AGENTS.md](../AGENTS.md#screenshot-review-process).

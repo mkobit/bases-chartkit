@@ -107,6 +107,10 @@ description = "Capture documentation screenshots headlessly with Virtual Framebu
 depends = ["build", "docs:collect-views"]
 run = "bun run docs:screenshots:headless"
 
+[tasks."docs:screenshots:compare"]
+description = "Compare two directories of PNG screenshots for pixel differences"
+run = "bun scripts/compare-screenshots.ts"
+
 [tasks."docs:screenshots:dark"]
 description = "Capture dark mode documentation screenshots across chart view types"
 depends = ["build", "docs:collect-views"]

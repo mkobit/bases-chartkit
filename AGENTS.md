@@ -10,6 +10,7 @@ The project enforces strict Functional Programming principles via `eslint`.
 -   **Localization**: Use `i18next` with keys from `src/lang/locales/en.json`. See `src/lang/AGENTS.md`.
 -   **Vault generation**: See `scripts/vault-gen/AGENTS.md` for layout, demo-data richness, and variant view set conventions.
 -   **Chart transformers**: See `src/charts/AGENTS.md` for visualization and palette guidelines.
+-   **Screenshot review**: See [Screenshot review process](#screenshot-review-process) for visual and pixel verification before committing documentation screenshots.
 
 ## Commands & Task Workflows
 The repository supports both `mise run` (for task DAG resolution, parallel checks, and source/output caching) and direct `bun run` scripts.
@@ -25,11 +26,28 @@ The repository supports both `mise run` (for task DAG resolution, parallel check
 | `bun run vault:install` | `mise run vault:install` | Install the built plugin into the example vault without launching. |
 | `bun run vault:generate` | `mise run vault:generate` | Generate example vault contents from generators and specs. |
 | `bun run docs:screenshots` | `mise run docs:screenshots` | Capture documentation screenshots across chart view types. |
+| `bun run docs:screenshots:compare` | `mise run docs:screenshots:compare` | Compare two directories of PNG screenshots for pixel differences. |
 | `bun run clean` | `mise run clean` | Remove generated build/test output artifacts. |
 | `bun run openspec:validate` | `mise run openspec:validate` | Validate OpenSpec specifications and changes. |
 | - | `mise run check` | Run all verification checks (typecheck, lint, budgets, specs, unit tests) in parallel. |
 | - | `mise run ci` | Run full check suite, build, and headless E2E pipeline locally. |
 | - | `mise tasks ls` | List all available tasks and descriptions. |
+
+## Screenshot review process
+Programmatic tests only confirm that the chart canvas mounts and series data populates.
+They do not detect visual defects like solid color fills, missing links, unscaled symbols, or colliding labels.
+Follow these steps before you commit or merge changes to documentation screenshots:
+
+1. Generate candidate screenshots with `bun run docs:screenshots` (or `mise run docs:screenshots`).
+2. Visually inspect changed images in `docs/images/chart-types/` with an image viewer.
+3. Confirm that all series elements render with expected shapes, colors, and layout.
+4. Confirm that all axis labels, legend items, and data titles are readable without overlap.
+5. Compare candidate screenshots against a baseline directory with `bun run docs:screenshots:compare <baselineDir> <candidateDir>`.
+6. Verify that deterministic charts have near-zero pixel differences (under 1%).
+7. Allow known non-deterministic chart differences:
+   - `word-cloud`: uses random word positioning.
+   - `graph`: uses iterative physics layout.
+   - `effect-scatter`: uses continuous ripple animation.
 
 ## Dependency installation handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
