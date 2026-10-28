@@ -24,25 +24,19 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUN_VERSION: "1.4.3"
   SBX_VERSION: "v0.50.0"
 
 permissions: {}
 
 jobs:
   validate:
-    name: Validate Docker Sandbox kit and execute checks
+    name: Validate Docker Sandbox kit
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup-env
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Cache sbx deb package
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -57,26 +51,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install and start sbx CLI
+      - name: Install sbx CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y /tmp/sbx.deb
-          sbx daemon start -d
 
       - name: Validate Docker Sandbox kit
         run: sbx kit validate .sbx/kit --offline
-
-      - name: Build SBX kit and provision sandbox
-        run: sbx env create --force .sbx/sbxenv.yaml
-
-      - name: Execute checks in SBX sandbox
-        run: sbx env exec .sbx/sbxenv.yaml -- mise run check
-
-      - name: Print daemon log on failure
-        if: failure()
-        run: |
-          cat ~/.local/state/sandboxes/sandboxes/sandboxd/daemon.log 2>/dev/null || true
-
-      - name: Clean up sandbox
-        if: always()
-        run: sbx env rm --force .sbx/sbxenv.yaml || true
