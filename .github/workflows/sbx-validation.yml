@@ -25,7 +25,7 @@ concurrency:
 
 env:
   BUN_VERSION: "1.4.3"
-  SBX_VERSION: "v0.49.2"
+  SBX_VERSION: "v0.50.0"
 
 permissions: {}
 
@@ -62,15 +62,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y /tmp/sbx.deb
           sbx daemon start -d
-          for _ in {1..30}; do
-            if sbx settings set kit.allowedSources '["docker.io/","github.com/docker/"]'; then
-              break
-            fi
-            sleep 1
-          done
 
-      - name: Validate Docker Sandbox environments
-        run: bun run check:sbx-env
+      - name: Validate Docker Sandbox kit
+        run: sbx kit validate .sbx/kit
 
       - name: Build SBX kit and provision sandbox
         run: sbx env create --force .sbx/sbxenv.yaml
