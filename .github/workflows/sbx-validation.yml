@@ -1,0 +1,86 @@
+name: Docker Sandbox validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".sbx/**"
+      - "mise.toml"
+      - "package.json"
+      - ".github/workflows/sbx-validation.yml"
+  pull_request:
+    branches: ["**"]
+    paths:
+      - ".sbx/**"
+      - "mise.toml"
+      - "package.json"
+      - ".github/workflows/sbx-validation.yml"
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: "1.4.3"
+  SBX_VERSION: "v0.49.2"
+
+permissions: {}
+
+jobs:
+  validate:
+    name: Validate Docker Sandbox kit and execute checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache sbx deb package
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        id: sbx-deb-cache
+        with:
+          path: /tmp/sbx.deb
+          key: sbx-${{ env.SBX_VERSION }}-deb
+
+      - name: Download sbx CLI
+        if: steps.sbx-deb-cache.outputs.cache-hit != 'true'
+        run: gh release download "${SBX_VERSION}" --repo docker/sbx-releases --pattern "DockerSandboxes-linux-amd64-ubuntu2404.deb" --output /tmp/sbx.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install and start sbx CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y /tmp/sbx.deb
+          mkdir -p ~/.config/sandboxes/sandboxes
+          cat <<'EOF' > ~/.config/sandboxes/sandboxes/settings.json
+          {
+            "kit.allowedSources": [
+              "docker.io/",
+              "github.com/docker/"
+            ]
+          }
+          EOF
+          sbx daemon start -d
+
+      - name: Validate Docker Sandbox environments
+        run: bun run check:sbx-env
+
+      - name: Build SBX kit and provision sandbox
+        run: sbx env create --force .sbx/sbxenv.yaml
+
+      - name: Execute checks in SBX sandbox
+        run: sbx env exec .sbx/sbxenv.yaml -- mise run check
+
+      - name: Clean up sandbox
+        if: always()
+        run: sbx env rm --force .sbx/sbxenv.yaml || true

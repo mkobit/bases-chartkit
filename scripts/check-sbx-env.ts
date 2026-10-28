@@ -118,6 +118,7 @@ function checkToolchainParity(): boolean {
   const pkgFile = 'package.json'
   const ciFile = '.github/workflows/ci.yml'
   const openspecFile = '.github/workflows/openspec.yml'
+  const sbxValidationFile = '.github/workflows/sbx-validation.yml'
   const setupEnvFile = '.github/actions/setup-env/action.yml'
 
   if (!existsSync(miseFile) || !existsSync(pkgFile) || !existsSync(kitSpecFile)) {
@@ -237,6 +238,20 @@ function checkToolchainParity(): boolean {
       if (openspecBun !== miseBun) {
         console.error(
           `Version mismatch: ${openspecFile} env.BUN_VERSION (${openspecBun ?? 'missing'}) does not match ${miseFile} bun (${miseBun})`,
+        )
+        return false
+      }
+    }
+  }
+
+  if (existsSync(sbxValidationFile)) {
+    const sbxValidationParsed = parseYaml(sbxValidationFile)
+    if (isRecord(sbxValidationParsed)) {
+      const sbxValidationEnv = isRecord(sbxValidationParsed['env']) ? sbxValidationParsed['env'] : undefined
+      const sbxValidationBun = typeof sbxValidationEnv?.['BUN_VERSION'] === 'string' ? sbxValidationEnv['BUN_VERSION'] : undefined
+      if (sbxValidationBun !== miseBun) {
+        console.error(
+          `Version mismatch: ${sbxValidationFile} env.BUN_VERSION (${sbxValidationBun ?? 'missing'}) does not match ${miseFile} bun (${miseBun})`,
         )
         return false
       }
