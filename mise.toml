@@ -24,7 +24,7 @@ run = "bun run check:eslint-disable-budget"
 [tasks.validate-sbx]
 description = "Validate Docker Sandbox kit"
 sources = [".sbx/**/*"]
-run = "sbx kit validate .sbx/kit"
+run = "sbx kit validate .sbx/kit --offline"
 
 [tasks."check:test-cast-budget"]
 description = "Check test type cast budget"

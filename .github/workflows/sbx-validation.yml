@@ -64,7 +64,7 @@ jobs:
           sbx daemon start -d
 
       - name: Validate Docker Sandbox kit
-        run: sbx kit validate .sbx/kit
+        run: sbx kit validate .sbx/kit --offline
 
       - name: Build SBX kit and provision sandbox
         run: sbx env create --force .sbx/sbxenv.yaml
