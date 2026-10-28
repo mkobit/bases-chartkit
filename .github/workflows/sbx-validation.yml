@@ -63,12 +63,11 @@ jobs:
           sudo apt-get install -y /tmp/sbx.deb
           sbx daemon start -d
           for _ in {1..30}; do
-            if sbx daemon status 2>&1 | grep -q "running"; then
+            if sbx settings set kit.allowedSources '["docker.io/","github.com/docker/"]'; then
               break
             fi
             sleep 1
           done
-          sbx settings set kit.allowedSources '["docker.io/","github.com/docker/"]'
 
       - name: Validate Docker Sandbox environments
         run: bun run check:sbx-env
@@ -78,6 +77,11 @@ jobs:
 
       - name: Execute checks in SBX sandbox
         run: sbx env exec .sbx/sbxenv.yaml -- mise run check
+
+      - name: Print daemon log on failure
+        if: failure()
+        run: |
+          cat ~/.local/state/sandboxes/sandboxes/sandboxd/daemon.log 2>/dev/null || true
 
       - name: Clean up sandbox
         if: always()
