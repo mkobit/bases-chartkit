@@ -51,13 +51,3 @@ export const funnelChartArbitrary = fc.record({
     }
   })
 })
-
-/**
- * Arbitrary for Gauge chart data.
- * Generates a single value.
- */
-export const gaugeChartArbitrary = fc.integer({ min: 25,
-  max: 95 }).map(val => ({
-  type: 'gauge',
-  data: [{ value: val }],
-}))

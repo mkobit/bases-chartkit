@@ -1,0 +1,17 @@
+properties:
+  note.SleepScore:
+    displayName: Sleep Score
+views:
+  - type: gauge-chart
+    name: Sleep quality score (vintage theme)
+    yAxisProp: note.SleepScore
+    aggregation: "avg"
+    minVal: 0
+    maxVal: 100
+    theme: "vintage"
+    colorBands: "60:#e6a23c,80:#409eff,100:#67c23a"
+    title: "Sleep Quality"
+    description: "Average sleep quality rating on vintage theme"
+    filters:
+      and:
+        - file.folder == "gauge/notes"

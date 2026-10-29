@@ -1,0 +1,16 @@
+properties:
+  note.Weight:
+    displayName: Weight
+views:
+  - type: gauge-chart
+    name: Current weight tracking (last)
+    yAxisProp: note.Weight
+    aggregation: "last"
+    minVal: 60
+    maxVal: 90
+    colorBands: "68:#91cc75,75:#fac858,90:#fd666d"
+    title: "Current Weight"
+    description: "Latest weigh-in relative to target weight zone (kg)"
+    filters:
+      and:
+        - file.folder == "gauge/notes"

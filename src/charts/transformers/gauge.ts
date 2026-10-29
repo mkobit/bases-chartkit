@@ -60,8 +60,10 @@ function aggregateValues(values: readonly number[], aggregation: GaugeAggregatio
     return 0
   }
   switch (aggregation) {
-    case 'avg':
-      return R.mean(values) ?? 0
+    case 'avg': {
+      const mean = R.mean(values) ?? 0
+      return Math.round(mean * 10) / 10
+    }
     case 'min':
       return Math.min(...values)
     case 'max':

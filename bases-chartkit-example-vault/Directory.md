@@ -36,7 +36,7 @@ views:
 - **[[effect-scatter/basic/Basic.base|effect-scatter]]** — GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=scatter-effect))
 - **[[funnel/Basic.base|funnel]]** — User journey funnel -- demonstrates a funnel chart with decreasing stage values. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=funnel))
 - **[[gantt/Basic.base|gantt]]** — Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=custom-gantt-flight))
-- **[[gauge/Basic.base|gauge]]** — Server load gauge -- demonstrates a gauge chart with an averaging aggregation. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=gauge))
+- **[[gauge/Basic.base|gauge]]** — Health log metrics -- demonstrates gauge charts with different aggregations and color bands. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=gauge))
 - **[[graph/Basic.base|graph]]** — Network topology -- demonstrates a graph chart. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=graph-simple))
 - **[[heatmap/Basic.base|heatmap]]** — Server load heatmap -- demonstrates a heatmap chart over a day x hour activity grid. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=heatmap-cartesian))
 - **[[histogram/Basic.base|histogram]]** — Score distribution -- demonstrates a histogram chart. ([ECharts example](https://echarts.apache.org/examples/en/editor.html?c=bar-histogram))
