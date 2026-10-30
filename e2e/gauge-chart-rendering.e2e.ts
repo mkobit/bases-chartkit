@@ -27,7 +27,7 @@ test.describe('gauge chart rendering', () => {
         state: { file: args.path, viewName: args.viewName },
         active: true,
       })
-    }, { path: 'gauge/Basic.base', viewName: 'Server load gauge (average)' })
+    }, { path: 'gauge/Basic.base', viewName: 'Daily step goal (average)' })
 
     await expect.poll(
       async () => {
