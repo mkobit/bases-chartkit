@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'bun:test'
-import { createMapChartOption } from '../src/charts/transformers/map'
+import { createMapChartOption, formatMapTooltip } from '../src/charts/transformers/map'
 import type { MapTransformerOptions } from '../src/charts/transformers/map'
 import type { BasesData } from '../src/charts/transformers/base'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
-import type { ContinuousVisualMapComponentOption, EChartsOption, MapSeriesOption } from 'echarts'
+import { CHICAGO_LANDMARKS, CHICAGO_SEASONS, mapChartArbitrary } from '../scripts/generators/map'
+import { getDeterministicSample } from '../scripts/generators/utils'
+import type {
+  ContinuousVisualMapComponentOption,
+  EChartsOption,
+  MapSeriesOption,
+} from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union, so checking the
 // literal `type` narrows each entry to MapSeriesOption -- no cast needed.
@@ -178,7 +184,204 @@ describe(
         expect(mapData).toContainEqual({ name: 'A',
           value: 0 })
         expect(mapData).toContainEqual({ name: 'B',
-          value: 0 }) // Number('invalid') -> NaN -> 0 logic in transformer? Check transformer logic.
+          value: 0 })
+      },
+    )
+
+    it(
+      'should fallback to 0..100 visualMap range when dataset is empty',
+      () => {
+        const result = createMapChartOption(
+          [],
+          mapName,
+          { mapName, regionProp: 'Country', valueProp: 'Population' },
+        )
+
+        const visualMap = firstContinuousVisualMap(result)
+        expect(visualMap.min).toBe(0)
+        expect(visualMap.max).toBe(100)
+      },
+    )
+
+    it(
+      'should support piecewise visualMap with splitNumber, pieces, and vertical orientation',
+      () => {
+        const pieces = [
+          { min: 0, max: 50, label: 'Low', color: '#e0f3db' },
+          { min: 50, max: 150, label: 'Medium', color: '#a8ddb5' },
+          { min: 150, max: 400, label: 'High', color: '#0868ac' },
+        ]
+        const options: MapTransformerOptions = {
+          mapName,
+          regionProp: 'Country',
+          valueProp: 'Population',
+          visualMapType: 'piecewise',
+          visualMapOrient: 'vertical',
+          visualMapSplitNumber: 3,
+          visualMapPieces: pieces,
+          visualMapColor: ['#e0f3db', '#a8ddb5', '#0868ac'],
+        }
+
+        const result = createMapChartOption(data, mapName, options)
+
+        expect(result.visualMap).toBeDefined()
+        expect(result.visualMap).toMatchObject({
+          type: 'piecewise',
+          orient: 'vertical',
+          left: 'left',
+          top: 'center',
+          splitNumber: 3,
+          pieces,
+          inRange: {
+            color: ['#e0f3db', '#a8ddb5', '#0868ac'],
+          },
+        })
+        expect(result.visualMap).not.toHaveProperty('bottom', '5%')
+      },
+    )
+
+    it(
+      'should respect explicit visualMapLeft and visualMapTop positioning',
+      () => {
+        const result = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            visualMapLeft: 'right',
+            visualMapTop: 'top',
+          },
+        )
+
+        const visualMap = firstContinuousVisualMap(result)
+        expect(visualMap.left).toBe('right')
+        expect(visualMap.top).toBe('top')
+        expect(visualMap.bottom).toBeUndefined()
+      },
+    )
+
+    it(
+      'should support title, description, xAxisLabel fallback, theme, and legend options',
+      () => {
+        const withTitle = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            title: 'North America Population',
+            description: 'Population in millions',
+            theme: 'Vintage',
+            legend: true,
+            legendPosition: 'bottom',
+          },
+        )
+
+        expect(withTitle.title).toMatchObject({
+          text: 'North America Population',
+          subtext: 'Population in millions',
+        })
+        expect(withTitle).toHaveProperty('theme', 'Vintage')
+        expect(withTitle.legend).toMatchObject({
+          bottom: 0,
+          left: 'center',
+          orient: 'horizontal',
+        })
+
+        const withXAxisFallback = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            xAxisLabel: 'Fallback Map Title',
+          },
+        )
+
+        expect(withXAxisFallback.title).toMatchObject({
+          text: 'Fallback Map Title',
+        })
+      },
+    )
+
+    it(
+      'should support roam and showLabel options on the map series',
+      () => {
+        const result = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            roam: 'scale',
+            showLabel: true,
+          },
+        )
+
+        const series = mapSeriesList(result)
+        expect(series[0]?.roam).toBe('scale')
+        expect(series[0]?.label?.show).toBe(true)
+      },
+    )
+
+    it(
+      'should format tooltip values when valueFormat is provided',
+      () => {
+        const result = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            valueFormat: '{value}M',
+          },
+        )
+
+        expect(result.tooltip).toBeDefined()
+        expect(result.tooltip).toHaveProperty('formatter')
+
+        expect(formatMapTooltip({ name: 'Grant Park', value: 741555 }, 'compact')).toBe('Grant Park : 741.6K')
+        expect(formatMapTooltip({ name: 'Wrigley Field', value: { value: 134 } }, 'currency:USD')).toBe('Wrigley Field : $134.00')
+        expect(formatMapTooltip({ name: 'Chicago', value: undefined }, 'compact')).toBe('Chicago')
+      },
+    )
+
+    it(
+      'should generate enriched landmark demo data with variance across all 5 GeoJSON landmarks',
+      () => {
+        const sample = getDeterministicSample(mapChartArbitrary, 20_260_722)
+
+        expect(sample.type).toBe('map')
+        expect(sample.data).toHaveLength(CHICAGO_LANDMARKS.length)
+
+        const names = sample.data.map(row => row.landmark)
+        expect(names).toEqual([
+          'Millennium Park',
+          'Navy Pier',
+          'Wrigley Field',
+          'Grant Park',
+          'Lincoln Park',
+        ])
+
+        for (const row of sample.data) {
+          expect(row.eventCount).toBeGreaterThanOrEqual(15)
+          expect(row.eventCount).toBeLessThanOrEqual(150)
+          expect(row.attendance).toBeGreaterThanOrEqual(95_000)
+          expect(row.rating).toBeGreaterThanOrEqual(4.0)
+          expect(row.rating).toBeLessThanOrEqual(5.0)
+          expect(row.ticketPrice).toBeGreaterThanOrEqual(10)
+          expect(CHICAGO_SEASONS).toContain(row.season)
+          expect(row.category.length).toBeGreaterThan(0)
+        }
+
+        const attendances = sample.data.map(row => row.attendance)
+        expect(Math.max(...attendances) - Math.min(...attendances)).toBeGreaterThan(200_000)
       },
     )
   },

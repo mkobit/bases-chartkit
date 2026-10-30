@@ -19,7 +19,7 @@ import { polarLineChartArbitrary } from '../generators/polar'
 import { radarChartArbitrary } from '../generators/radar'
 import { bubbleChartArbitrary } from '../generators/bubble'
 import { demographicScatterArbitrary } from '../generators/scatter'
-import { mapChartArbitrary } from '../generators/map'
+import { mapChartArbitrary, type MapSample } from '../generators/map'
 import { themeRiverChartArbitrary } from '../generators/theme-river'
 import { wordCloudChartArbitrary } from '../generators/word-cloud'
 import { defineChartExampleSpec, echartsExample } from './spec'
@@ -1899,16 +1899,6 @@ const wordCloudSpec = defineChartExampleSpec<WordCloudSample>({
   ],
 })
 
-interface MapSample {
-  readonly data: ReadonlyArray<{
-    readonly landmark: string
-    readonly lat: number
-    readonly lon: number
-    readonly eventType: string
-    readonly eventCount: number
-  }>
-}
-
 const mapSpec = defineChartExampleSpec<MapSample>({
   chartType: 'map',
   echartsExampleUrl: echartsExample('map-usa'),
@@ -1917,8 +1907,13 @@ const mapSpec = defineChartExampleSpec<MapSample>({
   notePrefix: 'Chicago-Landmark',
   toRows: sample => sample.data.map(row => ({
     Landmark: row.landmark,
+    Category: row.category,
+    Season: row.season,
     EventType: row.eventType,
     EventCount: row.eventCount,
+    Attendance: row.attendance,
+    Rating: row.rating,
+    TicketPrice: row.ticketPrice,
     Latitude: row.lat,
     Longitude: row.lon,
   })),
@@ -1934,8 +1929,84 @@ const mapSpec = defineChartExampleSpec<MapSample>({
       literalOptions: {
         mapFile: 'map/assets/chicago-landmarks.geo.json',
         xAxisLabel: 'Chicago landmarks',
+        title: 'Chicago Landmarks by Event Count',
+        description: 'Annual scheduled events across major Chicago cultural and civic landmarks',
       },
       filters: ['note.Landmark != null'],
+    },
+    {
+      fileName: 'CustomColorRamp.base',
+      viewName: 'Chicago landmarks by annual attendance (warm ramp)',
+      viewType: 'map-chart',
+      propBindings: {
+        regionProp: 'note.Landmark',
+        valueProp: 'note.Attendance',
+      },
+      literalOptions: {
+        mapFile: 'map/assets/chicago-landmarks.geo.json',
+        visualMapColor: '#fff7bc,#fec44f,#fe9929,#cc4c02,#662506',
+        valueFormat: 'compact',
+        title: 'Annual Landmark Attendance',
+        description: 'Total annual event visitors encoded on a sequential warm amber-to-brown ramp',
+      },
+      filters: ['note.Landmark != null'],
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Chicago landmarks by visitor rating (vintage theme)',
+      viewType: 'map-chart',
+      propBindings: {
+        regionProp: 'note.Landmark',
+        valueProp: 'note.Rating',
+      },
+      literalOptions: {
+        mapFile: 'map/assets/chicago-landmarks.geo.json',
+        theme: 'Vintage',
+        visualMapMin: 4,
+        visualMapMax: 5,
+        title: 'Landmark Visitor Satisfaction',
+        description: 'Average visitor rating (4.0 to 5.0 scale) rendered with the Vintage theme',
+      },
+      filters: ['note.Landmark != null'],
+    },
+    {
+      fileName: 'PiecewiseVisualMap.base',
+      viewName: 'Chicago landmarks by ticket price (piecewise vertical)',
+      viewType: 'map-chart',
+      propBindings: {
+        regionProp: 'note.Landmark',
+        valueProp: 'note.TicketPrice',
+      },
+      literalOptions: {
+        mapFile: 'map/assets/chicago-landmarks.geo.json',
+        visualMapType: 'piecewise',
+        visualMapOrient: 'vertical',
+        visualMapColor: '#e0f3db,#a8ddb5,#4eb3d3,#0868ac',
+        valueFormat: 'currency:USD',
+        title: 'Average Event Ticket Price by Landmark',
+        description: 'Piecewise vertical visual map banding landmarks by average ticket price (USD)',
+      },
+      filters: ['note.Landmark != null'],
+    },
+    {
+      fileName: 'PeakSummerFilter.base',
+      viewName: 'Peak summer festival & park landmarks',
+      viewType: 'map-chart',
+      propBindings: {
+        regionProp: 'note.Landmark',
+        valueProp: 'note.Attendance',
+      },
+      literalOptions: {
+        mapFile: 'map/assets/chicago-landmarks.geo.json',
+        visualMapColor: '#edf8fb,#b2e2e2,#66c2a4,#2ca25f,#006d2c',
+        valueFormat: 'compact',
+        title: 'Peak Summer Lakefront Landmarks',
+        description: 'Filtered to Peak Summer outdoor venues highlighting seasonal attendance concentration',
+      },
+      filters: [
+        'note.Landmark != null',
+        'note.Season == "Peak Summer"',
+      ],
     },
   ],
 })

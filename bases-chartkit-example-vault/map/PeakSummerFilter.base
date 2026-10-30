@@ -1,0 +1,22 @@
+properties:
+  note.Attendance:
+    displayName: Attendance
+  note.Landmark:
+    displayName: Landmark
+  note.Season:
+    displayName: Season
+views:
+  - type: map-chart
+    name: Peak summer festival & park landmarks
+    regionProp: note.Landmark
+    valueProp: note.Attendance
+    mapFile: "map/assets/chicago-landmarks.geo.json"
+    visualMapColor: "#edf8fb,#b2e2e2,#66c2a4,#2ca25f,#006d2c"
+    valueFormat: "compact"
+    title: "Peak Summer Lakefront Landmarks"
+    description: "Filtered to Peak Summer outdoor venues highlighting seasonal attendance concentration"
+    filters:
+      and:
+        - file.folder == "map/notes"
+        - note.Landmark != null
+        - note.Season == "Peak Summer"
