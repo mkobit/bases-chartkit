@@ -1,0 +1,25 @@
+properties:
+  note.Amount:
+    displayName: Amount
+  note.Source:
+    displayName: Source
+  note.Target:
+    displayName: Target
+  note.Zone:
+    displayName: Zone
+views:
+  - type: graph-chart
+    name: Network topology by architectural tier
+    sourceProp: note.Source
+    targetProp: note.Target
+    valueProp: note.Amount
+    categoryProp: note.Zone
+    showLegend: true
+    legendPosition: "right"
+    legendOrient: "vertical"
+    valueFormat: "{value} Gbps"
+    title: "Service Mesh & Network Topology"
+    description: "North-south and east-west traffic across 5 architectural tiers"
+    filters:
+      and:
+        - file.folder == "graph/notes"

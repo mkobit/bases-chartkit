@@ -1,5 +1,6 @@
 ---
-Source: "Database Master"
-Target: "Web Gateway"
-Amount: 5
+Source: "Order Service"
+Target: "Event Bus"
+Amount: 161
+Zone: "Core Services"
 ---

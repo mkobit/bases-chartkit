@@ -1,5 +1,6 @@
 ---
-Source: "Web Gateway"
-Target: "Secondary Firewall"
-Amount: 1
+Source: "WAF Gateway"
+Target: "Primary Firewall"
+Amount: 253
+Zone: "Edge & Security"
 ---

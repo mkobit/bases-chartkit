@@ -1,5 +1,6 @@
 ---
-Source: "Primary Firewall"
-Target: "DMZ Switch"
-Amount: 20
+Source: "Read Replica"
+Target: "Metrics Collector"
+Amount: 42
+Zone: "Data & Storage"
 ---

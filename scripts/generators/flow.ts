@@ -1,4 +1,5 @@
 import * as fc from 'fast-check'
+export { graphChartArbitrary, type GraphLinkSample, type GraphSample, type NetworkZone } from './graph'
 
 /**
  * Arbitrary for Sankey chart data.
@@ -25,71 +26,6 @@ export const sankeyChartArbitrary = fc.constant(null).map(() => {
     type: 'sankey',
     data,
   }
-})
-
-/**
- * Arbitrary for Graph chart data.
- * Generates nodes and links across network security zones.
- */
-export const graphChartArbitrary = fc.record({
-  nodeCount: fc.integer({ min: 10,
-    max: 16 }),
-}).chain((config) => {
-  return fc.array(
-    fc.record({
-      targetIndex: fc.integer({ min: 0,
-        max: config.nodeCount - 1 }),
-      value: fc.integer({ min: 1,
-        max: 20 }),
-    }),
-    { minLength: config.nodeCount * 2,
-      maxLength: config.nodeCount * 3 },
-  ).map((linksData) => {
-    const nodes = [
-      'Core Router',
-      'Primary Firewall',
-      'DMZ Switch',
-      'Web Gateway',
-      'App Cluster A',
-      'App Cluster B',
-      'Database Master',
-      'Database Replica',
-      'Secondary Firewall',
-      'Workstation Pool',
-      'Dev Laptop',
-      'IoT Sensor',
-      'VPN Gateway',
-      'Backup Vault',
-      'Auth Server',
-      'Monitoring Node',
-    ]
-
-    const zones = ['DMZ', 'Internal', 'Cloud'] as const
-
-    const links = linksData.map((l, i) => {
-      const sourceIndex = i % config.nodeCount
-      const rawTargetIndex = l.targetIndex
-      const targetIndex = sourceIndex === rawTargetIndex
-        ? (rawTargetIndex + 1) % config.nodeCount
-        : rawTargetIndex
-
-      const safeSource = nodes[sourceIndex % nodes.length] ?? 'Core Router'
-      const safeTarget = nodes[targetIndex % nodes.length] ?? 'Core Router'
-      const safeZone = zones[i % zones.length] ?? 'Internal'
-
-      return {
-        source: safeSource,
-        target: safeTarget,
-        traffic: l.value,
-        zone: safeZone,
-      }
-    })
-
-    return {
-      type: 'graph',
-      data: links,
-    }
-  })
 })
 
 /**

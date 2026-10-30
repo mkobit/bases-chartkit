@@ -1,5 +1,6 @@
 ---
-Source: "Core Router"
-Target: "Secondary Firewall"
-Amount: 15
+Source: "Edge Router"
+Target: "WAF Gateway"
+Amount: 425
+Zone: "Edge & Security"
 ---

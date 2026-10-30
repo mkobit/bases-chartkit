@@ -1,5 +1,6 @@
 ---
-Source: "Web Gateway"
-Target: "DMZ Switch"
-Amount: 4
+Source: "Auth Service"
+Target: "Redis Cache"
+Amount: 403
+Zone: "Core Services"
 ---

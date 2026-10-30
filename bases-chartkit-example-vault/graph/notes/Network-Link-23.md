@@ -1,5 +1,6 @@
 ---
-Source: "IoT Sensor"
-Target: "Database Master"
-Amount: 14
+Source: "Notification Worker"
+Target: "Log Aggregator"
+Amount: 90
+Zone: "Core Services"
 ---

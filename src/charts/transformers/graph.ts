@@ -1,14 +1,33 @@
 import type { EChartsOption, GraphSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { getNestedValue, safeToString } from './bases-values'
+import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { formatValue } from './formatters'
 import { getLegendOption } from './legend'
 import { getCategoricalColor } from './palette'
+import { asTooltipFormatter } from './tooltip'
 import * as R from 'remeda'
 
 export interface GraphTransformerOptions extends BaseTransformerOptions {
   readonly valueProp?: string // For edge weight
   readonly categoryProp?: string // For node category
+  readonly theme?: string
 }
+
+export interface GraphTooltipParam {
+  readonly name: string
+  readonly value?: unknown
+}
+
+export function formatGraphTooltip(param: GraphTooltipParam, valueFormat: string): string {
+  const rawValue = isRecord(param.value) && 'value' in param.value ? param.value.value : param.value
+  return rawValue !== undefined && rawValue !== null && !Number.isNaN(Number(rawValue))
+    ? `${param.name} : ${formatValue(rawValue, valueFormat)}`
+    : param.name
+}
+
+const DEFAULT_NODE_SYMBOL_SIZE = 20
+const MIN_NODE_SYMBOL_SIZE = 16
+const MAX_NODE_SYMBOL_SIZE = 32
 
 type GraphLinkRow = Readonly<{
   source: string
@@ -33,11 +52,44 @@ type GraphNode = Readonly<{
   category: string | undefined
   symbolSize: number
   draggable: boolean
+  itemStyle?: Readonly<{
+    color: string
+  }>
 }>
 
 type GraphCategory = Readonly<{
   name: string
 }>
+
+function computeNodeSymbolSizes(
+  nodeNames: readonly string[],
+  links: ReadonlyArray<GraphLink>,
+): Readonly<Record<string, number>> {
+  const hasWeights = links.some(l => l.value !== undefined)
+  return !hasWeights
+    ? R.fromKeys(nodeNames, _name => DEFAULT_NODE_SYMBOL_SIZE)
+    : (() => {
+        const weightsByNode: Readonly<Record<string, number>> = R.fromKeys(nodeNames, name =>
+          R.sumBy(
+            links.filter(l => l.source === name || l.target === name),
+            l => l.value ?? 0,
+          ),
+        )
+        const weights: readonly number[] = R.values(weightsByNode)
+        const minWeight = Math.min(...weights)
+        const maxWeight = Math.max(...weights)
+
+        return maxWeight <= minWeight
+          ? R.fromKeys(nodeNames, _name => DEFAULT_NODE_SYMBOL_SIZE)
+          : R.mapValues(weightsByNode, weight =>
+              Math.round(
+                MIN_NODE_SYMBOL_SIZE
+                + ((weight - minWeight) / (maxWeight - minWeight))
+                * (MAX_NODE_SYMBOL_SIZE - MIN_NODE_SYMBOL_SIZE),
+              ),
+            )
+      })()
+}
 
 export function createGraphChartOption(
   data: BasesData,
@@ -109,17 +161,23 @@ export function createGraphChartOption(
       category: undefined }),
   ) // Target categories unknown from this link unless it appears as source elsewhere
 
-  // Merge nodes by name, preferring the one with category
-  const nodesData: ReadonlyArray<GraphNode> = R.pipe(
+  const groupedNodes = R.pipe(
     [...sources,
       ...targets],
     R.groupBy(x => x.name),
+  )
+
+  const symbolSizes = computeNodeSymbolSizes(R.keys(groupedNodes), links)
+
+  // Merge nodes by name, preferring the one with category
+  const nodesData: ReadonlyArray<GraphNode> = R.pipe(
+    groupedNodes,
     R.mapValues((group: ReadonlyArray<GraphNodeRef>, name: string): GraphNode => {
       const withCat = group.find(x => x.category !== undefined)
       return {
         name,
         category: withCat?.category,
-        symbolSize: 20,
+        symbolSize: symbolSizes[name] ?? DEFAULT_NODE_SYMBOL_SIZE,
         draggable: true,
       }
     }),
@@ -136,12 +194,15 @@ export function createGraphChartOption(
 
   const hasCategories = categoriesList.length > 0
 
-  const finalNodesData: ReadonlyArray<GraphNode & { readonly itemStyle?: { readonly color: string } }> = hasCategories
-    ? nodesData
-    : R.map(nodesData, node => ({
-        ...node,
-        itemStyle: { color: getCategoricalColor(node.name) },
-      }))
+  const finalNodesData: ReadonlyArray<GraphNode> = R.map(
+    nodesData,
+    (node): GraphNode => node.category !== undefined
+      ? node
+      : {
+          ...node,
+          itemStyle: { color: getCategoricalColor(node.name) },
+        },
+  )
 
   const categoriesData: ReadonlyArray<GraphCategory> = R.map(
     categoriesList,
@@ -183,8 +244,14 @@ export function createGraphChartOption(
     },
   }
 
+  const valueFormat = options?.valueFormat
+
   const opt: EChartsOption = {
-    tooltip: {},
+    tooltip: valueFormat !== undefined
+      ? {
+          formatter: asTooltipFormatter((param: GraphTooltipParam) => formatGraphTooltip(param, valueFormat)),
+        }
+      : {},
     ...(getLegendOption(options) && hasCategories
       ? {
           legend: {
@@ -193,6 +260,7 @@ export function createGraphChartOption(
           },
         }
       : {}),
+    ...(options?.theme ? { theme: options.theme } : {}),
     series: [seriesItem],
   }
 

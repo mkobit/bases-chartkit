@@ -1,11 +1,18 @@
 import { describe, it, expect } from 'bun:test'
 import type { GraphTransformerOptions } from '../src/charts/transformer'
 import { transformDataToChartOption } from '../src/charts/transformer'
+import { formatGraphTooltip } from '../src/charts/transformers/graph'
+import { getCategoricalColor } from '../src/charts/transformers/palette'
 import type { EChartsOption, GraphSeriesOption } from 'echarts'
 
 interface GraphNode {
   readonly name: string
   readonly category?: string
+  readonly symbolSize?: number
+  readonly draggable?: boolean
+  readonly itemStyle?: {
+    readonly color?: string
+  }
 }
 
 function isGraphNode(value: unknown): value is GraphNode {
@@ -28,6 +35,12 @@ function firstGraphSeries(option: EChartsOption): GraphSeriesOption {
 function graphNodes(option: EChartsOption): readonly GraphNode[] {
   const data = firstGraphSeries(option).data
   return Array.isArray(data) ? data.flatMap(node => isGraphNode(node) ? [node] : []) : []
+}
+
+function optionTheme(option: EChartsOption): unknown {
+  return typeof option === 'object' && option !== null && 'theme' in option
+    ? option.theme
+    : undefined
 }
 
 describe(
@@ -95,7 +108,83 @@ describe(
     )
 
     it(
-      'should handle categories',
+      'should scale node symbolSize based on incident link weights',
+      () => {
+        // Incident weights: A = 15, B = 18 (max), C = 7 (min), D = 10
+        const data = [
+          { source: 'A',
+            target: 'B',
+            value: 10 },
+          { source: 'A',
+            target: 'C',
+            value: 5 },
+          { source: 'B',
+            target: 'D',
+            value: 8 },
+          { source: 'C',
+            target: 'D',
+            value: 2 },
+        ]
+
+        const result = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          { valueProp: 'value' },
+        )
+
+        const nodes = graphNodes(result)
+        const nodeB = nodes.find(n => n.name === 'B')
+        const nodeC = nodes.find(n => n.name === 'C')
+        const nodeA = nodes.find(n => n.name === 'A')
+
+        expect(nodeB?.symbolSize).toBe(32)
+        expect(nodeC?.symbolSize).toBe(16)
+        expect(nodeA?.symbolSize).toBeGreaterThan(16)
+        expect(nodeA?.symbolSize).toBeLessThan(32)
+      },
+    )
+
+    it(
+      'should use default symbolSize of 20 when links have no weights or equal weights',
+      () => {
+        const unweightedData = [
+          { source: 'A',
+            target: 'B' },
+          { source: 'B',
+            target: 'C' },
+        ]
+
+        const unweightedResult = transformDataToChartOption(
+          unweightedData,
+          'source',
+          'target',
+          'graph',
+        )
+        const unweightedNodes = graphNodes(unweightedResult)
+        expect(unweightedNodes.map(n => n.symbolSize)).toEqual([20, 20, 20])
+
+        const equalWeightData = [
+          { source: 'A',
+            target: 'B',
+            value: 10 },
+        ]
+
+        const equalWeightResult = transformDataToChartOption(
+          equalWeightData,
+          'source',
+          'target',
+          'graph',
+          { valueProp: 'value' },
+        )
+        const equalWeightNodes = graphNodes(equalWeightResult)
+        expect(equalWeightNodes.map(n => n.symbolSize)).toEqual([20, 20])
+      },
+    )
+
+    it(
+      'should handle categories and assign fallback colors only to uncategorized nodes',
       () => {
         const data = [
           { source: 'A',
@@ -123,25 +212,150 @@ describe(
         const series = firstGraphSeries(result)
 
         // Check categories list
-        expect(series.categories).toEqual(expect.arrayContaining([
+        expect(series.categories).toEqual([
           { name: 'Cat1' },
           { name: 'Cat2' },
-        ]))
-
-        // Check node categories
-        // Node A should be Cat1 (source in row 1)
-        // Node B should be Cat2 (source in row 2)
-        // Node C ... depends. If it was never a source with category, it remains undefined.
-        // Wait, C appears as target in row 2 (cat2 applies to B), and source in row 3 (no cat).
+        ])
 
         const nodes = graphNodes(result)
         const nodeA = nodes.find(n => n.name === 'A')
         const nodeB = nodes.find(n => n.name === 'B')
+        const nodeC = nodes.find(n => n.name === 'C')
 
         expect(nodeA?.category).toBe('Cat1')
+        expect(nodeA?.itemStyle).toBeUndefined()
         expect(nodeB?.category).toBe('Cat2')
+        expect(nodeB?.itemStyle).toBeUndefined()
+        // Uncategorized node C gets a deterministic fallback color
+        expect(nodeC?.category).toBeUndefined()
+        expect(nodeC?.itemStyle?.color).toBe(getCategoricalColor('C'))
 
         expect(result.legend).toBeDefined()
+      },
+    )
+
+    it(
+      'should assign deterministic categorical colors to all nodes when no categories exist',
+      () => {
+        const data = [
+          { source: 'Edge Router',
+            target: 'API Gateway' },
+          { source: 'API Gateway',
+            target: 'Primary Postgres' },
+        ]
+
+        const result = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          { legend: true },
+        )
+
+        const nodes = graphNodes(result)
+        expect(nodes).toHaveLength(3)
+        nodes.forEach((node) => {
+          expect(node.itemStyle?.color).toBe(getCategoricalColor(node.name))
+        })
+        // Legend should not be rendered when there are no categories
+        expect(result.legend).toBeUndefined()
+      },
+    )
+
+    it(
+      'should apply legendPosition and legendOrient when categories and legend are enabled',
+      () => {
+        const data = [
+          { source: 'A',
+            target: 'B',
+            zone: 'Edge' },
+          { source: 'B',
+            target: 'C',
+            zone: 'Core' },
+        ]
+
+        const result = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          {
+            categoryProp: 'zone',
+            legend: true,
+            legendPosition: 'right',
+            legendOrient: 'vertical',
+          },
+        )
+
+        const legend = Array.isArray(result.legend) ? result.legend[0] : result.legend
+        expect(legend).toBeDefined()
+        expect(legend?.orient).toBe('vertical')
+        expect(legend?.right).toBe(0)
+        expect(legend?.top).toBe('middle')
+      },
+    )
+
+    it(
+      'should include theme in returned option when provided',
+      () => {
+        const data = [
+          { source: 'A',
+            target: 'B' },
+        ]
+
+        const result = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          { theme: 'Vintage' },
+        )
+
+        expect(optionTheme(result)).toBe('Vintage')
+      },
+    )
+
+    it(
+      'should preserve default tooltip when valueFormat is undefined and format tooltip when valueFormat is defined',
+      () => {
+        const data = [
+          { source: 'Edge Router',
+            target: 'WAF Gateway',
+            traffic: 450 },
+        ]
+
+        const defaultResult = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          { valueProp: 'traffic' },
+        )
+        const defaultTooltip = Array.isArray(defaultResult.tooltip) ? defaultResult.tooltip[0] : defaultResult.tooltip
+        expect(defaultTooltip?.formatter).toBeUndefined()
+
+        const formattedResult = transformDataToChartOption(
+          data,
+          'source',
+          'target',
+          'graph',
+          {
+            valueProp: 'traffic',
+            valueFormat: '{value} Gbps',
+          },
+        )
+        const formattedTooltip = Array.isArray(formattedResult.tooltip) ? formattedResult.tooltip[0] : formattedResult.tooltip
+        expect(typeof formattedTooltip?.formatter).toBe('function')
+
+        expect(formatGraphTooltip({ name: 'Edge Router > WAF Gateway', value: 450 }, '{value} Gbps')).toBe(
+          'Edge Router > WAF Gateway : 450 Gbps',
+        )
+        expect(formatGraphTooltip({ name: 'Edge Router', value: { value: 320 } }, '{value} Gbps')).toBe(
+          'Edge Router : 320 Gbps',
+        )
+        expect(formatGraphTooltip({ name: 'Edge Router' }, '{value} Gbps')).toBe(
+          'Edge Router',
+        )
       },
     )
 

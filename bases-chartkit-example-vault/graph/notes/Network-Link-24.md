@@ -1,5 +1,6 @@
 ---
-Source: "Core Router"
-Target: "App Cluster B"
-Amount: 17
+Source: "Primary Postgres"
+Target: "Read Replica"
+Amount: 172
+Zone: "Data & Storage"
 ---
