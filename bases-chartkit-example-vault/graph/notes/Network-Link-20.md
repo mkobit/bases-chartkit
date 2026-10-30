@@ -1,5 +1,6 @@
 ---
-Source: "Secondary Firewall"
-Target: "App Cluster B"
-Amount: 5
+Source: "Billing Service"
+Target: "Event Bus"
+Amount: 161
+Zone: "Core Services"
 ---

@@ -1,5 +1,6 @@
 ---
-Source: "Core Router"
-Target: "Primary Firewall"
-Amount: 19
+Source: "API Gateway"
+Target: "Catalog Service"
+Amount: 247
+Zone: "Gateway & Routing"
 ---

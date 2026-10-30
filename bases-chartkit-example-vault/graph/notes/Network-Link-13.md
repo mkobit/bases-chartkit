@@ -1,5 +1,6 @@
 ---
-Source: "Primary Firewall"
-Target: "Dev Laptop"
-Amount: 12
+Source: "Service Mesh Proxy"
+Target: "Billing Service"
+Amount: 112
+Zone: "Gateway & Routing"
 ---

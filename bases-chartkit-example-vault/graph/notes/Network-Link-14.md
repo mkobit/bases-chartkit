@@ -1,5 +1,6 @@
 ---
-Source: "DMZ Switch"
-Target: "IoT Sensor"
-Amount: 5
+Source: "Service Mesh Proxy"
+Target: "Notification Worker"
+Amount: 75
+Zone: "Gateway & Routing"
 ---

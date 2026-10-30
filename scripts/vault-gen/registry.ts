@@ -4,7 +4,8 @@ import { barChartArbitrary, stackedBarChartArbitrary } from '../generators/bar'
 import { bulletChartArbitrary } from '../generators/bullet'
 import { boxplotChartArbitrary, histogramChartArbitrary, paretoChartArbitrary, waterfallChartArbitrary } from '../generators/distribution'
 import { candlestickChartArbitrary } from '../generators/financial'
-import { graphChartArbitrary, linesChartArbitrary, sankeyChartArbitrary } from '../generators/flow'
+import { linesChartArbitrary, sankeyChartArbitrary } from '../generators/flow'
+import { graphChartArbitrary, type GraphSample } from '../generators/graph'
 import { funnelChartArbitrary } from '../generators/funnel'
 import { gaugeChartArbitrary, type GaugeSample } from '../generators/gauge'
 import { ganttChartArbitrary } from '../generators/gantt'
@@ -789,20 +790,17 @@ const sankeySpec = defineChartExampleSpec<SankeySample>({
   ],
 })
 
-interface GraphSample {
-  readonly data: ReadonlyArray<{ readonly source: string, readonly target: string, readonly traffic: number, readonly zone: string }>
-}
-
 const graphSpec = defineChartExampleSpec<GraphSample>({
   chartType: 'graph',
   echartsExampleUrl: echartsExample('graph-simple'),
-  description: 'Network topology -- demonstrates a graph chart.',
+  description: 'Network topology across architectural tiers -- demonstrates a force-directed graph chart with categorized nodes and weighted edges.',
   arbitrary: graphChartArbitrary,
   notePrefix: 'Network-Link',
   toRows: sample => sample.data.map(row => ({
     Source: row.source,
     Target: row.target,
     Amount: row.traffic,
+    Zone: row.zone,
   })),
   variants: [
     {
@@ -813,8 +811,57 @@ const graphSpec = defineChartExampleSpec<GraphSample>({
         sourceProp: 'note.Source',
         targetProp: 'note.Target',
         valueProp: 'note.Amount',
+        categoryProp: 'note.Zone',
       },
       literalOptions: { showLegend: true },
+    },
+    {
+      fileName: 'CategoryTiers.base',
+      viewName: 'Network topology by architectural tier',
+      viewType: 'graph-chart',
+      propBindings: {
+        sourceProp: 'note.Source',
+        targetProp: 'note.Target',
+        valueProp: 'note.Amount',
+        categoryProp: 'note.Zone',
+      },
+      literalOptions: {
+        showLegend: true,
+        legendPosition: 'right',
+        legendOrient: 'vertical',
+        valueFormat: '{value} Gbps',
+        title: 'Service Mesh & Network Topology',
+        description: 'North-south and east-west traffic across 5 architectural tiers',
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Network topology (vintage theme)',
+      viewType: 'graph-chart',
+      propBindings: {
+        sourceProp: 'note.Source',
+        targetProp: 'note.Target',
+        valueProp: 'note.Amount',
+        categoryProp: 'note.Zone',
+      },
+      literalOptions: {
+        showLegend: true,
+        theme: 'Vintage',
+      },
+    },
+    {
+      fileName: 'UncategorizedNodes.base',
+      viewName: 'Network topology (per-node colors)',
+      viewType: 'graph-chart',
+      propBindings: {
+        sourceProp: 'note.Source',
+        targetProp: 'note.Target',
+        valueProp: 'note.Amount',
+      },
+      literalOptions: {
+        showLegend: false,
+        valueFormat: '{value} Gbps',
+      },
     },
   ],
 })

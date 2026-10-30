@@ -5,12 +5,15 @@ properties:
     displayName: Source
   note.Target:
     displayName: Target
+  note.Zone:
+    displayName: Zone
 views:
   - type: graph-chart
     name: Network topology (graph)
     sourceProp: note.Source
     targetProp: note.Target
     valueProp: note.Amount
+    categoryProp: note.Zone
     showLegend: true
     filters:
       and:

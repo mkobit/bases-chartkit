@@ -1,0 +1,18 @@
+properties:
+  note.Amount:
+    displayName: Amount
+  note.Source:
+    displayName: Source
+  note.Target:
+    displayName: Target
+views:
+  - type: graph-chart
+    name: Network topology (per-node colors)
+    sourceProp: note.Source
+    targetProp: note.Target
+    valueProp: note.Amount
+    showLegend: false
+    valueFormat: "{value} Gbps"
+    filters:
+      and:
+        - file.folder == "graph/notes"

@@ -1,5 +1,6 @@
 ---
-Source: "Database Replica"
-Target: "Primary Firewall"
-Amount: 18
+Source: "Billing Service"
+Target: "Primary Postgres"
+Amount: 96
+Zone: "Core Services"
 ---

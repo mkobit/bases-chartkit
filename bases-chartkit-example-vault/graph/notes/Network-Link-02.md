@@ -1,5 +1,6 @@
 ---
-Source: "DMZ Switch"
-Target: "IoT Sensor"
-Amount: 5
+Source: "WAF Gateway"
+Target: "Ingress Load Balancer"
+Amount: 555
+Zone: "Edge & Security"
 ---

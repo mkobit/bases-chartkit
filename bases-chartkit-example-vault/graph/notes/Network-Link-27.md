@@ -1,5 +1,6 @@
 ---
-Source: "Web Gateway"
-Target: "Secondary Firewall"
-Amount: 2
+Source: "Event Bus"
+Target: "Notification Worker"
+Amount: 234
+Zone: "Data & Storage"
 ---

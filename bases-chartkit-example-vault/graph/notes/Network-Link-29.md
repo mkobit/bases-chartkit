@@ -1,5 +1,6 @@
 ---
-Source: "App Cluster B"
-Target: "Workstation Pool"
-Amount: 19
+Source: "Log Aggregator"
+Target: "Primary Firewall"
+Amount: 21
+Zone: "Observability"
 ---

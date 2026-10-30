@@ -1,5 +1,6 @@
 ---
-Source: "DMZ Switch"
-Target: "Database Replica"
-Amount: 19
+Source: "Redis Cache"
+Target: "Metrics Collector"
+Amount: 71
+Zone: "Data & Storage"
 ---

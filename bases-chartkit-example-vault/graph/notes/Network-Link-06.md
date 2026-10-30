@@ -1,5 +1,6 @@
 ---
-Source: "Database Master"
-Target: "App Cluster A"
-Amount: 20
+Source: "VPN Concentrator"
+Target: "Primary Firewall"
+Amount: 92
+Zone: "Edge & Security"
 ---

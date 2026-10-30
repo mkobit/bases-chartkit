@@ -1,5 +1,6 @@
 ---
-Source: "App Cluster B"
-Target: "Secondary Firewall"
-Amount: 10
+Source: "Order Service"
+Target: "Primary Postgres"
+Amount: 141
+Zone: "Core Services"
 ---

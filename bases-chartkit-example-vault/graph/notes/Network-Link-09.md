@@ -1,5 +1,6 @@
 ---
-Source: "Workstation Pool"
-Target: "DMZ Switch"
-Amount: 2
+Source: "Ingress Load Balancer"
+Target: "Catalog Service"
+Amount: 351
+Zone: "Gateway & Routing"
 ---

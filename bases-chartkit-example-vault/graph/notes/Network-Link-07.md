@@ -1,5 +1,6 @@
 ---
-Source: "Database Replica"
-Target: "Workstation Pool"
-Amount: 2
+Source: "VPN Concentrator"
+Target: "Metrics Collector"
+Amount: 18
+Zone: "Edge & Security"
 ---

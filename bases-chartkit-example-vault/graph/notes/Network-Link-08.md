@@ -1,5 +1,6 @@
 ---
-Source: "Secondary Firewall"
-Target: "Web Gateway"
-Amount: 18
+Source: "Ingress Load Balancer"
+Target: "API Gateway"
+Amount: 302
+Zone: "Gateway & Routing"
 ---

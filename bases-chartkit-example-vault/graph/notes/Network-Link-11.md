@@ -1,5 +1,6 @@
 ---
-Source: "IoT Sensor"
-Target: "Web Gateway"
-Amount: 3
+Source: "API Gateway"
+Target: "Order Service"
+Amount: 160
+Zone: "Gateway & Routing"
 ---

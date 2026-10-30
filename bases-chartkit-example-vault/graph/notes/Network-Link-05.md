@@ -1,5 +1,6 @@
 ---
-Source: "App Cluster B"
-Target: "Secondary Firewall"
-Amount: 5
+Source: "Primary Firewall"
+Target: "Service Mesh Proxy"
+Amount: 257
+Zone: "Edge & Security"
 ---

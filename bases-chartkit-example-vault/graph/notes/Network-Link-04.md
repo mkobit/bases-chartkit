@@ -1,5 +1,6 @@
 ---
-Source: "App Cluster A"
-Target: "DMZ Switch"
-Amount: 1
+Source: "Primary Firewall"
+Target: "API Gateway"
+Amount: 474
+Zone: "Edge & Security"
 ---
