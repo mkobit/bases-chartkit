@@ -1,0 +1,20 @@
+properties:
+  note.Landmark:
+    displayName: Landmark
+  note.Rating:
+    displayName: Rating
+views:
+  - type: map-chart
+    name: Chicago landmarks by visitor rating (vintage theme)
+    regionProp: note.Landmark
+    valueProp: note.Rating
+    mapFile: "map/assets/chicago-landmarks.geo.json"
+    theme: "Vintage"
+    visualMapMin: 4
+    visualMapMax: 5
+    title: "Landmark Visitor Satisfaction"
+    description: "Average visitor rating (4.0 to 5.0 scale) rendered with the Vintage theme"
+    filters:
+      and:
+        - file.folder == "map/notes"
+        - note.Landmark != null

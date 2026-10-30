@@ -1,0 +1,19 @@
+properties:
+  note.Attendance:
+    displayName: Attendance
+  note.Landmark:
+    displayName: Landmark
+views:
+  - type: map-chart
+    name: Chicago landmarks by annual attendance (warm ramp)
+    regionProp: note.Landmark
+    valueProp: note.Attendance
+    mapFile: "map/assets/chicago-landmarks.geo.json"
+    visualMapColor: "#fff7bc,#fec44f,#fe9929,#cc4c02,#662506"
+    valueFormat: "compact"
+    title: "Annual Landmark Attendance"
+    description: "Total annual event visitors encoded on a sequential warm amber-to-brown ramp"
+    filters:
+      and:
+        - file.folder == "map/notes"
+        - note.Landmark != null

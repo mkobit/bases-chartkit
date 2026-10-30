@@ -1,0 +1,21 @@
+properties:
+  note.Landmark:
+    displayName: Landmark
+  note.TicketPrice:
+    displayName: Ticket Price
+views:
+  - type: map-chart
+    name: Chicago landmarks by ticket price (piecewise vertical)
+    regionProp: note.Landmark
+    valueProp: note.TicketPrice
+    mapFile: "map/assets/chicago-landmarks.geo.json"
+    visualMapType: "piecewise"
+    visualMapOrient: "vertical"
+    visualMapColor: "#e0f3db,#a8ddb5,#4eb3d3,#0868ac"
+    valueFormat: "currency:USD"
+    title: "Average Event Ticket Price by Landmark"
+    description: "Piecewise vertical visual map banding landmarks by average ticket price (USD)"
+    filters:
+      and:
+        - file.folder == "map/notes"
+        - note.Landmark != null

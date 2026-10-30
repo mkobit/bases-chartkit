@@ -10,6 +10,8 @@ views:
     valueProp: note.EventCount
     mapFile: "map/assets/chicago-landmarks.geo.json"
     xAxisLabel: "Chicago landmarks"
+    title: "Chicago Landmarks by Event Count"
+    description: "Annual scheduled events across major Chicago cultural and civic landmarks"
     filters:
       and:
         - file.folder == "map/notes"
