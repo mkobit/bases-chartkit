@@ -1,14 +1,16 @@
 properties:
-  note.Load:
-    displayName: Load
+  note.Steps:
+    displayName: Steps
 views:
   - type: gauge-chart
-    name: Server load gauge (average)
-    yAxisProp: note.Load
+    name: Daily step goal (average)
+    yAxisProp: note.Steps
     aggregation: "avg"
     minVal: 0
-    maxVal: 100
-    colorBands: "30:#67e0e3,70:#37a2da,100:#fd666d"
+    maxVal: 12000
+    colorBands: "5000:#fd666d,9000:#fac858,12000:#91cc75"
+    title: "Daily Steps"
+    description: "Two-week daily average against 10,000 step target"
     filters:
       and:
         - file.folder == "gauge/notes"

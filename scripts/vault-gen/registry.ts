@@ -5,7 +5,8 @@ import { bulletChartArbitrary } from '../generators/bullet'
 import { boxplotChartArbitrary, histogramChartArbitrary, paretoChartArbitrary, waterfallChartArbitrary } from '../generators/distribution'
 import { candlestickChartArbitrary } from '../generators/financial'
 import { graphChartArbitrary, linesChartArbitrary, sankeyChartArbitrary } from '../generators/flow'
-import { funnelChartArbitrary, gaugeChartArbitrary } from '../generators/funnel'
+import { funnelChartArbitrary } from '../generators/funnel'
+import { gaugeChartArbitrary, type GaugeSample } from '../generators/gauge'
 import { ganttChartArbitrary } from '../generators/gantt'
 import { calendarChartArbitrary, heatmapChartArbitrary } from '../generators/heatmap'
 import { sunburstChartArbitrary, treeChartArbitrary, treemapChartArbitrary } from '../generators/hierarchy'
@@ -1188,32 +1189,83 @@ const funnelSpec = defineChartExampleSpec<FunnelSample>({
   ],
 })
 
-interface GaugeSample {
-  readonly data: ReadonlyArray<{ readonly value: number }>
-}
-
-const gaugeSpec = defineChartExampleSpec<GaugeSample>({
+const gaugeSpec = defineChartExampleSpec<readonly GaugeSample[]>({
   chartType: 'gauge',
   echartsExampleUrl: echartsExample('gauge'),
-  description: 'Server load gauge -- demonstrates a gauge chart with an averaging aggregation.',
+  description: 'Health log metrics -- demonstrates gauge charts with different aggregations and color bands.',
   arbitrary: gaugeChartArbitrary,
-  notePrefix: 'Server-Load',
-  toRows: sample => sample.data.map(row => ({
-    Load: row.value,
+  notePrefix: 'Health-Log',
+  toRows: (sample: readonly GaugeSample[]) => sample.map((item, _idx) => ({
+    Date: item.date,
+    Steps: item.steps,
+    Weight: item.weight,
+    SleepScore: item.sleepScore,
+    WaterIntake: item.waterIntake,
   })),
   variants: [
     {
       fileName: 'Basic.base',
-      viewName: 'Server load gauge (average)',
+      viewName: 'Daily step goal (average)',
       viewType: 'gauge-chart',
       propBindings: {
-        yAxisProp: 'note.Load',
+        yAxisProp: 'note.Steps',
+      },
+      literalOptions: {
+        aggregation: 'avg',
+        minVal: 0,
+        maxVal: 12000,
+        colorBands: '5000:#fd666d,9000:#fac858,12000:#91cc75',
+        title: 'Daily Steps',
+        description: 'Two-week daily average against 10,000 step target',
+      },
+    },
+    {
+      fileName: 'CurrentWeight.base',
+      viewName: 'Current weight tracking (last)',
+      viewType: 'gauge-chart',
+      propBindings: {
+        yAxisProp: 'note.Weight',
+      },
+      literalOptions: {
+        aggregation: 'last',
+        minVal: 60,
+        maxVal: 90,
+        colorBands: '68:#91cc75,75:#fac858,90:#fd666d',
+        title: 'Current Weight',
+        description: 'Latest weigh-in relative to target weight zone (kg)',
+      },
+    },
+    {
+      fileName: 'CustomTheme.base',
+      viewName: 'Sleep quality score (vintage theme)',
+      viewType: 'gauge-chart',
+      propBindings: {
+        yAxisProp: 'note.SleepScore',
       },
       literalOptions: {
         aggregation: 'avg',
         minVal: 0,
         maxVal: 100,
-        colorBands: '30:#67e0e3,70:#37a2da,100:#fd666d',
+        theme: 'vintage',
+        colorBands: '60:#e6a23c,80:#409eff,100:#67c23a',
+        title: 'Sleep Quality',
+        description: 'Average sleep quality rating on vintage theme',
+      },
+    },
+    {
+      fileName: 'WaterTotal.base',
+      viewName: 'Period hydration total (sum)',
+      viewType: 'gauge-chart',
+      propBindings: {
+        yAxisProp: 'note.WaterIntake',
+      },
+      literalOptions: {
+        aggregation: 'sum',
+        minVal: 0,
+        maxVal: 40000,
+        colorBands: '15000:#fd666d,30000:#37a2da,40000:#67e0e3',
+        title: 'Hydration Total',
+        description: 'Total milliliters consumed across current tracking period',
       },
     },
   ],

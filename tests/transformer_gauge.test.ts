@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import type { EChartsOption, GaugeSeriesOption } from 'echarts'
-import type { GaugeTransformerOptions } from '../src/charts/transformers/gauge'
+import { parseColorBands, type GaugeTransformerOptions } from '../src/charts/transformers/gauge'
 
 // EChartsOption['series'] is a `type`-discriminated union, so this needs no
 // cast -- checking the literal `type` narrows `series` to GaugeSeriesOption.
@@ -209,6 +209,21 @@ describe(
         )
 
         it(
+          'should round average values to at most 1 decimal place',
+          () => {
+            const fractionalData = [
+              { val: 10 },
+              { val: 20 },
+              { val: 25 },
+            ]
+            const option = transformDataToChartOption(fractionalData, '', 'val', 'gauge', { aggregation: 'avg' })
+            const series = firstGaugeSeries(option)
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(series.data[0].value).toBe(18.3)
+          },
+        )
+
+        it(
           'should take the minimum when aggregation is min',
           () => {
             const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'min' })
@@ -321,6 +336,76 @@ describe(
             const series = firstGaugeSeries(option)
             // (50 - -100) / (200 - -100) = 0.5
             expect(series.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
+          },
+        )
+
+        it(
+          'should parse valid threshold:color pairs and filter invalid ones',
+          () => {
+            expect(parseColorBands('60:#e6a23c,80:#409eff,100:#67c23a')).toEqual([
+              { threshold: 60, color: '#e6a23c' },
+              { threshold: 80, color: '#409eff' },
+              { threshold: 100, color: '#67c23a' },
+            ])
+            expect(parseColorBands('')).toBeUndefined()
+            expect(parseColorBands('invalid')).toBeUndefined()
+          },
+        )
+
+        it(
+          'should parse colorBands string and normalize thresholds against min-max range',
+          () => {
+            const bands = parseColorBands('5000:#fd666d,9000:#fac858,12000:#91cc75')
+            expect(bands).toBeDefined()
+            const option = transformDataToChartOption(
+              [{ val: 8000 }],
+              '',
+              'val',
+              'gauge',
+              {
+                min: 0,
+                max: 12000,
+                colorBands: bands,
+              },
+            )
+
+            const series = firstGaugeSeries(option)
+            const colors = series.axisLine?.lineStyle?.color
+            expect(colors).toBeDefined()
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(colors[0][0]).toBeCloseTo(5000 / 12000, 5)
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(colors[0][1]).toBe('#fd666d')
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(colors[1]).toEqual([0.75, '#fac858'])
+            // @ts-expect-error - suppress strictNullChecks in tests
+            expect(colors[2]).toEqual([1, '#91cc75'])
+          },
+        )
+
+        it(
+          'should clamp normalized threshold fractions between 0 and 1',
+          () => {
+            const option = transformDataToChartOption(
+              [{ val: 50 }],
+              '',
+              'val',
+              'gauge',
+              {
+                min: 10,
+                max: 100,
+                colorBands: [
+                  { threshold: 0, color: '#ff0000' },
+                  { threshold: 150, color: '#00ff00' },
+                ],
+              },
+            )
+
+            const series = firstGaugeSeries(option)
+            expect(series.axisLine?.lineStyle?.color).toEqual([
+              [0, '#ff0000'],
+              [1, '#00ff00'],
+            ])
           },
         )
 

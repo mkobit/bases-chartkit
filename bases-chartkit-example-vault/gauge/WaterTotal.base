@@ -1,0 +1,16 @@
+properties:
+  note.WaterIntake:
+    displayName: Water Intake
+views:
+  - type: gauge-chart
+    name: Period hydration total (sum)
+    yAxisProp: note.WaterIntake
+    aggregation: "sum"
+    minVal: 0
+    maxVal: 40000
+    colorBands: "15000:#fd666d,30000:#37a2da,40000:#67e0e3"
+    title: "Hydration Total"
+    description: "Total milliliters consumed across current tracking period"
+    filters:
+      and:
+        - file.folder == "gauge/notes"
