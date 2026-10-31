@@ -70,3 +70,11 @@ Confirm with the user before `git push`, PR merges, or other shared-state/hard-t
 ## Docker Sandbox execution
 When running tests or checks locally within the Docker Sandbox, they can be executed by invoking the environment file explicitly. For example, to run the standard gate checks you should use:
 `sbx env exec .sbx/sbxenv.yaml -- mise run check`
+
+## Frontend Guidance
+
+HTML/CSS/frontend tasks should consult modern-web-guidance via:
+```bash
+bun x modern-web-guidance search "<query>"
+bun x modern-web-guidance retrieve "<id>"
+```

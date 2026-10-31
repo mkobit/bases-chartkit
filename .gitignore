@@ -47,3 +47,7 @@ build_output.log
 .beads-credential-key
 *.gate.lock*
 
+
+agent/
+.agents/
+.claude/
