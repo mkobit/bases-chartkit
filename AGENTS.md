@@ -50,15 +50,6 @@ Follow these steps before you commit or merge changes to documentation screensho
    - `graph`: uses iterative physics layout.
    - `effect-scatter`: uses continuous ripple animation.
 
-## Frontend Guidance
-
-HTML/CSS/frontend tasks should consult modern-web-guidance via:
-
-`bun x modern-web-guidance search "<query>"`
-
-`bun x modern-web-guidance retrieve "<id>"`
-
-
 ## Dependency installation handling
 We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
 If `bun install` fails to find a package, do not try to alter the package manager or bypass the configuration.
@@ -78,3 +69,11 @@ Confirm with the user before `git push`, PR merges, or other shared-state/hard-t
 ## Docker Sandbox execution
 When running tests or checks locally within the Docker Sandbox, they can be executed by invoking the environment file explicitly. For example, to run the standard gate checks you should use:
 `sbx env exec .sbx/sbxenv.yaml -- mise run check`
+
+## Frontend Guidance
+
+HTML/CSS/frontend tasks should consult modern-web-guidance via:
+```bash
+bun x modern-web-guidance search "<query>"
+bun x modern-web-guidance retrieve "<id>"
+```
