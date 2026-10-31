@@ -32,6 +32,7 @@ test-results/
 e2e/test-vault/
 
 # Claude Code local-only settings
+.claude/settings.local.json
 
 # Stray build output capture
 build_output.log
