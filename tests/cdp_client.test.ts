@@ -152,7 +152,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string, params?: unknown }
+          const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Custom.echo') {
             ws.send(JSON.stringify({
@@ -188,7 +188,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string, params?: { expression: string } }
+          const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Runtime.evaluate') {
             ws.send(JSON.stringify({
@@ -229,7 +229,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string }
+          const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Runtime.evaluate') {
             ws.send(JSON.stringify({
@@ -272,7 +272,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string }
+          const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Page.captureScreenshot') {
             ws.send(JSON.stringify({
@@ -313,7 +313,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string, params: { type: string, x: number, y: number } }
+          const parsed = JSON.parse(raw)
           sink.record(parsed)
 
           ws.send(JSON.stringify({
@@ -333,15 +333,13 @@ describe('Chrome DevTools Protocol client session', () => {
       })
 
       const msg = sink.message
-      if (msg === null) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-        throw new Error('Message was not captured')
+      expect(msg).not.toBeNull()
+      if (msg !== null) {
+        expect(msg.method).toBe('Input.dispatchMouseEvent')
+        expect(msg.params.type).toBe('mouseMoved')
+        expect(msg.params.x).toBe(100)
+        expect(msg.params.y).toBe(200)
       }
-
-      expect(msg.method).toBe('Input.dispatchMouseEvent')
-      expect(msg.params.type).toBe('mouseMoved')
-      expect(msg.params.x).toBe(100)
-      expect(msg.params.y).toBe(200)
 
       await client.close()
     }
@@ -364,7 +362,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number, method: string, params: { type: string, key: string } }
+          const parsed = JSON.parse(raw)
           sink.record(parsed)
 
           ws.send(JSON.stringify({
@@ -384,14 +382,12 @@ describe('Chrome DevTools Protocol client session', () => {
       })
 
       const msg = sink.message
-      if (msg === null) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-        throw new Error('Message was not captured')
+      expect(msg).not.toBeNull()
+      if (msg !== null) {
+        expect(msg.method).toBe('Input.dispatchKeyEvent')
+        expect(msg.params.type).toBe('keyDown')
+        expect(msg.params.key).toBe('Escape')
       }
-
-      expect(msg.method).toBe('Input.dispatchKeyEvent')
-      expect(msg.params.type).toBe('keyDown')
-      expect(msg.params.key).toBe('Escape')
 
       await client.close()
     }
@@ -414,7 +410,7 @@ describe('Chrome DevTools Protocol client session', () => {
       websocket: {
         message(ws, message) {
           const raw = typeof message === 'string' ? message : ''
-          const parsed = JSON.parse(raw) as { id: number }
+          const parsed = JSON.parse(raw)
           ws.send(JSON.stringify({ id: parsed.id, result: { connected: true } }))
         },
       },
