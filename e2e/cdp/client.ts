@@ -235,8 +235,13 @@ export class CdpClientSession implements CdpClient {
 /**
  * Fetches Chrome DevTools Protocol targets from the specified HTTP port.
  */
-export async function fetchCdpTargets(port: number): Promise<readonly CdpTarget[]> {
-  const response = await fetch(`http://127.0.0.1:${port}/json/list`)
+export async function fetchCdpTargets(
+  port: number,
+  timeoutMs: number = 1_000,
+): Promise<readonly CdpTarget[]> {
+  const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+    signal: AbortSignal.timeout(timeoutMs),
+  })
   if (!response.ok) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
     throw new Error(`Failed to fetch CDP targets from port ${port}: ${response.statusText}`)
