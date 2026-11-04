@@ -1,19 +1,33 @@
 /**
  * Bun test fixture bridge for Obsidian end-to-end tests.
  * Connects to the orchestrator-managed Chrome DevTools Protocol port.
+ * Preserves Playwright test runner fallback for legacy Node execution until Phase 4.
  */
 
-import { test as bunTest, describe, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
 import type { App } from 'obsidian'
 import type { Page as PlaywrightPage } from '@playwright/test'
+import type { ChildProcess } from 'node:child_process'
 import { connectCdp } from '../cdp/client'
 import type { CdpClient, ScreenshotOptions } from '../cdp/client'
-import { expect as augmentedExpect } from '../helpers/poll'
+
+const isBun = typeof Bun !== 'undefined'
+
+const bunTest = isBun ? await import('bun:test') : null
+const pollModule = isBun ? await import('../helpers/poll') : null
+const augmentedExpect = pollModule ? pollModule.expect : null
+const playwright = !isBun ? await import('@playwright/test') : null
+const obsidianLauncherModule = !isBun ? await import('obsidian-launcher') : null
+const net = !isBun ? await import('node:net') : null
+const appearanceModule = !isBun ? await import('../../shared/appearance') : null
+const evaluateModule = !isBun ? await import('../helpers/evaluate') : null
 
 export const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 export const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
+export const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
+export const OBSIDIAN_APP_VERSION = '1.13.4'
+export const OBSIDIAN_INSTALLER_VERSION = '1.13.4'
 
 const LOCATOR_BRAND = Symbol('ObsidianLocator')
 
@@ -98,7 +112,7 @@ let activePage: (ObsidianPageObject & PlaywrightPage) | null = null
 /**
  * Connects to or reuses the active Chrome DevTools Protocol client connection.
  */
-export async function getOrCreateCdpClient(): Promise<CdpClient> {
+export async function getActiveCdpClient(): Promise<CdpClient> {
   if (activeCdpClient !== null) {
     return activeCdpClient
   }
@@ -106,23 +120,25 @@ export async function getOrCreateCdpClient(): Promise<CdpClient> {
     return activeCdpClientPromise
   }
   const port = getCdpPort()
-  activeCdpClientPromise = (async () => {
-    const client = await connectCdp(port)
-    activeCdpClient = client
-    return client
-  })()
-  try {
-    return await activeCdpClientPromise
-  }
-  catch (error: unknown) {
-    activeCdpClientPromise = null
-    throw error
-  }
+  activeCdpClientPromise = connectCdp(port)
+    .then((client) => {
+      activeCdpClient = client
+      activeCdpClientPromise = null
+      return client
+    })
+    .catch((err) => {
+      activeCdpClientPromise = null
+      throw err
+    })
+  return activeCdpClientPromise
 }
 
-/**
- * Closes the active Chrome DevTools Protocol WebSocket connection.
- */
+export function setCdpClientForTesting(client: CdpClient | null): void {
+  activeCdpClient = client
+  activeCdpClientPromise = null
+  activePage = null
+}
+
 export async function closeActiveCdpConnection(): Promise<void> {
   if (activeCdpClient !== null) {
     const client = activeCdpClient
@@ -133,186 +149,74 @@ export async function closeActiveCdpConnection(): Promise<void> {
   }
 }
 
-/**
- * Injects a mock or custom CDP client for testing purposes.
- */
-export function setCdpClientForTesting(client: CdpClient | null): void {
-  activeCdpClient = client
-  activeCdpClientPromise = client !== null ? Promise.resolve(client) : null
-  activePage = client !== null ? createObsidianPage(client) : null
+export function sanitizeTestTitle(title: string): string {
+  const cleaned = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return cleaned === '' ? 'test' : cleaned
 }
 
-const KEY_DEFINITIONS: Readonly<Record<string, { readonly key: string, readonly code: string, readonly keyCode: number }>> = {
-  Escape: { key: 'Escape', code: 'Escape', keyCode: 27 },
-  Enter: { key: 'Enter', code: 'Enter', keyCode: 13 },
-  Tab: { key: 'Tab', code: 'Tab', keyCode: 9 },
-  Backspace: { key: 'Backspace', code: 'Backspace', keyCode: 8 },
-  ArrowUp: { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
-  ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
-  ArrowLeft: { key: 'ArrowLeft', code: 'ArrowLeft', keyCode: 37 },
-  ArrowRight: { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
-}
+const DEFAULT_MOUSE_MOVE_STEPS = 1
 
-function createLocator(
-  page: ObsidianPageObject,
-  selector: string,
-  options?: { readonly hasText?: string },
-  isFirstOnly: boolean = false,
-): Locator {
-  return {
-    [LOCATOR_BRAND]: true,
-    first: () => createLocator(page, selector, options, true),
-    count: async (): Promise<number> => {
-      return page.evaluate(([sel, opt, first]) => {
-        const elements = Array.from(document.querySelectorAll(sel))
-        const textFilter = opt?.hasText
-        const filtered = textFilter !== undefined
-          ? elements.filter(el => (el.textContent ?? '').includes(textFilter))
-          : elements
-        return first ? Math.min(filtered.length, 1) : filtered.length
-      }, [selector, options, isFirstOnly] as const)
-    },
-    click: async (clickOptions?: { readonly timeout?: number }): Promise<void> => {
-      const timeoutMs = clickOptions?.timeout ?? 5_000
-      const deadline = Temporal.Now.instant().epochMilliseconds + timeoutMs
-
-      const pollClick = async (): Promise<void> => {
-        const clicked = await page.evaluate(([sel, opt, first]) => {
-          const elements = Array.from(document.querySelectorAll(sel))
-          const textFilter = opt?.hasText
-          const filtered = textFilter !== undefined
-            ? elements.filter(el => (el.textContent ?? '').includes(textFilter))
-            : elements
-          const target = first ? filtered[0] : filtered[0]
-          if (!target) {
-            return false
-          }
-          if ('click' in target && typeof target.click === 'function') {
-            if ('scrollIntoView' in target && typeof target.scrollIntoView === 'function') {
-              target.scrollIntoView({ block: 'center', inline: 'center' })
-            }
-            target.click()
-          }
-          else {
-            target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
-          }
-          return true
-        }, [selector, options, isFirstOnly] as const)
-
-        if (clicked) {
-          return
-        }
-
-        const now = Temporal.Now.instant().epochMilliseconds
-        if (now >= deadline) {
-          fail(`Element not found to click for selector: "${selector}" after ${timeoutMs}ms`)
-        }
-        await Bun.sleep(100)
-        return pollClick()
-      }
-
-      return pollClick()
-    },
-    isVisible: async (visOptions?: { readonly timeout?: number }): Promise<boolean> => {
-      const timeoutMs = visOptions?.timeout ?? 0
-      const checkVisible = async (): Promise<boolean> => {
-        return page.evaluate(([sel, opt, first]) => {
-          const elements = Array.from(document.querySelectorAll(sel))
-          const textFilter = opt?.hasText
-          const filtered = textFilter !== undefined
-            ? elements.filter(el => (el.textContent ?? '').includes(textFilter))
-            : elements
-          const targetList = first ? filtered.slice(0, 1) : filtered
-          if (targetList.length === 0) {
-            return false
-          }
-          return targetList.some((element) => {
-            if (!('getBoundingClientRect' in element && typeof element.getBoundingClientRect === 'function')) {
-              return true
-            }
-            const style = window.getComputedStyle(element)
-            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-              return false
-            }
-            const rect = element.getBoundingClientRect()
-            return rect.width > 0 && rect.height > 0
-          })
-        }, [selector, options, isFirstOnly] as const)
-      }
-
-      if (timeoutMs <= 0) {
-        return checkVisible()
-      }
-
-      const deadline = Temporal.Now.instant().epochMilliseconds + timeoutMs
-      const pollVisibility = async (): Promise<boolean> => {
-        const visible = await checkVisible()
-        if (visible) {
-          return true
-        }
-        const now = Temporal.Now.instant().epochMilliseconds
-        if (now >= deadline) {
-          return false
-        }
-        await Bun.sleep(Math.min(100, Math.max(0, deadline - now)))
-        return pollVisibility()
-      }
-      return pollVisibility()
-    },
-  }
-}
-
-/**
- * Creates an Obsidian page object wrapper around a Chrome DevTools Protocol client.
- */
 export function createObsidianPage(client: CdpClient): ObsidianPageObject & PlaywrightPage {
-  let currentX = 0
-  let currentY = 0
+  let currentMouseX = 0
+  let currentMouseY = 0
+
+  const evaluate = async <T = unknown, A = unknown>(
+    fn: ((args: A) => T | Promise<T>) | string,
+    args?: A,
+  ): Promise<T> => {
+    if (typeof fn === 'string') {
+      return client.evaluate<T>(fn)
+    }
+    const fnSrc = fn.toString()
+    const serializedArgs = args === undefined ? 'undefined' : JSON.stringify(args)
+    const expression = `Promise.resolve().then(() => (${fnSrc})(${serializedArgs}))`
+    return client.evaluate<T>(expression)
+  }
 
   const mouse: Mouse = {
     move: async (x: number, y: number, options?: { readonly steps?: number }): Promise<void> => {
-      const steps = Math.max(1, options?.steps ?? 1)
-      if (steps === 1) {
-        await client.dispatchMouseEvent({ type: 'mouseMoved', x, y })
-        currentX = x
-        currentY = y
-        return
-      }
+      const steps = Math.max(1, options?.steps ?? DEFAULT_MOUSE_MOVE_STEPS)
+      const startX = currentMouseX
+      const startY = currentMouseY
 
-      const startX = currentX
-      const startY = currentY
-      const stepIndices = Array.from({ length: steps }, (_, index) => index + 1)
-      for (const step of stepIndices) {
-        const progress = step / steps
-        const interX = startX + (x - startX) * progress
-        const interY = startY + (y - startY) * progress
+      for (let i = 1; i <= steps; i += 1) {
+        const fraction = i / steps
+        const intermediateX = startX + (x - startX) * fraction
+        const intermediateY = startY + (y - startY) * fraction
         await client.dispatchMouseEvent({
           type: 'mouseMoved',
-          x: interX,
-          y: interY,
+          x: intermediateX,
+          y: intermediateY,
         })
       }
-      currentX = x
-      currentY = y
+
+      currentMouseX = x
+      currentMouseY = y
     },
+
     down: async (options?: { readonly button?: 'left' | 'middle' | 'right' }): Promise<void> => {
       await client.dispatchMouseEvent({
         type: 'mousePressed',
-        x: currentX,
-        y: currentY,
+        x: currentMouseX,
+        y: currentMouseY,
         button: options?.button ?? 'left',
         clickCount: 1,
       })
     },
+
     up: async (options?: { readonly button?: 'left' | 'middle' | 'right' }): Promise<void> => {
       await client.dispatchMouseEvent({
         type: 'mouseReleased',
-        x: currentX,
-        y: currentY,
+        x: currentMouseX,
+        y: currentMouseY,
         button: options?.button ?? 'left',
         clickCount: 1,
       })
     },
+
     click: async (x: number, y: number, options?: { readonly button?: 'left' | 'middle' | 'right' }): Promise<void> => {
       await mouse.move(x, y)
       await mouse.down(options)
@@ -320,249 +224,287 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject & Play
     },
   }
 
+  const KEY_MAPPINGS: Record<string, { readonly key: string, readonly code: string, readonly keyCode: number }> = {
+    Escape: { key: 'Escape', code: 'Escape', keyCode: 27 },
+    Enter: { key: 'Enter', code: 'Enter', keyCode: 13 },
+    Tab: { key: 'Tab', code: 'Tab', keyCode: 9 },
+    Backspace: { key: 'Backspace', code: 'Backspace', keyCode: 8 },
+    ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
+    ArrowUp: { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
+    ArrowLeft: { key: 'ArrowLeft', code: 'ArrowLeft', keyCode: 37 },
+    ArrowRight: { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+  }
+
   const keyboard: Keyboard = {
     press: async (key: string): Promise<void> => {
-      const mapped = KEY_DEFINITIONS[key]
-      if (mapped !== undefined) {
-        await client.dispatchKeyEvent({
-          type: 'rawKeyDown',
-          key: mapped.key,
-          code: mapped.code,
-          windowsVirtualKeyCode: mapped.keyCode,
-        })
-        await client.dispatchKeyEvent({
-          type: 'keyUp',
-          key: mapped.key,
-          code: mapped.code,
-          windowsVirtualKeyCode: mapped.keyCode,
-        })
-        return
-      }
+      const mapping = KEY_MAPPINGS[key]
+      const keyName = mapping?.key ?? key
+      const codeName = mapping?.code ?? key
+      const keyCode = mapping?.keyCode ?? (key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0)
 
-      if (key.length === 1) {
-        await client.dispatchKeyEvent({
-          type: 'rawKeyDown',
-          key,
-          text: key,
-          unmodifiedText: key,
-        })
-        await client.dispatchKeyEvent({
-          type: 'keyUp',
-          key,
-        })
-        return
-      }
-
-      await client.dispatchKeyEvent({ type: 'rawKeyDown', key })
-      await client.dispatchKeyEvent({ type: 'keyUp', key })
+      await client.dispatchKeyEvent({
+        type: 'rawKeyDown',
+        key: keyName,
+        code: codeName,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+      })
+      await client.dispatchKeyEvent({
+        type: 'keyUp',
+        key: keyName,
+        code: codeName,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+      })
     },
   }
 
-  const pageObject: ObsidianPageObject = {
-    evaluate: async <T = unknown, A = unknown>(
-      fn: ((args: A) => T | Promise<T>) | string,
-      args?: A,
-    ): Promise<T> => {
-      if (typeof fn === 'string') {
-        if (args !== undefined) {
-          const serializedArgs = JSON.stringify(args)
-          const expression = `(() => {
-            const args = ${serializedArgs};
-            return (${fn});
-          })()`
-          return client.evaluate<T>(expression)
-        }
-        return client.evaluate<T>(fn)
-      }
+  const createLocatorInstance = (
+    selector: string,
+    options?: { readonly hasText?: string, readonly index?: number },
+  ): Locator => {
+    const hasText = options?.hasText
+    const targetIndex = options?.index
 
-      const fnSrc = fn.toString()
-      const serializedArgs = args === undefined ? 'undefined' : JSON.stringify(args)
-      const expression = `(() => {
-        const userFn = (${fnSrc});
-        return userFn(${serializedArgs});
-      })()`
-      return client.evaluate<T>(expression)
-    },
-    mouse,
-    keyboard,
-    locator: (selector: string, options?: { readonly hasText?: string }) => {
-      return createLocator(pageObject, selector, options)
-    },
-    screenshot: async (options?: ScreenshotOptions): Promise<Buffer> => {
-      return client.captureScreenshot(options)
-    },
-    waitForFunction: async (
-      fn: (() => boolean | Promise<boolean>) | string,
-      options?: { readonly timeout?: number },
-    ): Promise<void> => {
-      const timeoutMs = options?.timeout ?? 30_000
-      const deadline = Temporal.Now.instant().epochMilliseconds + timeoutMs
+    const count = async (): Promise<number> => {
+      const elementsCount = await evaluate<number, { readonly selector: string, readonly hasText?: string }>(
+        (args) => {
+          const list = Array.from(document.querySelectorAll(args.selector))
+          const filtered = args.hasText !== undefined
+            ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+            : list
+          return filtered.length
+        },
+        { selector, hasText },
+      )
+      return targetIndex !== undefined ? Math.min(1, Math.max(0, elementsCount - targetIndex)) : elementsCount
+    }
 
-      const pollFn = async (): Promise<void> => {
-        const result = await pageObject.evaluate(fn)
-        if (result) {
-          return
+    const click = async (clickOptions?: { readonly timeout?: number }): Promise<void> => {
+      const timeoutMs = clickOptions?.timeout ?? 5_000
+      const startTime = Temporal.Now.instant().epochMilliseconds
+      const deadline = startTime + timeoutMs
+
+      const pollForElement = async (): Promise<{ readonly x: number, readonly y: number }> => {
+        const coords = await evaluate<
+          { readonly x: number, readonly y: number } | null,
+          { readonly selector: string, readonly hasText?: string, readonly index: number }
+        >(
+          (args) => {
+            const list = Array.from(document.querySelectorAll(args.selector))
+            const filtered = args.hasText !== undefined
+              ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+              : list
+            const el = filtered[args.index]
+            if (!el) {
+              return null
+            }
+            const rect = el.getBoundingClientRect()
+            return {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2,
+            }
+          },
+          { selector, hasText, index: targetIndex ?? 0 },
+        )
+
+        if (coords !== null) {
+          return coords
         }
+
         const now = Temporal.Now.instant().epochMilliseconds
         if (now >= deadline) {
-          fail(`waitForFunction timed out after ${timeoutMs}ms`)
+          fail(`Element not found or not clickable for selector "${selector}" after ${timeoutMs}ms`)
         }
-        await Bun.sleep(Math.min(100, Math.max(0, deadline - now)))
-        return pollFn()
+        await Bun.sleep(100)
+        return pollForElement()
       }
 
-      return pollFn()
-    },
+      const point = await pollForElement()
+      await mouse.click(point.x, point.y)
+    }
+
+    const first = (): Locator => createLocatorInstance(selector, { hasText, index: 0 })
+
+    const isVisible = async (visOptions?: { readonly timeout?: number }): Promise<boolean> => {
+      const timeoutMs = visOptions?.timeout ?? 5_000
+      const startTime = Temporal.Now.instant().epochMilliseconds
+      const deadline = startTime + timeoutMs
+
+      const checkVisibility = async (): Promise<boolean> => {
+        const visible = await evaluate<
+          boolean,
+          { readonly selector: string, readonly hasText?: string, readonly index: number }
+        >(
+          (args) => {
+            const list = Array.from(document.querySelectorAll(args.selector))
+            const filtered = args.hasText !== undefined
+              ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+              : list
+            const el = filtered[args.index]
+            if (!el) {
+              return false
+            }
+            const rect = el.getBoundingClientRect()
+            const style = window.getComputedStyle(el)
+            return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'
+          },
+          { selector, hasText, index: targetIndex ?? 0 },
+        )
+
+        if (visible) {
+          return true
+        }
+
+        const now = Temporal.Now.instant().epochMilliseconds
+        if (now >= deadline) {
+          return false
+        }
+        await Bun.sleep(100)
+        return checkVisibility()
+      }
+
+      return checkVisibility()
+    }
+
+    return {
+      [LOCATOR_BRAND]: true,
+      count,
+      click,
+      first,
+      isVisible,
+    }
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridge page object to Playwright page interface during migration
-  return pageObject as ObsidianPageObject & PlaywrightPage
+  const locator = (
+    selector: string,
+    options?: { readonly hasText?: string },
+  ): Locator => createLocatorInstance(selector, options)
+
+  const screenshot = async (options?: ScreenshotOptions): Promise<Buffer> =>
+    client.captureScreenshot(options)
+
+  const waitForFunction = async (
+    fn: (() => boolean | Promise<boolean>) | string,
+    options?: { readonly timeout?: number },
+  ): Promise<void> => {
+    const timeoutMs = options?.timeout ?? 30_000
+    const startTime = Temporal.Now.instant().epochMilliseconds
+    const deadline = startTime + timeoutMs
+
+    const poll = async (): Promise<void> => {
+      const passed = await evaluate<boolean>(fn)
+      if (passed) {
+        return
+      }
+      const now = Temporal.Now.instant().epochMilliseconds
+      if (now >= deadline) {
+        fail(`waitForFunction timed out after ${timeoutMs}ms`)
+      }
+      await Bun.sleep(100)
+      return poll()
+    }
+
+    return poll()
+  }
+
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridge custom page object to PlaywrightPage compatibility type
+  return {
+    evaluate,
+    mouse,
+    keyboard,
+    locator,
+    screenshot,
+    waitForFunction,
+  } as unknown as ObsidianPageObject & PlaywrightPage
 }
 
-/**
- * Retrieves or initializes the singleton Obsidian page instance.
- */
 export async function getOrCreateObsidianPage(): Promise<ObsidianPageObject & PlaywrightPage> {
   if (activePage !== null) {
     return activePage
   }
-  const client = await getOrCreateCdpClient()
+  const client = await getActiveCdpClient()
   activePage = createObsidianPage(client)
   return activePage
 }
 
-/**
- * Resets the Obsidian workspace state before executing a test.
- */
 export async function resetWorkspace(page: ObsidianPageObject): Promise<void> {
-  await page.evaluate(`(() => {
-    const win = window;
-    const obsidianApp = (win.activeWindow || win).app;
-    if (obsidianApp && obsidianApp.workspace && typeof obsidianApp.workspace.detachLeavesOfType === 'function') {
-      obsidianApp.workspace.detachLeavesOfType('bases');
+  await page.evaluate(() => {
+    const win = window
+    const obsidianApp = (win.activeWindow || win).app
+    if (obsidianApp?.workspace !== undefined) {
+      obsidianApp.workspace.detachLeavesOfType('bases')
     }
-
-    const modalContainers = Array.from(document.querySelectorAll('.modal-container'));
-    modalContainers.forEach((container) => {
-      const closeButton = container.querySelector('.modal-close-button');
-      if (closeButton && typeof closeButton.click === 'function') {
-        closeButton.click();
+    const modals = document.querySelectorAll('.bases-chart-modal, .modal-container')
+    modals.forEach((modal) => {
+      const closeButton = modal.querySelector('.modal-close-button')
+      if (closeButton instanceof HTMLElement) {
+        closeButton.click()
       }
       else {
-        container.remove();
+        modal.remove()
       }
-    });
-
-    const chartModals = Array.from(document.querySelectorAll('.bases-chart-modal, .modal-bg'));
-    chartModals.forEach((element) => {
-      element.remove();
-    });
-  })()`)
+    })
+  })
 }
 
-/**
- * Sanitizes a test title for safe filesystem screenshot naming.
- */
-export function sanitizeTestTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-/**
- * Captures a screenshot to the test-results directory upon test failure.
- */
 export async function captureFailureScreenshot(
   page: ObsidianPageObject,
-  testTitle: string,
-): Promise<void> {
+  testName: string,
+  outputDir = path.join(ROOT_DIR, 'test-results'),
+): Promise<string> {
+  const sanitized = sanitizeTestTitle(testName)
+  const filename = `${sanitized}-failure.png`
+  const filepath = path.join(outputDir, filename)
+
   try {
-    const sanitizedTitle = sanitizeTestTitle(testTitle)
-    const resultsDir = path.resolve(process.cwd(), 'test-results')
-    await fs.mkdir(resultsDir, { recursive: true })
-    const screenshotPath = path.join(resultsDir, `${sanitizedTitle}-failure.png`)
-    const screenshotBuffer = await page.screenshot({ format: 'png' })
-    await fs.writeFile(screenshotPath, screenshotBuffer)
-    process.stderr.write(`[test failure] Screenshot saved to: ${screenshotPath}\n`)
+    await fs.mkdir(outputDir, { recursive: true })
+    const buffer = await page.screenshot({ format: 'png' })
+    await fs.writeFile(filepath, buffer)
+    process.stderr.write(`[test failure] Screenshot saved to: ${filepath}\n`)
+    return filepath
   }
-  catch (screenshotError: unknown) {
-    process.stderr.write(
-      `[test failure] Failed to capture failure screenshot: ${screenshotError instanceof Error ? screenshotError.message : String(screenshotError)}\n`,
-    )
+  catch (screenshotErr: unknown) {
+    process.stderr.write(`[test failure] Failed to capture failure screenshot: ${String(screenshotErr)}\n`)
+    return filepath
   }
 }
 
-declare module 'bun:test' {
-  interface Matchers<T = unknown> {
-    readonly toHaveCount: (expected: number, options?: { readonly timeout?: number }) => Promise<void>
-    readonly toBeVisible: (options?: { readonly timeout?: number }) => Promise<void>
-    readonly _phantom?: T
-  }
-  interface AsymmetricMatchers {
-    readonly toHaveCount: (expected: number, options?: { readonly timeout?: number }) => Promise<void>
-    readonly toBeVisible: (options?: { readonly timeout?: number }) => Promise<void>
-  }
-}
-
-augmentedExpect.extend({
-  async toHaveCount(
-    this: { readonly isNot?: boolean } | void,
-    actual: unknown,
-    expected: number,
-    options?: { readonly timeout?: number },
-  ) {
-    if (!isLocator(actual)) {
+if (augmentedExpect) {
+  augmentedExpect.extend({
+  async toHaveCount(received: unknown, expected: number) {
+    const isNegated = this.isNot === true
+    if (!isLocator(received)) {
       return {
         pass: false,
-        message: () => `expected a Locator instance, received ${typeof actual}`,
+        message: () => `expected Locator instance, received ${typeof received}`,
       }
     }
-    const timeoutMs = options?.timeout ?? 5_000
-    const deadline = Temporal.Now.instant().epochMilliseconds + timeoutMs
-    const isNegated = Boolean(this?.isNot)
-
-    const pollCount = async (): Promise<{ readonly pass: boolean, readonly count: number }> => {
-      const current = await actual.count()
-      const match = current === expected
-      if (isNegated ? !match : match) {
-        return { pass: match, count: current }
-      }
-      const now = Temporal.Now.instant().epochMilliseconds
-      if (now >= deadline) {
-        return { pass: match, count: current }
-      }
-      await Bun.sleep(Math.min(100, Math.max(0, deadline - now)))
-      return pollCount()
-    }
-
-    const result = await pollCount()
+    const actualCount = await received.count()
+    const pass = actualCount === expected
     return {
-      pass: result.pass,
+      pass,
       message: () =>
         isNegated
-          ? `expected locator count not to be ${expected}, got ${result.count}`
-          : `expected locator count to be ${expected}, got ${result.count} (timed out after ${timeoutMs}ms)`,
+          ? `expected locator count not to be ${expected}`
+          : `expected locator count to be ${expected}, got ${actualCount}`,
     }
   },
 
-  async toBeVisible(
-    this: { readonly isNot?: boolean } | void,
-    actual: unknown,
-    options?: { readonly timeout?: number },
-  ) {
-    if (!isLocator(actual)) {
+  async toBeVisible(received: unknown, options?: { readonly timeout?: number }) {
+    const isNegated = this.isNot === true
+    if (!isLocator(received)) {
       return {
         pass: false,
-        message: () => `expected a Locator instance, received ${typeof actual}`,
+        message: () => `expected Locator instance, received ${typeof received}`,
       }
     }
     const timeoutMs = options?.timeout ?? 5_000
-    const deadline = Temporal.Now.instant().epochMilliseconds + timeoutMs
-    const isNegated = Boolean(this?.isNot)
+    const startTime = Temporal.Now.instant().epochMilliseconds
+    const deadline = startTime + timeoutMs
 
     const pollVis = async (): Promise<boolean> => {
-      const visible = await actual.isVisible()
+      const visible = await received.isVisible()
       if (isNegated ? !visible : visible) {
         return visible
       }
@@ -584,8 +526,7 @@ augmentedExpect.extend({
     }
   },
 })
-
-export { augmentedExpect as expect }
+}
 
 export async function evaluateObsidian<T>(
   fn: (app: App) => T | Promise<T>,
@@ -657,36 +598,214 @@ function wrapTestCallback(
 }
 
 function createTestWrapper(
-  baseRunner: typeof bunTest,
+  baseRunner: unknown,
 ) {
   return (
     name: string,
     fn?: TestCallback,
     options?: number | Record<string, unknown>,
   ) => {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- delegate runner callback
+    const runner = baseRunner as (testName: string, testFn: () => void | Promise<void>, testOptions?: unknown) => void
     if (fn === undefined) {
-      return baseRunner(name, () => {})
+      return runner(name, () => {})
     }
-    return baseRunner(name, wrapTestCallback(name, fn), options)
+    return runner(name, wrapTestCallback(name, fn), options)
   }
 }
 
-export const test = Object.assign(createTestWrapper(bunTest), {
-  describe,
-  skip: createTestWrapper(bunTest.skip),
-  only: (
-    name: string,
-    fn?: TestCallback,
-    options?: number | Record<string, unknown>,
-  ) => createTestWrapper(bunTest.only)(name, fn, options),
-  fixme: createTestWrapper(bunTest.skip),
-  use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-})
+export function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    if (!net) {
+      fail('node:net is unavailable')
+    }
+    const server = net.createServer()
+    server.listen(0, () => {
+      const addr = server.address()
+      server.close(() => {
+        if (addr !== null && typeof addr === 'object') {
+          resolve(addr.port)
+        }
+        else {
+          fail('Could not determine free port')
+        }
+      })
+    })
+  })
+}
 
-afterAll(async () => {
-  await closeActiveCdpConnection()
-})
+export async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
+  if (!playwright) {
+    return
+  }
+  await playwright.expect(async () => {
+    if (proc.exitCode !== null) {
+      fail(`Obsidian process exited early with code ${proc.exitCode}`)
+    }
+    const browser = await playwright.chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 30_000 })
+    await browser.close()
+  }).toPass({ intervals: [1_000], timeout: 30_000 })
+}
+
+const SIGTERM_GRACE_PERIOD_MS = 5_000
+
+export async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
+  const exited = proc.exitCode !== null || proc.signalCode !== null
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => { proc.once('exit', () => resolve()) })
+
+  if (proc.pid !== undefined) {
+    process.kill(-proc.pid, 'SIGTERM')
+  }
+
+  const outcome = await Promise.race([
+    exited.then(() => 'exited' as const),
+    new Promise<'timed-out'>((resolve) => {
+      setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD_MS)
+    }),
+  ])
+
+  if (outcome === 'timed-out' && proc.pid !== undefined) {
+    process.stderr.write('obsidian did not exit within the SIGTERM grace period, escalating to SIGKILL\n')
+    process.kill(-proc.pid, 'SIGKILL')
+  }
+
+  await exited
+
+  const results = await Promise.allSettled([
+    fs.rm(configDir, { recursive: true, force: true }),
+    vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
+  ])
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      process.stderr.write(`obsidian tmpdir cleanup failed: ${String(result.reason)}\n`)
+    }
+  }
+}
+
+function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string | undefined): () => void {
+  const onSignal = (signal: NodeJS.Signals): void => {
+    void stopObsidian(proc, configDir, vault).finally(() => process.kill(process.pid, signal))
+  }
+  process.once('SIGTERM', onSignal)
+  process.once('SIGINT', onSignal)
+  return () => {
+    process.removeListener('SIGTERM', onSignal)
+    process.removeListener('SIGINT', onSignal)
+  }
+}
+
+type ObsidianWorkerOptions = {
+  readonly theme: import('../../shared/appearance').ViewMode | undefined
+}
+
+type ObsidianWorkerFixtures = ObsidianWorkerOptions & {
+  readonly obsidianPage: ObsidianPage
+}
+
+type LegacyTestFixtures = {
+  readonly resetWorkspace: void
+}
+
+const playwrightTestInstance = playwright && obsidianLauncherModule && appearanceModule && evaluateModule
+  ? playwright.test.extend<LegacyTestFixtures, ObsidianWorkerFixtures>({
+      theme: [undefined, { option: true, scope: 'worker' }],
+      obsidianPage: [async ({ theme }, use) => {
+        const port = await findFreePort()
+        const ObsidianLauncher = obsidianLauncherModule.default
+        const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
+
+        const copiedVault = await launcher.setupVault({
+          vault: VAULT_PATH,
+          copy: true,
+          plugins: [ROOT_DIR],
+        })
+        if (theme) {
+          await appearanceModule.applyViewMode(copiedVault, theme)
+        }
+
+        const { proc, configDir, vault } = await launcher.launch({
+          appVersion: OBSIDIAN_APP_VERSION,
+          installerVersion: OBSIDIAN_INSTALLER_VERSION,
+          vault: copiedVault,
+          copy: false,
+          args: [
+            `--remote-debugging-port=${port}`,
+            '--disable-gpu',
+            '--disable-gpu-compositing',
+            '--disable-software-rasterizer',
+            '--disable-gpu-sandbox',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+          ],
+          spawnOptions: { stdio: 'pipe', detached: true },
+        })
+
+        if (proc.stderr) {
+          proc.stderr.on('data', (data: Buffer) => process.stderr.write(`[obsidian] ${data.toString()}`))
+        }
+
+        const removeSignalHandlers = terminateOnSignal(proc, configDir, vault)
+
+        try {
+          await waitForCDP(port, proc)
+
+          const browser = await playwright.chromium.connectOverCDP(`http://localhost:${port}`)
+          const context = browser.contexts()[0] ?? await browser.newContext()
+          const page = context.pages()[0] ?? await context.newPage()
+
+          await page.waitForFunction(
+            () => typeof (window as { app?: unknown }).app !== 'undefined',
+            { timeout: 30_000 },
+          )
+
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridge playwright page
+          await use({ page: page as unknown as ObsidianPageObject & PlaywrightPage })
+
+          await browser.close()
+        }
+        finally {
+          removeSignalHandlers()
+          await stopObsidian(proc, configDir, vault)
+        }
+      }, { scope: 'worker' }],
+
+      resetWorkspace: [async ({ obsidianPage: { page } }, use) => {
+        await evaluateModule.evaluateObsidian(page, (app) => {
+          app.workspace.detachLeavesOfType('bases')
+        })
+        await use()
+      }, { auto: true }],
+    })
+  : null
+
+const bunTestBridge = bunTest
+  ? Object.assign(createTestWrapper(bunTest.test), {
+      describe: bunTest.describe,
+      skip: createTestWrapper(bunTest.test.skip),
+      only: (
+        name: string,
+        fn?: TestCallback,
+        options?: number | Record<string, unknown>,
+      ) => createTestWrapper(bunTest.test.only)(name, fn, options),
+      fixme: createTestWrapper(bunTest.test.skip),
+      use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
+      beforeEach: bunTest.beforeEach,
+      afterEach: bunTest.afterEach,
+      beforeAll: bunTest.beforeAll,
+      afterAll: bunTest.afterAll,
+    })
+  : null
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridge test runner instance
+export const test = (isBun ? bunTestBridge : playwrightTestInstance) as unknown as typeof playwrightTestInstance
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridge expect instance
+export const expect = (isBun ? augmentedExpect : playwright?.expect) as unknown as typeof augmentedExpect
+
+if (isBun && bunTest) {
+  bunTest.afterAll(async () => {
+    await closeActiveCdpConnection()
+  })
+}
