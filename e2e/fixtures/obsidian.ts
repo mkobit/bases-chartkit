@@ -674,7 +674,11 @@ function createTestWrapper(
 export const test = Object.assign(createTestWrapper(bunTest), {
   describe,
   skip: createTestWrapper(bunTest.skip),
-  only: createTestWrapper(bunTest.only),
+  only: (
+    name: string,
+    fn?: TestCallback,
+    options?: number | Record<string, unknown>,
+  ) => createTestWrapper(bunTest.only)(name, fn, options),
   fixme: createTestWrapper(bunTest.skip),
   use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
   beforeEach,
