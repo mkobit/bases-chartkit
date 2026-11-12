@@ -1,5 +1,5 @@
 [tools]
-bun = "1.4.3"
+bun = "1.4.4"
 "github:gastownhall/beads" = "1.3.1"
 
 [settings]
