@@ -7,7 +7,7 @@ on:
         branches: ["**"]
 
 env:
-    BUN_VERSION: "1.4.3"
+    BUN_VERSION: "1.4.4"
 
 jobs:
     audit:
