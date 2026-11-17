@@ -27,12 +27,12 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ env.RELEASE_TAG }}
 
       - name: Setup environment
-        uses: ./.github/actions/setup-env
+        uses: $/.github/actions/setup-env
 
       - name: Build
         run: bun run build

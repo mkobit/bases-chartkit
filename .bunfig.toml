@@ -1,2 +1,2 @@
 [install]
-minimumReleaseAge = 1209600 # unit is time in seconds
+minimumReleaseAge = 1814400 # unit is time in seconds (21 days)

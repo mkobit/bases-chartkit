@@ -1,0 +1,38 @@
+name: Actions lock
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  pull_request:
+    branches: ["**"]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify actions lockfile
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install gh-actions-lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install github/gh-actions-lock
+      - name: Verify actions lockfile
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh actions-lock --verify

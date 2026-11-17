@@ -8,7 +8,11 @@ updates:
       - "mkobit"
     open-pull-requests-limit: 10
     cooldown:
-      default-days: 14
+      default-days: 21
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
@@ -19,7 +23,7 @@ updates:
     ignore:
       - dependency-name: "obsidian"
     cooldown:
-      default-days: 14
+      default-days: 21
     groups:
       typescript:
         patterns:
