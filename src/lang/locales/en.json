@@ -144,6 +144,17 @@
 				"scatter": "Scatter"
 			}
 		},
+		"echarts": {
+			"name": "ECharts",
+			"option_label": "ECharts option",
+			"option_placeholder": "YAML ECharts option (with dataset: { id: 'bases' })",
+			"empty_option_prompt": "Add an echartsOption configuration with dataset: { id: 'bases' } to render a chart.",
+			"error_yaml_parse": "Invalid YAML in echartsOption: {{error}}",
+			"error_invalid_root": "echartsOption must evaluate to a YAML mapping object.",
+			"error_dataset": "Invalid Bases dataset configuration: {{error}}",
+			"error_render": "Failed to render ECharts option: {{error}}",
+			"error_unknown": "Unknown error"
+		},
 		"area": {
 			"name": "Area chart",
 			"smooth": "Smooth line",

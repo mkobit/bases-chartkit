@@ -30,10 +30,15 @@ export function parseDateToEpochMs(val: unknown): number | null {
   }
   catch {
     try {
-      return Temporal.PlainDate.from(str).toZonedDateTime('UTC').epochMilliseconds
+      return Temporal.PlainDateTime.from(str).toZonedDateTime('UTC').epochMilliseconds
     }
     catch {
-      return null
+      try {
+        return Temporal.PlainDate.from(str).toZonedDateTime('UTC').epochMilliseconds
+      }
+      catch {
+        return null
+      }
     }
   }
 }

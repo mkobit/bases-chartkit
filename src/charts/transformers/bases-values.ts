@@ -89,6 +89,9 @@ export function extractFilePath(item: unknown): string | undefined {
   if (!isRecord(item)) {
     return undefined
   }
+  if (typeof item._file === 'string' && item._file.length > 0) {
+    return item._file
+  }
   if (typeof item.filePath === 'string' && item.filePath.length > 0) {
     return item.filePath
   }
