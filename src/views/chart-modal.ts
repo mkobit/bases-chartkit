@@ -43,3 +43,14 @@ export class ChartModal extends Modal {
     this.chart?.resize()
   }
 }
+
+export function openChartFullscreenModal(
+  app: App,
+  option: EChartsOption | null,
+  theme: string | undefined,
+): void {
+  if (!option) {
+    return
+  }
+  new ChartModal(app, option, theme).open()
+}

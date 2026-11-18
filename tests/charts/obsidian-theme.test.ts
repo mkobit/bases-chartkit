@@ -3,6 +3,8 @@ import {
   extractObsidianCssTokens,
   buildEChartsThemeFromObsidian,
   resolveTheme,
+  resolveThemeContext,
+  partitionCustomThemes,
   OBSIDIAN_AUTO_THEME_NAME,
 } from '../../src/charts/obsidian-theme'
 import type { StyleResolverTarget } from '../../src/charts/obsidian-theme'
@@ -140,6 +142,35 @@ describe('obsidian-theme', () => {
     it('should fall back to undefined when default and auto theme is unavailable in light mode', () => {
       const resolved = resolveTheme('default', '', false, false)
       expect(resolved).toBeUndefined()
+    })
+  })
+
+  describe('resolveThemeContext', () => {
+    it('should return autoTheme and isDarkMode=true when dark Obsidian tokens are present', () => {
+      const mockTarget = createMockTarget({ '--text-normal': '#ffffff' }, true)
+      const context = resolveThemeContext(mockTarget, 'default', '')
+      expect(context.theme).toBe(OBSIDIAN_AUTO_THEME_NAME)
+      expect(context.isDarkMode).toBe(true)
+      expect(context.autoTheme).toBeDefined()
+    })
+
+    it('should prioritize custom chart theme over dark-mode fallback for isDarkMode', () => {
+      const mockTarget = createMockTarget({ '--text-normal': '#ffffff' }, true)
+      const context = resolveThemeContext(mockTarget, 'custom-light', '')
+      expect(context.theme).toBe('custom-light')
+      expect(context.isDarkMode).toBe(false)
+    })
+  })
+
+  describe('partitionCustomThemes', () => {
+    it('should separate valid JSON object themes from invalid ones', () => {
+      const result = partitionCustomThemes([
+        { name: 'valid-theme', json: '{"color":["#111111"]}' },
+        { name: 'bad-json', json: '{not-valid' },
+        { name: 'not-object', json: '[1, 2, 3]' },
+      ])
+      expect(result.valid).toEqual([{ name: 'valid-theme', theme: { color: ['#111111'] } }])
+      expect(result.invalidNames).toEqual(['bad-json', 'not-object'])
     })
   })
 })

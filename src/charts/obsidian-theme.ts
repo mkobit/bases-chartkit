@@ -1,5 +1,6 @@
 import * as R from 'remeda'
 import { DEFAULT_CATEGORICAL_PALETTE } from './transformers/palette'
+import { parseTheme } from '../theme-validation'
 
 export interface ObsidianCssTokens {
   readonly darkMode: boolean
@@ -349,4 +350,61 @@ export function resolveTheme(
         : isDark
           ? 'dark'
           : undefined
+}
+
+export interface ResolvedThemeContext {
+  readonly theme: string | undefined
+  readonly isDarkMode: boolean
+  readonly autoTheme?: ObsidianEChartsTheme
+}
+
+export function isObsidianDarkMode(target?: StyleResolverTarget | Element | null): boolean {
+  const doc = target?.ownerDocument ?? (typeof activeDocument !== 'undefined' ? activeDocument : undefined)
+  return doc?.body?.classList?.contains('theme-dark') ?? false
+}
+
+export function resolveThemeContext(
+  target: StyleResolverTarget | Element | null,
+  chartTheme: string | undefined,
+  pluginTheme: string | undefined,
+): ResolvedThemeContext {
+  const tokens = extractObsidianCssTokens(target)
+  const autoTheme = tokens ? buildEChartsThemeFromObsidian(tokens) : undefined
+  const dark = isObsidianDarkMode(target)
+  const theme = resolveTheme(chartTheme, pluginTheme, tokens !== null, dark)
+  const isDarkMode = theme === 'dark'
+    || ((theme === OBSIDIAN_AUTO_THEME_NAME || theme === undefined) && dark)
+
+  return {
+    theme,
+    isDarkMode,
+    ...(autoTheme ? { autoTheme } : {}),
+  }
+}
+
+export interface CustomThemeInput {
+  readonly name: string
+  readonly json: string
+}
+
+export interface ParsedCustomThemes {
+  readonly valid: readonly { readonly name: string, readonly theme: object }[]
+  readonly invalidNames: readonly string[]
+}
+
+export function partitionCustomThemes(customThemes: readonly CustomThemeInput[]): ParsedCustomThemes {
+  const parsed = R.map(customThemes, entry => ({
+    name: entry.name,
+    theme: parseTheme(entry.json),
+  }))
+
+  const [valid, invalid] = R.partition(
+    parsed,
+    (entry): entry is { readonly name: string, readonly theme: object } => entry.theme !== null,
+  )
+
+  return {
+    valid,
+    invalidNames: R.map(invalid, entry => entry.name),
+  }
 }
