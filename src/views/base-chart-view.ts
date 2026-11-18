@@ -17,14 +17,14 @@ import * as echarts from 'echarts'
 import type BarePlugin from '../main'
 import type { EChartsOption } from 'echarts'
 import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../charts/transformers/base'
-import { ChartModal } from './chart-modal'
+import { openChartFullscreenModal } from './chart-modal'
+import { ChartResizeController } from './chart-resize'
 import { t } from '../lang/text'
 import { applyOptionOverride } from '../charts/option-override'
 import {
-  extractObsidianCssTokens,
-  buildEChartsThemeFromObsidian,
-  resolveTheme,
+  resolveThemeContext,
   OBSIDIAN_AUTO_THEME_NAME,
+  type ResolvedThemeContext,
 } from '../charts/obsidian-theme'
 import * as R from 'remeda'
 import {
@@ -47,9 +47,8 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   readonly chartEl: HTMLElement
   readonly plugin: BarePlugin
   protected chart: echarts.ECharts | null = null
-  private resizeObserver: ResizeObserver | null = null
+  private resizeController: ChartResizeController | null = null
   private isFullScreenGeneration = false
-  private resizeTimeout: number | null = null
 
   public static readonly X_AXIS_PROP_KEY = 'xAxisProp'
   public static readonly Y_AXIS_PROP_KEY = 'yAxisProp'
@@ -117,35 +116,25 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       this,
     ))
 
-    this.resizeObserver = new ResizeObserver((_entries) => {
-      this.triggerResize()
+    this.resizeController = new ChartResizeController(this.containerEl, () => {
+      // Only resize an already-mounted chart. Don't initiate the first render
+      // from a ResizeObserver — `this.config` isn't set until Obsidian invokes
+      // the BasesView lifecycle (which calls `onDataUpdated`).
+      this.chart?.resize()
     })
-    this.resizeObserver.observe(this.containerEl)
   }
 
   onunload() {
     this.plugin.unregisterChartView(this)
-    this.resizeObserver?.disconnect()
-    this.resizeObserver = null
+    this.resizeController?.disconnect()
+    this.resizeController = null
     this.chart?.dispose()
     this.chart = null
     this.hoverPopover = null
   }
 
-  private triggerResize(): void {
-    if (this.resizeTimeout !== null) {
-      window.clearTimeout(this.resizeTimeout)
-    }
-    this.resizeTimeout = window.setTimeout(() => {
-      // Only resize an already-mounted chart. Don't initiate the first render
-      // from a ResizeObserver — `this.config` isn't set until Obsidian invokes
-      // the BasesView lifecycle (which calls `onDataUpdated`).
-      this.chart?.resize()
-    }, 100)
-  }
-
   onResize(): void {
-    this.triggerResize()
+    this.resizeController?.trigger()
   }
 
   onDataUpdated(): void {
@@ -215,9 +204,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   }
 
   protected getCommonTransformerOptions(): BaseTransformerOptions {
-    const resolvedTheme = this.getTheme()
-    const isDarkMode = resolvedTheme === 'dark'
-      || ((resolvedTheme === OBSIDIAN_AUTO_THEME_NAME || resolvedTheme === undefined) && this.isDarkMode())
+    const { isDarkMode } = this.getThemeContext()
 
     const options: BaseTransformerOptions = {
       title: this.getStringOption(BaseChartView.TITLE_KEY),
@@ -278,9 +265,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     const option = this.resolveChartOption(data)
     this.isFullScreenGeneration = false
 
-    if (option) {
-      new ChartModal(this.app, option, this.getTheme()).open()
-    }
+    openChartFullscreenModal(this.app, option, this.getTheme())
   }
 
   protected renderChart(): void {
@@ -459,23 +444,20 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     )
   }
 
-  private getTheme(): string | undefined {
-    const tokens = extractObsidianCssTokens(this.containerEl)
-    if (tokens) {
-      const theme = buildEChartsThemeFromObsidian(tokens)
-      echarts.registerTheme(OBSIDIAN_AUTO_THEME_NAME, theme)
-    }
-
-    return resolveTheme(
+  private getThemeContext(): ResolvedThemeContext {
+    const context = resolveThemeContext(
+      this.containerEl,
       this.getStringOption(BaseChartView.THEME_KEY),
       this.plugin.settings.selectedTheme,
-      tokens !== null,
-      this.isDarkMode(),
     )
+    if (context.autoTheme) {
+      echarts.registerTheme(OBSIDIAN_AUTO_THEME_NAME, context.autoTheme)
+    }
+    return context
   }
 
-  private isDarkMode(): boolean {
-    return activeDocument.body.classList.contains('theme-dark')
+  private getTheme(): string | undefined {
+    return this.getThemeContext().theme
   }
 
   static getHostViewOptions(plugin?: BarePlugin): BasesOptions[] {
