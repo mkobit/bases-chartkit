@@ -37,6 +37,7 @@ import { PolarScatterChartView } from './views/polar-scatter-chart-view'
 import { MapChartView } from './views/map-chart-view'
 import { WordCloudChartView } from './views/word-cloud-chart-view'
 import { ComboChartView } from './views/combo-chart-view'
+import { EChartsView } from './views/echarts-view'
 import { initializeI18n } from './lang/i18n'
 import { t } from './lang/text'
 import * as echarts from 'echarts'
@@ -611,6 +612,20 @@ export default class BarePlugin extends Plugin {
           this,
         ),
         options: () => WordCloudChartView.getViewOptions(),
+      },
+    )
+
+    this.registerBasesView(
+      'echarts',
+      {
+        name: t('views.echarts.name'),
+        icon: 'code-2',
+        factory: (controller, containerEl) => new EChartsView(
+          controller,
+          containerEl,
+          this,
+        ),
+        options: () => EChartsView.getViewOptions(this),
       },
     )
 

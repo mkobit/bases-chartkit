@@ -262,6 +262,10 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     return this.data.data as unknown as BasesData
   }
 
+  protected getInteractivityData(): BasesData | undefined {
+    return this.getBasesData()
+  }
+
   public openFullScreen(): void {
     if (!this.chartEl || !this.config) {
       return
@@ -271,8 +275,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       return
     }
     this.isFullScreenGeneration = true
-    const rawOption = this.getChartOption(data)
-    const option = this.applyOptionOverride(rawOption)
+    const option = this.resolveChartOption(data)
     this.isFullScreenGeneration = false
 
     if (option) {
@@ -320,7 +323,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     if (!mod) {
       return
     }
-    const data = this.getBasesData()
+    const data = this.getInteractivityData()
     const filePaths = extractTargetFilePaths(params, data)
     if (filePaths.length === 0) {
       return
@@ -347,7 +350,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     if (!rawEvent || !isUserEvent(rawEvent) || !Keymap.isModifier(rawEvent, 'Mod')) {
       return
     }
-    const data = this.getBasesData()
+    const data = this.getInteractivityData()
     const filePath = extractTargetFilePath(params, data)
     if (!filePath) {
       return
@@ -368,7 +371,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     if (!rawEvent || !isUserEvent(rawEvent)) {
       return
     }
-    const data = this.getBasesData()
+    const data = this.getInteractivityData()
     const filePaths = extractTargetFilePaths(params, data)
     if (filePaths.length === 0) {
       return
@@ -412,20 +415,34 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     const height = this.getStringOption(BaseChartView.HEIGHT_KEY) || this.plugin.settings.defaultHeight
     this.chartEl.style.height = height
 
-    this.chart
-      ? this.chart.resize()
-      : (this.chart = this.initChart())
-
     const data = this.getBasesData()
-    const rawOption = data ? this.getChartOption(data) : null
-    const option = this.applyOptionOverride(rawOption)
+    const option = data ? this.resolveChartOption(data) : null
+    this.applyResolvedChartOption(option)
+  }
 
-    option
-      ? this.chart.setOption(
-          option,
-          true,
-        )
-      : this.chart.clear()
+  protected ensureChart(): echarts.ECharts {
+    if (this.chart) {
+      this.chart.resize()
+      return this.chart
+    }
+    this.chart = this.initChart()
+    return this.chart
+  }
+
+  protected resolveChartOption(data: BasesData): EChartsOption | null {
+    const rawOption = this.getChartOption(data)
+    return this.applyOptionOverride(rawOption)
+  }
+
+  protected applyResolvedChartOption(option: EChartsOption | null): void {
+    if (option) {
+      this.ensureChart().setOption(
+        option,
+        true,
+      )
+      return
+    }
+    this.chart?.clear()
   }
 
   private applyOptionOverride(option: EChartsOption | null): EChartsOption | null {
@@ -461,7 +478,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     return activeDocument.body.classList.contains('theme-dark')
   }
 
-  static getCommonViewOptions(plugin?: BarePlugin): BasesOptions[] {
+  static getHostViewOptions(plugin?: BarePlugin): BasesOptions[] {
     const themeOptions: Record<string, string> = {
       default: t('views.common.theme_default'),
     }
@@ -479,6 +496,23 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
         key: BaseChartView.THEME_KEY,
         options: themeOptions,
       },
+      {
+        displayName: t('views.common.height'),
+        type: 'text',
+        key: BaseChartView.HEIGHT_KEY,
+        placeholder: t('views.common.height_placeholder'),
+      },
+    ]
+  }
+
+  static getCommonViewOptions(plugin?: BarePlugin): BasesOptions[] {
+    const [themeOption, heightOption] = BaseChartView.getHostViewOptions(plugin)
+    if (!themeOption || !heightOption) {
+      return []
+    }
+
+    return [
+      themeOption,
       {
         displayName: t('views.common.x_axis_prop'),
         type: 'property',
@@ -522,12 +556,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
           vertical: t('views.common.legend_orient_options.vertical'),
         },
       },
-      {
-        displayName: t('views.common.height'),
-        type: 'text',
-        key: BaseChartView.HEIGHT_KEY,
-        placeholder: t('views.common.height_placeholder'),
-      },
+      heightOption,
       {
         displayName: t('views.common.value_format'),
         type: 'text',

@@ -9,6 +9,7 @@ import {
 } from '../src/charts/transformers/bases-values'
 import { parseDateToEpochMs } from '../src/charts/transformers/dates'
 import { getLegendOption } from '../src/charts/transformers/legend'
+import { extractTargetFilePath } from '../src/charts/interactivity'
 import { asTooltipFormatter } from '../src/charts/transformers/tooltip'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
 import type { BaseTransformerOptions } from '../src/charts/transformers/base'
@@ -359,6 +360,11 @@ describe('Transformer Modules', () => {
         .toBe(Temporal.Instant.from('2023-01-01T00:00:00Z').epochMilliseconds)
     })
 
+    it('should fall back to Temporal.PlainDateTime for a bare datetime string', () => {
+      expect(parseDateToEpochMs('2023-01-01T14:30:00'))
+        .toBe(Temporal.PlainDateTime.from('2023-01-01T14:30:00').toZonedDateTime('UTC').epochMilliseconds)
+    })
+
     it('should fall back to Temporal.PlainDate for a bare calendar date string', () => {
       expect(parseDateToEpochMs('2023-01-01'))
         .toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
@@ -467,10 +473,37 @@ describe('Transformer Modules', () => {
     })
 
     it('should return undefined for empty string path properties', () => {
+      expect(extractFilePath({ _file: '' })).toBeUndefined()
       expect(extractFilePath({ filePath: '' })).toBeUndefined()
       expect(extractFilePath({ file: { path: '' } })).toBeUndefined()
       expect(extractFilePath({ 'file.path': '' })).toBeUndefined()
       expect(extractFilePath({ file: '' })).toBeUndefined()
+    })
+
+    it('should prioritize _file over filePath, file.path, and file', () => {
+      expect(extractFilePath({
+        _file: 'notes/from-underscore.md',
+        filePath: 'notes/from-filePath.md',
+        file: { path: 'notes/from-nested.md' },
+      })).toBe('notes/from-underscore.md')
+
+      expect(extractFilePath({
+        _file: '',
+        filePath: 'notes/from-filePath.md',
+        file: 'notes/from-file.md',
+      })).toBe('notes/from-filePath.md')
+    })
+  })
+
+  describe('extractTargetFilePath', () => {
+    it('should return undefined when data is omitted and _file is absent', () => {
+      expect(extractTargetFilePath({ dataIndex: 0, data: { value: 42 } })).toBeUndefined()
+      expect(extractTargetFilePath({ dataIndex: 0, data: { _file: 'notes/dataset.md' } })).toBe('notes/dataset.md')
+    })
+
+    it('should preserve dataIndex fallback when data is provided for preset views', () => {
+      const data = [{ file: { path: 'notes/preset.md' } }]
+      expect(extractTargetFilePath({ dataIndex: 0, data: { value: 42 } }, data)).toBe('notes/preset.md')
     })
   })
 

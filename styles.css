@@ -93,3 +93,30 @@
 .is-mobile .bases-echarts-container {
     min-height: 200px;
 }
+
+.bases-echarts-prompt,
+.bases-echarts-error {
+    padding: var(--size-4-4, 1rem);
+    padding-right: var(--size-4-12, 3rem);
+    border-radius: var(--radius-s, 4px);
+    background-color: var(--background-secondary);
+    font-size: var(--font-ui-small, 0.875rem);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+    max-height: 100%;
+    box-sizing: border-box;
+}
+
+.bases-echarts-prompt {
+    color: var(--text-muted);
+}
+
+.bases-echarts-error {
+    color: var(--text-error);
+}
+
+.bases-echarts-hidden {
+    display: none;
+}
