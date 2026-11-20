@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/mkobit/bases-chartkit/compare/0.2.0...0.3.0) (2026-11-20)
+
+
+### Features
+
+* add shared Bases dataset layer and generic ECharts view ([#499](https://github.com/mkobit/bases-chartkit/issues/499)) ([2763159](https://github.com/mkobit/bases-chartkit/commit/27631594ed330c098b9dc6fe8dac7501a6dfa784))
+
 ## [0.2.0](https://github.com/mkobit/bases-chartkit/compare/0.1.0...0.2.0) (2026-11-12)
 
 
