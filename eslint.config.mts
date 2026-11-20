@@ -1,3 +1,4 @@
+import * as path from 'node:path'
 import tseslint from 'typescript-eslint'
 import obsidianmd from 'eslint-plugin-obsidianmd'
 import globals from 'globals'
@@ -11,6 +12,12 @@ import type { Node } from 'estree'
 import json, { type JSONRuleDefinition } from '@eslint/json'
 import yml from 'eslint-plugin-yml'
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
+import {
+  QUALITY_RATCHET_FILENAME,
+  createQualityRatchetYamlPlugin,
+  createRatchetExemptionConfigs,
+  loadQualityRatchetForConfig,
+} from './shared/quality-ratchet'
 
 const jsFiles = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs', '**/*.cjs', '**/*.mts', '**/*.cts']
 
@@ -230,7 +237,6 @@ export default tseslint.config(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
       promise,
       unicorn,
-      'eslint-comments': eslintComments,
     },
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- eslint-plugin-promise ships no type declarations (no .d.ts, no @types package, verified against npm as of 7.3.0)
     rules: {
@@ -262,10 +268,6 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-assertions': ['error', {
         assertionStyle: 'never',
       }],
-      // Every eslint-disable comment (the only way past the cast bans above)
-      // must carry a `-- reason` description -- otherwise the ban is just a
-      // suggestion, not an enforced escape-hatch discipline.
-      'eslint-comments/require-description': 'error',
       // Enforce separate type imports (User Request)
       '@typescript-eslint/consistent-type-imports': ['error', {
         prefer: 'type-imports',
@@ -429,15 +431,6 @@ export default tseslint.config(
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
       'obsidianmd/rule-custom-message': 'off', // same new Function() usage trips obsidianmd's no-new-func message too
       'obsidianmd/prefer-window-timers': 'off', // e2e fixtures run in the Playwright/Node worker process, not Obsidian's renderer -- `window` doesn't exist there
-    },
-  },
-  // tests/** still allows unaudited type assertions (mocking, deep option-type
-  // narrowing) -- e2e/** was audited (bck-1cs) and now enforces the same
-  // 'never' rule as src/, via the general **/*.ts block above.
-  {
-    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
-    rules: {
-      '@typescript-eslint/consistent-type-assertions': 'off', // Needed for mocking
     },
   },
   // Legacy Transformers (Pending Refactor)
@@ -687,6 +680,39 @@ export default tseslint.config(
       'no-undef': 'off',
     },
   },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    plugins: {
+      'eslint-comments': eslintComments,
+    },
+    rules: {
+      // Every eslint-disable comment must carry a `-- reason` description --
+      // otherwise the escape hatch becomes an unaudited shortcut.
+      'eslint-comments/require-description': 'error',
+      // Disallow eslint-disable directives repo-wide unless the file is
+      // explicitly listed in quality-ratchet.yaml.
+      'eslint-comments/no-use': ['error', {
+        allow: ['eslint', 'eslint-enable', 'eslint-env', 'exported', 'global', 'globals'],
+      }],
+    },
+  },
+  {
+    files: [QUALITY_RATCHET_FILENAME],
+    plugins: {
+      'quality-ratchet': createQualityRatchetYamlPlugin(import.meta.dirname),
+    },
+    rules: {
+      'yml/sort-keys': ['error', 'asc', { caseSensitive: true, natural: false }],
+      'yml/sort-sequence-values': ['error', {
+        pathPattern: '.*',
+        order: { type: 'asc', caseSensitive: true, natural: false },
+      }],
+      'quality-ratchet/valid-exemptions': 'error',
+    },
+  },
+  ...createRatchetExemptionConfigs(
+    loadQualityRatchetForConfig(path.join(import.meta.dirname, QUALITY_RATCHET_FILENAME)),
+  ),
   globalIgnores([
     'node_modules',
     'dist',

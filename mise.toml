@@ -13,23 +13,18 @@ run = "bun run typecheck"
 
 [tasks.lint]
 description = "Run ESLint checks"
-sources = ["src/**/*", "tests/**/*", "scripts/**/*", "eslint.config.mts", "package.json", "bun.lock"]
+sources = ["src/**/*", "tests/**/*", "e2e/**/*", "scripts/**/*", "shared/quality-ratchet.ts", "quality-ratchet.yaml", "eslint.config.mts", "package.json", "bun.lock"]
 run = "bun run lint"
 
-[tasks."check:eslint-disable-budget"]
-description = "Check ESLint disable directives budget"
-sources = ["src/**/*", "tests/**/*", "scripts/check-eslint-disable-budget.ts", "eslint.config.mts", "package.json", "bun.lock"]
-run = "bun run check:eslint-disable-budget"
+[tasks."check:quality-ratchet"]
+description = "Check quality ratchet exemptions for stale entries"
+sources = ["src/**/*", "tests/**/*", "e2e/**/*", "scripts/**/*", "shared/**/*", "quality-ratchet.yaml", "eslint.config.mts", "package.json", "bun.lock"]
+run = "bun run check:quality-ratchet"
 
 [tasks.validate-sbx]
 description = "Validate Docker Sandbox kit"
 sources = [".sbx/**/*"]
 run = "sbx kit validate .sbx/kit --offline"
-
-[tasks."check:test-cast-budget"]
-description = "Check test type cast budget"
-sources = ["tests/**/*", "scripts/check-test-cast-budget.ts", "package.json", "bun.lock"]
-run = "bun run check:test-cast-budget"
 
 [tasks."openspec:validate"]
 description = "Validate OpenSpec specifications and changes"
@@ -122,8 +117,7 @@ description = "Run all verification, linting, budget, specification, and unit te
 depends = [
   "typecheck",
   "lint",
-  "check:eslint-disable-budget",
-  "check:test-cast-budget",
+  "check:quality-ratchet",
   "openspec:validate",
   "test"
 ]
