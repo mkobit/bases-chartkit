@@ -7,8 +7,7 @@
 	"scripts": {
 		"build": "bun run typecheck && bun esbuild.config.mjs production",
 		"build:bundle": "bun esbuild.config.mjs production",
-		"check:eslint-disable-budget": "bun scripts/check-eslint-disable-budget.ts",
-		"check:test-cast-budget": "bun scripts/check-test-cast-budget.ts",
+		"check:quality-ratchet": "bun scripts/quality-ratchet.ts",
 		"clean": "bun scripts/clean.ts",
 		"dev": "bun esbuild.config.mjs",
 		"docs:collect-views": "bun scripts/collect-chart-views.ts",
