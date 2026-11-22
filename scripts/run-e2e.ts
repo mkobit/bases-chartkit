@@ -23,6 +23,7 @@ export const DEFAULT_OBSIDIAN_INSTALLER_VERSION = process.env.OBSIDIAN_INSTALLER
 export const SIGTERM_GRACE_PERIOD_MS = 5_000
 export const DEFAULT_CDP_TIMEOUT_MS = 60_000
 export const DEFAULT_POLL_INTERVAL_MS = 500
+export const DEFAULT_TEST_TIMEOUT_MS = 180_000
 
 export type SuiteName = 'standard' | 'light' | 'dark'
 
@@ -507,16 +508,41 @@ export interface RunBunTestOptions {
   readonly stdio?: ['inherit' | 'pipe' | 'ignore', 'inherit' | 'pipe' | 'ignore', 'inherit' | 'pipe' | 'ignore']
 }
 
+export function toBunTestArg(file: string): string {
+  if (file.startsWith('./') || file.startsWith('../') || path.isAbsolute(file)) {
+    return file
+  }
+  if (file.includes('/') || file.endsWith('.ts')) {
+    return `./${file}`
+  }
+  return file
+}
+
+/**
+ * Builds the `bun test` CLI argument list with default timeout and path prefixes.
+ */
+export function buildBunTestArgs(
+  testFiles: readonly string[],
+  passthroughArgs: readonly string[] = [],
+): readonly string[] {
+  const hasTimeoutArg = passthroughArgs.some(
+    arg => arg === '--timeout' || arg === '-t' || arg.startsWith('--timeout=') || arg.startsWith('-t='),
+  )
+  const timeoutArgs = hasTimeoutArg ? [] : ['--timeout', String(DEFAULT_TEST_TIMEOUT_MS)]
+  return [
+    'bun',
+    'test',
+    ...timeoutArgs,
+    ...passthroughArgs,
+    ...testFiles.map(toBunTestArg),
+  ]
+}
+
 /**
  * Executes Bun test with the targeted test files and Obsidian debugging port.
  */
 export async function runBunTest(options: RunBunTestOptions): Promise<number> {
-  const args = [
-    'bun',
-    'test',
-    ...(options.passthroughArgs ?? []),
-    ...options.testFiles,
-  ]
+  const args = [...buildBunTestArgs(options.testFiles, options.passthroughArgs)]
   const env = {
     ...process.env,
     ...(options.env ?? {}),

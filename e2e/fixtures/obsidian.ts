@@ -799,7 +799,16 @@ export const test = (isBun ? bunTestBridge : playwrightTestInstance) as unknown 
 export const expect = (isBun ? augmentedExpect : playwrightExpect) as unknown as typeof playwrightExpect & NonNullable<typeof augmentedExpect>
 
 if (isBun && bunTest) {
-  bunTest.afterAll(async () => {
-    await closeActiveCdpConnection()
-  })
+  // Scripts such as survey-chart-types.ts import createObsidianPage outside `bun test`,
+  // where lifecycle hooks like afterAll() throw because no test runner is active.
+  try {
+    bunTest.afterAll(async () => {
+      await closeActiveCdpConnection()
+    })
+  }
+  catch (error: unknown) {
+    if (!(error instanceof Error && error.message.includes('outside of the test runner'))) {
+      throw error
+    }
+  }
 }
