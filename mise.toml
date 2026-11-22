@@ -82,20 +82,14 @@ depends = ["build"]
 outputs = ["playwright-report/**"]
 run = "bun run test:e2e:headless"
 
-[tasks."docs:collect-views"]
-description = "Extract flattened chart views from example vault for survey testing"
-sources = ["bases-chartkit-example-vault/**", "scripts/collect-chart-views.ts", "package.json", "bun.lock"]
-outputs = [".test-output/chart-views.json"]
-run = "bun run docs:collect-views"
-
 [tasks."docs:screenshots"]
 description = "Capture documentation screenshots across chart view types"
-depends = ["build", "docs:collect-views"]
+depends = ["build"]
 run = "bun run docs:screenshots"
 
 [tasks."docs:screenshots:headless"]
 description = "Capture documentation screenshots headlessly with Virtual Framebuffer"
-depends = ["build", "docs:collect-views"]
+depends = ["build"]
 run = "bun run docs:screenshots:headless"
 
 [tasks."docs:screenshots:compare"]
@@ -104,12 +98,12 @@ run = "bun scripts/compare-screenshots.ts"
 
 [tasks."docs:screenshots:dark"]
 description = "Capture dark mode documentation screenshots across chart view types"
-depends = ["build", "docs:collect-views"]
+depends = ["build"]
 run = "bun run docs:screenshots:dark"
 
 [tasks."docs:screenshots:dark:headless"]
 description = "Capture dark mode documentation screenshots headlessly with Virtual Framebuffer"
-depends = ["build", "docs:collect-views"]
+depends = ["build"]
 run = "bun run docs:screenshots:dark:headless"
 
 [tasks.check]
