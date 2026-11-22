@@ -4,6 +4,7 @@
 	"description": "Advanced visualization for Obsidian via the Bases API.",
 	"main": "main.js",
 	"type": "module",
+	"packageManager": "bun@1.4.4",
 	"scripts": {
 		"build": "bun run typecheck && bun esbuild.config.mjs production",
 		"build:bundle": "bun esbuild.config.mjs production",

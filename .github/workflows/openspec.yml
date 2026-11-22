@@ -6,15 +6,16 @@ on:
     paths:
       - "openspec/**"
       - ".github/workflows/openspec.yml"
+      - ".github/actions/setup-env/action.yml"
+      - "package.json"
   pull_request:
     branches: ["**"]
     paths:
       - "openspec/**"
       - ".github/workflows/openspec.yml"
+      - ".github/actions/setup-env/action.yml"
+      - "package.json"
   workflow_dispatch: {}
-
-env:
-  BUN_VERSION: "1.4.4"
 
 permissions: {}
 
