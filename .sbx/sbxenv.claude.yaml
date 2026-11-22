@@ -6,8 +6,3 @@ workspace:
   clone: false
 kits:
   - ./kit
-ports:
-  - sandbox: 6080
-  - sandbox: 5900
-  - sandbox: 9222
-  - sandbox: 5173

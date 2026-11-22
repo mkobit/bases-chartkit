@@ -17,20 +17,6 @@ permissions:
       - releases.obsidian.md
       - github-releases.githubusercontent.com
 
-ports:
-  - container: 6080
-    protocol: tcp
-    name: novnc
-  - container: 5900
-    protocol: tcp
-    name: vnc
-  - container: 9222
-    protocol: tcp
-    name: cdp
-  - container: 5173
-    protocol: tcp
-    name: dev
-
 environment:
   variables:
     PATH: /home/agent/.local/share/mise/shims:/home/agent/.local/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
