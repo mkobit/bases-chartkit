@@ -65,4 +65,19 @@ export function registerChartCommands(plugin: BarePlugin): void {
       return true
     },
   })
+
+  plugin.addCommand({
+    id: 'copy-active-chart-png',
+    name: t('commands.copy_chart_png'),
+    checkCallback: (checking: boolean) => {
+      const activeView = plugin.getActiveChartView()
+      if (!activeView) {
+        return false
+      }
+      if (!checking) {
+        void activeView.copyAsPng()
+      }
+      return true
+    },
+  })
 }

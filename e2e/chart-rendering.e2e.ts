@@ -84,7 +84,12 @@ test.describe('chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBeGreaterThan(0)
 
-    const fullscreenButton = page.locator('.bases-chart-toolbar .clickable-icon')
+    const copyPngButton = page.locator('.bases-chart-toolbar .clickable-icon[aria-label="Copy chart as PNG"]')
+    await expect(copyPngButton).toHaveCount(1)
+    await copyPngButton.click()
+    await expect(page.locator('.notice', { hasText: 'Chart copied to clipboard as PNG' })).toBeVisible()
+
+    const fullscreenButton = page.locator('.bases-chart-toolbar .clickable-icon[aria-label="Full screen"]')
     await expect(fullscreenButton).toHaveCount(1)
 
     // Click toolbar affordance to open fullscreen chart modal
