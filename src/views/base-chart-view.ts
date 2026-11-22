@@ -11,6 +11,7 @@ import {
   ExtraButtonComponent,
   Keymap,
   Menu,
+  Notice,
   Platform,
 } from 'obsidian'
 import * as echarts from 'echarts'
@@ -26,6 +27,7 @@ import {
   OBSIDIAN_AUTO_THEME_NAME,
   type ResolvedThemeContext,
 } from '../charts/obsidian-theme'
+import { copyChartAsPng, resolveExportBackgroundColor } from '../charts/export-png'
 import * as R from 'remeda'
 import {
   extractTargetFilePath,
@@ -92,6 +94,12 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     // BasesView extends Component (not ItemView), so Obsidian provides no
     // supported API for registering actions directly on the Bases pane toolbar.
     // Instead, chart views expose an in-view toolbar affordance and an Obsidian command.
+    new ExtraButtonComponent(this.toolbarEl)
+      .setIcon('copy')
+      .setTooltip(t('views.common.copy_png'))
+      .onClick(() => {
+        void this.copyAsPng()
+      })
     new ExtraButtonComponent(this.toolbarEl)
       .setIcon('expand')
       .setTooltip(t('views.common.fullscreen'))
@@ -266,6 +274,18 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     this.isFullScreenGeneration = false
 
     openChartFullscreenModal(this.app, option, this.getTheme())
+  }
+
+  public async copyAsPng(): Promise<boolean> {
+    if (!this.chart) {
+      new Notice(t('views.common.copy_png_unavailable'))
+      return false
+    }
+    const { theme, isDarkMode } = this.getThemeContext()
+    const backgroundColor = resolveExportBackgroundColor(theme, isDarkMode)
+    const copied = await copyChartAsPng(this.chart, { backgroundColor })
+    new Notice(t(copied ? 'views.common.copy_png_success' : 'views.common.copy_png_error'))
+    return copied
   }
 
   protected renderChart(): void {

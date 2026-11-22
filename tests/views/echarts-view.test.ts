@@ -114,6 +114,7 @@ void mock.module('obsidian', () => ({
   },
   Menu: class {},
   Modal: class {},
+  Notice: class {},
   Platform: { isMobile: false },
   parseYaml,
 }))
