@@ -4,6 +4,8 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import {
+  buildBunTestArgs,
+  DEFAULT_TEST_TIMEOUT_MS,
   filterTestFiles,
   findFreePort,
   isDarkFixture,
@@ -15,6 +17,7 @@ import {
   runOrchestrator,
   stopObsidian,
   terminateOnSignal,
+  toBunTestArg,
   waitForCdpReady,
 } from '../scripts/run-e2e'
 import type { TestSuite } from '../scripts/run-e2e'
@@ -298,6 +301,39 @@ describe('Obsidian process termination and cleanup', () => {
 })
 
 describe('Bun test runner spawn helper', () => {
+  test('prefixes relative file paths with ./ so bun test treats them as paths', () => {
+    expect(toBunTestArg('e2e/smoke.e2e.ts')).toBe('./e2e/smoke.e2e.ts')
+    expect(toBunTestArg('./e2e/smoke.e2e.ts')).toBe('./e2e/smoke.e2e.ts')
+    expect(toBunTestArg('/abs/e2e/smoke.e2e.ts')).toBe('/abs/e2e/smoke.e2e.ts')
+    expect(toBunTestArg('pie-chart')).toBe('pie-chart')
+  })
+
+  test('builds args with default timeout when none is provided', () => {
+    expect(buildBunTestArgs(['e2e/smoke.e2e.ts'])).toEqual([
+      'bun',
+      'test',
+      '--timeout',
+      String(DEFAULT_TEST_TIMEOUT_MS),
+      './e2e/smoke.e2e.ts',
+    ])
+  })
+
+  test('preserves caller timeout flags without duplicating --timeout', () => {
+    expect(buildBunTestArgs(['e2e/smoke.e2e.ts'], ['--timeout', '30000'])).toEqual([
+      'bun',
+      'test',
+      '--timeout',
+      '30000',
+      './e2e/smoke.e2e.ts',
+    ])
+    expect(buildBunTestArgs(['e2e/smoke.e2e.ts'], ['-t=15000'])).toEqual([
+      'bun',
+      'test',
+      '-t=15000',
+      './e2e/smoke.e2e.ts',
+    ])
+  })
+
   test('executes command and sets environment variable', async () => {
     const exitCode = await runBunTest({
       cdpPort: 12_345,
