@@ -1,5 +1,6 @@
 import type { EChartsOption } from 'echarts'
 import { isRecord } from './transformers/bases-values'
+import { GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND, hasTopLegendWithSubtitle } from './transformers/legend'
 import { getTitleOption } from './transformers/title'
 
 import type {
@@ -426,34 +427,10 @@ const transformerMap: Readonly<Record<
   ),
 }
 
-/**
- * Transforms Bases data into an ECharts option object.
- */
-export function transformDataToChartOption(
-  data: BasesData,
-  xProp: string,
-  yProp: string,
-  chartType: ChartType = 'bar',
-  options?: ChartTransformerOptions,
+function applyTitleOption(
+  rawOption: EChartsOption,
+  titleOpt: ReturnType<typeof getTitleOption>,
 ): EChartsOption {
-  const transformer = transformerMap[chartType]
-
-  const rawOption = transformer
-    ? transformer(
-        data,
-        xProp,
-        yProp,
-        options,
-      )
-    : createCartesianChartOption(
-        data,
-        xProp,
-        yProp,
-        'bar',
-        asOptions(options),
-      )
-
-  const titleOpt = getTitleOption(options)
   if (!titleOpt) {
     return rawOption
   }
@@ -486,6 +463,75 @@ export function transformDataToChartOption(
   }
 
   return rawOption
+}
+
+function applyTopLegendGridOffset(
+  option: EChartsOption,
+  options?: ChartTransformerOptions,
+): EChartsOption {
+  if (!hasTopLegendWithSubtitle(options)) {
+    return option
+  }
+
+  if (Array.isArray(option.grid)) {
+    return option
+  }
+
+  if (isRecord(option.grid)) {
+    if (option.grid.top !== undefined) {
+      return option
+    }
+    return {
+      ...option,
+      grid: {
+        ...option.grid,
+        top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND,
+      },
+    }
+  }
+
+  if (option.xAxis !== undefined || option.yAxis !== undefined) {
+    return {
+      ...option,
+      grid: {
+        top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND,
+      },
+    }
+  }
+
+  return option
+}
+
+/**
+ * Transforms Bases data into an ECharts option object.
+ */
+export function transformDataToChartOption(
+  data: BasesData,
+  xProp: string,
+  yProp: string,
+  chartType: ChartType = 'bar',
+  options?: ChartTransformerOptions,
+): EChartsOption {
+  const transformer = transformerMap[chartType]
+
+  const rawOption = transformer
+    ? transformer(
+        data,
+        xProp,
+        yProp,
+        options,
+      )
+    : createCartesianChartOption(
+        data,
+        xProp,
+        yProp,
+        'bar',
+        asOptions(options),
+      )
+
+  const titleOpt = getTitleOption(options)
+  const optionWithTitle = applyTitleOption(rawOption, titleOpt)
+  return applyTopLegendGridOffset(optionWithTitle, options)
 }
 
 export { type ChartType, type BaseTransformerOptions, type BasesData, type RowMetadata } from './transformers/base'

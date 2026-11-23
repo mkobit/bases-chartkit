@@ -1,12 +1,26 @@
 import type { LegendComponentOption } from 'echarts'
 import type { BaseTransformerOptions } from './base'
 
-export function getLegendOption(options?: BaseTransformerOptions): Readonly<LegendComponentOption> | undefined {
-  const showLegend = options?.legend ?? false
+export const TOP_LEGEND_WITH_SUBTITLE_OFFSET = 56
+export const GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND = 88
 
+export function resolveLegendPosition(options?: BaseTransformerOptions): 'top' | 'bottom' | 'left' | 'right' {
   const isCompact = (options?.isMobile ?? false) || (options?.containerWidth !== undefined && options.containerWidth < 600)
   const defaultPosition = isCompact ? 'bottom' : 'top'
   const position = options?.legendPosition || defaultPosition
+  if (position === 'bottom' || position === 'left' || position === 'right' || position === 'top') {
+    return position
+  }
+  return 'top'
+}
+
+export function hasTopLegendWithSubtitle(options?: BaseTransformerOptions): boolean {
+  return Boolean(options?.legend) && Boolean(options?.description) && resolveLegendPosition(options) === 'top'
+}
+
+export function getLegendOption(options?: BaseTransformerOptions): Readonly<LegendComponentOption> | undefined {
+  const showLegend = options?.legend ?? false
+  const position = resolveLegendPosition(options)
 
   const defaultOrient = (position === 'left' || position === 'right') ? 'vertical' : 'horizontal'
   const orient = options?.legendOrient ?? defaultOrient
@@ -17,22 +31,21 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
     type: 'scroll',
   }
 
-  const positionMap: Readonly<Record<string, Readonly<LegendComponentOption>>> = {
+  const topOffset = hasTopLegendWithSubtitle(options) ? TOP_LEGEND_WITH_SUBTITLE_OFFSET : 0
+
+  const positionMap: Readonly<Record<'top' | 'bottom' | 'left' | 'right', Readonly<LegendComponentOption>>> = {
     bottom: { bottom: 0,
       left: 'center' },
     left: { left: 0,
       top: 'middle' },
     right: { right: 0,
       top: 'middle' },
-    top: { top: 0,
+    top: { top: topOffset,
       left: 'center' },
   }
 
-  const posConfig = positionMap[position] ?? positionMap['top']
-
   return showLegend
-
     ? { ...base,
-        ...posConfig }
+        ...positionMap[position] }
     : undefined
 }

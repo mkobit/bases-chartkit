@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
+import { GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND, TOP_LEGEND_WITH_SUBTITLE_OFFSET } from '../../../src/charts/transformers/legend'
 import { getTitleOption } from '../../../src/charts/transformers/title'
 
 describe('Chart titles and explainability descriptions', () => {
@@ -142,6 +143,66 @@ describe('Chart titles and explainability descriptions', () => {
         left: 'left',
         top: 0,
       })
+    })
+
+    test('offsets top legend and pushes grid down when subtitle and legendPosition top are configured', () => {
+      const boxplotData = [
+        { Product: 'A', Channel: 'Web', Score: 10 },
+        { Product: 'A', Channel: 'Web', Score: 20 },
+        { Product: 'A', Channel: 'Web', Score: 30 },
+      ]
+      const boxplotOpt = transformDataToChartOption(boxplotData, 'Product', 'Score', 'boxplot', {
+        title: 'Product Score',
+        description: 'Distribution by channel',
+        legend: true,
+        legendPosition: 'top',
+      })
+      expect(boxplotOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
+      expect(boxplotOpt.grid).toMatchObject({ top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
+
+      const bulletData = [
+        { Metric: 'Revenue', Value: 80, Target: 90, RangeLow: 50, RangeMid: 75, RangeHigh: 100 },
+      ]
+      const bulletOpt = transformDataToChartOption(bulletData, 'Metric', 'Value', 'bullet', {
+        title: 'KPI Bullet',
+        description: 'Monthly progress',
+        legend: true,
+        legendPosition: 'top',
+        valueProp: 'Value',
+        targetProp: 'Target',
+        rangeLowProp: 'RangeLow',
+        rangeMidProp: 'RangeMid',
+        rangeHighProp: 'RangeHigh',
+      })
+      expect(bulletOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
+      expect(bulletOpt.grid).toMatchObject({ containLabel: true, top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
+
+      const ganttData = [
+        { Task: 'Design', Start: '2026-01-01', End: '2026-02-01', Project: 'Core' },
+      ]
+      const ganttOpt = transformDataToChartOption(ganttData, 'Task', 'Start', 'gantt', {
+        title: 'Delivery Timeline',
+        description: 'By project',
+        legend: true,
+        legendPosition: 'top',
+        taskProp: 'Task',
+        startProp: 'Start',
+        endProp: 'End',
+        seriesProp: 'Project',
+      })
+      expect(ganttOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
+      expect(ganttOpt.grid).toMatchObject({ containLabel: true, top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
+    })
+
+    test('keeps top legend at 0 and omits grid top offset when no subtitle is configured', () => {
+      const barOpt = transformDataToChartOption(dummyData, 'country', 'gdp', 'bar', {
+        title: 'Country GDP',
+        legend: true,
+        legendPosition: 'top',
+      })
+      expect(barOpt.legend).toMatchObject({ top: 0, left: 'center' })
+      expect(barOpt.grid).toMatchObject({ containLabel: true })
+      expect(barOpt.grid).not.toHaveProperty('top')
     })
   })
 })

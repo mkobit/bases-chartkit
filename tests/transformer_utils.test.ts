@@ -8,7 +8,7 @@ import {
   extractRowMetadata,
 } from '../src/charts/transformers/bases-values'
 import { parseDateToEpochMs } from '../src/charts/transformers/dates'
-import { getLegendOption } from '../src/charts/transformers/legend'
+import { getLegendOption, TOP_LEGEND_WITH_SUBTITLE_OFFSET } from '../src/charts/transformers/legend'
 import { extractTargetFilePath } from '../src/charts/interactivity'
 import { asTooltipFormatter } from '../src/charts/transformers/tooltip'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
@@ -317,6 +317,47 @@ describe('Transformer Modules', () => {
           expect(result.left).toBe(0)
           expect(result.top).toBe('middle')
           expect(result.orient).toBe('horizontal')
+        }
+      })
+
+      it('should offset top legend below subtitle when description is set', () => {
+        const result = getLegendOption({
+          legend: true,
+          legendPosition: 'top',
+          title: 'Chart Title',
+          description: 'Chart subtitle',
+        })
+        expect(result).toBeDefined()
+        if (result) {
+          expect(result.top).toBe(TOP_LEGEND_WITH_SUBTITLE_OFFSET)
+          expect(result.left).toBe('center')
+        }
+      })
+
+      it('should keep top legend at 0 when legendPosition is top without subtitle', () => {
+        const result = getLegendOption({
+          legend: true,
+          legendPosition: 'top',
+          title: 'Chart Title',
+          description: '',
+        })
+        expect(result).toBeDefined()
+        if (result) {
+          expect(result.top).toBe(0)
+          expect(result.left).toBe('center')
+        }
+      })
+
+      it('should not offset bottom legend when description is set', () => {
+        const result = getLegendOption({
+          legend: true,
+          legendPosition: 'bottom',
+          description: 'Chart subtitle',
+        })
+        expect(result).toBeDefined()
+        if (result) {
+          expect(result.bottom).toBe(0)
+          expect(result.top).toBeUndefined()
         }
       })
     })
