@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import * as echarts from 'echarts'
 import { createThemeRiverChartOption } from '../../../src/charts/transformers/theme-river'
 import type { EChartsOption, ThemeRiverSeriesOption } from 'echarts'
 
@@ -190,6 +191,103 @@ describe(
 
         const singleAxis = Array.isArray(option.singleAxis) ? option.singleAxis[0] : option.singleAxis
         expect(singleAxis?.orient).toBe('vertical')
+        expect(singleAxis?.position).toBe('left')
+        expect(singleAxis?.inverse).toBe(true)
+      },
+    )
+
+    it(
+      'should render horizontal river bands, vertical date axis ticks, and unclipped labels when flipAxis is true',
+      () => {
+        const multiMonthData = [
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+          { date: '2024-01-01',
+            mentions: 5,
+            topic: 'Politics' },
+          { date: '2024-02-01',
+            mentions: 15,
+            topic: 'Tech' },
+          { date: '2024-02-01',
+            mentions: 8,
+            topic: 'Politics' },
+          { date: '2024-03-01',
+            mentions: 12,
+            topic: 'Tech' },
+          { date: '2024-03-01',
+            mentions: 20,
+            topic: 'Politics' },
+        ]
+        const option = createThemeRiverChartOption(
+          multiMonthData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true,
+            title: 'News topics over time (vertical)',
+            description: 'Time runs top to bottom; bands spread horizontally.',
+            legend: true,
+            legendPosition: 'bottom' },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        // No NaN coordinates from missing singleAxis.position.
+        expect(svg).not.toContain('translate(NaN')
+
+        // Both theme bands render as chart paths with non-zero horizontal span.
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(2)
+        const xCoordsPerBand = bandPaths.map(d =>
+          [...d.matchAll(/[MC]\s*(-?\d+(?:\.\d+)?)/g)].map(m => Number(m[1])),
+        )
+        expect(xCoordsPerBand.every(xs => new Set(xs).size > 1)).toBe(true)
+
+        // Vertical axis line and ticks are drawn along x=60.
+        expect(svg).toContain('M60.5 70L60.5 545')
+
+        // Year label '2024' is positioned cleanly at x=52, y>=70 (not clipped at top-left).
+        const yearMatch = /transform="translate\(([^ )]+) ([^)]+)\)"[^>]*>2024<\/text>/.exec(svg)
+        expect(yearMatch).not.toBeNull()
+        const yearX = Number(yearMatch?.[1])
+        const yearY = Number(yearMatch?.[2])
+        expect(yearX).toBeGreaterThan(0)
+        expect(yearY).toBeGreaterThanOrEqual(70)
+
+        // Both theme labels are rendered.
+        expect(svg).toContain('>Tech</text>')
+        expect(svg).toContain('>Politics</text>')
+      },
+    )
+
+    it(
+      'should render a valid band path for single-date vertical theme-river data',
+      () => {
+        const singleDateData = [
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+        ]
+        const option = createThemeRiverChartOption(
+          singleDateData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(1)
+        expect(bandPaths[0]?.length ?? 0).toBeGreaterThan(0)
       },
     )
   },
