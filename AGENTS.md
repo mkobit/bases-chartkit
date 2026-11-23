@@ -20,8 +20,8 @@ The repository supports both `mise run` (for task DAG resolution, parallel check
 | `bun run build` | `mise run build` | Full production build with incremental source/output caching. |
 | `bun test` | `mise run test` | Run unit tests. |
 | `bun run test:coverage` | `mise run test:coverage` | Run unit tests with coverage reporting. |
-| `bun run test:e2e` | `mise run test:e2e` | Run end-to-end tests via Playwright (pops a real Obsidian window, on Linux/WSLg). |
-| `bun run test:e2e:headless` | `mise run test:e2e:headless` | Run Playwright E2E tests headlessly under `xvfb-run` matching CI. |
+| `bun run test:e2e` | `mise run test:e2e` | Run end-to-end tests via Bun test and Chrome DevTools Protocol (`scripts/run-e2e.ts`). |
+| `bun run test:e2e:headless` | `mise run test:e2e:headless` | Run end-to-end tests headlessly under `xvfb-run` matching CI. |
 | `bun run vault:dev` | `mise run vault:dev` | Launch sandboxed Linux Obsidian against `bases-chartkit-example-vault/`. |
 | `bun run vault:install` | `mise run vault:install` | Install the built plugin into the example vault without launching. |
 | `bun run vault:generate` | `mise run vault:generate` | Generate example vault contents from generators and specs. |

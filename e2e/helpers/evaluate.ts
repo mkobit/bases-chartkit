@@ -1,10 +1,10 @@
 import type { App } from 'obsidian'
-import type { Page } from '@playwright/test'
-import { expect } from '@playwright/test'
+import type { Page } from '../fixtures/obsidian'
+import { expect } from './poll'
 
 /**
  * A cold Obsidian profile (fresh configDir, no persisted metadata cache --
- * true of every e2e Playwright launch) can take longer than 30s to finish
+ * true of every e2e Obsidian launch) can take longer than 30s to finish
  * indexing/caching frontmatter for the whole example vault before Bases
  * queries resolve, now that the vault contains several large-volume
  * chart-type directories (calendar: 365 notes, heatmap: 168, theme-river:
@@ -13,11 +13,11 @@ import { expect } from '@playwright/test'
  *
  * 100s rather than a round 60s or 90s: a clean single run of the
  * sankey-chart rendering test still exceeded a 60_000ms budget on its first
- * attempt (only passed on Playwright's automatic retry), and a full
- * back-to-back run of the whole indexing-sensitive suite produced one more
- * marginal case at 90_000ms -- indexing time is load-sensitive, not a fixed
- * cost. 100s leaves headroom under playwright.config.ts's 120_000ms
- * per-test timeout for the rest of each test's setup/assertions.
+ * attempt, and a full back-to-back run of the whole indexing-sensitive suite
+ * produced one more marginal case at 90_000ms -- indexing time is
+ * load-sensitive, not a fixed cost. 100s leaves headroom under
+ * `scripts/run-e2e.ts`'s 180_000ms per-test timeout for the rest of each
+ * test's setup/assertions.
  */
 export const VAULT_INDEXED_POLL_TIMEOUT_MS = 100_000
 
@@ -933,7 +933,7 @@ export async function isGraphLayouting(page: Page, seriesIndex = 0): Promise<boo
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
   args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
-  // Playwright's page.mouse.move sends a single instantaneous mousemove by
+  // `page.mouse.move` sends a single instantaneous mousemove by
   // default (no intermediate events). That's sufficient to trigger every
   // trigger:'item' and cartesian trigger:'axis' tooltip in this codebase,
   // but polar-line's trigger:'axis' + coordinateSystem:'polar' combination

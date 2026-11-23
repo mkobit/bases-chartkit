@@ -30,7 +30,6 @@
 		"types": [
 			"bun",
 			"node",
-			"@playwright/test",
 			"temporal-spec/global"
 		]
 	},
@@ -40,7 +39,6 @@
 		"e2e/**/*.ts",
 		"scripts/**/*.ts",
 		"shared/**/*.ts",
-		"playwright.config.ts",
 		".claude/hooks/**/*.ts"
 	]
 }

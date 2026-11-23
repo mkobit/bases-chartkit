@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures/obsidian'
+import type { Page } from './fixtures/obsidian'
 import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
 
 interface HierarchyLeaf {
