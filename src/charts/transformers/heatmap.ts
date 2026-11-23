@@ -125,6 +125,9 @@ export function createHeatmapChartOption(
   const finalMaxVal = options?.visualMapMax !== undefined ? options.visualMapMax : dataMax
 
   const dataset: DatasetComponentOption = {
+    dimensions: ['x',
+      'y',
+      'value'],
     source: normalizedData,
   }
 
@@ -167,6 +170,7 @@ export function createHeatmapChartOption(
     top: options?.visualMapTop,
     type: options?.visualMapType ?? 'continuous',
     formatter: formatCompactVisualMapLabel,
+    dimension: 2,
     inRange: {
       color: options?.visualMapColor && options.visualMapColor.length > 0
         ? [...options.visualMapColor]

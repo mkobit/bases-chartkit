@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import * as echarts from 'echarts'
 import { transformDataToChartOption } from '../src/charts/transformer'
 import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
 import { DEFAULT_SEQUENTIAL_COLOR_GRADIENT } from '../src/charts/transformers/palette'
@@ -386,6 +387,67 @@ describe(
         expect(rows[0]?.filePath).toBe('notes/day1.md')
         expect(rows[1]?.rowIndex).toBe(12)
         expect(rows[1]?.filePath).toBe('notes/day2.md')
+      },
+    )
+
+    it(
+      'binds visualMap to the value dimension so cells fill with ramp colors instead of transparent',
+      () => {
+        // Regression for bck-996a: without visualMap.dimension = 'value',
+        // ECharts' VisualMapModel#getDataDimensionIndex falls back to the last
+        // non-coordinate dimension on the object-row dataset (rowIndex or
+        // filePath), leaving heatmap cells out-of-range / transparent.
+        const option = transformDataToChartOption(
+          [
+            { x: '00:00', y: 'Mon', val: 10, file: { path: 'notes/a.md' } },
+            { x: '01:00', y: 'Mon', val: 90, file: { path: 'notes/b.md' } },
+          ],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+        const visualMap = firstContinuousVisualMap(option)
+        expect(visualMap.dimension).toBe(2)
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 400, height: 300, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        // Min (#cde2fb -> rgb(205,226,251)) and max (#0d366b -> rgb(13,54,107))
+        // ramp colors must be applied to the rendered SVG cell rects.
+        expect(svg).toContain('fill="rgb(205,226,251)"')
+        expect(svg).toContain('fill="rgb(13,54,107)"')
+      },
+    )
+
+    it(
+      'fills heatmap cells with custom visualMapColor ramp in rendered SVG',
+      () => {
+        const option = transformDataToChartOption(
+          [
+            { x: '00:00', y: 'Mon', val: 10, file: { path: 'notes/a.md' } },
+            { x: '01:00', y: 'Mon', val: 90, file: { path: 'notes/b.md' } },
+          ],
+          'x',
+          'y',
+          'heatmap',
+          {
+            valueProp: 'val',
+            visualMapColor: ['#e5f5e0',
+              '#41ab5d',
+              '#005a32'],
+          },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 400, height: 300, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        expect(svg).toContain('fill="rgb(229,245,224)"')
+        expect(svg).toContain('fill="rgb(0,90,50)"')
       },
     )
   },
