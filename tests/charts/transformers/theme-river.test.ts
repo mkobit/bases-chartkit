@@ -1,12 +1,18 @@
-import { describe, it, expect } from 'bun:test'
+import { describe, it, expect, mock } from 'bun:test'
+import * as echarts from 'echarts'
 import { createThemeRiverChartOption } from '../../../src/charts/transformers/theme-river'
-import type { EChartsOption, ThemeRiverSeriesOption } from 'echarts'
+import type { CustomSeriesOption, EChartsOption, ThemeRiverSeriesOption } from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union; filtering on the
 // literal `type` narrows each element to ThemeRiverSeriesOption -- no cast.
 function themeRiverSeries(option: EChartsOption): readonly ThemeRiverSeriesOption[] {
   const list = Array.isArray(option.series) ? option.series : []
   return list.flatMap(s => s.type === 'themeRiver' ? [s] : [])
+}
+
+function customSeries(option: EChartsOption): readonly CustomSeriesOption[] {
+  const list = Array.isArray(option.series) ? option.series : []
+  return list.flatMap(s => s.type === 'custom' ? [s] : [])
 }
 
 // ThemeRiver series data are [date, value, theme] tuples typed loosely by
@@ -190,6 +196,265 @@ describe(
 
         const singleAxis = Array.isArray(option.singleAxis) ? option.singleAxis[0] : option.singleAxis
         expect(singleAxis?.orient).toBe('vertical')
+        expect(singleAxis?.position).toBe('left')
+        expect(singleAxis?.inverse).toBe(true)
+      },
+    )
+
+    it(
+      'should render horizontal river bands, vertical date axis ticks, and unclipped labels when flipAxis is true',
+      () => {
+        const multiMonthData = [
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+          { date: '2024-01-01',
+            mentions: 5,
+            topic: 'Politics' },
+          { date: '2024-02-01',
+            mentions: 15,
+            topic: 'Tech' },
+          { date: '2024-02-01',
+            mentions: 8,
+            topic: 'Politics' },
+          { date: '2024-03-01',
+            mentions: 12,
+            topic: 'Tech' },
+          { date: '2024-03-01',
+            mentions: 20,
+            topic: 'Politics' },
+        ]
+        const option = createThemeRiverChartOption(
+          multiMonthData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true,
+            title: 'News topics over time (vertical)',
+            description: 'Time runs top to bottom; bands spread horizontally.',
+            legend: true,
+            legendPosition: 'bottom' },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        // No NaN coordinates from missing singleAxis.position.
+        expect(svg).not.toContain('translate(NaN')
+
+        // Both theme bands render as chart paths with non-zero horizontal span.
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(2)
+        const xCoordsPerBand = bandPaths.map(d =>
+          [...d.matchAll(/[MC]\s*(-?\d+(?:\.\d+)?)/g)].map(m => Number(m[1])),
+        )
+        expect(xCoordsPerBand.every(xs => new Set(xs).size > 1)).toBe(true)
+
+        // Vertical axis line and ticks are drawn along x=60.
+        expect(svg).toContain('M60.5 70L60.5 545')
+
+        // Year label '2024' is positioned cleanly at x=52, y>=70 (not clipped at top-left).
+        const yearMatch = /transform="translate\(([^ )]+) ([^)]+)\)"[^>]*>2024<\/text>/.exec(svg)
+        expect(yearMatch).not.toBeNull()
+        const yearX = Number(yearMatch?.[1])
+        const yearY = Number(yearMatch?.[2])
+        expect(yearX).toBeGreaterThan(0)
+        expect(yearY).toBeGreaterThanOrEqual(70)
+
+        // Both theme labels are rendered.
+        expect(svg).toContain('>Tech</text>')
+        expect(svg).toContain('>Politics</text>')
+      },
+    )
+
+    it(
+      'should render a valid band path for single-date vertical theme-river data',
+      () => {
+        const singleDateData = [
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+        ]
+        const option = createThemeRiverChartOption(
+          singleDateData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(1)
+        expect(bandPaths[0]?.length ?? 0).toBeGreaterThan(0)
+      },
+    )
+
+    it(
+      'should return empty series for empty data when flipAxis is true',
+      () => {
+        const option = createThemeRiverChartOption(
+          [],
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        expect(customSeries(option)).toHaveLength(0)
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        expect(svg).not.toContain('ecmeta_ssr_type="chart"')
+      },
+    )
+
+    it(
+      'should sort unsorted and sparse dates into monotonic vertical bands when flipAxis is true',
+      () => {
+        const sparseUnsortedData = [
+          { date: '2024-03-01',
+            mentions: 20,
+            topic: 'Politics' },
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+          { date: '2024-02-01',
+            mentions: 15,
+            topic: 'Tech' },
+        ]
+        const option = createThemeRiverChartOption(
+          sparseUnsortedData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const series = customSeries(option)
+        expect(series).toHaveLength(2)
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(2)
+        expect(svg).toContain('>Tech</text>')
+        expect(svg).toContain('>Politics</text>')
+      },
+    )
+
+    it(
+      'should clamp Bezier y control points within plot vertical bounds for uneven date spacing',
+      () => {
+        // Two closely spaced dates followed by a huge gap: unclamped Catmull-Rom
+        // tangents would overshoot above top=50 or below bottom=545.
+        const unevenData = [
+          { date: '2024-01-01',
+            mentions: 10,
+            topic: 'Tech' },
+          { date: '2024-01-02',
+            mentions: 30,
+            topic: 'Tech' },
+          { date: '2024-12-31',
+            mentions: 12,
+            topic: 'Tech' },
+          { date: '2024-01-01',
+            mentions: 5,
+            topic: 'Politics' },
+          { date: '2024-01-02',
+            mentions: 8,
+            topic: 'Politics' },
+          { date: '2024-12-31',
+            mentions: 25,
+            topic: 'Politics' },
+        ]
+        const option = createThemeRiverChartOption(
+          unevenData,
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(option)
+        const svg = chart.renderToSVGString()
+        chart.dispose()
+
+        const bandPaths = [...svg.matchAll(/<path d="([^"]+)"[^>]*ecmeta_ssr_type="chart"/g)].map(m => m[1] ?? '')
+        expect(bandPaths).toHaveLength(2)
+
+        // Extract every numeric coordinate pair (x y) from M, L, and C commands.
+        const allYCoords = bandPaths.flatMap(d =>
+          [...d.matchAll(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g)].map(m => Number(m[2])),
+        )
+        expect(allYCoords.length).toBeGreaterThan(0)
+        // Plot vertical bounds with no title: top=50, bottom=600-55=545.
+        expect(allYCoords.every(y => y >= 50 && y <= 545)).toBe(true)
+      },
+    )
+
+    it(
+      'should attach non-null emphasis style on vertical band path elements returned by renderItem',
+      () => {
+        const option = createThemeRiverChartOption(
+          [
+            { date: '2024-01-01',
+              mentions: 10,
+              topic: 'Tech' },
+            { date: '2024-02-01',
+              mentions: 15,
+              topic: 'Tech' },
+          ],
+          'date',
+          { valueProp: 'mentions',
+            themeProp: 'topic',
+            flipAxis: true },
+        )
+
+        const series = customSeries(option)
+        expect(series).toHaveLength(1)
+        const origRenderItem = series[0]?.renderItem
+        expect(typeof origRenderItem).toBe('function')
+
+        const renderSpy = mock((
+          params: Parameters<NonNullable<CustomSeriesOption['renderItem']>>[0],
+          api: Parameters<NonNullable<CustomSeriesOption['renderItem']>>[1],
+        ) => (typeof origRenderItem === 'function' ? origRenderItem(params, api) : null))
+
+        const spiedOption: EChartsOption = {
+          ...option,
+          series: series.map(s => ({ ...s, renderItem: renderSpy })),
+        }
+
+        const chart = echarts.init(null, null, { renderer: 'svg', width: 800, height: 600, ssr: true })
+        chart.setOption(spiedOption)
+        chart.renderToSVGString()
+        chart.dispose()
+
+        const element = renderSpy.mock.results[0]?.value
+        const hasEmphasis = element && typeof element === 'object' && 'type' in element && element.type === 'path' && 'emphasis' in element
+          ? element.emphasis
+          : null
+        const emphasisStyle = hasEmphasis && typeof hasEmphasis === 'object' && 'style' in hasEmphasis && hasEmphasis.style && typeof hasEmphasis.style === 'object'
+          ? hasEmphasis.style
+          : null
+        const shadowBlur = emphasisStyle && 'shadowBlur' in emphasisStyle ? emphasisStyle.shadowBlur : undefined
+        const shadowColor = emphasisStyle && 'shadowColor' in emphasisStyle ? emphasisStyle.shadowColor : undefined
+        expect(emphasisStyle).not.toBeNull()
+        expect(typeof shadowBlur === 'number' && shadowBlur > 0).toBe(true)
+        expect(typeof shadowColor).toBe('string')
       },
     )
   },
