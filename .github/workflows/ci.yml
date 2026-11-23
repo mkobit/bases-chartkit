@@ -105,16 +105,17 @@ jobs:
               uses: actions/cache@v6.1.0
               with:
                   path: .obsidian-cache
-                  key: obsidian-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'playwright.config.ts') }}
+                  key: obsidian-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'scripts/run-e2e.ts') }}
                   restore-keys: |
                       obsidian-cache-${{ runner.os }}-
 
             - name: Run E2E Tests
-              run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" bun run test:e2e
+              run: bun run test:e2e:headless
 
-            - name: Upload Playwright Report
-              if: always()
+            - name: Upload Failure Screenshots
+              if: failure()
               uses: actions/upload-artifact@v7.0.2
               with:
-                  name: playwright-report
-                  path: playwright-report/
+                  name: e2e-failure-screenshots
+                  path: test-results/
+                  if-no-files-found: ignore

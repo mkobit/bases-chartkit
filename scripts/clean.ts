@@ -8,7 +8,6 @@ const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 const CLEAN_TARGETS = [
   'main.js',
   'test-results',
-  'playwright-report',
   '.test-output',
   '.obsidian-cache',
   'coverage',

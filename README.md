@@ -149,13 +149,13 @@ mise run build
 
 ### Automated testing
 
-We use Playwright for end-to-end testing.
+We use `bun test` with a Chrome DevTools Protocol client (`scripts/run-e2e.ts`) for end-to-end testing.
 
 ```bash
 bun run test:e2e
 ```
 
-The e2e fixture downloads a sandboxed Linux Obsidian AppImage to `.obsidian-cache/` on first run and launches it against a temp-copied vault for each test.
+The e2e runner downloads a sandboxed Linux Obsidian AppImage to `.obsidian-cache/` on first run and launches one Obsidian instance per suite against a temp-copied vault.
 For more details, see [`e2e/AGENTS.md`](e2e/AGENTS.md).
 
 ### Manual testing

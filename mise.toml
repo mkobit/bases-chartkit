@@ -72,14 +72,13 @@ depends = ["vault:install"]
 run = "bun run vault:dev"
 
 [tasks."test:e2e"]
-description = "Run Playwright E2E tests interactively"
+description = "Run end-to-end tests interactively via Bun test and Chrome DevTools Protocol"
 depends = ["build"]
 run = "bun run test:e2e"
 
 [tasks."test:e2e:headless"]
-description = "Run Playwright E2E tests headlessly with Virtual Framebuffer"
+description = "Run end-to-end tests headlessly under Virtual Framebuffer"
 depends = ["build"]
-outputs = ["playwright-report/**"]
 run = "bun run test:e2e:headless"
 
 [tasks."docs:screenshots"]

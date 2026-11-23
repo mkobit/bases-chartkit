@@ -1,4 +1,7 @@
-# E2E testing (Playwright)
+# End-to-end testing
+
+`scripts/run-e2e.ts` launches one Obsidian instance per suite (`standard`, `light`, `dark`) and executes `bun test` over `e2e/*.e2e.ts` through the Chrome DevTools Protocol fixture bridge in `e2e/fixtures/obsidian.ts`.
+Run `bun run test:e2e` interactively or `bun run test:e2e:headless` under `xvfb-run`.
 
 ## Core strategy
 **Avoid UI Scraping**: Use `evaluateObsidian` to interact with the internal Obsidian API for robust state verification.
@@ -25,7 +28,7 @@ await evaluateObsidian(page, async (app, args: { filename: string }) => {
 `e2e/obsidian-internal.d.ts` augments `App` with internal members used by e2e tests (`app.plugins`, `app.setting`, `app.internalPlugins`). When a new test needs a different internal API, add it there — don't use `as unknown as` casts (the e2e lint rule blocks them).
 
 ## Screenshot survey verification
-`e2e/survey/chart-types.survey.ts` captures screenshots for all chart views into `docs/images/chart-types/`.
+`scripts/survey-chart-types.ts` captures screenshots for all chart views into `docs/images/chart-types/`.
 Programmatic checks cannot verify that rendered visuals match visual requirements.
 Review every changed screenshot visually or with `scripts/compare-screenshots.ts` before committing.
 See the screenshot review process in [AGENTS.md](../AGENTS.md#screenshot-review-process).

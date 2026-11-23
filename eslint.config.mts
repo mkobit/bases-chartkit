@@ -425,12 +425,11 @@ export default tseslint.config(
         ignoreClasses: true,
         ignoreAccessorPattern: ['this.**'],
       }],
-      'no-empty-pattern': 'off', // Playwright fixtures require ({}, use) destructure syntax
-      'functional/no-let': 'off', // Allow let in Playwright e2e tests
+      'functional/no-let': 'off', // Allow let in e2e tests
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
       'obsidianmd/rule-custom-message': 'off', // same new Function() usage trips obsidianmd's no-new-func message too
-      'obsidianmd/prefer-window-timers': 'off', // e2e fixtures run in the Playwright/Node worker process, not Obsidian's renderer -- `window` doesn't exist there
+      'obsidianmd/prefer-window-timers': 'off', // e2e fixtures run in the Bun test runner process, not Obsidian's renderer -- `window` doesn't exist there
     },
   },
   // Legacy Transformers (Pending Refactor)
@@ -659,7 +658,7 @@ export default tseslint.config(
   },
   // Config files (relax rules)
   {
-    files: ['eslint.config.mts', 'playwright.config.ts'],
+    files: ['eslint.config.mts'],
     rules: {
       'functional/prefer-immutable-types': 'off',
       'functional/no-conditional-statements': 'off',
@@ -720,7 +719,6 @@ export default tseslint.config(
     'versions.json',
     'main.js',
     'coverage',
-    'playwright-report/**',
     'test-results/**',
     // bd-managed scaffolding, not project source
     '.beads/**',

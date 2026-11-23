@@ -1,23 +1,13 @@
 /**
  * Bun test fixture bridge for Obsidian end-to-end tests.
  * Connects to the orchestrator-managed Chrome DevTools Protocol port.
- * Preserves Playwright test runner fallback for legacy Node execution until Phase 4.
  */
 
-import { createRequire } from 'node:module'
-import * as net from 'node:net'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
-import type { ChildProcess } from 'node:child_process'
-import { test as playwrightBaseTest, expect as playwrightExpect, chromium } from '@playwright/test'
-import type { Page as PlaywrightPage } from '@playwright/test'
-import ObsidianLauncher from 'obsidian-launcher'
 import type { App } from 'obsidian'
-import { applyViewMode } from '../../shared/appearance'
-import type { ViewMode } from '../../shared/appearance'
-import { evaluateObsidian as evaluateObsidianLegacy } from '../helpers/evaluate'
-import type * as BunTestModule from 'bun:test'
-import type * as PollHelperModule from '../helpers/poll'
+import * as bunTest from 'bun:test'
+import { expect as augmentedExpect } from '../helpers/poll'
 import { connectCdp } from '../cdp/client'
 import type { CdpClient, ScreenshotOptions } from '../cdp/client'
 
@@ -28,30 +18,8 @@ declare module 'bun:test' {
   }
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- required for Playwright matcher augmentation
-  namespace PlaywrightTest {
-    interface Matchers<R> {
-      readonly toHaveCount: (expected: number) => Promise<R>
-      readonly toBeVisible: (options?: { readonly timeout?: number }) => Promise<R>
-    }
-  }
-}
-
-const req = createRequire(import.meta.url)
-const isBun = typeof Bun !== 'undefined'
-
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- dynamic bun test loader
-const bunTest = isBun ? (req('bun:test') as typeof BunTestModule) : null
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- dynamic poll helper loader
-const pollModule = isBun ? (req('../helpers/poll') as typeof PollHelperModule) : null
-const augmentedExpect = pollModule ? pollModule.expect : null
-
 export const ROOT_DIR = path.resolve(import.meta.dirname, '../../')
 export const VAULT_PATH = path.join(ROOT_DIR, 'bases-chartkit-example-vault')
-export const CACHE_DIR = path.join(ROOT_DIR, '.obsidian-cache')
-export const OBSIDIAN_APP_VERSION = '1.13.4'
-export const OBSIDIAN_INSTALLER_VERSION = '1.13.4'
 
 const LOCATOR_BRAND = Symbol('ObsidianLocator')
 
@@ -92,7 +60,7 @@ export interface ObsidianPageObject {
 export type Page = ObsidianPageObject
 
 export interface ObsidianPage {
-  readonly page: ObsidianPageObject & PlaywrightPage
+  readonly page: ObsidianPageObject
 }
 
 export interface ObsidianTestFixtures {
@@ -131,7 +99,7 @@ export function getCdpPort(env: NodeJS.ProcessEnv = process.env): number {
 
 let activeCdpClient: CdpClient | null = null
 let activeCdpClientPromise: Promise<CdpClient> | null = null
-let activePage: (ObsidianPageObject & PlaywrightPage) | null = null
+let activePage: ObsidianPageObject | null = null
 
 /**
  * Connects to or reuses the active Chrome DevTools Protocol client connection.
@@ -183,7 +151,7 @@ export function sanitizeTestTitle(title: string): string {
 
 const DEFAULT_MOUSE_MOVE_STEPS = 1
 
-export function createObsidianPage(client: CdpClient): ObsidianPageObject & PlaywrightPage {
+export function createObsidianPage(client: CdpClient): ObsidianPageObject {
   let currentMouseX = 0
   let currentMouseY = 0
 
@@ -410,7 +378,6 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject & Play
     return poll()
   }
 
-  // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- bridge custom page object to PlaywrightPage compatibility type
   return {
     evaluate,
     mouse,
@@ -418,10 +385,10 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject & Play
     locator,
     screenshot,
     waitForFunction,
-  } as unknown as ObsidianPageObject & PlaywrightPage
+  }
 }
 
-export async function getOrCreateObsidianPage(): Promise<ObsidianPageObject & PlaywrightPage> {
+export async function getOrCreateObsidianPage(): Promise<ObsidianPageObject> {
   if (activePage !== null) {
     return activePage
   }
@@ -473,63 +440,61 @@ export async function captureFailureScreenshot(
   }
 }
 
-if (augmentedExpect) {
-  augmentedExpect.extend({
-    async toHaveCount(received: unknown, expected: number) {
-      const isNegated = this.isNot === true
-      if (!isLocator(received)) {
-        return {
-          pass: false,
-          message: () => `expected Locator instance, received ${typeof received}`,
-        }
-      }
-      const actualCount = await received.count()
-      const pass = actualCount === expected
+augmentedExpect.extend({
+  async toHaveCount(received: unknown, expected: number) {
+    const isNegated = this.isNot === true
+    if (!isLocator(received)) {
       return {
-        pass,
-        message: () =>
-          isNegated
-            ? `expected locator count not to be ${expected}`
-            : `expected locator count to be ${expected}, got ${actualCount}`,
+        pass: false,
+        message: () => `expected Locator instance, received ${typeof received}`,
       }
-    },
+    }
+    const actualCount = await received.count()
+    const pass = actualCount === expected
+    return {
+      pass,
+      message: () =>
+        isNegated
+          ? `expected locator count not to be ${expected}`
+          : `expected locator count to be ${expected}, got ${actualCount}`,
+    }
+  },
 
-    async toBeVisible(received: unknown, options?: { readonly timeout?: number }) {
-      const isNegated = this.isNot === true
-      if (!isLocator(received)) {
-        return {
-          pass: false,
-          message: () => `expected Locator instance, received ${typeof received}`,
-        }
-      }
-      const timeoutMs = options?.timeout ?? 5_000
-      const startTime = Temporal.Now.instant().epochMilliseconds
-      const deadline = startTime + timeoutMs
-
-      const pollVis = async (): Promise<boolean> => {
-        const visible = await received.isVisible()
-        if (isNegated ? !visible : visible) {
-          return visible
-        }
-        const now = Temporal.Now.instant().epochMilliseconds
-        if (now >= deadline) {
-          return visible
-        }
-        await Bun.sleep(Math.min(100, Math.max(0, deadline - now)))
-        return pollVis()
-      }
-
-      const isVis = await pollVis()
+  async toBeVisible(received: unknown, options?: { readonly timeout?: number }) {
+    const isNegated = this.isNot === true
+    if (!isLocator(received)) {
       return {
-        pass: isVis,
-        message: () =>
-          isNegated
-            ? 'expected locator not to be visible'
-            : `expected locator to be visible (timed out after ${timeoutMs}ms)`,
+        pass: false,
+        message: () => `expected Locator instance, received ${typeof received}`,
       }
-    },
-  })
-}
+    }
+    const timeoutMs = options?.timeout ?? 5_000
+    const startTime = Temporal.Now.instant().epochMilliseconds
+    const deadline = startTime + timeoutMs
+
+    const pollVis = async (): Promise<boolean> => {
+      const visible = await received.isVisible()
+      if (isNegated ? !visible : visible) {
+        return visible
+      }
+      const now = Temporal.Now.instant().epochMilliseconds
+      if (now >= deadline) {
+        return visible
+      }
+      await Bun.sleep(Math.min(100, Math.max(0, deadline - now)))
+      return pollVis()
+    }
+
+    const isVis = await pollVis()
+    return {
+      pass: isVis,
+      message: () =>
+        isNegated
+          ? 'expected locator not to be visible'
+          : `expected locator to be visible (timed out after ${timeoutMs}ms)`,
+    }
+  },
+})
 
 export async function evaluateObsidian<T>(
   fn: (app: App) => T | Promise<T>,
@@ -617,198 +582,33 @@ function createTestWrapper(
   }
 }
 
-export function findFreePort(): Promise<number> {
-  return new Promise((resolve) => {
-    const server = net.createServer()
-    server.listen(0, () => {
-      const addr = server.address()
-      server.close(() => {
-        if (addr !== null && typeof addr === 'object') {
-          resolve(addr.port)
-        }
-        else {
-          fail('Could not determine free port')
-        }
-      })
-    })
-  })
-}
-
-export async function waitForCDP(port: number, proc: ChildProcess): Promise<void> {
-  await playwrightExpect(async () => {
-    if (proc.exitCode !== null) {
-      fail(`Obsidian process exited early with code ${proc.exitCode}`)
-    }
-    const browser = await chromium.connectOverCDP(`http://localhost:${port}`, { timeout: 30_000 })
-    await browser.close()
-  }).toPass({ intervals: [1_000], timeout: 30_000 })
-}
-
-const SIGTERM_GRACE_PERIOD_MS = 5_000
-
-export async function stopObsidian(proc: ChildProcess, configDir: string, vault: string | undefined): Promise<void> {
-  const exited = proc.exitCode !== null || proc.signalCode !== null
-    ? Promise.resolve()
-    : new Promise<void>((resolve) => { proc.once('exit', () => resolve()) })
-
-  if (proc.pid !== undefined) {
-    process.kill(-proc.pid, 'SIGTERM')
-  }
-
-  const outcome = await Promise.race([
-    exited.then(() => 'exited' as const),
-    new Promise<'timed-out'>((resolve) => {
-      setTimeout(() => resolve('timed-out'), SIGTERM_GRACE_PERIOD_MS)
-    }),
-  ])
-
-  if (outcome === 'timed-out' && proc.pid !== undefined) {
-    process.stderr.write('obsidian did not exit within the SIGTERM grace period, escalating to SIGKILL\n')
-    process.kill(-proc.pid, 'SIGKILL')
-  }
-
-  await exited
-
-  const results = await Promise.allSettled([
-    fs.rm(configDir, { recursive: true, force: true }),
-    vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
-  ])
-  for (const result of results) {
-    if (result.status === 'rejected') {
-      process.stderr.write(`obsidian tmpdir cleanup failed: ${String(result.reason)}\n`)
-    }
-  }
-}
-
-function terminateOnSignal(proc: ChildProcess, configDir: string, vault: string | undefined): () => void {
-  const onSignal = (signal: NodeJS.Signals): void => {
-    void stopObsidian(proc, configDir, vault).finally(() => process.kill(process.pid, signal))
-  }
-  process.once('SIGTERM', onSignal)
-  process.once('SIGINT', onSignal)
-  return () => {
-    process.removeListener('SIGTERM', onSignal)
-    process.removeListener('SIGINT', onSignal)
-  }
-}
-
-type ObsidianWorkerOptions = {
-  readonly theme: ViewMode | undefined
-}
-
-type ObsidianWorkerFixtures = ObsidianWorkerOptions & {
-  readonly obsidianPage: ObsidianPage
-}
-
-type LegacyTestFixtures = {
-  readonly resetWorkspace: void
-}
-
-const playwrightTestInstance = playwrightBaseTest.extend<LegacyTestFixtures, ObsidianWorkerFixtures>({
-  theme: [undefined, { option: true, scope: 'worker' }],
-  obsidianPage: [async ({ theme }, use) => {
-    const port = await findFreePort()
-    const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
-
-    const copiedVault = await launcher.setupVault({
-      vault: VAULT_PATH,
-      copy: true,
-      plugins: [ROOT_DIR],
-    })
-    if (theme) {
-      await applyViewMode(copiedVault, theme)
-    }
-
-    const { proc, configDir, vault } = await launcher.launch({
-      appVersion: OBSIDIAN_APP_VERSION,
-      installerVersion: OBSIDIAN_INSTALLER_VERSION,
-      vault: copiedVault,
-      copy: false,
-      args: [
-        `--remote-debugging-port=${port}`,
-        '--disable-gpu',
-        '--disable-gpu-compositing',
-        '--disable-software-rasterizer',
-        '--disable-gpu-sandbox',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding',
-      ],
-      spawnOptions: { stdio: 'pipe', detached: true },
-    })
-
-    if (proc.stderr) {
-      proc.stderr.on('data', (data: Buffer) => process.stderr.write(`[obsidian] ${data.toString()}`))
-    }
-
-    const removeSignalHandlers = terminateOnSignal(proc, configDir, vault)
-
-    try {
-      await waitForCDP(port, proc)
-
-      const browser = await chromium.connectOverCDP(`http://localhost:${port}`)
-      const context = browser.contexts()[0] ?? await browser.newContext()
-      const page = context.pages()[0] ?? await context.newPage()
-
-      await page.waitForFunction(
-        () => Reflect.has(window, 'app'),
-        { timeout: 30_000 },
-      )
-
-      // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- bridge playwright page
-      await use({ page: page as unknown as ObsidianPageObject & PlaywrightPage })
-
-      await browser.close()
-    }
-    finally {
-      removeSignalHandlers()
-      await stopObsidian(proc, configDir, vault)
-    }
-  }, { scope: 'worker' }],
-
-  resetWorkspace: [async ({ obsidianPage: { page } }, use) => {
-    await evaluateObsidianLegacy(page, (app) => {
-      app.workspace.detachLeavesOfType('bases')
-    })
-    await use()
-  }, { auto: true }],
+export const test = Object.assign(createTestWrapper(bunTest.test), {
+  describe: bunTest.describe,
+  skip: createTestWrapper(bunTest.test.skip),
+  only: (
+    name: string,
+    fn?: TestCallback,
+    options?: number | Record<string, unknown>,
+  ) => createTestWrapper(bunTest.test.only)(name, fn, options),
+  fixme: createTestWrapper(bunTest.test.skip),
+  use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
+  beforeEach: bunTest.beforeEach,
+  afterEach: bunTest.afterEach,
+  beforeAll: bunTest.beforeAll,
+  afterAll: bunTest.afterAll,
 })
 
-const bunTestBridge = bunTest
-  ? Object.assign(createTestWrapper(bunTest.test), {
-      describe: bunTest.describe,
-      skip: createTestWrapper(bunTest.test.skip),
-      only: (
-        name: string,
-        fn?: TestCallback,
-        options?: number | Record<string, unknown>,
-      ) => createTestWrapper(bunTest.test.only)(name, fn, options),
-      fixme: createTestWrapper(bunTest.test.skip),
-      use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
-      beforeEach: bunTest.beforeEach,
-      afterEach: bunTest.afterEach,
-      beforeAll: bunTest.beforeAll,
-      afterAll: bunTest.afterAll,
-    })
-  : null
+export const expect = augmentedExpect
 
-// eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- bridge test runner instance
-export const test = (isBun ? bunTestBridge : playwrightTestInstance) as unknown as NonNullable<typeof playwrightTestInstance>
-
-// eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- bridge expect instance
-export const expect = (isBun ? augmentedExpect : playwrightExpect) as unknown as typeof playwrightExpect & NonNullable<typeof augmentedExpect>
-
-if (isBun && bunTest) {
-  // Scripts such as survey-chart-types.ts import createObsidianPage outside `bun test`,
-  // where lifecycle hooks like afterAll() throw because no test runner is active.
-  try {
-    bunTest.afterAll(async () => {
-      await closeActiveCdpConnection()
-    })
-  }
-  catch (error: unknown) {
-    if (!(error instanceof Error && error.message.includes('outside of the test runner'))) {
-      throw error
-    }
+// Scripts such as survey-chart-types.ts import createObsidianPage outside `bun test`,
+// where lifecycle hooks like afterAll() throw because no test runner is active.
+try {
+  bunTest.afterAll(async () => {
+    await closeActiveCdpConnection()
+  })
+}
+catch (error: unknown) {
+  if (!(error instanceof Error && error.message.includes('outside of the test runner'))) {
+    throw error
   }
 }
