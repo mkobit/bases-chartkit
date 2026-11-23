@@ -54,10 +54,12 @@ function smoothCurveSegments(points: readonly Point2D[]): string {
     const p1 = points[i + 1] ?? p0
     const prev = i > 0 ? (points[i - 1] ?? p0) : p0
     const next = i + 2 < n ? (points[i + 2] ?? p1) : p1
+    const minY = Math.min(p0.y, p1.y)
+    const maxY = Math.max(p0.y, p1.y)
     const cp1x = p0.x + (p1.x - prev.x) * tension
-    const cp1y = p0.y + (p1.y - prev.y) * tension
+    const cp1y = Math.min(maxY, Math.max(minY, p0.y + (p1.y - prev.y) * tension))
     const cp2x = p1.x - (next.x - p0.x) * tension
-    const cp2y = p1.y - (next.y - p0.y) * tension
+    const cp2y = Math.min(maxY, Math.max(minY, p1.y - (next.y - p0.y) * tension))
     return `C${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p1.x} ${p1.y}`
   }).join('')
 }
@@ -189,6 +191,12 @@ function buildVerticalThemeRiverSeries(riverData: readonly ThemeRiverItem[]): re
         style: {
           fill: typeof fill === 'string' ? fill : undefined,
         },
+        emphasis: {
+          style: {
+            shadowBlur: STYLE_TOKENS.shadowBlur.deep,
+            shadowColor: COLOR_TOKENS.chrome.shadows.deep,
+          },
+        },
         textContent: {
           type: 'text',
           style: {
@@ -201,12 +209,6 @@ function buildVerticalThemeRiverSeries(riverData: readonly ThemeRiverItem[]): re
         },
         textConfig: { position: 'inside' },
       }
-    },
-    emphasis: {
-      itemStyle: {
-        shadowBlur: STYLE_TOKENS.shadowBlur.deep,
-        shadowColor: COLOR_TOKENS.chrome.shadows.deep,
-      },
     },
   }))
 }
