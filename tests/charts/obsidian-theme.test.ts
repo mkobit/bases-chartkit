@@ -27,6 +27,52 @@ function createMockTarget(cssVars: Record<string, string>, isDark = false): Styl
   }
 }
 
+class MockCanvasContext2d {
+  private current = '#000000'
+  private readonly resolvedColors: Readonly<Record<string, string>>
+
+  constructor(resolvedColors: Readonly<Record<string, string>>) {
+    this.resolvedColors = resolvedColors
+  }
+
+  get fillStyle(): string {
+    return this.current
+  }
+
+  set fillStyle(value: string) {
+    const normalized = this.resolvedColors[value]
+    this.current = normalized !== undefined
+      ? normalized
+      : (value === '#000000' || value === '#ffffff' ? value : this.current)
+  }
+}
+
+function createMockTargetWithCanvas(
+  cssVars: Readonly<Record<string, string>>,
+  resolvedColors: Readonly<Record<string, string>>,
+  isDark = false,
+): StyleResolverTarget {
+  const ctx = new MockCanvasContext2d(resolvedColors)
+
+  return {
+    ownerDocument: {
+      body: {
+        classList: {
+          contains: (token: string) => token === 'theme-dark' && isDark,
+        },
+      },
+      defaultView: {
+        getComputedStyle: () => ({
+          getPropertyValue: (prop: string) => cssVars[prop] ?? '',
+        }),
+      },
+      createElement: (tagName: string) => tagName === 'canvas'
+        ? { getContext: (id: string) => (id === '2d' ? ctx : null) }
+        : null,
+    },
+  }
+}
+
 describe('obsidian-theme', () => {
   describe('extractObsidianCssTokens', () => {
     it('should return null when no core Obsidian CSS custom properties are defined', () => {
@@ -78,6 +124,33 @@ describe('obsidian-theme', () => {
       const tokens = extractObsidianCssTokens(mockTarget)
       expect(tokens).not.toBeNull()
       expect(tokens?.palette).toEqual(DEFAULT_CATEGORICAL_PALETTE)
+    })
+
+    it('should normalize calc() and named CSS colors via canvas context while preserving genuine black and invalid strings', () => {
+      const cssVars: Record<string, string> = {
+        '--text-normal': 'rgb(0, 0, 0)',
+        '--background-primary': '#ffffff',
+        '--interactive-accent': 'hsl(calc(258 - 1), calc(88% * 1.01), calc(66% * 1.075))',
+        '--color-blue': '#086ddd',
+        '--color-green': '#08b94e',
+        '--background-modifier-border': 'unparseable-color',
+        '--font-interface': 'Inter, sans-serif',
+      }
+      const resolvedColors: Record<string, string> = {
+        'rgb(0, 0, 0)': '#000000',
+        'hsl(calc(258 - 1), calc(88% * 1.01), calc(66% * 1.075))': '#8e6cf0',
+        '#086ddd': '#086ddd',
+        '#08b94e': '#08b94e',
+      }
+
+      const mockTarget = createMockTargetWithCanvas(cssVars, resolvedColors, false)
+      const tokens = extractObsidianCssTokens(mockTarget)
+      expect(tokens).not.toBeNull()
+      expect(tokens?.textNormal).toBe('#000000')
+      expect(tokens?.interactiveAccent).toBe('#8e6cf0')
+      expect(tokens?.backgroundModifierBorder).toBe('unparseable-color')
+      expect(tokens?.fontFamily).toBe('Inter, sans-serif')
+      expect(tokens?.palette).toEqual(['#8e6cf0', '#086ddd', '#08b94e'])
     })
   })
 
