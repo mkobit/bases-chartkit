@@ -95,9 +95,15 @@ describe(
         // CalendarModel's mergeAndNormalizeLayoutParams/sizeCalculable) -
         // only `left` may be set, or day cells silently stop being fixed
         // squares and stretch to fill the container instead.
-        expect(calendar.cellSize).toEqual([13,
-          13])
+        expect(calendar.cellSize).toEqual([11,
+          11])
+        expect(calendar.left).toBe('center')
+        expect(calendar.top).toBe('middle')
         expect(calendar.right).toBeUndefined()
+
+        const visualMap = firstContinuousVisualMap(option)
+        expect(visualMap.bottom).toBe('5%')
+        expect(visualMap.top).toBeUndefined()
 
         // Check Series
         expect(seriesList(option)).toHaveLength(1)

@@ -103,7 +103,7 @@ export function createCalendarChartOption(
         )
 
         const calendarItem: CalendarComponentOption = {
-          top: 120,
+          top: 'middle',
           // ECharts forces cellSize's width back to 'auto' whenever both
           // `left` and `right` are set (they imply a fixed total width,
           // which conflicts with a fixed per-cell width) - see
@@ -112,9 +112,11 @@ export function createCalendarChartOption(
           // stick, so day cells render as small GitHub-style squares
           // instead of stretching to fill the container (which, for a
           // short date range, collapses into a few wide solid bands).
-          left: 30,
-          cellSize: [13,
-            13],
+          // A 53-week year at 11px/cell is 583px wide, fitting within a
+          // ~668px pane with room on both sides for day labels and margin.
+          left: 'center',
+          cellSize: [11,
+            11],
           range: [minDate,
             maxDate],
           itemStyle: {
@@ -135,7 +137,8 @@ export function createCalendarChartOption(
           calculable: true,
           orient: options?.visualMapOrient ?? 'horizontal',
           left: options?.visualMapLeft ?? 'center',
-          top: options?.visualMapTop ?? 65,
+          bottom: options?.visualMapTop !== undefined ? undefined : '5%',
+          top: options?.visualMapTop,
           type: options?.visualMapType ?? 'continuous',
           formatter: formatCompactVisualMapLabel,
           // Daily activity is a magnitude, so default to the shared sequential
