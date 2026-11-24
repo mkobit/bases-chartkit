@@ -2,7 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { createMapChartOption, formatMapTooltip } from '../src/charts/transformers/map'
 import type { MapTransformerOptions } from '../src/charts/transformers/map'
 import type { BasesData } from '../src/charts/transformers/base'
-import { formatCompactVisualMapLabel } from '../src/charts/transformers/visual-map'
+import { formatCompactVisualMapLabel, formatPiecewiseVisualMapLabel } from '../src/charts/transformers/visual-map'
 import { CHICAGO_LANDMARKS, CHICAGO_SEASONS, mapChartArbitrary } from '../scripts/generators/map'
 import { getDeterministicSample } from '../scripts/generators/utils'
 import type {
@@ -382,6 +382,39 @@ describe(
 
         const attendances = sample.data.map(row => row.attendance)
         expect(Math.max(...attendances) - Math.min(...attendances)).toBeGreaterThan(200_000)
+      },
+    )
+
+    it(
+      'should omit High/Low text on piecewise visualMap and format ranges with valueFormat',
+      () => {
+        const result = createMapChartOption(
+          data,
+          mapName,
+          {
+            mapName,
+            regionProp: 'Country',
+            valueProp: 'Population',
+            visualMapType: 'piecewise',
+            visualMapOrient: 'vertical',
+            valueFormat: 'currency:USD',
+          },
+        )
+
+        const visualMap = Array.isArray(result.visualMap) ? result.visualMap[0] : result.visualMap
+        expect(visualMap?.type).toBe('piecewise')
+        if (visualMap?.type !== 'piecewise') {
+          return
+        }
+        expect(visualMap.text).toBeUndefined()
+        expect(typeof visualMap.formatter).toBe('function')
+        if (typeof visualMap.formatter === 'function') {
+          expect(visualMap.formatter(25, 46.8)).toBe('$25.00 - $46.80')
+        }
+
+        expect(formatPiecewiseVisualMapLabel(-Infinity, 50, 'currency:USD')).toBe('< $50.00')
+        expect(formatPiecewiseVisualMapLabel(100, Infinity, 'currency:USD')).toBe('> $100.00')
+        expect(formatPiecewiseVisualMapLabel(1500, undefined, undefined)).toBe('1.5K')
       },
     )
   },

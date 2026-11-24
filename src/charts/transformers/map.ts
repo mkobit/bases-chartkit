@@ -5,7 +5,7 @@ import { formatValue } from './formatters'
 import { getLegendOption } from './legend'
 import { getTitleOption } from './title'
 import { asTooltipFormatter } from './tooltip'
-import { formatCompactVisualMapLabel } from './visual-map'
+import { formatCompactVisualMapLabel, formatPiecewiseVisualMapLabel } from './visual-map'
 import * as R from 'remeda'
 
 export interface MapVisualMapPiece {
@@ -90,6 +90,8 @@ export function createMapChartOption(
     ? { color: [...options.visualMapColor] }
     : undefined
 
+  const valueFormat = options?.valueFormat
+
   const visualMapOption: VisualMapComponentOption = isPiecewise
     ? {
         type: 'piecewise',
@@ -99,9 +101,9 @@ export function createMapChartOption(
         left: options?.visualMapLeft ?? (isVertical ? 'left' : 'center'),
         top: options?.visualMapTop ?? (isVertical ? 'center' : undefined),
         bottom: options?.visualMapTop !== undefined || isVertical ? undefined : '5%',
-        text: ['High',
-          'Low'],
-        formatter: formatCompactVisualMapLabel,
+        // Omit `text: ['High', 'Low']` on piecewise visualMaps because ECharts
+        // treats `endsText` as suppressing `showLabel` and hides piece ranges.
+        formatter: (value: unknown, value2?: unknown) => formatPiecewiseVisualMapLabel(value, value2, valueFormat),
         inRange: inRangeColor,
         ...(options?.visualMapSplitNumber !== undefined
           ? { splitNumber: options.visualMapSplitNumber }
@@ -145,7 +147,6 @@ export function createMapChartOption(
     : options
 
   const titleOpt = getTitleOption(mapOptions)
-  const valueFormat = options?.valueFormat
 
   const opt: EChartsOption = {
     ...(titleOpt ? { title: titleOpt } : {}),
