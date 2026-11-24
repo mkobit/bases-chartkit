@@ -103,11 +103,11 @@ test.describe('map chart rendering', () => {
       { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
     ).toBe(5)
 
-    // Chicago-Landmark-3.md ({ Landmark: "Grant Park", EventCount: 91 })
-    // resolves to mapData[0] -- transformers/map.ts maps rows 1:1 into `data`
-    // with no grouping/reordering, so this index is safe to hardcode (matching
-    // the existing region-state test's use of the same note above).
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const state = await getMapSeriesState(page, { seriesIndex: 0 })
+    const targetIndex = state?.items.findIndex(item => item.name === 'Grant Park') ?? -1
+    expect(targetIndex).toBeGreaterThanOrEqual(0)
+
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: targetIndex })
 
     expect(tooltipText).toContain('Grant Park')
     expect(tooltipText).toContain('91')
