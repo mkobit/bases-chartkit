@@ -58,17 +58,6 @@ class MockBasesView {
       trigger: () => undefined,
     },
   }
-
-  setConfigMap(entries: Readonly<Record<string, unknown>>): void {
-    this.config = {
-      ...this.config,
-      get: (key: string) => entries[key],
-    }
-  }
-
-  setData(data: { readonly data: readonly unknown[], readonly properties: readonly string[] }): void {
-    this.data = data
-  }
 }
 
 class MockExtraButtonComponent {
@@ -181,23 +170,39 @@ describe('Chart view style options', () => {
     return firstCall?.[0] ?? {}
   }
 
+  function configureView(
+    view: any,
+    entries: Readonly<Record<string, unknown>>,
+    data: { readonly data: readonly unknown[], readonly properties: readonly string[] },
+  ): void {
+    Reflect.set(view, 'config', {
+      get: (key: string) => entries[key],
+      getAsPropertyId: () => undefined,
+      getDisplayName: (id: string) => id.replace(/^note\./, ''),
+    })
+    Reflect.set(view, 'data', data)
+  }
+
   it('passes PieChartView innerRadius, outerRadius, padAngle, and borderRadius to ECharts', () => {
     const view: any = new PieChartView(makeControllerStub(), makeScrollElStub(), makePluginStub())
-    view.setConfigMap({
-      xAxisProp: 'note.Region',
-      yAxisProp: 'note.Revenue',
-      innerRadius: '40%',
-      outerRadius: '70%',
-      padAngle: 5,
-      borderRadius: 8,
-    })
-    view.setData({
-      data: [
-        { note: { Region: 'North', Revenue: 100 } },
-        { note: { Region: 'South', Revenue: 200 } },
-      ],
-      properties: ['note.Region', 'note.Revenue'],
-    })
+    configureView(
+      view,
+      {
+        xAxisProp: 'note.Region',
+        yAxisProp: 'note.Revenue',
+        innerRadius: '40%',
+        outerRadius: '70%',
+        padAngle: 5,
+        borderRadius: 8,
+      },
+      {
+        data: [
+          { note: { Region: 'North', Revenue: 100 } },
+          { note: { Region: 'South', Revenue: 200 } },
+        ],
+        properties: ['note.Region', 'note.Revenue'],
+      },
+    )
 
     const option = renderAndCaptureOption(view)
     const series = Array.isArray(option.series) ? option.series[0] : option.series
@@ -211,18 +216,21 @@ describe('Chart view style options', () => {
 
   it('passes RadarChartView shape: circle and areaStyle: true to ECharts', () => {
     const view: any = new RadarChartView(makeControllerStub(), makeScrollElStub(), makePluginStub())
-    view.setConfigMap({
-      xAxisProp: 'note.Name',
-      metricProps: 'note.Strength, note.Dexterity',
-      shape: 'circle',
-      areaStyle: true,
-    })
-    view.setData({
-      data: [
-        { note: { Name: 'Hero', Strength: 18, Dexterity: 14 } },
-      ],
-      properties: ['note.Name', 'note.Strength', 'note.Dexterity'],
-    })
+    configureView(
+      view,
+      {
+        xAxisProp: 'note.Name',
+        metricProps: 'note.Strength, note.Dexterity',
+        shape: 'circle',
+        areaStyle: true,
+      },
+      {
+        data: [
+          { note: { Name: 'Hero', Strength: 18, Dexterity: 14 } },
+        ],
+        properties: ['note.Name', 'note.Strength', 'note.Dexterity'],
+      },
+    )
 
     const option = renderAndCaptureOption(view)
     const radar = Array.isArray(option.radar) ? option.radar[0] : option.radar
@@ -237,20 +245,23 @@ describe('Chart view style options', () => {
 
   it('passes RoseChartView roseType, padAngle, and borderRadius to ECharts', () => {
     const view: any = new RoseChartView(makeControllerStub(), makeScrollElStub(), makePluginStub())
-    view.setConfigMap({
-      xAxisProp: 'note.Department',
-      yAxisProp: 'note.Spend',
-      roseType: 'radius',
-      padAngle: 2,
-      borderRadius: 4,
-    })
-    view.setData({
-      data: [
-        { note: { Department: 'Engineering', Spend: 500 } },
-        { note: { Department: 'Design', Spend: 300 } },
-      ],
-      properties: ['note.Department', 'note.Spend'],
-    })
+    configureView(
+      view,
+      {
+        xAxisProp: 'note.Department',
+        yAxisProp: 'note.Spend',
+        roseType: 'radius',
+        padAngle: 2,
+        borderRadius: 4,
+      },
+      {
+        data: [
+          { note: { Department: 'Engineering', Spend: 500 } },
+          { note: { Department: 'Design', Spend: 300 } },
+        ],
+        properties: ['note.Department', 'note.Spend'],
+      },
+    )
 
     const option = renderAndCaptureOption(view)
     const series = Array.isArray(option.series) ? option.series[0] : option.series
