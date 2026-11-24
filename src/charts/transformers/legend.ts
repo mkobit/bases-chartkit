@@ -3,6 +3,10 @@ import type { BaseTransformerOptions } from './base'
 
 export const TOP_LEGEND_WITH_SUBTITLE_OFFSET = 56
 export const GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND = 88
+// `left: 'center'` splits `right` evenly across both sides when ECharts clamps
+// scrollable legend width, so 160 reserves ~80px on the right for the
+// copy/fullscreen toolbar (two icon buttons + 8px offset in `styles.css`).
+export const TOP_LEGEND_TOOLBAR_RIGHT_MARGIN = 160
 
 export function resolveLegendPosition(options?: BaseTransformerOptions): 'top' | 'bottom' | 'left' | 'right' {
   const isCompact = (options?.isMobile ?? false) || (options?.containerWidth !== undefined && options.containerWidth < 600)
@@ -41,7 +45,8 @@ export function getLegendOption(options?: BaseTransformerOptions): Readonly<Lege
     right: { right: 0,
       top: 'middle' },
     top: { top: topOffset,
-      left: 'center' },
+      left: 'center',
+      right: TOP_LEGEND_TOOLBAR_RIGHT_MARGIN },
   }
 
   return showLegend
