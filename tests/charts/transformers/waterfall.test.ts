@@ -287,5 +287,63 @@ describe(
         }
       },
     )
+
+    it(
+      'omits hardcoded bar colors when a custom theme is active so the theme palette applies',
+      () => {
+        const option = createWaterfallChartOption(
+          [
+            { category: 'Start', value: 100, total: true },
+            { category: 'Up', value: 50, total: false },
+            { category: 'Down', value: -20, total: false },
+          ],
+          'category',
+          'value',
+          {
+            totalProp: 'total',
+            theme: 'Vintage',
+            upColor: '#14b143',
+            downColor: '#ef232a',
+          },
+        )
+
+        const series = waterfallSeries(option)
+        const baseSeries = seriesNamed(series, '_base')
+        const increaseSeries = seriesNamed(series, 'Increase')
+        const decreaseSeries = seriesNamed(series, 'Decrease')
+        const totalSeries = seriesNamed(series, 'Total')
+
+        expect(baseSeries.itemStyle?.color).toBe('transparent')
+        expect(increaseSeries.itemStyle?.color).toBeUndefined()
+        expect(decreaseSeries.itemStyle?.color).toBeUndefined()
+        expect(totalSeries.itemStyle?.color).toBeUndefined()
+      },
+    )
+
+    it(
+      'keeps semantic up/down/total colors for default, dark, and obsidian-auto themes',
+      () => {
+        ([undefined, 'default', 'dark', 'obsidian-auto'] as const).forEach((theme) => {
+          const option = createWaterfallChartOption(
+            [
+              { category: 'Start', value: 100, total: true },
+              { category: 'Up', value: 50, total: false },
+              { category: 'Down', value: -20, total: false },
+            ],
+            'category',
+            'value',
+            {
+              totalProp: 'total',
+              ...(theme !== undefined ? { theme } : {}),
+            },
+          )
+
+          const series = waterfallSeries(option)
+          expect(seriesNamed(series, 'Increase').itemStyle?.color).toBe('#14b143')
+          expect(seriesNamed(series, 'Decrease').itemStyle?.color).toBe('#ef232a')
+          expect(seriesNamed(series, 'Total').itemStyle?.color).toBe('#5470c6')
+        })
+      },
+    )
   },
 )

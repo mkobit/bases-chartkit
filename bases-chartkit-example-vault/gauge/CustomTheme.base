@@ -8,7 +8,7 @@ views:
     aggregation: "avg"
     minVal: 0
     maxVal: 100
-    theme: "vintage"
+    theme: "Vintage"
     colorBands: "60:#e6a23c,80:#409eff,100:#67c23a"
     title: "Sleep Quality"
     description: "Average sleep quality rating on vintage theme"

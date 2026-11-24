@@ -6,6 +6,7 @@ import { getNestedValue, safeToString } from './bases-values'
 import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
+import { OBSIDIAN_AUTO_THEME_NAME } from '../obsidian-theme'
 
 export interface WaterfallTransformerOptions extends BaseTransformerOptions {
   // Property whose truthy value marks a row as an absolute total (bck-h0b):
@@ -46,6 +47,10 @@ export function createWaterfallChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const totalProp = options?.totalProp
   const isDarkMode = options?.isDarkMode ?? false
+  const hasCustomTheme = Boolean(options?.theme)
+    && options?.theme !== 'default'
+    && options?.theme !== 'dark'
+    && options?.theme !== OBSIDIAN_AUTO_THEME_NAME
   const isMobile = options?.isMobile ?? false
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
@@ -232,9 +237,7 @@ export function createWaterfallChartOption(
         stack: 'total',
         ...insideBarLabel,
         data: [...totalData],
-        itemStyle: {
-          color: totalBarColor(isDarkMode),
-        },
+        ...(hasCustomTheme ? {} : { itemStyle: { color: totalBarColor(isDarkMode) } }),
       }]
     : []
 
@@ -246,9 +249,7 @@ export function createWaterfallChartOption(
       stack: 'total',
       ...insideBarLabel,
       data: [...riseData],
-      itemStyle: {
-        color: options?.upColor ?? COLOR_TOKENS.status.up,
-      },
+      ...(hasCustomTheme ? {} : { itemStyle: { color: options?.upColor ?? COLOR_TOKENS.status.up } }),
     },
     {
       name: 'Decrease',
@@ -256,9 +257,7 @@ export function createWaterfallChartOption(
       stack: 'total',
       ...insideBarLabel,
       data: [...fallData],
-      itemStyle: {
-        color: options?.downColor ?? COLOR_TOKENS.status.down,
-      },
+      ...(hasCustomTheme ? {} : { itemStyle: { color: options?.downColor ?? COLOR_TOKENS.status.down } }),
     },
     ...totalSeries,
   ]
@@ -285,7 +284,9 @@ export function createWaterfallChartOption(
 
         const totalParam = pList.find(p => p.seriesName === 'Total')
         if (totalParam && totalParam.value !== '-' && totalParam.value !== undefined) {
-          const totalColor = totalBarColor(isDarkMode)
+          const totalColor = hasCustomTheme
+            ? (totalParam.color ?? totalBarColor(isDarkMode))
+            : totalBarColor(isDarkMode)
           return `${name}<br/>Total: <span style="color:${totalColor}">${Number(totalParam.value)}</span>`
         }
 
@@ -299,9 +300,11 @@ export function createWaterfallChartOption(
           : (fallParam && fallParam.value !== '-' ? -Number(fallParam.value) : 0)
 
         const type = isRising ? 'Increase' : 'Decrease'
-        const color = isRising
+        const activeParam = isRising ? riseParam : fallParam
+        const defaultColor = isRising
           ? (options?.upColor ?? COLOR_TOKENS.status.up)
           : (options?.downColor ?? COLOR_TOKENS.status.down)
+        const color = hasCustomTheme ? (activeParam?.color ?? defaultColor) : defaultColor
         const displayValue = isRising ? value : -Math.abs(value)
 
         return `${name}<br/>${type}: <span style="color:${color}">${displayValue}</span>`
