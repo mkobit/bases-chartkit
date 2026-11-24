@@ -2,6 +2,7 @@ import type { EChartsOption, PieSeriesOption, DatasetComponentOption } from 'ech
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, isRecord, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { resolveCircularLayout } from './circular-layout'
 import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
@@ -58,6 +59,7 @@ export function formatTooltip(param: PieTooltipParam, valueFormat?: string): str
 
 function resolveRadius(
   options?: PieTransformerOptions,
+  circularRadius?: string,
 ): PieSeriesOption['radius'] {
   if (options?.radius !== undefined) {
     if (typeof options.radius === 'string' || typeof options.radius === 'number') {
@@ -72,7 +74,7 @@ function resolveRadius(
     return ['40%', '70%']
   }
   if (options?.roseType) {
-    return [20, '75%']
+    return [20, circularRadius ?? '75%']
   }
   return '50%'
 }
@@ -116,6 +118,12 @@ export function createPieChartOption(
     source: normalizedData,
   }
 
+  const circularLayout = resolveCircularLayout(options, {
+    defaultRadius: '75%',
+    sideLegendRadius: '55%',
+  })
+  const hasChrome = Boolean(options?.legend) || Boolean(options?.title) || Boolean(options?.description)
+
   const seriesItem: PieSeriesOption = {
     type: 'pie',
     datasetIndex: 0,
@@ -123,7 +131,8 @@ export function createPieChartOption(
       itemName: 'name',
       value: 'value',
     },
-    radius: resolveRadius(options),
+    ...(hasChrome ? { center: circularLayout.center } : {}),
+    radius: resolveRadius(options, circularLayout.radius),
     ...(options?.roseType ? { roseType: options.roseType } : {}),
     ...(options?.padAngle !== undefined ? { padAngle: options.padAngle } : {}),
     ...(options?.borderRadius !== undefined

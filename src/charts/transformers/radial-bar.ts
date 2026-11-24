@@ -2,6 +2,7 @@ import type { EChartsOption, BarSeriesOption, DatasetComponentOption } from 'ech
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { resolveCircularLayout } from './circular-layout'
 import * as R from 'remeda'
 
 export interface RadialBarTransformerOptions extends BaseTransformerOptions {
@@ -104,9 +105,15 @@ export function createRadialBarChartOption(
     }
   })
 
+  const circularLayout = resolveCircularLayout(options, {
+    defaultRadius: flipAxis ? '72%' : '75%',
+  })
+
   const opt: EChartsOption = {
     dataset: [...datasets],
     polar: {
+      center: circularLayout.center,
+      radius: flipAxis ? ['22%', circularLayout.radius] : circularLayout.radius,
     },
     angleAxis: flipAxis
       ? {
@@ -125,6 +132,12 @@ export function createRadialBarChartOption(
       ? {
           type: 'category',
           data: [...angleAxisData],
+          axisTick: {
+            alignWithLabel: true,
+          },
+          axisLabel: {
+            margin: 12,
+          },
         }
       : {
           type: 'value',

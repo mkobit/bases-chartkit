@@ -121,6 +121,12 @@ describe(
           data: ['A',
             'B',
             'C'],
+          axisTick: {
+            alignWithLabel: true,
+          },
+          axisLabel: {
+            margin: 12,
+          },
         })
         expect(option.angleAxis).toEqual({
           type: 'value',
