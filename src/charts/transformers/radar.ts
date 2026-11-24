@@ -2,6 +2,7 @@ import type { EChartsOption, RadarSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
+import { resolveCircularLayout } from './circular-layout'
 import * as R from 'remeda'
 
 export interface RadarTransformerOptions extends BaseTransformerOptions {
@@ -110,6 +111,7 @@ function createWideFormatRadarOption(
   })
 
   const areaStyle = getAreaStyleOption(options)
+  const circularLayout = resolveCircularLayout(options)
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
@@ -120,6 +122,8 @@ function createWideFormatRadarOption(
 
   return {
     radar: {
+      center: circularLayout.center,
+      radius: circularLayout.radius,
       indicator: [...radarIndicators],
       ...(options?.shape ? { shape: options.shape } : {}),
     },
@@ -219,6 +223,7 @@ function createLongFormatRadarOption(
   })
 
   const areaStyle = getAreaStyleOption(options)
+  const circularLayout = resolveCircularLayout(options)
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
@@ -229,6 +234,8 @@ function createLongFormatRadarOption(
 
   const opt: EChartsOption = {
     radar: {
+      center: circularLayout.center,
+      radius: circularLayout.radius,
       indicator: [...radarIndicators],
       ...(options?.shape ? { shape: options.shape } : {}),
     },

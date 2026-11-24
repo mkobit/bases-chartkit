@@ -3,6 +3,7 @@ import type { BaseTransformerOptions, BasesData } from './base'
 import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
 import { getLegendOption } from './legend'
 import { getTitleOption } from './title'
+import { resolveCircularLayout } from './circular-layout'
 import * as R from 'remeda'
 
 export interface PolarLineTransformerOptions extends BaseTransformerOptions {
@@ -109,19 +110,19 @@ export function createPolarLineChartOption(
   })
 
   const title = getTitleOption(options)
+  const circularLayout = resolveCircularLayout(options)
 
   const opt: EChartsOption = {
     dataset: [...datasets],
     ...(title ? { title } : {}),
     // Angle/radius carry no axis chrome unlike a cartesian chart, so without a
     // name a first-time reader has no label for what's being encoded (bck-aie.27
-    // feedback: "i dont know what to look for here"). Also shift the plot down
-    // and shrink it slightly when a title is present, so the polar circle
-    // doesn't start under the title/legend chrome -- the polar analog of
-    // theme-river's singleAxis top offset.
+    // feedback: "i dont know what to look for here"). Center and radius also
+    // adapt to surrounding title/subtitle/legend chrome so outer ring labels
+    // do not collide with them.
     polar: {
-      center: ['50%', title ? '56%' : '50%'],
-      radius: title ? '70%' : '75%',
+      center: circularLayout.center,
+      radius: circularLayout.radius,
     },
     angleAxis: {
       type: 'category',

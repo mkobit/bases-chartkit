@@ -4,6 +4,7 @@ import { extractRowMetadata, getNestedValue, isNumericAxisValues, isRecord, safe
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
+import { resolveCircularLayout } from './circular-layout'
 import * as R from 'remeda'
 
 export interface PolarScatterTransformerOptions extends BaseTransformerOptions {
@@ -211,9 +212,18 @@ export function createPolarScatterChartOption(
     }
   })
 
+  const hasVisualMap = Boolean(visualMapOption)
+  const circularLayout = resolveCircularLayout(options, {
+    hasTopVisualMap: hasVisualMap && options?.visualMapTop !== undefined,
+    hasBottomVisualMap: hasVisualMap && options?.visualMapTop === undefined,
+  })
+
   const opt: EChartsOption = {
     dataset: [...datasets],
-    polar: {},
+    polar: {
+      center: circularLayout.center,
+      radius: circularLayout.radius,
+    },
     angleAxis: {
       ...(isNumericAngle
         ? { type: 'value' }
