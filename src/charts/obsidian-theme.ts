@@ -24,7 +24,46 @@ export interface StyleResolverTarget {
       }
     }
     readonly defaultView?: unknown
+    readonly createElement?: (tagName: string) => unknown
   } | null
+}
+
+interface CanvasContext2dLike {
+  readonly fillStyle: string | object
+}
+
+interface CanvasLike {
+  readonly getContext?: (contextId: '2d') => CanvasContext2dLike | null
+}
+
+function isCanvasLike(el: unknown): el is CanvasLike {
+  return typeof el === 'object' && el !== null && 'getContext' in el && typeof el.getContext === 'function'
+}
+
+function normalizeWithCanvas(ctx: CanvasContext2dLike, color: string): string {
+  // Use two sentinels so a genuine black (#000000) isn't confused with an
+  // unparsed CSS color string (which leaves fillStyle unchanged).
+  Reflect.set(ctx, 'fillStyle', '#000000')
+  Reflect.set(ctx, 'fillStyle', color)
+  const first = ctx.fillStyle
+  return typeof first === 'string' && first !== '#000000'
+    ? first
+    : (() => {
+        Reflect.set(ctx, 'fillStyle', '#ffffff')
+        Reflect.set(ctx, 'fillStyle', color)
+        const second = ctx.fillStyle
+        return typeof second === 'string' && second !== '#ffffff' ? second : color
+      })()
+}
+
+function createColorNormalizer(
+  doc: { readonly createElement?: (tagName: string) => unknown },
+): (color: string) => string {
+  const canvas = typeof doc.createElement === 'function' ? doc.createElement('canvas') : null
+  const ctx = isCanvasLike(canvas) ? canvas.getContext?.('2d') ?? null : null
+  return !ctx
+    ? color => color
+    : (color: string): string => (!color ? color : normalizeWithCanvas(ctx, color))
 }
 
 interface StyleContextView {
@@ -125,31 +164,33 @@ export const OBSIDIAN_AUTO_THEME_NAME = 'obsidian-auto'
 
 function assembleTokens(
   getProp: (prop: string) => string,
+  normalizeColor: (color: string) => string,
   textNormal: string,
   backgroundPrimary: string,
   interactiveAccent: string,
   doc: { readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null },
 ): ObsidianCssTokens {
   const isDark = doc.body?.classList?.contains('theme-dark') ?? false
-  const resolvedTextNormal = textNormal || (isDark ? '#dcddde' : '#222222')
-  const textMuted = getProp('--text-muted') || resolvedTextNormal
-  const textFaint = getProp('--text-faint') || textMuted
-  const textAccent = getProp('--text-accent') || interactiveAccent || resolvedTextNormal
-  const backgroundSecondary = getProp('--background-secondary') || backgroundPrimary || (isDark ? '#202020' : '#f4f4f4')
-  const backgroundModifierBorder = getProp('--background-modifier-border') || textFaint
-  const resolvedAccent = interactiveAccent || '#705dcf'
+  const resolvedTextNormal = normalizeColor(textNormal) || (isDark ? '#dcddde' : '#222222')
+  const textMuted = normalizeColor(getProp('--text-muted')) || resolvedTextNormal
+  const textFaint = normalizeColor(getProp('--text-faint')) || textMuted
+  const resolvedAccent = normalizeColor(interactiveAccent) || '#705dcf'
+  const textAccent = normalizeColor(getProp('--text-accent')) || resolvedAccent || resolvedTextNormal
+  const resolvedBackgroundPrimary = normalizeColor(backgroundPrimary) || (isDark ? '#1e1e1e' : '#ffffff')
+  const backgroundSecondary = normalizeColor(getProp('--background-secondary')) || resolvedBackgroundPrimary || (isDark ? '#202020' : '#f4f4f4')
+  const backgroundModifierBorder = normalizeColor(getProp('--background-modifier-border')) || textFaint
   const fontFamily = getProp('--font-interface') || getProp('--font-text') || undefined
 
   const rawColors = [
     resolvedAccent,
-    getProp('--color-blue'),
-    getProp('--color-green'),
-    getProp('--color-yellow'),
-    getProp('--color-orange'),
-    getProp('--color-red'),
-    getProp('--color-purple'),
-    getProp('--color-pink'),
-    getProp('--color-cyan'),
+    normalizeColor(getProp('--color-blue')),
+    normalizeColor(getProp('--color-green')),
+    normalizeColor(getProp('--color-yellow')),
+    normalizeColor(getProp('--color-orange')),
+    normalizeColor(getProp('--color-red')),
+    normalizeColor(getProp('--color-purple')),
+    normalizeColor(getProp('--color-pink')),
+    normalizeColor(getProp('--color-cyan')),
   ]
   const obsidianColors = R.filter(rawColors, (c: string): boolean => c.length > 0)
 
@@ -159,7 +200,7 @@ function assembleTokens(
 
   return {
     darkMode: isDark,
-    backgroundPrimary: backgroundPrimary || (isDark ? '#1e1e1e' : '#ffffff'),
+    backgroundPrimary: resolvedBackgroundPrimary,
     backgroundSecondary,
     backgroundModifierBorder,
     textNormal: resolvedTextNormal,
@@ -174,7 +215,10 @@ function assembleTokens(
 
 function parseTokens(
   computed: { readonly getPropertyValue: (prop: string) => string },
-  doc: { readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null },
+  doc: {
+    readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null
+    readonly createElement?: (tagName: string) => unknown
+  },
 ): ObsidianCssTokens | null {
   const getProp = (prop: string): string => computed.getPropertyValue(prop).trim()
 
@@ -184,12 +228,15 @@ function parseTokens(
 
   return !textNormal && !backgroundPrimary && !interactiveAccent
     ? null
-    : assembleTokens(getProp, textNormal, backgroundPrimary, interactiveAccent, doc)
+    : assembleTokens(getProp, createColorNormalizer(doc), textNormal, backgroundPrimary, interactiveAccent, doc)
 }
 
 function extractTokensFromView(
   el: unknown,
-  doc: { readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null },
+  doc: {
+    readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null
+    readonly createElement?: (tagName: string) => unknown
+  },
   view: StyleContextView,
 ): ObsidianCssTokens | null {
   const computed = view.getComputedStyle(el)
