@@ -99,6 +99,27 @@ describe(
         )
 
         it(
+          'should configure compact radial labels with truncation and overlap hiding',
+          () => {
+            const option = transformDataToChartOption(
+              [{ path: 'A/B/C', val: 10 }],
+              'path',
+              '',
+              'sunburst',
+              { valueProp: 'val', title: 'Org', description: 'Breakdown' },
+            )
+
+            const series = firstSunburstSeries(option)
+            expect(series.label?.rotate).toBe('radial')
+            expect(series.label?.overflow).toBe('truncate')
+            expect(series.label?.minAngle).toBeGreaterThan(0)
+            expect(series.labelLayout).toEqual({ hideOverlap: true })
+            expect(series.center).toEqual(['50%', '56%'])
+            expect(series.radius).toEqual([0, '66%'])
+          },
+        )
+
+        it(
           'should propagate rowIndex and filePath to single leaf nodes',
           () => {
             const data = [

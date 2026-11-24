@@ -326,6 +326,9 @@ describe(
         const series = mapSeriesList(result)
         expect(series[0]?.roam).toBe('scale')
         expect(series[0]?.label?.show).toBe(true)
+        expect(series[0]?.label?.overflow).toBe('truncate')
+        expect(series[0]?.labelLayout).toEqual({ hideOverlap: true })
+        expect(series[0]?.bottom).toBe(56)
       },
     )
 

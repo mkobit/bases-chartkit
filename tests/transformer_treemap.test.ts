@@ -197,5 +197,33 @@ describe(
         expect(hierarchy[0]?.value).toBeUndefined()
       },
     )
+
+    it(
+      'should wrap leaf labels and offset top when title or description is present',
+      () => {
+        const data = [{ path: 'A/B/Long Leaf Label', val: 10 }]
+        const withSubtitle = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          { title: 'Headcount', description: 'By department' },
+        )
+        const withoutTitle = transformDataToChartOption(
+          data,
+          'path',
+          'val',
+          'treemap',
+          {},
+        )
+
+        const s1 = treemapSeriesList(withSubtitle)[0]
+        const s2 = treemapSeriesList(withoutTitle)[0]
+        expect(s1?.label?.overflow).toBe('break')
+        expect(s1?.upperLabel?.overflow).toBe('truncate')
+        expect(s1?.top).toBe(56)
+        expect(s2?.top).toBe(16)
+      },
+    )
   },
 )

@@ -21,7 +21,7 @@ export function createTreemapChartOption(
   // per node. A per-node legend would need real engineering (explicit
   // legend.data + matching itemStyle.color per root branch) beyond what
   // this shared options plumbing provides.
-  _options?: TreemapTransformerOptions,
+  options?: TreemapTransformerOptions,
 ): EChartsOption {
   const hierarchyData = buildHierarchy(
     data,
@@ -29,12 +29,21 @@ export function createTreemapChartOption(
     valueProp,
   )
 
+  const hasTitle = Boolean(options?.title)
+  const hasSubtitle = Boolean(options?.description)
+  const top = hasSubtitle ? 56 : hasTitle ? 36 : 16
+
   const seriesItem: TreemapSeriesOption = {
     type: 'treemap',
     data: asTreemapData(hierarchyData),
+    left: '3%',
+    right: '3%',
+    top,
+    bottom: 36,
     roam: false, // Zoom/pan
     breadcrumb: {
       show: true,
+      bottom: 4,
     },
     // Render the whole tree at once and print each non-leaf node's name in a
     // header strip. Without this, ECharts' defaults (upperLabel.show:false,
@@ -44,11 +53,16 @@ export function createTreemapChartOption(
     // legible (a sunburst gets this for free from its concentric rings).
     upperLabel: {
       show: true,
-      height: 24,
+      height: 20,
+      fontSize: 10,
+      overflow: 'truncate',
     },
     label: {
       show: true,
       formatter: '{b}',
+      fontSize: 10,
+      overflow: 'break',
+      padding: [2, 4],
     },
     // Per-depth framing: a gap between sibling tiles exposes the parent tile
     // behind them, so each branch reads as a contained group. Gaps widen toward

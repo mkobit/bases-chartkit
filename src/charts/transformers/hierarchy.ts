@@ -1,6 +1,7 @@
 import type { EChartsOption, SunburstSeriesOption, TreeSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
+import { resolveCircularLayout } from './circular-layout'
 import * as R from 'remeda'
 
 export interface SunburstTransformerOptions extends BaseTransformerOptions {
@@ -154,14 +155,26 @@ export function createSunburstChartOption(
     valueProp,
   )
 
+  const circularLayout = resolveCircularLayout(
+    options ? { ...options, legend: false } : undefined,
+    { defaultRadius: '86%' },
+  )
+
   const seriesItem: SunburstSeriesOption = {
     type: 'sunburst',
     data: asSunburstData(hierarchyData),
     colorBy: 'data',
+    center: circularLayout.center,
     radius: [0,
-      '90%'],
+      circularLayout.radius],
     label: {
       rotate: 'radial',
+      fontSize: 10,
+      minAngle: 10,
+      overflow: 'truncate',
+    },
+    labelLayout: {
+      hideOverlap: true,
     },
   }
 

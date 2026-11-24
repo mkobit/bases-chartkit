@@ -160,13 +160,17 @@ export function createHeatmapChartOption(
     },
   }
 
+  const hasTitle = Boolean(options?.title)
+  const hasSubtitle = Boolean(options?.description)
+  const isBottomVisualMap = options?.visualMapTop === undefined && (options?.visualMapOrient ?? 'horizontal') === 'horizontal'
+
   const visualMapOption: VisualMapComponentOption = {
     min: finalMinVal,
     max: finalMaxVal,
     calculable: true,
     orient: options?.visualMapOrient ?? 'horizontal',
     left: options?.visualMapLeft ?? 'center',
-    bottom: options?.visualMapTop !== undefined ? undefined : '0%',
+    bottom: options?.visualMapTop !== undefined ? undefined : 4,
     top: options?.visualMapTop,
     type: options?.visualMapType ?? 'continuous',
     formatter: formatCompactVisualMapLabel,
@@ -185,8 +189,8 @@ export function createHeatmapChartOption(
       formatter: asTooltipFormatter((param: HeatmapTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, options?.valueLabel ?? valueProp ?? 'Value')),
     },
     grid: {
-      height: '70%',
-      top: '10%',
+      top: hasSubtitle ? 60 : hasTitle ? 42 : '8%',
+      bottom: isBottomVisualMap ? (xAxisRotate > 0 ? 124 : 108) : 40,
     },
     xAxis: {
       type: 'category',
