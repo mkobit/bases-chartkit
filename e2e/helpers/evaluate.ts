@@ -998,3 +998,61 @@ export async function hoverChartDataPointAndGetTooltip(
   }
   return text
 }
+
+export interface ScatterDatasetRowLike {
+  readonly x: string | number | null
+  readonly y: number | null
+  readonly s: string
+  readonly size?: number
+}
+
+export interface ScatterTarget<TRow extends ScatterDatasetRowLike = ScatterDatasetRowLike> {
+  readonly seriesIndex: number
+  readonly dataIndex: number
+  readonly row: TRow
+}
+
+/**
+ * Picks the dataset row whose normalized `(x, y)` coordinates are farthest from
+ * every other row, along with its `(seriesIndex, dataIndex)` in the ECharts
+ * filter-transformed series. Avoids hovering a point occluded by a neighbor
+ * drawn on top at the same pixel on continuous value axes.
+ */
+export function findIsolatedScatterTarget<TRow extends ScatterDatasetRowLike>(
+  series: readonly { readonly name?: string }[],
+  sourceRows: readonly TRow[],
+): ScatterTarget<TRow> {
+  const numericRows = sourceRows.filter(
+    (row): row is TRow & { readonly x: number, readonly y: number } =>
+      typeof row.x === 'number' && row.y !== null,
+  )
+  if (numericRows.length === 0) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error('expected at least one numeric scatter row')
+  }
+  const xs = numericRows.map(r => r.x)
+  const ys = numericRows.map(r => r.y)
+  const xSpan = Math.max(...xs) - Math.min(...xs) || 1
+  const ySpan = Math.max(...ys) - Math.min(...ys) || 1
+
+  const candidates = numericRows.map((row) => {
+    const minSqDist = numericRows.reduce((best, other) => {
+      if (other === row) {
+        return best
+      }
+      const dx = (row.x - other.x) / xSpan
+      const dy = (row.y - other.y) / ySpan
+      return Math.min(best, dx * dx + dy * dy)
+    }, Number.POSITIVE_INFINITY)
+    return { row, minSqDist }
+  })
+
+  const best = candidates.reduce((acc, cur) => (cur.minSqDist > acc.minSqDist ? cur : acc))
+  const seriesIndex = series.findIndex(s => s.name === best.row.s)
+  if (seriesIndex < 0) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+    throw new Error(`expected a series named ${best.row.s}`)
+  }
+  const dataIndex = sourceRows.filter(r => r.s === best.row.s).indexOf(best.row)
+  return { seriesIndex, dataIndex, row: best.row }
+}

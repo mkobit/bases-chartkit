@@ -128,3 +128,43 @@ export function extractRowMetadata(item: unknown, index: number): RowMetadata {
   const filePath = extractFilePath(item)
   return filePath !== undefined ? { rowIndex, filePath } : { rowIndex }
 }
+
+function isPresentValue(val: unknown): boolean {
+  if (val === null || val === undefined) {
+    return false
+  }
+  if (typeof val === 'string') {
+    return val.trim().length > 0
+  }
+  if (isRecord(val) && isRenderableValue(val)) {
+    return safeToString(val).trim().length > 0
+  }
+  return true
+}
+
+export function toFiniteNumber(val: unknown): number | null {
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? val : null
+  }
+  if (typeof val === 'string') {
+    if (val.trim().length === 0) {
+      return null
+    }
+    const num = Number(val)
+    return Number.isFinite(num) ? num : null
+  }
+  if (isRecord(val) && isRenderableValue(val)) {
+    const str = safeToString(val).trim()
+    if (str.length === 0) {
+      return null
+    }
+    const num = Number(str)
+    return Number.isFinite(num) ? num : null
+  }
+  return null
+}
+
+export function isNumericAxisValues(values: readonly unknown[]): boolean {
+  const present: readonly unknown[] = values.filter(isPresentValue)
+  return present.length > 0 && present.every(v => toFiniteNumber(v) !== null)
+}

@@ -1,18 +1,22 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, getSeriesVisualValues, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  findIsolatedScatterTarget,
+  getChartOption,
+  getSeriesVisualValues,
+  hoverChartDataPointAndGetTooltip,
+  type ScatterDatasetRowLike,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface EffectScatterSeriesLike {
   readonly name?: string
 }
 
-interface EffectScatterRow {
-  readonly x: string
-  readonly y: number | null
-  readonly s: string
-}
-
 interface DatasetLike {
-  readonly source?: readonly EffectScatterRow[]
+  readonly source?: readonly ScatterDatasetRowLike[]
 }
 
 test.describe('effect-scatter chart rendering', () => {
@@ -77,16 +81,6 @@ test.describe('effect-scatter chart rendering', () => {
     // final state.
     await waitForVaultIndexed(page)
 
-    // Read AFTER hovering, not before: a live run showed this test flaky
-    // under the "read then hover" ordering even with waitForVaultIndexed in
-    // place. hoverChartDataPointAndGetTooltip's own internal
-    // position-stability poll is the strongest available settling signal --
-    // reading the comparison values immediately after it resolves guarantees
-    // they describe the exact same render the tooltip came from. seriesIndex
-    // 0 and dataIndex 0 are fixed/known ahead of time, so this doesn't need
-    // the resolved continent name/row to start the hover.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
-
     const option = asOptionLike<{
       readonly series: readonly EffectScatterSeriesLike[]
       readonly dataset: readonly DatasetLike[]
@@ -95,26 +89,19 @@ test.describe('effect-scatter chart rendering', () => {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
     }
-    const continent = option.series[0]?.name
-    if (typeof continent !== 'string') {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-      throw new Error('expected effect-scatter series[0] to have a resolved continent name')
-    }
-
-    const sourceRows = option.dataset[0]?.source ?? []
-    const firstContinentRow = sourceRows.find(row => row.s === continent)
-    if (!firstContinentRow || firstContinentRow.y === null) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-      throw new Error(`expected at least one dataset row for continent ${continent}`)
-    }
+    const target = findIsolatedScatterTarget(option.series, option.dataset[0]?.source ?? [])
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: target.seriesIndex,
+      dataIndex: target.dataIndex,
+    })
 
     // Regression coverage for bck-i9b.10: see scatter-chart-rendering.e2e.ts's
     // identical comment (bck-i9b.8) -- effect-scatter.ts's default
     // formatter-less tooltip hit the same object-row labeling gap. A custom
     // formatter now labels each value with its axis name.
-    expect(tooltipText).toContain(continent)
-    expect(tooltipText).toContain(`GDP: ${firstContinentRow.x}`)
-    expect(tooltipText).toContain(`Life Expectancy: ${firstContinentRow.y.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(target.row.s)
+    expect(tooltipText).toContain(`GDP: ${target.row.x}`)
+    expect(tooltipText).toContain(`Life Expectancy: ${target.row.y?.toLocaleString('en-US')}`)
   })
   // Regression test: sizeProp must be normalized into a bounded pixel range
   // (matching scatter.ts's visualMap-based approach), not used directly as a

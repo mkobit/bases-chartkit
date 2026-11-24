@@ -1,19 +1,21 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  findIsolatedScatterTarget,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  type ScatterDatasetRowLike,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface PolarScatterSeriesLike {
   readonly name?: string
 }
 
-interface PolarScatterRow {
-  readonly x: string
-  readonly y: number | null
-  readonly s: string
-  readonly size?: number
-}
-
 interface DatasetLike {
-  readonly source?: readonly PolarScatterRow[]
+  readonly source?: readonly ScatterDatasetRowLike[]
 }
 
 test.describe('polar-scatter chart rendering', () => {
@@ -85,8 +87,6 @@ test.describe('polar-scatter chart rendering', () => {
     // final state.
     await waitForVaultIndexed(page)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
-
     const option = asOptionLike<{
       readonly series: readonly PolarScatterSeriesLike[]
       readonly dataset: readonly DatasetLike[]
@@ -95,25 +95,22 @@ test.describe('polar-scatter chart rendering', () => {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
     }
-    const continent = option.series[0]?.name
-    if (typeof continent !== 'string') {
+    const target = findIsolatedScatterTarget(option.series, option.dataset[0]?.source ?? [])
+    if (target.row.size === undefined) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-      throw new Error('expected polar-scatter series[0] to have a resolved continent name')
+      throw new Error(`expected a resolved size for continent ${target.row.s}`)
     }
-
-    const sourceRows = option.dataset[0]?.source ?? []
-    const firstContinentRow = sourceRows.find(row => row.s === continent)
-    if (!firstContinentRow || firstContinentRow.y === null || firstContinentRow.size === undefined) {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-      throw new Error(`expected at least one dataset row with a resolved size for continent ${continent}`)
-    }
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: target.seriesIndex,
+      dataIndex: target.dataIndex,
+    })
 
     // Regression coverage for bck-i9b.8: see scatter-chart-rendering.e2e.ts's
     // identical comment -- polar-scatter.ts's custom formatter (same
     // approach as scatter.ts) labels each value with its axis/size name.
-    expect(tooltipText).toContain(continent)
-    expect(tooltipText).toContain(`GDP: ${firstContinentRow.x}`)
-    expect(tooltipText).toContain(`Life Expectancy: ${firstContinentRow.y.toLocaleString('en-US')}`)
-    expect(tooltipText).toContain(`Population: ${firstContinentRow.size.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(target.row.s)
+    expect(tooltipText).toContain(`GDP: ${target.row.x}`)
+    expect(tooltipText).toContain(`Life Expectancy: ${target.row.y?.toLocaleString('en-US')}`)
+    expect(tooltipText).toContain(`Population: ${target.row.size.toLocaleString('en-US')}`)
   })
 })

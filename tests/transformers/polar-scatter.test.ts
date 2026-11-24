@@ -16,9 +16,9 @@ function scatterSeriesAt(option: EChartsOption, index: number): ScatterSeriesOpt
 }
 
 // EChartsOption['angleAxis']/['radiusAxis'] are `type`-discriminated unions
-// (only the 'category' member has `.data`) -- polar-scatter.ts always sets
-// angleAxis to 'category' and radiusAxis to 'value', so these check the real
-// discriminant rather than asserting it.
+// (only the 'category' member has `.data`) -- polar-scatter.ts sets angleAxis
+// to 'category' or 'value' depending on the data, and radiusAxis to 'value',
+// so these check the real discriminant rather than asserting it.
 function firstCategoryAngleAxis(option: EChartsOption) {
   const angleAxis = Array.isArray(option.angleAxis) ? option.angleAxis[0] : option.angleAxis
   if (angleAxis?.type !== 'category') {
@@ -155,6 +155,39 @@ describe(
 
         const angleAxis = firstCategoryAngleAxis(option)
         expect(angleAxis.axisLabel?.hideOverlap).toBe(true)
+      },
+    )
+
+    it(
+      'should use value angleAxis with numeric data when angle property is numeric',
+      () => {
+        const numericData: BasesData = [
+          { gdp: 50000,
+            lifeExpectancy: 81.2 },
+          { gdp: 12000,
+            lifeExpectancy: 72.5 },
+        ]
+        const option = createPolarScatterChartOption(
+          numericData,
+          'gdp',
+          'lifeExpectancy',
+        )
+
+        const angleAxis = Array.isArray(option.angleAxis) ? option.angleAxis[0] : option.angleAxis
+        expect(angleAxis?.type).toBe('value')
+        expect(angleAxis !== undefined && 'data' in angleAxis).toBe(false)
+
+        const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+        expect(dataset?.source).toEqual([
+          { x: 50000,
+            y: 81.2,
+            s: 'lifeExpectancy',
+            rowIndex: 0 },
+          { x: 12000,
+            y: 72.5,
+            s: 'lifeExpectancy',
+            rowIndex: 1 },
+        ])
       },
     )
   },

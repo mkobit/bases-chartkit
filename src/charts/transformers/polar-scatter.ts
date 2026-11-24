@@ -1,6 +1,6 @@
 import type { EChartsOption, ScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
+import { extractRowMetadata, getNestedValue, isNumericAxisValues, isRecord, safeToString, toFiniteNumber } from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
@@ -13,7 +13,7 @@ export interface PolarScatterTransformerOptions extends BaseTransformerOptions {
 }
 
 interface ScatterDataPoint {
-  readonly x: string
+  readonly x: string | number | null
   readonly y: number | null
   readonly s: string
   readonly size?: number
@@ -44,9 +44,10 @@ function formatTooltip(param: PolarScatterTooltipParam, xLabel: string, yLabel: 
   }
   const marker = param.marker ?? ''
   const header = param.seriesName ? `${marker}<b>${param.seriesName}</b><br/>` : ''
+  const xText = row.x === null ? '-' : String(row.x)
   const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
   const sizeLine = sizeLabel && row.size !== undefined ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}` : ''
-  return `${header}${xLabel}: ${row.x}<br/>${yLabel}: ${yText}${sizeLine}`
+  return `${header}${xLabel}: ${xText}<br/>${yLabel}: ${yText}${sizeLine}`
 }
 
 function getDimension(dimName: string): number {
@@ -64,6 +65,10 @@ export function createPolarScatterChartOption(
   const sizeProp = options?.sizeProp
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
+
+  const isNumericAngle = isNumericAxisValues(
+    R.map(data, item => getNestedValue(item, xProp)),
+  )
 
   const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
@@ -91,7 +96,9 @@ export function createPolarScatterChartOption(
       const meta = extractRowMetadata(item, index)
 
       return {
-        x: xRaw === undefined || xRaw === null ? 'Unknown' : safeToString(xRaw),
+        x: isNumericAngle
+          ? toFiniteNumber(xRaw)
+          : (xRaw === undefined || xRaw === null ? 'Unknown' : safeToString(xRaw)),
         y: Number.isNaN(yRaw) ? null : yRaw,
         s: seriesProp && sRaw !== undefined && sRaw !== null ? safeToString(sRaw) : yAxisLabel,
         ...(sizeProp ? { size: Number.isNaN(sizeRaw) ? 0 : sizeRaw } : {}),
@@ -101,11 +108,14 @@ export function createPolarScatterChartOption(
     },
   )
 
-  const angleAxisData: readonly string[] = R.pipe(
-    normalizedData,
-    R.map(d => d.x),
-    R.unique(),
-  )
+  const angleAxisData: readonly string[] = isNumericAngle
+    ? []
+    : R.pipe(
+        normalizedData,
+        R.map(d => d.x),
+        R.filter((x): x is string => typeof x === 'string'),
+        R.unique(),
+      )
 
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
@@ -205,8 +215,12 @@ export function createPolarScatterChartOption(
     dataset: [...datasets],
     polar: {},
     angleAxis: {
-      type: 'category',
-      data: [...angleAxisData],
+      ...(isNumericAngle
+        ? { type: 'value' }
+        : {
+            type: 'category',
+            data: [...angleAxisData],
+          }),
       startAngle: 90,
       splitLine: { show: true },
       axisLabel: {

@@ -23,6 +23,11 @@ function firstVisualMap(option: EChartsOption): VisualMapComponentOption {
   return visualMap
 }
 
+function firstDatasetSource(option: EChartsOption): unknown {
+  const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+  return dataset?.source
+}
+
 describe(
   'createScatterChartOption',
   () => {
@@ -59,6 +64,108 @@ describe(
         const visualMap = firstVisualMap(option)
         expect(visualMap).toBeDefined()
         expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
+      },
+    )
+
+    it(
+      'should use value xAxis with numeric data when x property is numeric',
+      () => {
+        const numericData = [
+          { gdp: 50000,
+            lifeExpectancy: 81.2 },
+          { gdp: 12000,
+            lifeExpectancy: 72.5 },
+          { gdp: '35000',
+            lifeExpectancy: 78.9 },
+          { gdp: null,
+            lifeExpectancy: 70.0 },
+        ]
+        const option = createScatterChartOption(
+          numericData,
+          'gdp',
+          'lifeExpectancy',
+        )
+
+        const xAxis = firstXAxis(option)
+        expect(xAxis.type).toBe('value')
+        expect('data' in xAxis).toBe(false)
+        expect(firstDatasetSource(option)).toEqual([
+          { x: 50000,
+            y: 81.2,
+            s: 'lifeExpectancy',
+            rowIndex: 0 },
+          { x: 12000,
+            y: 72.5,
+            s: 'lifeExpectancy',
+            rowIndex: 1 },
+          { x: 35000,
+            y: 78.9,
+            s: 'lifeExpectancy',
+            rowIndex: 2 },
+          { x: null,
+            y: 70.0,
+            s: 'lifeExpectancy',
+            rowIndex: 3 },
+        ])
+      },
+    )
+
+    it(
+      'should use category xAxis when x property is non-numeric or mixed',
+      () => {
+        const mixedData = [
+          { label: 10,
+            value: 5 },
+          { label: 'B',
+            value: 15 },
+        ]
+        const option = createScatterChartOption(
+          mixedData,
+          'label',
+          'value',
+        )
+
+        const xAxis = firstXAxis(option)
+        expect(xAxis.type).toBe('category')
+        if (xAxis.type === 'category') {
+          expect(xAxis.data).toEqual(['10',
+            'B'])
+        }
+      },
+    )
+
+    it(
+      'should use value xAxis for bubble charts with numeric x property',
+      () => {
+        const bubbleData = [
+          { x: 40,
+            y: 80,
+            size: 100 },
+          { x: 10,
+            y: 65,
+            size: 25 },
+        ]
+        const option = createScatterChartOption(
+          bubbleData,
+          'x',
+          'y',
+          { sizeProp: 'size' },
+        )
+
+        expect(firstXAxis(option).type).toBe('value')
+        expect(firstVisualMap(option)).toBeDefined()
+        expect(firstDatasetSource(option)).toEqual([
+          { x: 40,
+            y: 80,
+            s: 'y',
+            size: 100,
+            rowIndex: 0 },
+          { x: 10,
+            y: 65,
+            s: 'y',
+            size: 25,
+            rowIndex: 1 },
+        ])
       },
     )
   },
