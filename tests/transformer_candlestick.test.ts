@@ -262,6 +262,7 @@ describe(
         )
 
         expect(firstCategoryXAxis(option).axisLabel?.interval).toBe('auto')
+        expect(firstCategoryXAxis(option).axisLabel?.rotate).toBe(0)
       },
     )
 

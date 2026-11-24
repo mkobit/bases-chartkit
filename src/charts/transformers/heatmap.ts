@@ -109,7 +109,7 @@ export function createHeatmapChartOption(
   const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
     xAxisData.length,
     isCompact,
-    options?.xAxisLabelRotate,
+    options?.xAxisLabelRotate ?? 0,
     false,
   )
 

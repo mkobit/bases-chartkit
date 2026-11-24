@@ -348,6 +348,7 @@ describe(
         const xAxis = firstCategoryXAxis(option)
 
         expect(xAxis.axisLabel?.interval).toBe('auto')
+        expect(xAxis.axisLabel?.rotate).toBe(0)
       },
     )
 
