@@ -1,5 +1,13 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, getSeriesDataCount, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  getSeriesDataCount,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface CandlestickRow {
   readonly x: string
@@ -43,28 +51,38 @@ test.describe('candlestick chart rendering', () => {
   // ECharts fell back to showing just one. Fixed by declaring `encode.
   // tooltip` explicitly on the series (see candlestick.ts), bypassing that
   // detection path entirely.
-  test('hovering the last candle shows its date and OHLC values in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'candlestick/Basic.base', viewName: 'AAPL stock analysis' })
+  test('hovering the last candle shows its date and OHLC values in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'candlestick/Basic.base', viewName: 'AAPL stock analysis' },
+    )
 
     // series[0] uses datasetIndex rather than an inline `data` array, so
     // dataset readiness (not series[0].data) is the real signal here.
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds a non-empty
@@ -73,7 +91,9 @@ test.describe('candlestick chart rendering', () => {
     // all observe the same, final state.
     await waitForVaultIndexed(page)
 
-    const option = asOptionLike<{ readonly dataset: readonly DatasetLike[] }>(await getChartOption(page))
+    const option = asOptionLike<{ readonly dataset: readonly DatasetLike[] }>(
+      await getChartOption(page),
+    )
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -91,7 +111,10 @@ test.describe('candlestick chart rendering', () => {
       throw new Error('expected at least one candlestick row inside the dataZoom window')
     }
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: filteredCount - 1 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: filteredCount - 1,
+    })
 
     // Regression coverage for bck-i9b.8: candlestick's default
     // (formatter-less) tooltip hit the same object-row labeling gap as
@@ -119,26 +142,36 @@ test.describe('candlestick chart rendering', () => {
   // Date.format("MMM DD, YYYY"), so Bases pre-formats the raw ISO Date and the
   // candlestick's category axis plots the "Mon DD, YYYY" string. A raw ISO date
   // or 'Unknown' here would mean the formula.* id never flowed through.
-  test('the formula variant plots Bases-formula-formatted dates on the x-axis', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'candlestick/Formula.base', viewName: 'AAPL stock analysis (formatted dates)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the formula variant plots Bases-formula-formatted dates on the x-axis', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'candlestick/Formula.base', viewName: 'AAPL stock analysis (formatted dates)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     await waitForVaultIndexed(page)
 

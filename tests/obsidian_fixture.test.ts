@@ -35,45 +35,53 @@ function createMockCdpServer(options?: MockServerOptions) {
     websocket: {
       message(ws, raw) {
         const payload = typeof raw === 'string' ? raw : ''
-        const parsed: { readonly id?: number, readonly method?: string } = JSON.parse(payload)
+        const parsed: { readonly id?: number; readonly method?: string } = JSON.parse(payload)
 
         if (parsed.method === 'Runtime.evaluate') {
           if (options?.evaluateError !== undefined) {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                exceptionDetails: {
-                  text: options.evaluateError,
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: {
+                  exceptionDetails: {
+                    text: options.evaluateError,
+                  },
                 },
-              },
-            }))
+              }),
+            )
             return
           }
-          ws.send(JSON.stringify({
-            id: parsed.id,
-            result: {
+          ws.send(
+            JSON.stringify({
+              id: parsed.id,
               result: {
-                value: options?.evaluateValue ?? true,
+                result: {
+                  value: options?.evaluateValue ?? true,
+                },
               },
-            },
-          }))
+            }),
+          )
           return
         }
 
         if (parsed.method === 'Page.captureScreenshot') {
-          ws.send(JSON.stringify({
-            id: parsed.id,
-            result: {
-              data: Buffer.from('fake-screenshot-data').toString('base64'),
-            },
-          }))
+          ws.send(
+            JSON.stringify({
+              id: parsed.id,
+              result: {
+                data: Buffer.from('fake-screenshot-data').toString('base64'),
+              },
+            }),
+          )
           return
         }
 
-        ws.send(JSON.stringify({
-          id: parsed.id,
-          result: {},
-        }))
+        ws.send(
+          JSON.stringify({
+            id: parsed.id,
+            result: {},
+          }),
+        )
       },
     },
   })
@@ -85,15 +93,21 @@ describe('Chrome DevTools Protocol port validation', () => {
   })
 
   test('throws informative error when OBSIDIAN_CDP_PORT is whitespace', () => {
-    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: '   ' })).toThrow('OBSIDIAN_CDP_PORT environment variable is missing')
+    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: '   ' })).toThrow(
+      'OBSIDIAN_CDP_PORT environment variable is missing',
+    )
   })
 
   test('throws informative error when OBSIDIAN_CDP_PORT is not a number', () => {
-    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: 'invalid-port' })).toThrow('OBSIDIAN_CDP_PORT environment variable is invalid')
+    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: 'invalid-port' })).toThrow(
+      'OBSIDIAN_CDP_PORT environment variable is invalid',
+    )
   })
 
   test('throws informative error when OBSIDIAN_CDP_PORT is out of range', () => {
-    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: '70000' })).toThrow('OBSIDIAN_CDP_PORT environment variable is invalid')
+    expect(() => getCdpPort({ OBSIDIAN_CDP_PORT: '70000' })).toThrow(
+      'OBSIDIAN_CDP_PORT environment variable is invalid',
+    )
   })
 
   test('returns numeric port when OBSIDIAN_CDP_PORT is valid', () => {
@@ -104,7 +118,9 @@ describe('Chrome DevTools Protocol port validation', () => {
 describe('Test title sanitization', () => {
   test('converts test title to lowercase kebab-case for screenshots', () => {
     const rawTitle = 'Hovering The First Point Shows Coordinates in Tooltip!'
-    expect(sanitizeTestTitle(rawTitle)).toBe('hovering-the-first-point-shows-coordinates-in-tooltip')
+    expect(sanitizeTestTitle(rawTitle)).toBe(
+      'hovering-the-first-point-shows-coordinates-in-tooltip',
+    )
   })
 
   test('trims special characters and consecutive hyphens', () => {
@@ -120,13 +136,15 @@ describe('Obsidian page object methods', () => {
     const page = createObsidianPage(client)
 
     try {
-      const result = await page.evaluate((args: { readonly message: string }) => {
-        return args.message
-      }, { message: 'computed-result' })
+      const result = await page.evaluate(
+        (args: { readonly message: string }) => {
+          return args.message
+        },
+        { message: 'computed-result' },
+      )
 
       expect(result).toBe('computed-result')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -140,8 +158,7 @@ describe('Obsidian page object methods', () => {
     try {
       const result = await page.evaluate<number>('100 + 23')
       expect(result).toBe(123)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -154,8 +171,7 @@ describe('Obsidian page object methods', () => {
 
     try {
       await page.mouse.move(30, 60, { steps: 3 })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -169,8 +185,7 @@ describe('Obsidian page object methods', () => {
     try {
       await page.keyboard.press('Escape')
       await page.keyboard.press('a')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -184,8 +199,7 @@ describe('Obsidian page object methods', () => {
     try {
       const buffer = await page.screenshot({ format: 'png' })
       expect(buffer.toString()).toBe('fake-screenshot-data')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -198,8 +212,7 @@ describe('Obsidian page object methods', () => {
 
     try {
       await page.waitForFunction(() => true, { timeout: 500 })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -214,15 +227,13 @@ describe('Obsidian page object methods', () => {
       let failureError: Error | null = null
       try {
         await page.waitForFunction(() => false, { timeout: 100 })
-      }
-      catch (error: unknown) {
+      } catch (error: unknown) {
         if (error instanceof Error) {
           failureError = error
         }
       }
       expect(failureError?.message).toContain('waitForFunction timed out after 100ms')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -240,8 +251,7 @@ describe('Locator operations and brand detection', () => {
       expect(isLocator(locator)).toBe(true)
       expect(isLocator(null)).toBe(false)
       expect(isLocator({})).toBe(false)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -256,8 +266,7 @@ describe('Locator operations and brand detection', () => {
       const locator = page.locator('.chart-bar')
       const count = await locator.count()
       expect(count).toBe(3)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -273,8 +282,7 @@ describe('Locator operations and brand detection', () => {
       expect(isLocator(firstLocator)).toBe(true)
       const count = await firstLocator.count()
       expect(count).toBe(1)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -288,8 +296,7 @@ describe('Locator operations and brand detection', () => {
     try {
       const button = page.locator('.clickable-icon')
       await button.click()
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -304,8 +311,7 @@ describe('Locator operations and brand detection', () => {
       const notice = page.locator('.notice', { hasText: 'success' })
       const visible = await notice.isVisible()
       expect(visible).toBe(true)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -321,8 +327,7 @@ describe('Custom expect matchers for locators', () => {
     try {
       const locator = page.locator('.item')
       await fixtureExpect(locator).toHaveCount(2)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -336,8 +341,7 @@ describe('Custom expect matchers for locators', () => {
     try {
       const locator = page.locator('.item')
       await fixtureExpect(locator).not.toHaveCount(2)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -351,8 +355,7 @@ describe('Custom expect matchers for locators', () => {
     try {
       const locator = page.locator('.notice')
       await fixtureExpect(locator).toBeVisible({ timeout: 500 })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -366,8 +369,7 @@ describe('Custom expect matchers for locators', () => {
     try {
       const locator = page.locator('.notice')
       await fixtureExpect(locator).not.toBeVisible({ timeout: 200 })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -382,8 +384,7 @@ describe('Workspace reset and failure screenshots', () => {
 
     try {
       await resetWorkspace(page)
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -398,13 +399,19 @@ describe('Workspace reset and failure screenshots', () => {
     try {
       await captureFailureScreenshot(page, title)
 
-      const expectedPath = path.resolve(process.cwd(), 'test-results', 'sample-failure-test-failure.png')
-      const fileExists = await fs.access(expectedPath).then(() => true).catch(() => false)
+      const expectedPath = path.resolve(
+        process.cwd(),
+        'test-results',
+        'sample-failure-test-failure.png',
+      )
+      const fileExists = await fs
+        .access(expectedPath)
+        .then(() => true)
+        .catch(() => false)
       expect(fileExists).toBe(true)
 
       await fs.rm(expectedPath, { force: true })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -418,13 +425,16 @@ describe('evaluateObsidian wrapper', () => {
     const page = createObsidianPage(client)
 
     try {
-      const result = await evaluateObsidian(page, (_app, args: { readonly key: string }) => {
-        return args.key
-      }, { key: 'test-value' })
+      const result = await evaluateObsidian(
+        page,
+        (_app, args: { readonly key: string }) => {
+          return args.key
+        },
+        { key: 'test-value' },
+      )
 
       expect(result).toBe('success-explicit')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
     }
@@ -436,13 +446,15 @@ describe('evaluateObsidian wrapper', () => {
     setCdpClientForTesting(client)
 
     try {
-      const result = await evaluateObsidian((_app, args: { readonly message: string }) => {
-        return args.message
-      }, { message: 'hello-obsidian' })
+      const result = await evaluateObsidian(
+        (_app, args: { readonly message: string }) => {
+          return args.message
+        },
+        { message: 'hello-obsidian' },
+      )
 
       expect(result).toBe('success-implicit')
-    }
-    finally {
+    } finally {
       setCdpClientForTesting(null)
       await client.close()
       await server.stop(true)
@@ -481,8 +493,7 @@ describe('Fixture test bridge modifiers and constants', () => {
 
     try {
       await closeActiveCdpConnection()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })

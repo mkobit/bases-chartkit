@@ -1,49 +1,49 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     assignees:
-      - "mkobit"
+      - 'mkobit'
     open-pull-requests-limit: 10
     cooldown:
       default-days: 21
     groups:
       github-actions:
         patterns:
-          - "*"
-  - package-ecosystem: "bun"
-    directory: "/"
+          - '*'
+  - package-ecosystem: 'bun'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     assignees:
-      - "mkobit"
+      - 'mkobit'
     open-pull-requests-limit: 10
     ignore:
-      - dependency-name: "obsidian"
+      - dependency-name: 'obsidian'
     cooldown:
       default-days: 21
     groups:
       typescript:
         patterns:
-          - "typescript"
+          - 'typescript'
       linters:
         patterns:
-          - "eslint*"
-          - "@eslint*"
-          - "@stylistic*"
-          - "typescript-eslint*"
-          - "@typescript-eslint*"
-          - "*eslint*"
+          - 'eslint*'
+          - '@eslint*'
+          - '@stylistic*'
+          - 'typescript-eslint*'
+          - '@typescript-eslint*'
+          - '*eslint*'
       bun-ecosystem:
         patterns:
-          - "*"
+          - '*'
         exclude-patterns:
-          - "typescript"
-          - "eslint*"
-          - "@eslint*"
-          - "@stylistic*"
-          - "typescript-eslint*"
-          - "@typescript-eslint*"
-          - "*eslint*"
+          - 'typescript'
+          - 'eslint*'
+          - '@eslint*'
+          - '@stylistic*'
+          - 'typescript-eslint*'
+          - '@typescript-eslint*'
+          - '*eslint*'

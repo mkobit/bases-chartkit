@@ -1,8 +1,14 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface LinesOptionLike {
-  readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: readonly unknown[] }>
+  readonly series?: ReadonlyArray<{ readonly name?: string; readonly data?: readonly unknown[] }>
 }
 
 test.describe('lines chart rendering', () => {
@@ -16,26 +22,34 @@ test.describe('lines chart rendering', () => {
   // strokeContainThreshold)` -- `strokeContainThreshold` defaults to 5px, so
   // even lineStyle.width: 2 (transformers/lines.ts) gets a 5px-wide hit band
   // well clear of a single-pixel hover point.
-  test('hovering a route line shows its route type in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'lines/Basic.base', viewName: 'Route lines' })
-
-    await expect.poll(
-      async () => {
-        const opt = asOptionLike<LinesOptionLike>(await getChartOption(page))
-        return opt?.series?.[0]?.data?.length ?? 0
+  test('hovering a route line shows its route type in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'lines/Basic.base', viewName: 'Route lines' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const opt = asOptionLike<LinesOptionLike>(await getChartOption(page))
+          return opt?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // transformers/lines.ts groups rows by the derived RouteType
     // (Outbound/Return) into separate series via Object.keys(groupBy(...)),
@@ -52,7 +66,10 @@ test.describe('lines chart rendering', () => {
     // getItemModel) whenever a key isn't found locally -- so the tooltip
     // ends up showing the series-level name (the route type), not any
     // per-row coordinate.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain(seriesName)
   })

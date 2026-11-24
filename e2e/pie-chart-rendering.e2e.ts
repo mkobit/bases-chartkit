@@ -1,5 +1,9 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  evaluateObsidian,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('pie chart rendering', () => {
   // Regression coverage for bck-44j, extending the bar/radar hover-tooltip
@@ -8,23 +12,30 @@ test.describe('pie chart rendering', () => {
   // have distinct Region values, so grouping is a no-op and the alphabetical
   // note-filename order (Sales-Region-0.md first, same convention as
   // bar/radar) survives into dataIndex order.
-  test('hovering the first slice shows its region name and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'pie/Basic.base', viewName: 'Sales by region (pie)' })
+  test('hovering the first slice shows its region name and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'pie/Basic.base', viewName: 'Sales by region (pie)' },
+    )
 
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
 
     // Sales-Region-0.md is { Region: "Search Engine", Revenue: 24986 }. pie.ts
     // uses a custom tooltip formatter (bck-i9b.8: the default formatter-less
@@ -32,7 +43,10 @@ test.describe('pie chart rendering', () => {
     // comment on the same underlying ECharts limitation -- and pie's raw
     // value alone doesn't convey share-of-whole), so the tooltip is
     // "name: value (percent%)" with no separate series-name header line.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain('Search Engine')
     expect(tooltipText).toContain('24,986')

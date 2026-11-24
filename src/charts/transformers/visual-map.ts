@@ -1,10 +1,9 @@
 import { formatValue } from './formatters'
 
-const compactNumberFormatter = new Intl.NumberFormat(
-  undefined,
-  { notation: 'compact',
-    maximumFractionDigits: 1 },
-)
+const compactNumberFormatter = new Intl.NumberFormat(undefined, {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
 
 // Abbreviates large numeric visualMap min/max handle labels (e.g. GDP
 // figures like 6994402 -> "7M") so they stay short enough not to overlap
@@ -26,11 +25,10 @@ export function formatPiecewiseVisualMapLabel(
   value2?: unknown,
   valueFormat?: string,
 ): string {
-  const formatBound = (bound: unknown): string => (
+  const formatBound = (bound: unknown): string =>
     valueFormat !== undefined && valueFormat.trim() !== ''
       ? formatValue(bound, valueFormat)
       : formatCompactVisualMapLabel(bound)
-  )
 
   if (value2 === undefined) {
     return formatBound(value)

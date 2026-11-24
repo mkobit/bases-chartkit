@@ -7,11 +7,17 @@ import { t } from '../lang/text'
 
 export class TreeChartView extends BaseChartView {
   readonly type = 'tree-chart'
-  getViewType(): string { return 'tree-chart' }
+  getViewType(): string {
+    return 'tree-chart'
+  }
 
-  getDisplayText(): string { return 'Tree' }
+  getDisplayText(): string {
+    return 'Tree'
+  }
 
-  getIcon(): string { return 'network' }
+  getIcon(): string {
+    return 'network'
+  }
 
   static getViewOptions(): BasesOptions[] {
     return [
@@ -21,9 +27,13 @@ export class TreeChartView extends BaseChartView {
         key: BaseChartView.X_AXIS_PROP_KEY,
         placeholder: t('views.tree.path_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((o) => {
+      ...BaseChartView.getCommonViewOptions().filter(o => {
         const key = o.key
-        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+        return (
+          key !== BaseChartView.X_AXIS_PROP_KEY &&
+          key !== BaseChartView.Y_AXIS_PROP_KEY &&
+          key !== BaseChartView.SERIES_PROP_KEY
+        )
       }),
     ]
   }

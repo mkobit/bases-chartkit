@@ -55,18 +55,8 @@ export function createMapChartOption(
   const mapData: ReadonlyArray<MapRegionValue> = R.pipe(
     data,
     R.map((item): MapRegionValue => {
-      const nameRaw = regionProp
-        ? getNestedValue(
-            item,
-            regionProp,
-          )
-        : undefined
-      const valRaw = valueProp
-        ? getNestedValue(
-            item,
-            valueProp,
-          )
-        : undefined
+      const nameRaw = regionProp ? getNestedValue(item, regionProp) : undefined
+      const valRaw = valueProp ? getNestedValue(item, valueProp) : undefined
 
       const valNum = valRaw ? Number(valRaw) : 0
       return {
@@ -77,18 +67,16 @@ export function createMapChartOption(
     R.filter(item => item.name !== ''),
   )
 
-  const values: readonly number[] = R.map(
-    mapData,
-    d => d.value,
-  )
+  const values: readonly number[] = R.map(mapData, d => d.value)
   const dataMin = values.length > 0 ? Math.min(...values) : 0
   const dataMax = values.length > 0 ? Math.max(...values) : 100
 
   const isVertical = options?.visualMapOrient === 'vertical'
   const isPiecewise = options?.visualMapType === 'piecewise'
-  const inRangeColor = options?.visualMapColor && options.visualMapColor.length > 0
-    ? { color: [...options.visualMapColor] }
-    : undefined
+  const inRangeColor =
+    options?.visualMapColor && options.visualMapColor.length > 0
+      ? { color: [...options.visualMapColor] }
+      : undefined
 
   const valueFormat = options?.valueFormat
 
@@ -103,7 +91,8 @@ export function createMapChartOption(
         bottom: options?.visualMapTop !== undefined || isVertical ? undefined : '5%',
         // Omit `text: ['High', 'Low']` on piecewise visualMaps because ECharts
         // treats `endsText` as suppressing `showLabel` and hides piece ranges.
-        formatter: (value: unknown, value2?: unknown) => formatPiecewiseVisualMapLabel(value, value2, valueFormat),
+        formatter: (value: unknown, value2?: unknown) =>
+          formatPiecewiseVisualMapLabel(value, value2, valueFormat),
         inRange: inRangeColor,
         ...(options?.visualMapSplitNumber !== undefined
           ? { splitNumber: options.visualMapSplitNumber }
@@ -121,8 +110,7 @@ export function createMapChartOption(
         left: options?.visualMapLeft ?? (isVertical ? 'left' : 'center'),
         top: options?.visualMapTop ?? (isVertical ? 'center' : undefined),
         bottom: options?.visualMapTop !== undefined || isVertical ? undefined : '5%',
-        text: ['High',
-          'Low'],
+        text: ['High', 'Low'],
         formatter: formatCompactVisualMapLabel,
         inRange: inRangeColor,
       }
@@ -155,9 +143,8 @@ export function createMapChartOption(
     },
   }
 
-  const mapOptions = options?.xAxisLabel && !options.title
-    ? { ...options, title: options.xAxisLabel }
-    : options
+  const mapOptions =
+    options?.xAxisLabel && !options.title ? { ...options, title: options.xAxisLabel } : options
 
   const titleOpt = getTitleOption(mapOptions)
 
@@ -169,7 +156,9 @@ export function createMapChartOption(
       transitionDuration: 0.2,
       ...(valueFormat !== undefined
         ? {
-            formatter: asTooltipFormatter((param: MapTooltipParam) => formatMapTooltip(param, valueFormat)),
+            formatter: asTooltipFormatter((param: MapTooltipParam) =>
+              formatMapTooltip(param, valueFormat),
+            ),
           }
         : {}),
     },

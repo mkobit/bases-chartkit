@@ -12,12 +12,7 @@ export type BasesDatasetEntryLike = {
   readonly getValue: (propertyId: BasesPropertyId) => unknown
 }
 
-export type BasesDatasetValue
-  = | string
-    | number
-    | boolean
-    | null
-    | readonly BasesDatasetValue[]
+export type BasesDatasetValue = string | number | boolean | null | readonly BasesDatasetValue[]
 
 export type BasesDatasetRow = {
   readonly _file: string
@@ -29,9 +24,9 @@ export interface BasesDataset {
   readonly source: readonly BasesDatasetRow[]
 }
 
-export type InjectBasesDatasetResult
-  = | { readonly ok: true, readonly option: EChartsOption }
-    | { readonly ok: false, readonly error: string }
+export type InjectBasesDatasetResult =
+  | { readonly ok: true; readonly option: EChartsOption }
+  | { readonly ok: false; readonly error: string }
 
 const FORBIDDEN_BASES_DATASET_KEYS = [
   'source',
@@ -49,28 +44,32 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function getValueStaticType(val: Record<string, unknown>): string | undefined {
   const ctor: unknown = val.constructor
-  return (typeof ctor === 'function' || isRecord(ctor)) && 'type' in ctor && typeof ctor.type === 'string'
+  return (typeof ctor === 'function' || isRecord(ctor)) &&
+    'type' in ctor &&
+    typeof ctor.type === 'string'
     ? ctor.type
     : undefined
 }
 
 function isErrorValueLike(val: Record<string, unknown>): boolean {
-  return val.constructor.name === 'ErrorValue'
-    || getValueStaticType(val) === 'error'
-    || ('error' in val && val.error !== undefined)
+  return (
+    val.constructor.name === 'ErrorValue' ||
+    getValueStaticType(val) === 'error' ||
+    ('error' in val && val.error !== undefined)
+  )
 }
 
 function isNullValueLike(val: Record<string, unknown>): boolean {
   const staticType = getValueStaticType(val)
   return val.constructor.name === 'NullValue' || staticType === 'null'
     ? true
-    : typeof val.toString === 'function'
-      && val.toString() === 'null'
-      && !('data' in val)
-      && !('date' in val)
-      && typeof val.length !== 'function'
-      && staticType !== 'string'
-      && val.constructor.name !== 'StringValue'
+    : typeof val.toString === 'function' &&
+        val.toString() === 'null' &&
+        !('data' in val) &&
+        !('date' in val) &&
+        typeof val.length !== 'function' &&
+        staticType !== 'string' &&
+        val.constructor.name !== 'StringValue'
 }
 
 interface ListValueLike {
@@ -78,28 +77,36 @@ interface ListValueLike {
   readonly get: (index: number) => unknown
 }
 
-function isListValueLike(val: Record<string, unknown>): val is Record<string, unknown> & ListValueLike {
+function isListValueLike(
+  val: Record<string, unknown>,
+): val is Record<string, unknown> & ListValueLike {
   return typeof val.length === 'function' && typeof val.get === 'function'
 }
 
 function isBooleanValueLike(val: Record<string, unknown>): boolean {
-  return val.constructor.name === 'BooleanValue'
-    || getValueStaticType(val) === 'boolean'
-    || typeof val.data === 'boolean'
+  return (
+    val.constructor.name === 'BooleanValue' ||
+    getValueStaticType(val) === 'boolean' ||
+    typeof val.data === 'boolean'
+  )
 }
 
 function isNumberValueLike(val: Record<string, unknown>): boolean {
-  return val.constructor.name === 'NumberValue'
-    || getValueStaticType(val) === 'number'
-    || typeof val.data === 'number'
+  return (
+    val.constructor.name === 'NumberValue' ||
+    getValueStaticType(val) === 'number' ||
+    typeof val.data === 'number'
+  )
 }
 
 function isDateValueLike(val: Record<string, unknown>): boolean {
-  return val.constructor.name === 'DateValue'
-    || val.constructor.name === 'RelativeDateValue'
-    || getValueStaticType(val) === 'date'
-    || typeof val.dateOnly === 'function'
-    || 'date' in val
+  return (
+    val.constructor.name === 'DateValue' ||
+    val.constructor.name === 'RelativeDateValue' ||
+    getValueStaticType(val) === 'date' ||
+    typeof val.dateOnly === 'function' ||
+    'date' in val
+  )
 }
 
 function unwrapNumberString(str: string): number | null {
@@ -118,18 +125,22 @@ export function unwrapBasesValue(val: unknown): BasesDatasetValue {
   return val === null || val === undefined
     ? null
     : !isRecord(val)
-        ? (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean' ? val : null)
-        : isErrorValueLike(val) || isNullValueLike(val)
-          ? null
-          : isListValueLike(val)
-            ? R.range(0, val.length()).map(index => unwrapBasesValue(val.get(index)))
-            : isBooleanValueLike(val)
-              ? (typeof val.isTruthy === 'function' ? val.isTruthy() : Boolean(val.data))
-              : isNumberValueLike(val)
-                ? unwrapNumberString(val.toString())
-                : isDateValueLike(val)
-                  ? parseDateToEpochMs(val.toString())
-                  : val.toString()
+      ? typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean'
+        ? val
+        : null
+      : isErrorValueLike(val) || isNullValueLike(val)
+        ? null
+        : isListValueLike(val)
+          ? R.range(0, val.length()).map(index => unwrapBasesValue(val.get(index)))
+          : isBooleanValueLike(val)
+            ? typeof val.isTruthy === 'function'
+              ? val.isTruthy()
+              : Boolean(val.data)
+            : isNumberValueLike(val)
+              ? unwrapNumberString(val.toString())
+              : isDateValueLike(val)
+                ? parseDateToEpochMs(val.toString())
+                : val.toString()
 }
 
 /**
@@ -140,7 +151,7 @@ export function serializeBasesDataset(
   properties: readonly BasesPropertyId[],
 ): BasesDataset {
   const dimensions: readonly string[] = [...properties]
-  const source: readonly BasesDatasetRow[] = entries.map((entry) => {
+  const source: readonly BasesDatasetRow[] = entries.map(entry => {
     const propEntries: readonly (readonly [string, BasesDatasetValue])[] = properties.map(
       propId => [propId, unwrapBasesValue(entry.getValue(propId))] as const,
     )
@@ -199,7 +210,9 @@ function validateAndInjectEntries(
             option: {
               ...userOption,
               dataset: isArrayDataset
-                ? entries.map(entry => (entry.id === 'bases' ? buildInjectedDatasetEntry(entry, basesDataset) : entry))
+                ? entries.map(entry =>
+                    entry.id === 'bases' ? buildInjectedDatasetEntry(entry, basesDataset) : entry,
+                  )
                 : buildInjectedDatasetEntry(basesEntry, basesDataset),
             },
           }

@@ -44,21 +44,27 @@ interface PictorialBarTooltipRow {
   readonly row: PictorialBarDataPoint
 }
 
-export function formatTooltip(params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>): string {
+export function formatTooltip(
+  params: PictorialBarTooltipParam | ReadonlyArray<PictorialBarTooltipParam>,
+): string {
   const list: ReadonlyArray<PictorialBarTooltipParam> = Array.isArray(params) ? params : [params]
   const validRows: ReadonlyArray<PictorialBarTooltipRow> = list
-    .map((p): PictorialBarTooltipRow | null => (isPictorialBarDataPoint(p.value) ? { param: p, row: p.value } : null))
+    .map((p): PictorialBarTooltipRow | null =>
+      isPictorialBarDataPoint(p.value) ? { param: p, row: p.value } : null,
+    )
     .filter((r): r is PictorialBarTooltipRow => r !== null)
   const first = validRows[0]
   if (!first) {
     return ''
   }
-  const lines = validRows.map(({ param, row }) => {
-    const marker = param.marker ?? ''
-    const seriesLabel = param.seriesName || row.s
-    const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
-    return `${marker}${seriesLabel ? `${seriesLabel}: ` : ''}${yText}`
-  }).join('<br/>')
+  const lines = validRows
+    .map(({ param, row }) => {
+      const marker = param.marker ?? ''
+      const seriesLabel = param.seriesName || row.s
+      const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+      return `${marker}${seriesLabel ? `${seriesLabel}: ` : ''}${yText}`
+    })
+    .join('<br/>')
   return `<b>${first.row.x}</b><br/>${lines}`
 }
 
@@ -79,26 +85,18 @@ export function createPictorialBarChartOption(
   const normalizedData: ReadonlyArray<PictorialBarDataPoint> = R.map(
     data,
     (item, index): PictorialBarDataPoint => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yValRaw = Number(getNestedValue(
-        item,
-        yProp,
-      ))
-      const sValRaw = seriesProp
-        ? getNestedValue(
-            item,
-            seriesProp,
-          )
-        : undefined
+      const xValRaw = getNestedValue(item, xProp)
+      const yValRaw = Number(getNestedValue(item, yProp))
+      const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
       const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        s:
+          seriesProp && sValRaw !== undefined && sValRaw !== null
+            ? safeToString(sValRaw)
+            : yAxisLabel,
         rowIndex: meta.rowIndex,
         ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
@@ -117,16 +115,10 @@ export function createPictorialBarChartOption(
     interval: categoryAxisInterval,
     rotate: categoryAxisRotate,
     hideOverlap: categoryAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    xAxisData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    flipAxis,
-    {
-      labels: xAxisData,
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(xAxisData.length, isCompact, options?.xAxisLabelRotate, flipAxis, {
+    labels: xAxisData,
+    containerWidth,
+  })
 
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
@@ -143,57 +135,53 @@ export function createPictorialBarChartOption(
     ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
-          config: { dimension: 's',
-            value: name },
+          config: { dimension: 's', value: name },
         },
       }))
     : []
 
-  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
-    ...filterDatasets]
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset, ...filterDatasets]
 
-  const seriesOptions: ReadonlyArray<PictorialBarSeriesOption> = seriesNames.map((name, idx): PictorialBarSeriesOption => {
-    const datasetIndex = seriesProp ? idx + 1 : 0
+  const seriesOptions: ReadonlyArray<PictorialBarSeriesOption> = seriesNames.map(
+    (name, idx): PictorialBarSeriesOption => {
+      const datasetIndex = seriesProp ? idx + 1 : 0
 
-    // Handle string booleans from BasesOptions dropdowns. Default to a repeating
-    // pictogram when unset -- a single non-repeating symbol is stretched to
-    // fill the entire bar's bounding box by ECharts, which for most symbols
-    // (especially 'rect') is visually indistinguishable from a plain bar.
-    const rawRepeat = options?.symbolRepeat
-    const symbolRepeat = rawRepeat === undefined || rawRepeat === true || rawRepeat === 'true'
-      ? true
-      : rawRepeat === false || rawRepeat === 'false'
-        ? false
-        : rawRepeat
+      // Handle string booleans from BasesOptions dropdowns. Default to a repeating
+      // pictogram when unset -- a single non-repeating symbol is stretched to
+      // fill the entire bar's bounding box by ECharts, which for most symbols
+      // (especially 'rect') is visually indistinguishable from a plain bar.
+      const rawRepeat = options?.symbolRepeat
+      const symbolRepeat =
+        rawRepeat === undefined || rawRepeat === true || rawRepeat === 'true'
+          ? true
+          : rawRepeat === false || rawRepeat === 'false'
+            ? false
+            : rawRepeat
 
-    // Symbol clipping ensures repeated/fixed symbols accurately encode and
-    // visually convey bar values rather than quantizing to integer symbol counts
-    // (where each block is the same size and different values look identical).
-    const symbolClip = options?.symbolClip ?? true
+      // Symbol clipping ensures repeated/fixed symbols accurately encode and
+      // visually convey bar values rather than quantizing to integer symbol counts
+      // (where each block is the same size and different values look identical).
+      const symbolClip = options?.symbolClip ?? true
 
-    return {
-      name: name,
-      type: 'pictorialBar',
-      datasetIndex: datasetIndex,
-      ...(!seriesProp ? { colorBy: 'data' as const } : {}),
-      // If flipped: X-Axis is Value (y data), Y-Axis is Category (x data)
-      encode: flipAxis
-        ? { x: 'y',
-            y: 'x',
-            tooltip: ['x',
-              'y',
-              's'] }
-        : { x: 'x',
-            y: 'y',
-            tooltip: ['x',
-              'y',
-              's'] },
-      symbol: options?.symbol || 'circle',
-      symbolRepeat: symbolRepeat,
-      symbolClip: symbolClip,
-      symbolSize: options?.symbolSize !== undefined && options?.symbolSize !== '' ? options.symbolSize : '100%',
-    }
-  })
+      return {
+        name: name,
+        type: 'pictorialBar',
+        datasetIndex: datasetIndex,
+        ...(!seriesProp ? { colorBy: 'data' as const } : {}),
+        // If flipped: X-Axis is Value (y data), Y-Axis is Category (x data)
+        encode: flipAxis
+          ? { x: 'y', y: 'x', tooltip: ['x', 'y', 's'] }
+          : { x: 'x', y: 'y', tooltip: ['x', 'y', 's'] },
+        symbol: options?.symbol || 'circle',
+        symbolRepeat: symbolRepeat,
+        symbolClip: symbolClip,
+        symbolSize:
+          options?.symbolSize !== undefined && options?.symbolSize !== ''
+            ? options.symbolSize
+            : '100%',
+      }
+    },
+  )
 
   const opt: EChartsOption = {
     dataset: [...datasets],

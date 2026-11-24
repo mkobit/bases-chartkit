@@ -15,21 +15,14 @@ export class StackedBarChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'bar',
-      {
-        ...this.getCommonTransformerOptions(),
-        stack: true,
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'bar', {
+      ...this.getCommonTransformerOptions(),
+      stack: true,
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
-    return [...BaseChartView.getCommonViewOptions(),
-      ...BaseChartView.getAxisViewOptions()]
+    return [...BaseChartView.getCommonViewOptions(), ...BaseChartView.getAxisViewOptions()]
   }
 }

@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface WaterfallSeriesLike {
   readonly name?: string
@@ -22,27 +28,37 @@ test.describe('waterfall chart rendering', () => {
   // rather than assuming, and hover that one. The chart also installs a
   // fully custom tooltip formatter (not the default renderer), producing
   // '<name><br/>Increase: <value>' / '...Decrease: <value>' text.
-  test('hovering a rising step\'s bar shows its step name and increase value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'waterfall/Basic.base', viewName: 'Budget waterfall' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(await getChartOption(page))
-        const increaseSeries = option?.series?.find(s => s.name === 'Increase')
-        return increaseSeries?.data?.length ?? 0
+  test("hovering a rising step's bar shows its step name and increase value in the tooltip", async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'waterfall/Basic.base', viewName: 'Budget waterfall' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          const increaseSeries = option?.series?.find(s => s.name === 'Increase')
+          return increaseSeries?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<{
       readonly series: readonly WaterfallSeriesLike[]
@@ -77,27 +93,37 @@ test.describe('waterfall chart rendering', () => {
   // drawn from zero rather than stacked on the running delta sum. The custom
   // formatter labels them '<step><br/>Total: <value>'. Read which index holds
   // the total live and hover exactly that bar, same as the rising-step test.
-  test('hovering an absolute-total bar shows its step name and total value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'waterfall/Basic.base', viewName: 'Budget waterfall' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(await getChartOption(page))
-        const totalSeries = option?.series?.find(s => s.name === 'Total')
-        return totalSeries?.data?.length ?? 0
+  test('hovering an absolute-total bar shows its step name and total value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'waterfall/Basic.base', viewName: 'Budget waterfall' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          const totalSeries = option?.series?.find(s => s.name === 'Total')
+          return totalSeries?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<{
       readonly series: readonly WaterfallSeriesLike[]
@@ -134,29 +160,41 @@ test.describe('waterfall chart rendering', () => {
   // totalProp through end-to-end (the transformer omits the Total series when
   // no row is flagged), which unit tests can't exercise since they can't feed
   // Bases' Value-wrapped booleans.
-  test('the deltas-only variant renders no Total series when totalProp is unset', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'waterfall/DeltasOnly.base', viewName: 'Budget waterfall (deltas only)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(await getChartOption(page))
-        const increaseSeries = option?.series?.find(s => s.name === 'Increase')
-        return increaseSeries?.data?.length ?? 0
+  test('the deltas-only variant renders no Total series when totalProp is unset', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'waterfall/DeltasOnly.base', viewName: 'Budget waterfall (deltas only)' },
+    )
 
-    const option = asOptionLike<{ readonly series: readonly WaterfallSeriesLike[] }>(await getChartOption(page))
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly WaterfallSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          const increaseSeries = option?.series?.find(s => s.name === 'Increase')
+          return increaseSeries?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
+
+    const option = asOptionLike<{ readonly series: readonly WaterfallSeriesLike[] }>(
+      await getChartOption(page),
+    )
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')

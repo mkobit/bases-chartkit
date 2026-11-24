@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface FunnelDataPointLike {
   readonly name: string
@@ -16,28 +22,40 @@ test.describe('funnel chart rendering', () => {
   // stage (which happens to have the highest Population, but that's this
   // vault's data being coincidentally pre-sorted, not something the test
   // should rely on).
-  test('hovering the top funnel stage shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'funnel/Basic.base', viewName: 'User journey funnel' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly FunnelDataPointLike[] }> }>(await getChartOption(page))
-        return option?.series?.[0]?.data?.[0]?.value ?? 0
+  test('hovering the top funnel stage shows its name and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'funnel/Basic.base', viewName: 'User journey funnel' },
+    )
 
-    const option = asOptionLike<{ readonly series: ReadonlyArray<{ readonly data: readonly FunnelDataPointLike[] }> }>(await getChartOption(page))
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly series?: ReadonlyArray<{ readonly data?: readonly FunnelDataPointLike[] }>
+          }>(await getChartOption(page))
+          return option?.series?.[0]?.data?.[0]?.value ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
+
+    const option = asOptionLike<{
+      readonly series: ReadonlyArray<{ readonly data: readonly FunnelDataPointLike[] }>
+    }>(await getChartOption(page))
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -47,7 +65,10 @@ test.describe('funnel chart rendering', () => {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- see above.
     const topStage = funnelSeries.data[0]!
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain(topStage.name)
     // funnel.ts's tooltip formatter is the literal string '{b} : {c}%' --

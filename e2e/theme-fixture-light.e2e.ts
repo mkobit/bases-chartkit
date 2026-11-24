@@ -7,8 +7,12 @@ test.use({ theme: 'light' })
 
 test.describe('obsidianPage theme fixture', () => {
   test('launches with the light color scheme applied', async ({ obsidianPage: { page } }) => {
-    const isDark = await evaluateObsidian(page, () => document.body.classList.contains('theme-dark'))
-    const isLight = await evaluateObsidian(page, () => document.body.classList.contains('theme-light'))
+    const isDark = await evaluateObsidian(page, () =>
+      document.body.classList.contains('theme-dark'),
+    )
+    const isLight = await evaluateObsidian(page, () =>
+      document.body.classList.contains('theme-light'),
+    )
     expect(isDark).toBe(false)
     expect(isLight).toBe(true)
   })

@@ -29,9 +29,8 @@ function estimateHorizontalLabelOverlap(
   if (!labels || labels.length === 0 || categoryCount <= 1) {
     return false
   }
-  const effectiveWidth = containerWidth !== undefined && containerWidth > 0
-    ? containerWidth
-    : DEFAULT_CONTAINER_WIDTH
+  const effectiveWidth =
+    containerWidth !== undefined && containerWidth > 0 ? containerWidth : DEFAULT_CONTAINER_WIDTH
   const plotWidth = Math.max(effectiveWidth - ESTIMATED_SIDE_CHROME_PX, MIN_ESTIMATED_PLOT_WIDTH_PX)
   const slotWidth = plotWidth / categoryCount
   const maxLabelLength = Math.max(...labels.map(label => label.length))
@@ -49,15 +48,12 @@ export function getAxisLabelOverlapOptions(
   context?: AxisLabelOverlapContext,
 ): AxisLabelOverlapOptions {
   const needsThinning = isCompact || categoryCount > MANY_CATEGORIES_THRESHOLD
-  const labelsOverlap = !flipAxis && estimateHorizontalLabelOverlap(
-    categoryCount,
-    context?.labels,
-    context?.containerWidth,
-  )
+  const labelsOverlap =
+    !flipAxis &&
+    estimateHorizontalLabelOverlap(categoryCount, context?.labels, context?.containerWidth)
   const rotate = explicitRotate ?? ((needsThinning || labelsOverlap) && !flipAxis ? 45 : 0)
-  const interval: 0 | 'auto' = needsThinning || (labelsOverlap && !flipAxis && rotate === 0)
-    ? 'auto'
-    : 0
+  const interval: 0 | 'auto' =
+    needsThinning || (labelsOverlap && !flipAxis && rotate === 0) ? 'auto' : 0
   return {
     interval,
     rotate,

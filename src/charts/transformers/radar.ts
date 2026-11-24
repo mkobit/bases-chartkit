@@ -62,18 +62,8 @@ export function createRadarChartOption(
   options?: RadarTransformerOptions,
 ): EChartsOption {
   return options?.metricProps && options.metricProps.length > 0
-    ? createWideFormatRadarOption(
-        data,
-        indicatorProp,
-        options.metricProps,
-        options,
-      )
-    : createLongFormatRadarOption(
-        data,
-        indicatorProp,
-        valueProp,
-        options,
-      )
+    ? createWideFormatRadarOption(data, indicatorProp, options.metricProps, options)
+    : createLongFormatRadarOption(data, indicatorProp, valueProp, options)
 }
 
 // Wide format: one row per entity with a column per metric (e.g. one row per
@@ -86,37 +76,31 @@ function createWideFormatRadarOption(
   options?: RadarTransformerOptions,
 ): EChartsOption {
   const seriesData: readonly RadarSeriesDatum[] = data.map((item): RadarSeriesDatum => {
-    const nameRaw = getNestedValue(
-      item,
-      nameProp,
-    )
+    const nameRaw = getNestedValue(item, nameProp)
     const name = nameRaw === undefined || nameRaw === null ? 'Unknown' : safeToString(nameRaw)
-    const values: readonly number[] = metricProps.map((prop) => {
-      const val = Number(getNestedValue(
-        item,
-        prop,
-      ))
+    const values: readonly number[] = metricProps.map(prop => {
+      const val = Number(getNestedValue(item, prop))
       return Number.isNaN(val) ? 0 : val
     })
-    return { value: values,
-      name }
+    return { value: values, name }
   })
 
-  const radarIndicators: readonly RadarIndicator[] = metricProps.map((prop, index): RadarIndicator => {
-    // `d.value` is built from this same `metricProps` array above, so it's
-    // always exactly as long -- `?? 0` only satisfies noUncheckedIndexedAccess,
-    // it's not covering a real out-of-range case.
-    const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
-    return { name: options?.metricLabels?.[prop] ?? prop, min, max }
-  })
+  const radarIndicators: readonly RadarIndicator[] = metricProps.map(
+    (prop, index): RadarIndicator => {
+      // `d.value` is built from this same `metricProps` array above, so it's
+      // always exactly as long -- `?? 0` only satisfies noUncheckedIndexedAccess,
+      // it's not covering a real out-of-range case.
+      const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
+      return { name: options?.metricLabels?.[prop] ?? prop, min, max }
+    },
+  )
 
   const areaStyle = getAreaStyleOption(options)
   const circularLayout = resolveCircularLayout(options)
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
-    data: seriesData.map(d => ({ name: d.name,
-      value: [...d.value] })),
+    data: seriesData.map(d => ({ name: d.name, value: [...d.value] })),
     ...(areaStyle !== undefined ? { areaStyle } : {}),
   }
 
@@ -154,32 +138,23 @@ function createLongFormatRadarOption(
 
   const indicatorsList: readonly string[] = R.pipe(
     data,
-    R.map((item) => {
-      const valRaw = getNestedValue(
-        item,
-        indicatorProp,
-      )
+    R.map(item => {
+      const valRaw = getNestedValue(item, indicatorProp)
       return valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
     }),
     R.unique(),
   )
 
-  const groupedData: Record<string, BasesData> = R.groupBy(
-    data,
-    (item) => {
-      return seriesProp
-        ? (() => {
-            const valRaw = getNestedValue(
-              item,
-              seriesProp,
-            )
-            return valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
-          })()
-        // No grouping prop configured -- fall back to the value prop's own
+  const groupedData: Record<string, BasesData> = R.groupBy(data, item => {
+    return seriesProp
+      ? (() => {
+          const valRaw = getNestedValue(item, seriesProp)
+          return valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
+        })()
+      : // No grouping prop configured -- fall back to the value prop's own
         // name so every row lands in one series instead of an empty key.
-        : valueProp
-    },
-  )
+        valueProp
+  })
 
   const uniqueSeries: readonly string[] = R.keys(groupedData)
 
@@ -188,23 +163,16 @@ function createLongFormatRadarOption(
 
     const valueMap = R.pipe(
       items,
-      R.map((item) => {
-        const indRaw = getNestedValue(
-          item,
-          indicatorProp,
-        )
+      R.map(item => {
+        const indRaw = getNestedValue(item, indicatorProp)
         const indVal = indRaw === undefined || indRaw === null ? 'Unknown' : safeToString(indRaw)
-        const val = Number(getNestedValue(
-          item,
-          valueProp,
-        ))
-        return { indVal,
-          val }
+        const val = Number(getNestedValue(item, valueProp))
+        return { indVal, val }
       }),
       R.indexBy(x => x.indVal),
     )
 
-    const values: readonly number[] = indicatorsList.map((ind) => {
+    const values: readonly number[] = indicatorsList.map(ind => {
       const found = valueMap[ind]
       return found && !Number.isNaN(found.val) ? found.val : 0
     })
@@ -215,20 +183,21 @@ function createLongFormatRadarOption(
     }
   })
 
-  const radarIndicators: readonly RadarIndicator[] = indicatorsList.map((name, index): RadarIndicator => {
-    // Same as the wide-format builder above: `d.value` is always as long as
-    // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.
-    const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
-    return { name, min, max }
-  })
+  const radarIndicators: readonly RadarIndicator[] = indicatorsList.map(
+    (name, index): RadarIndicator => {
+      // Same as the wide-format builder above: `d.value` is always as long as
+      // `indicatorsList`, so `?? 0` is only here for noUncheckedIndexedAccess.
+      const { min, max } = computeIndicatorRange(seriesData.map(d => d.value[index] ?? 0))
+      return { name, min, max }
+    },
+  )
 
   const areaStyle = getAreaStyleOption(options)
   const circularLayout = resolveCircularLayout(options)
 
   const seriesItem: RadarSeriesOption = {
     type: 'radar',
-    data: seriesData.map(d => ({ name: d.name,
-      value: [...d.value] })),
+    data: seriesData.map(d => ({ name: d.name, value: [...d.value] })),
     ...(areaStyle !== undefined ? { areaStyle } : {}),
   }
 

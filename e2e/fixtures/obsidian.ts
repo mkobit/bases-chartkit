@@ -35,7 +35,11 @@ export interface Mouse {
   readonly move: (x: number, y: number, options?: { readonly steps?: number }) => Promise<void>
   readonly down: (options?: { readonly button?: 'left' | 'middle' | 'right' }) => Promise<void>
   readonly up: (options?: { readonly button?: 'left' | 'middle' | 'right' }) => Promise<void>
-  readonly click: (x: number, y: number, options?: { readonly button?: 'left' | 'middle' | 'right' }) => Promise<void>
+  readonly click: (
+    x: number,
+    y: number,
+    options?: { readonly button?: 'left' | 'middle' | 'right' },
+  ) => Promise<void>
 }
 
 export interface Keyboard {
@@ -67,9 +71,7 @@ export interface ObsidianTestFixtures {
   readonly obsidianPage: ObsidianPage
 }
 
-export type ObsidianTestFunction = (
-  fixtures: ObsidianTestFixtures,
-) => void | Promise<void>
+export type ObsidianTestFunction = (fixtures: ObsidianTestFixtures) => void | Promise<void>
 
 export type TestCallback = ObsidianTestFunction | (() => void | Promise<void>)
 
@@ -113,12 +115,12 @@ export async function getActiveCdpClient(): Promise<CdpClient> {
   }
   const port = getCdpPort()
   activeCdpClientPromise = connectCdp(port)
-    .then((client) => {
+    .then(client => {
       activeCdpClient = client
       activeCdpClientPromise = null
       return client
     })
-    .catch((err) => {
+    .catch(err => {
       activeCdpClientPromise = null
       throw err
     })
@@ -209,14 +211,21 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject {
       })
     },
 
-    click: async (x: number, y: number, options?: { readonly button?: 'left' | 'middle' | 'right' }): Promise<void> => {
+    click: async (
+      x: number,
+      y: number,
+      options?: { readonly button?: 'left' | 'middle' | 'right' },
+    ): Promise<void> => {
       await mouse.move(x, y)
       await mouse.down(options)
       await mouse.up(options)
     },
   }
 
-  const KEY_MAPPINGS: Record<string, { readonly key: string, readonly code: string, readonly keyCode: number }> = {
+  const KEY_MAPPINGS: Record<
+    string,
+    { readonly key: string; readonly code: string; readonly keyCode: number }
+  > = {
     Escape: { key: 'Escape', code: 'Escape', keyCode: 27 },
     Enter: { key: 'Enter', code: 'Enter', keyCode: 13 },
     Tab: { key: 'Tab', code: 'Tab', keyCode: 9 },
@@ -253,23 +262,29 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject {
 
   const createLocatorInstance = (
     selector: string,
-    options?: { readonly hasText?: string, readonly index?: number },
+    options?: { readonly hasText?: string; readonly index?: number },
   ): Locator => {
     const hasText = options?.hasText
     const targetIndex = options?.index
 
     const count = async (): Promise<number> => {
-      const elementsCount = await evaluate<number, { readonly selector: string, readonly hasText?: string }>(
-        (args) => {
+      const elementsCount = await evaluate<
+        number,
+        { readonly selector: string; readonly hasText?: string }
+      >(
+        args => {
           const list = Array.from(document.querySelectorAll(args.selector))
-          const filtered = args.hasText !== undefined
-            ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
-            : list
+          const filtered =
+            args.hasText !== undefined
+              ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+              : list
           return filtered.length
         },
         { selector, hasText },
       )
-      return targetIndex !== undefined ? Math.min(1, Math.max(0, elementsCount - targetIndex)) : elementsCount
+      return targetIndex !== undefined
+        ? Math.min(1, Math.max(0, elementsCount - targetIndex))
+        : elementsCount
     }
 
     const click = async (clickOptions?: { readonly timeout?: number }): Promise<void> => {
@@ -277,16 +292,17 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject {
       const startTime = Temporal.Now.instant().epochMilliseconds
       const deadline = startTime + timeoutMs
 
-      const pollForElement = async (): Promise<{ readonly x: number, readonly y: number }> => {
+      const pollForElement = async (): Promise<{ readonly x: number; readonly y: number }> => {
         const coords = await evaluate<
-          { readonly x: number, readonly y: number } | null,
-          { readonly selector: string, readonly hasText?: string, readonly index: number }
+          { readonly x: number; readonly y: number } | null,
+          { readonly selector: string; readonly hasText?: string; readonly index: number }
         >(
-          (args) => {
+          args => {
             const list = Array.from(document.querySelectorAll(args.selector))
-            const filtered = args.hasText !== undefined
-              ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
-              : list
+            const filtered =
+              args.hasText !== undefined
+                ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+                : list
             const el = filtered[args.index]
             if (!el) {
               return null
@@ -321,20 +337,26 @@ export function createObsidianPage(client: CdpClient): ObsidianPageObject {
     const isVisible = async (): Promise<boolean> => {
       return evaluate<
         boolean,
-        { readonly selector: string, readonly hasText?: string, readonly index: number }
+        { readonly selector: string; readonly hasText?: string; readonly index: number }
       >(
-        (args) => {
+        args => {
           const list = Array.from(document.querySelectorAll(args.selector))
-          const filtered = args.hasText !== undefined
-            ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
-            : list
+          const filtered =
+            args.hasText !== undefined
+              ? list.filter(el => (el.textContent ?? '').includes(args.hasText ?? ''))
+              : list
           const el = filtered[args.index]
           if (!el) {
             return false
           }
           const rect = el.getBoundingClientRect()
           const style = window.getComputedStyle(el)
-          return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.visibility !== 'hidden' &&
+            style.display !== 'none'
+          )
         },
         { selector, hasText, index: targetIndex ?? 0 },
       )
@@ -400,18 +422,20 @@ export async function getOrCreateObsidianPage(): Promise<ObsidianPageObject> {
 export async function resetWorkspace(page: ObsidianPageObject): Promise<void> {
   await page.evaluate(() => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Obsidian renderer window globals
-    const win = window as Window & { readonly activeWindow?: Window & { readonly app?: App }, readonly app?: App }
+    const win = window as Window & {
+      readonly activeWindow?: Window & { readonly app?: App }
+      readonly app?: App
+    }
     const obsidianApp = (win.activeWindow ?? win).app
     if (obsidianApp?.workspace !== undefined) {
       obsidianApp.workspace.detachLeavesOfType('bases')
     }
     const modals = document.querySelectorAll('.bases-chart-modal, .modal-container')
-    modals.forEach((modal) => {
+    modals.forEach(modal => {
       const closeButton = modal.querySelector('.modal-close-button')
       if (closeButton instanceof HTMLElement) {
         closeButton.click()
-      }
-      else {
+      } else {
         modal.remove()
       }
     })
@@ -433,9 +457,10 @@ export async function captureFailureScreenshot(
     await fs.writeFile(filepath, buffer)
     process.stderr.write(`[test failure] Screenshot saved to: ${filepath}\n`)
     return filepath
-  }
-  catch (screenshotErr: unknown) {
-    process.stderr.write(`[test failure] Failed to capture failure screenshot: ${String(screenshotErr)}\n`)
+  } catch (screenshotErr: unknown) {
+    process.stderr.write(
+      `[test failure] Failed to capture failure screenshot: ${String(screenshotErr)}\n`,
+    )
     return filepath
   }
 }
@@ -496,9 +521,7 @@ augmentedExpect.extend({
   },
 })
 
-export async function evaluateObsidian<T>(
-  fn: (app: App) => T | Promise<T>,
-): Promise<T>
+export async function evaluateObsidian<T>(fn: (app: App) => T | Promise<T>): Promise<T>
 export async function evaluateObsidian<T, A>(
   fn: (app: App, args: A) => T | Promise<T>,
   args: A,
@@ -513,7 +536,8 @@ export async function evaluateObsidian<T, A>(
   args: A,
 ): Promise<T>
 export async function evaluateObsidian<T, A>(
-  pageOrFn: ObsidianPageObject | ((app: App) => T | Promise<T>) | ((app: App, args: A) => T | Promise<T>),
+  pageOrFn:
+    ObsidianPageObject | ((app: App) => T | Promise<T>) | ((app: App, args: A) => T | Promise<T>),
   fnOrArgs?: ((app: App) => T | Promise<T>) | ((app: App, args: A) => T | Promise<T>) | A,
   maybeArgs?: A,
 ): Promise<T> {
@@ -545,10 +569,7 @@ export async function evaluateObsidian<T, A>(
   fail('Invalid evaluateObsidian arguments')
 }
 
-function wrapTestCallback(
-  name: string,
-  fn: TestCallback,
-): () => Promise<void> {
+function wrapTestCallback(name: string, fn: TestCallback): () => Promise<void> {
   return async () => {
     const page = await getOrCreateObsidianPage()
     await resetWorkspace(page)
@@ -557,24 +578,21 @@ function wrapTestCallback(
       if (outcome instanceof Promise) {
         await outcome
       }
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       await captureFailureScreenshot(page, name)
       throw error
     }
   }
 }
 
-function createTestWrapper(
-  baseRunner: unknown,
-) {
-  return (
-    name: string,
-    fn?: TestCallback,
-    options?: number | Record<string, unknown>,
-  ) => {
+function createTestWrapper(baseRunner: unknown) {
+  return (name: string, fn?: TestCallback, options?: number | Record<string, unknown>) => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- delegate runner callback
-    const runner = baseRunner as (testName: string, testFn: () => void | Promise<void>, testOptions?: unknown) => void
+    const runner = baseRunner as (
+      testName: string,
+      testFn: () => void | Promise<void>,
+      testOptions?: unknown,
+    ) => void
     if (fn === undefined) {
       return runner(name, () => {})
     }
@@ -585,11 +603,8 @@ function createTestWrapper(
 export const test = Object.assign(createTestWrapper(bunTest.test), {
   describe: bunTest.describe,
   skip: createTestWrapper(bunTest.test.skip),
-  only: (
-    name: string,
-    fn?: TestCallback,
-    options?: number | Record<string, unknown>,
-  ) => createTestWrapper(bunTest.test.only)(name, fn, options),
+  only: (name: string, fn?: TestCallback, options?: number | Record<string, unknown>) =>
+    createTestWrapper(bunTest.test.only)(name, fn, options),
   fixme: createTestWrapper(bunTest.test.skip),
   use: (_options?: { readonly theme?: 'dark' | 'light' }): void => {},
   beforeEach: bunTest.beforeEach,
@@ -606,8 +621,7 @@ try {
   bunTest.afterAll(async () => {
     await closeActiveCdpConnection()
   })
-}
-catch (error: unknown) {
+} catch (error: unknown) {
   if (!(error instanceof Error && error.message.includes('outside of the test runner'))) {
     throw error
   }

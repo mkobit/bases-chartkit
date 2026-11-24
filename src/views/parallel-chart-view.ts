@@ -44,22 +44,35 @@ export class ParallelChartView extends BaseChartView {
     const xProp = this.getStringOption('xProp') ?? ''
     const seriesProp = this.getStringOption('seriesProp')
     const smooth = this.getBooleanOption(ParallelChartView.SMOOTH_KEY)
-    const layout = this.getLiteralOption(ParallelChartView.LAYOUT_KEY, ['horizontal', 'vertical'] as const)
+    const layout = this.getLiteralOption(ParallelChartView.LAYOUT_KEY, [
+      'horizontal',
+      'vertical',
+    ] as const)
     const theme = this.getStringOption(BaseChartView.THEME_KEY)
 
     const lineWidthRaw = this.config.get(ParallelChartView.LINE_WIDTH_KEY)
-    const lineWidth = typeof lineWidthRaw === 'number'
-      ? lineWidthRaw
-      : (typeof lineWidthRaw === 'string' && !Number.isNaN(Number(lineWidthRaw)) ? Number(lineWidthRaw) : undefined)
+    const lineWidth =
+      typeof lineWidthRaw === 'number'
+        ? lineWidthRaw
+        : typeof lineWidthRaw === 'string' && !Number.isNaN(Number(lineWidthRaw))
+          ? Number(lineWidthRaw)
+          : undefined
 
     const lineOpacityRaw = this.config.get(ParallelChartView.LINE_OPACITY_KEY)
-    const lineOpacity = typeof lineOpacityRaw === 'number'
-      ? lineOpacityRaw
-      : (typeof lineOpacityRaw === 'string' && !Number.isNaN(Number(lineOpacityRaw)) ? Number(lineOpacityRaw) : undefined)
+    const lineOpacity =
+      typeof lineOpacityRaw === 'number'
+        ? lineOpacityRaw
+        : typeof lineOpacityRaw === 'string' && !Number.isNaN(Number(lineOpacityRaw))
+          ? Number(lineOpacityRaw)
+          : undefined
 
-    const dims = typeof xProp === 'string'
-      ? xProp.split(',').map(s => s.trim()).filter(s => s.length > 0)
-      : []
+    const dims =
+      typeof xProp === 'string'
+        ? xProp
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s.length > 0)
+        : []
     const dimensionLabels = Object.fromEntries(
       dims.map(dim => [dim, this.getDisplayNameForPropertyPath(dim)]),
     )
@@ -75,12 +88,6 @@ export class ParallelChartView extends BaseChartView {
       theme,
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      '',
-      'parallel',
-      options,
-    )
+    return transformDataToChartOption(data, xProp, '', 'parallel', options)
   }
 }

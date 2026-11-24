@@ -21,20 +21,14 @@ export class AreaChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'line',
-      {
-        ...this.getCommonTransformerOptions(),
-        smooth,
-        showSymbol,
-        stack,
-        areaStyle,
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'line', {
+      ...this.getCommonTransformerOptions(),
+      smooth,
+      showSymbol,
+      stack,
+      areaStyle,
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

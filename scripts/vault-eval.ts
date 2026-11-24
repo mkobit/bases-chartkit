@@ -14,8 +14,8 @@ import { runObsidianCli } from './obsidian-cli'
 const code = process.argv[2]
 
 if (!code) {
-  console.error('Usage: bun scripts/vault-eval.ts \'<js expression>\'')
-  console.error('  e.g. bun scripts/vault-eval.ts \'app.vault.getName()\'')
+  console.error("Usage: bun scripts/vault-eval.ts '<js expression>'")
+  console.error("  e.g. bun scripts/vault-eval.ts 'app.vault.getName()'")
   process.exit(1)
 }
 

@@ -176,7 +176,9 @@ describe('Shared Bases dataset layer', () => {
     it('unwraps StringValue, LinkValue, and TagValue via toString()', () => {
       expect(unwrapBasesValue(makeStringValue('hello'))).toBe('hello')
       expect(unwrapBasesValue(makeStringValue('null'))).toBe('null')
-      expect(unwrapBasesValue({ renderTo: () => undefined, toString: () => '[[Note]]' })).toBe('[[Note]]')
+      expect(unwrapBasesValue({ renderTo: () => undefined, toString: () => '[[Note]]' })).toBe(
+        '[[Note]]',
+      )
       expect(unwrapBasesValue({ renderTo: () => undefined, toString: () => '#tag' })).toBe('#tag')
     })
   })
@@ -233,7 +235,8 @@ describe('Shared Bases dataset layer', () => {
             'note.category': 'Sales',
             'note.amount': 250,
             'note.active': true,
-            'file.ctime': Temporal.PlainDate.from('2025-01-10').toZonedDateTime('UTC').epochMilliseconds,
+            'file.ctime':
+              Temporal.PlainDate.from('2025-01-10').toZonedDateTime('UTC').epochMilliseconds,
           },
           {
             '_file': 'notes/b.md',
@@ -251,9 +254,7 @@ describe('Shared Bases dataset layer', () => {
     const sampleDataset: BasesDataset = {
       id: 'bases',
       dimensions: ['note.label', 'note.value'],
-      source: [
-        { '_file': 'notes/a.md', 'note.label': 'A', 'note.value': 10 },
-      ],
+      source: [{ '_file': 'notes/a.md', 'note.label': 'A', 'note.value': 10 }],
     }
 
     it('injects into a single-object dataset without mutating userOption', () => {
@@ -310,9 +311,14 @@ describe('Shared Bases dataset layer', () => {
 
     it('returns error when id: bases is missing or duplicated', () => {
       expect(injectBasesDataset({ dataset: { id: 'other' } }, sampleDataset).ok).toBe(false)
-      expect(injectBasesDataset({
-        dataset: [{ id: 'bases' }, { id: 'bases' }],
-      }, sampleDataset).ok).toBe(false)
+      expect(
+        injectBasesDataset(
+          {
+            dataset: [{ id: 'bases' }, { id: 'bases' }],
+          },
+          sampleDataset,
+        ).ok,
+      ).toBe(false)
     })
 
     it('returns error when id: bases defines conflicting dataset properties', () => {
@@ -327,9 +333,12 @@ describe('Shared Bases dataset layer', () => {
       ] as const
 
       for (const key of forbiddenKeys) {
-        const result = injectBasesDataset({
-          dataset: { id: 'bases', [key]: 'conflict' },
-        }, sampleDataset)
+        const result = injectBasesDataset(
+          {
+            dataset: { id: 'bases', [key]: 'conflict' },
+          },
+          sampleDataset,
+        )
         expect(result.ok).toBe(false)
         if (!result.ok) {
           expect(result.error).toContain(key)
@@ -338,9 +347,12 @@ describe('Shared Bases dataset layer', () => {
     })
 
     it('accepts forbidden dataset keys when explicitly set to undefined', () => {
-      const result = injectBasesDataset({
-        dataset: { id: 'bases', source: undefined, transform: undefined },
-      }, sampleDataset)
+      const result = injectBasesDataset(
+        {
+          dataset: { id: 'bases', source: undefined, transform: undefined },
+        },
+        sampleDataset,
+      )
       expect(result.ok).toBe(true)
     })
   })

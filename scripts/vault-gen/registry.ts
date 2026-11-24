@@ -2,7 +2,12 @@ import * as fc from 'fast-check'
 import * as R from 'remeda'
 import { barChartArbitrary, stackedBarChartArbitrary } from '../generators/bar'
 import { bulletChartArbitrary } from '../generators/bullet'
-import { boxplotChartArbitrary, histogramChartArbitrary, paretoChartArbitrary, waterfallChartArbitrary } from '../generators/distribution'
+import {
+  boxplotChartArbitrary,
+  histogramChartArbitrary,
+  paretoChartArbitrary,
+  waterfallChartArbitrary,
+} from '../generators/distribution'
 import { candlestickChartArbitrary } from '../generators/financial'
 import { linesChartArbitrary, sankeyChartArbitrary } from '../generators/flow'
 import { graphChartArbitrary, type GraphSample } from '../generators/graph'
@@ -10,7 +15,11 @@ import { funnelChartArbitrary } from '../generators/funnel'
 import { gaugeChartArbitrary, type GaugeSample } from '../generators/gauge'
 import { ganttChartArbitrary } from '../generators/gantt'
 import { calendarChartArbitrary, heatmapChartArbitrary } from '../generators/heatmap'
-import { sunburstChartArbitrary, treeChartArbitrary, treemapChartArbitrary } from '../generators/hierarchy'
+import {
+  sunburstChartArbitrary,
+  treeChartArbitrary,
+  treemapChartArbitrary,
+} from '../generators/hierarchy'
 import { lineChartArbitrary, stackedAreaChartArbitrary } from '../generators/line'
 import { pieChartArbitrary } from '../generators/pie'
 import { roseChartArbitrary } from '../generators/rose'
@@ -26,7 +35,7 @@ import { defineChartExampleSpec, echartsExample } from './spec'
 import type { ChartExampleSpec } from './spec'
 
 interface BarSample {
-  readonly data: ReadonlyArray<{ readonly category: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly category: string; readonly value: number }>
 }
 
 const barSpec = defineChartExampleSpec<BarSample>({
@@ -35,10 +44,11 @@ const barSpec = defineChartExampleSpec<BarSample>({
   description: 'Department spend, ranked -- demonstrates a basic bar chart.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
-  toRows: sample => sample.data.map(row => ({
-    Department: row.category,
-    Spend: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Department: row.category,
+      Spend: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -86,13 +96,15 @@ const barSpec = defineChartExampleSpec<BarSample>({
 const pictorialBarSpec = defineChartExampleSpec<BarSample>({
   chartType: 'pictorial-bar',
   echartsExampleUrl: echartsExample('pictorialBar-vehicle'),
-  description: 'Department spend, ranked -- demonstrates a pictorial bar chart with a custom symbol.',
+  description:
+    'Department spend, ranked -- demonstrates a pictorial bar chart with a custom symbol.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
-  toRows: sample => sample.data.map(row => ({
-    Department: row.category,
-    Spend: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Department: row.category,
+      Spend: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -153,10 +165,11 @@ const radialBarSpec = defineChartExampleSpec<BarSample>({
   description: 'Department spend, ranked -- demonstrates a radial bar chart.',
   arbitrary: barChartArbitrary,
   notePrefix: 'Dept-Spend',
-  toRows: sample => sample.data.map(row => ({
-    Department: row.category,
-    Spend: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Department: row.category,
+      Spend: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -207,10 +220,11 @@ const roseSpec = defineChartExampleSpec<RoseSample>({
   description: 'Department spend, ranked -- demonstrates a rose chart.',
   arbitrary: roseChartArbitrary,
   notePrefix: 'Dept-Spend',
-  toRows: sample => sample.data.map(row => ({
-    Department: row.category,
-    Spend: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Department: row.category,
+      Spend: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -253,20 +267,26 @@ const roseSpec = defineChartExampleSpec<RoseSample>({
 })
 
 interface StackedBarSample {
-  readonly data: ReadonlyArray<{ readonly quarter: string, readonly region: string, readonly revenue: number }>
+  readonly data: ReadonlyArray<{
+    readonly quarter: string
+    readonly region: string
+    readonly revenue: number
+  }>
 }
 
 const stackedBarSpec = defineChartExampleSpec<StackedBarSample>({
   chartType: 'stacked-bar',
   echartsExampleUrl: echartsExample('bar-stack'),
-  description: 'Quarterly revenue by region -- demonstrates a stacked bar chart with multiple series.',
+  description:
+    'Quarterly revenue by region -- demonstrates a stacked bar chart with multiple series.',
   arbitrary: stackedBarChartArbitrary,
   notePrefix: 'Quarterly-Revenue',
-  toRows: sample => sample.data.map(row => ({
-    Quarter: row.quarter,
-    Region: row.region,
-    Revenue: row.revenue,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Quarter: row.quarter,
+      Region: row.region,
+      Revenue: row.revenue,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -316,7 +336,7 @@ const stackedBarSpec = defineChartExampleSpec<StackedBarSample>({
 })
 
 interface LineSample {
-  readonly data: ReadonlyArray<{ readonly date: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly date: string; readonly value: number }>
 }
 
 const lineSpec = defineChartExampleSpec<LineSample>({
@@ -325,10 +345,11 @@ const lineSpec = defineChartExampleSpec<LineSample>({
   description: 'Daily revenue trend -- demonstrates a basic line chart.',
   arbitrary: lineChartArbitrary,
   notePrefix: 'Revenue',
-  toRows: sample => sample.data.map(row => ({
-    Date: Temporal.PlainDate.from(row.date),
-    Revenue: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Date: Temporal.PlainDate.from(row.date),
+      Revenue: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -413,16 +434,17 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
   description: 'Character attribute comparison -- demonstrates a radar chart with multiple series.',
   arbitrary: radarChartArbitrary,
   notePrefix: 'Character',
-  toRows: sample => sample.data.map(row => ({
-    Name: row.name,
-    Class: row.class,
-    Strength: row.Strength,
-    Dexterity: row.Dexterity,
-    Constitution: row.Constitution,
-    Intelligence: row.Intelligence,
-    Wisdom: row.Wisdom,
-    Charisma: row.Charisma,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Name: row.name,
+      Class: row.class,
+      Strength: row.Strength,
+      Dexterity: row.Dexterity,
+      Constitution: row.Constitution,
+      Intelligence: row.Intelligence,
+      Wisdom: row.Wisdom,
+      Charisma: row.Charisma,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -430,7 +452,8 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
       viewType: 'radar-chart',
       propBindings: {
         xAxisProp: 'note.Name',
-        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        metricProps:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
       },
       literalOptions: { showLegend: true },
       filters: ['note.Class != null'],
@@ -441,7 +464,8 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
       viewType: 'radar-chart',
       propBindings: {
         xAxisProp: 'note.Name',
-        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        metricProps:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
       },
       literalOptions: { showLegend: true, areaStyle: true },
       filters: ['note.Class != null'],
@@ -452,7 +476,8 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
       viewType: 'radar-chart',
       propBindings: {
         xAxisProp: 'note.Name',
-        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        metricProps:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
       },
       literalOptions: { showLegend: true, shape: 'circle' },
       filters: ['note.Class != null'],
@@ -463,7 +488,8 @@ const radarSpec = defineChartExampleSpec<RadarSample>({
       viewType: 'radar-chart',
       propBindings: {
         xAxisProp: 'note.Name',
-        metricProps: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        metricProps:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
       },
       literalOptions: { showLegend: true, theme: 'Vintage' },
       filters: ['note.Class != null'],
@@ -528,61 +554,73 @@ interface ParallelSample {
 
 const parallelChartArbitrary: fc.Arbitrary<ParallelSample> = fc
   .subarray([...PARALLEL_CHARACTER_NAMES], { minLength: 16, maxLength: 24 })
-  .chain((names) => {
-    return fc.tuple(
-      ...names.map(() => fc.tuple(
-        fc.constantFrom(...PARALLEL_CLASSES),
-        fc.integer({ min: 3, max: 18 }),
-        fc.integer({ min: 3, max: 18 }),
-        fc.integer({ min: 3, max: 18 }),
-        fc.integer({ min: 3, max: 18 }),
-        fc.integer({ min: 3, max: 18 }),
-        fc.integer({ min: 3, max: 18 }),
-      )),
-    ).map((rolls) => {
-      const data = R.pipe(
-        R.zip(names, rolls),
-        R.map(([name, [characterClass, strength, dexterity, constitution, intelligence, wisdom, charisma]]) => ({
-          name,
-          class: characterClass,
-          Strength: strength,
-          Dexterity: dexterity,
-          Constitution: constitution,
-          Intelligence: intelligence,
-          Wisdom: wisdom,
-          Charisma: charisma,
-        })),
+  .chain(names => {
+    return fc
+      .tuple(
+        ...names.map(() =>
+          fc.tuple(
+            fc.constantFrom(...PARALLEL_CLASSES),
+            fc.integer({ min: 3, max: 18 }),
+            fc.integer({ min: 3, max: 18 }),
+            fc.integer({ min: 3, max: 18 }),
+            fc.integer({ min: 3, max: 18 }),
+            fc.integer({ min: 3, max: 18 }),
+            fc.integer({ min: 3, max: 18 }),
+          ),
+        ),
       )
+      .map(rolls => {
+        const data = R.pipe(
+          R.zip(names, rolls),
+          R.map(
+            ([
+              name,
+              [characterClass, strength, dexterity, constitution, intelligence, wisdom, charisma],
+            ]) => ({
+              name,
+              class: characterClass,
+              Strength: strength,
+              Dexterity: dexterity,
+              Constitution: constitution,
+              Intelligence: intelligence,
+              Wisdom: wisdom,
+              Charisma: charisma,
+            }),
+          ),
+        )
 
-      return {
-        data,
-      }
-    })
+        return {
+          data,
+        }
+      })
   })
 
 const parallelSpec = defineChartExampleSpec<ParallelSample>({
   chartType: 'parallel',
   echartsExampleUrl: echartsExample('parallel-simple'),
-  description: 'Character attribute comparison grouped by class -- demonstrates a parallel-coordinates chart, reusing radarChartArbitrary.',
+  description:
+    'Character attribute comparison grouped by class -- demonstrates a parallel-coordinates chart, reusing radarChartArbitrary.',
   arbitrary: parallelChartArbitrary,
   notePrefix: 'Character',
-  toRows: sample => sample.data.map(row => ({
-    Name: row.name,
-    Class: row.class,
-    Strength: row.Strength,
-    Dexterity: row.Dexterity,
-    Constitution: row.Constitution,
-    Intelligence: row.Intelligence,
-    Wisdom: row.Wisdom,
-    Charisma: row.Charisma,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Name: row.name,
+      Class: row.class,
+      Strength: row.Strength,
+      Dexterity: row.Dexterity,
+      Constitution: row.Constitution,
+      Intelligence: row.Intelligence,
+      Wisdom: row.Wisdom,
+      Charisma: row.Charisma,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
       viewName: 'Character stats (parallel)',
       viewType: 'parallel-chart',
       propBindings: {
-        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        xProp:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
         seriesProp: 'note.Class',
       },
       literalOptions: { showLegend: true },
@@ -593,7 +631,8 @@ const parallelSpec = defineChartExampleSpec<ParallelSample>({
       viewName: 'Character stats (smooth curves)',
       viewType: 'parallel-chart',
       propBindings: {
-        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        xProp:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
         seriesProp: 'note.Class',
       },
       literalOptions: { showLegend: true, smooth: true },
@@ -604,7 +643,8 @@ const parallelSpec = defineChartExampleSpec<ParallelSample>({
       viewName: 'Character stats (vintage theme)',
       viewType: 'parallel-chart',
       propBindings: {
-        xProp: 'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
+        xProp:
+          'note.Strength, note.Dexterity, note.Constitution, note.Intelligence, note.Wisdom, note.Charisma',
         seriesProp: 'note.Class',
       },
       literalOptions: { showLegend: true, theme: 'Vintage' },
@@ -614,7 +654,11 @@ const parallelSpec = defineChartExampleSpec<ParallelSample>({
 })
 
 interface BoxplotSample {
-  readonly data: ReadonlyArray<{ readonly category: string, readonly channel: string, readonly value: number }>
+  readonly data: ReadonlyArray<{
+    readonly category: string
+    readonly channel: string
+    readonly value: number
+  }>
 }
 
 const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
@@ -623,11 +667,12 @@ const boxplotSpec = defineChartExampleSpec<BoxplotSample>({
   description: 'Product score distribution -- demonstrates a boxplot chart.',
   arbitrary: boxplotChartArbitrary,
   notePrefix: 'Product-Score',
-  toRows: sample => sample.data.map(row => ({
-    Product: row.category,
-    Channel: row.channel,
-    Score: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Product: row.category,
+      Channel: row.channel,
+      Score: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -663,9 +708,10 @@ const histogramSpec = defineChartExampleSpec<HistogramSample>({
   description: 'Score distribution -- demonstrates a histogram chart.',
   arbitrary: histogramChartArbitrary,
   notePrefix: 'Score',
-  toRows: sample => sample.data.map(row => ({
-    Score: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Score: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -679,7 +725,7 @@ const histogramSpec = defineChartExampleSpec<HistogramSample>({
 })
 
 interface ParetoSample {
-  readonly data: ReadonlyArray<{ readonly name: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly name: string; readonly value: number }>
 }
 
 const paretoSpec = defineChartExampleSpec<ParetoSample>({
@@ -691,10 +737,11 @@ const paretoSpec = defineChartExampleSpec<ParetoSample>({
   description: 'Product sales, ranked -- demonstrates a pareto chart.',
   arbitrary: paretoChartArbitrary,
   notePrefix: 'Product-Sales',
-  toRows: sample => sample.data.map(row => ({
-    Product: row.name,
-    Sales: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Product: row.name,
+      Sales: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -709,20 +756,26 @@ const paretoSpec = defineChartExampleSpec<ParetoSample>({
 })
 
 interface WaterfallSample {
-  readonly data: ReadonlyArray<{ readonly step: string, readonly value: number, readonly isTotal: boolean }>
+  readonly data: ReadonlyArray<{
+    readonly step: string
+    readonly value: number
+    readonly isTotal: boolean
+  }>
 }
 
 const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
   chartType: 'waterfall',
   echartsExampleUrl: echartsExample('bar-waterfall'),
-  description: 'Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.',
+  description:
+    'Budget waterfall -- demonstrates a waterfall chart with connector lines and absolute-total bars.',
   arbitrary: waterfallChartArbitrary,
   notePrefix: 'Budget-Step',
-  toRows: sample => sample.data.map(row => ({
-    Step: row.step,
-    Change: row.value,
-    IsTotal: row.isTotal,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Step: row.step,
+      Change: row.value,
+      IsTotal: row.isTotal,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -761,7 +814,11 @@ const waterfallSpec = defineChartExampleSpec<WaterfallSample>({
 })
 
 interface SankeySample {
-  readonly data: ReadonlyArray<{ readonly source: string, readonly target: string, readonly users: number }>
+  readonly data: ReadonlyArray<{
+    readonly source: string
+    readonly target: string
+    readonly users: number
+  }>
 }
 
 const sankeySpec = defineChartExampleSpec<SankeySample>({
@@ -770,11 +827,12 @@ const sankeySpec = defineChartExampleSpec<SankeySample>({
   description: 'User funnel flow -- demonstrates a sankey chart.',
   arbitrary: sankeyChartArbitrary,
   notePrefix: 'Funnel-Step',
-  toRows: sample => sample.data.map(row => ({
-    Source: row.source,
-    Target: row.target,
-    Amount: row.users,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Source: row.source,
+      Target: row.target,
+      Amount: row.users,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -793,15 +851,17 @@ const sankeySpec = defineChartExampleSpec<SankeySample>({
 const graphSpec = defineChartExampleSpec<GraphSample>({
   chartType: 'graph',
   echartsExampleUrl: echartsExample('graph-simple'),
-  description: 'Network topology across architectural tiers -- demonstrates a force-directed graph chart with categorized nodes and weighted edges.',
+  description:
+    'Network topology across architectural tiers -- demonstrates a force-directed graph chart with categorized nodes and weighted edges.',
   arbitrary: graphChartArbitrary,
   notePrefix: 'Network-Link',
-  toRows: sample => sample.data.map(row => ({
-    Source: row.source,
-    Target: row.target,
-    Amount: row.traffic,
-    Zone: row.zone,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Source: row.source,
+      Target: row.target,
+      Amount: row.traffic,
+      Zone: row.zone,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -867,7 +927,12 @@ const graphSpec = defineChartExampleSpec<GraphSample>({
 })
 
 interface LinesSample {
-  readonly data: ReadonlyArray<{ readonly start_x: number, readonly start_y: number, readonly end_x: number, readonly end_y: number }>
+  readonly data: ReadonlyArray<{
+    readonly start_x: number
+    readonly start_y: number
+    readonly end_x: number
+    readonly end_y: number
+  }>
 }
 
 const linesSpec = defineChartExampleSpec<LinesSample>({
@@ -880,13 +945,14 @@ const linesSpec = defineChartExampleSpec<LinesSample>({
   // field. Route type is derived here (not sampled) from each line's own
   // direction, so it stays deterministic without adding new randomness:
   // "Outbound" for a line moving rightward, "Return" otherwise.
-  toRows: sample => sample.data.map(row => ({
-    StartX: row.start_x,
-    StartY: row.start_y,
-    EndX: row.end_x,
-    EndY: row.end_y,
-    RouteType: row.end_x >= row.start_x ? 'Outbound' : 'Return',
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      StartX: row.start_x,
+      StartY: row.start_y,
+      EndX: row.end_x,
+      EndY: row.end_y,
+      RouteType: row.end_x >= row.start_x ? 'Outbound' : 'Return',
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -905,19 +971,21 @@ const linesSpec = defineChartExampleSpec<LinesSample>({
 })
 
 interface HierarchySample {
-  readonly data: ReadonlyArray<{ readonly path: string, readonly employees: number }>
+  readonly data: ReadonlyArray<{ readonly path: string; readonly employees: number }>
 }
 
 const treeSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'tree',
   echartsExampleUrl: echartsExample('tree-basic'),
-  description: 'Company org chart -- demonstrates a tree chart over hierarchical, slash-delimited path data.',
+  description:
+    'Company org chart -- demonstrates a tree chart over hierarchical, slash-delimited path data.',
   arbitrary: treeChartArbitrary,
   notePrefix: 'Org-Node',
-  toRows: sample => sample.data.map(row => ({
-    Path: row.path,
-    Value: row.employees,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Path: row.path,
+      Value: row.employees,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -934,13 +1002,15 @@ const treeSpec = defineChartExampleSpec<HierarchySample>({
 const sunburstSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'sunburst',
   echartsExampleUrl: echartsExample('sunburst-simple'),
-  description: 'Company org chart -- demonstrates a sunburst chart over hierarchical, slash-delimited path data.',
+  description:
+    'Company org chart -- demonstrates a sunburst chart over hierarchical, slash-delimited path data.',
   arbitrary: sunburstChartArbitrary,
   notePrefix: 'Org-Node',
-  toRows: sample => sample.data.map(row => ({
-    Path: row.path,
-    Value: row.employees,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Path: row.path,
+      Value: row.employees,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -958,13 +1028,15 @@ const sunburstSpec = defineChartExampleSpec<HierarchySample>({
 const treemapSpec = defineChartExampleSpec<HierarchySample>({
   chartType: 'treemap',
   echartsExampleUrl: echartsExample('treemap-simple'),
-  description: 'Org headcount by division -- demonstrates a treemap over multi-root, slash-delimited hierarchical path data with area-proportional leaves.',
+  description:
+    'Org headcount by division -- demonstrates a treemap over multi-root, slash-delimited hierarchical path data with area-proportional leaves.',
   arbitrary: treemapChartArbitrary,
   notePrefix: 'Org-Node',
-  toRows: sample => sample.data.map(row => ({
-    Path: row.path,
-    Value: row.employees,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Path: row.path,
+      Value: row.employees,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -984,8 +1056,7 @@ const treemapSpec = defineChartExampleSpec<HierarchySample>({
         xAxisProp: 'note.Path',
         valueProp: 'note.Value',
       },
-      literalOptions: { showLegend: true,
-        theme: 'Vintage' },
+      literalOptions: { showLegend: true, theme: 'Vintage' },
     },
   ],
 })
@@ -1002,14 +1073,16 @@ interface ScatterWithSeriesSample {
 const scatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'scatter',
   echartsExampleUrl: echartsExample('scatter-simple'),
-  description: 'GDP vs life expectancy by continent -- demonstrates a scatter chart with a categorical series.',
+  description:
+    'GDP vs life expectancy by continent -- demonstrates a scatter chart with a categorical series.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
-  toRows: sample => sample.data.map(row => ({
-    GDP: row.x,
-    LifeExpectancy: row.y,
-    Continent: row.continent,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      GDP: row.x,
+      LifeExpectancy: row.y,
+      Continent: row.continent,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1026,7 +1099,7 @@ const scatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
 })
 
 interface BubblePointSample {
-  readonly data: ReadonlyArray<{ readonly x: number, readonly y: number, readonly size: number }>
+  readonly data: ReadonlyArray<{ readonly x: number; readonly y: number; readonly size: number }>
 }
 
 const bubbleSpec = defineChartExampleSpec<BubblePointSample>({
@@ -1035,11 +1108,12 @@ const bubbleSpec = defineChartExampleSpec<BubblePointSample>({
   description: 'Weighted point cloud -- demonstrates a bubble chart with size-encoded points.',
   arbitrary: bubbleChartArbitrary,
   notePrefix: 'Point',
-  toRows: sample => sample.data.map(row => ({
-    PointX: row.x,
-    PointY: row.y,
-    Weight: row.size,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      PointX: row.x,
+      PointY: row.y,
+      Weight: row.size,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1068,15 +1142,17 @@ const bubbleSpec = defineChartExampleSpec<BubblePointSample>({
 const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'effect-scatter',
   echartsExampleUrl: echartsExample('scatter-effect'),
-  description: 'GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.',
+  description:
+    'GDP vs life expectancy by continent -- demonstrates an effect-scatter chart. Ships a second, intentionally-broken sizeProp variant preserving the bck-ma9 regression trigger.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
-  toRows: sample => sample.data.map(row => ({
-    GDP: row.x,
-    LifeExpectancy: row.y,
-    Continent: row.continent,
-    Population: row.population,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      GDP: row.x,
+      LifeExpectancy: row.y,
+      Continent: row.continent,
+      Population: row.population,
+    })),
   variants: [
     {
       fileName: 'basic/Basic.base',
@@ -1109,15 +1185,17 @@ const effectScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
 const polarScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
   chartType: 'polar-scatter',
   echartsExampleUrl: echartsExample('scatter-polar-punchCard'),
-  description: 'GDP vs life expectancy by continent, sized by population -- demonstrates a polar-scatter chart with a normalized sizeProp.',
+  description:
+    'GDP vs life expectancy by continent, sized by population -- demonstrates a polar-scatter chart with a normalized sizeProp.',
   arbitrary: demographicScatterArbitrary,
   notePrefix: 'Country',
-  toRows: sample => sample.data.map(row => ({
-    GDP: row.x,
-    LifeExpectancy: row.y,
-    Continent: row.continent,
-    Population: row.population,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      GDP: row.x,
+      LifeExpectancy: row.y,
+      Continent: row.continent,
+      Population: row.population,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1135,7 +1213,7 @@ const polarScatterSpec = defineChartExampleSpec<ScatterWithSeriesSample>({
 })
 
 interface PieSample {
-  readonly data: ReadonlyArray<{ readonly name: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly name: string; readonly value: number }>
 }
 
 const pieSpec = defineChartExampleSpec<PieSample>({
@@ -1144,10 +1222,11 @@ const pieSpec = defineChartExampleSpec<PieSample>({
   description: 'Sales by region -- demonstrates a basic pie chart.',
   arbitrary: pieChartArbitrary,
   notePrefix: 'Sales-Region',
-  toRows: sample => sample.data.map(row => ({
-    Region: row.name,
-    Revenue: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Region: row.name,
+      Revenue: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1189,7 +1268,7 @@ const pieSpec = defineChartExampleSpec<PieSample>({
 })
 
 interface FunnelSample {
-  readonly data: ReadonlyArray<{ readonly step: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly step: string; readonly value: number }>
 }
 
 const funnelSpec = defineChartExampleSpec<FunnelSample>({
@@ -1198,10 +1277,11 @@ const funnelSpec = defineChartExampleSpec<FunnelSample>({
   description: 'User journey funnel -- demonstrates a funnel chart with decreasing stage values.',
   arbitrary: funnelChartArbitrary,
   notePrefix: 'Funnel-Stage',
-  toRows: sample => sample.data.map(row => ({
-    FunnelStage: row.step,
-    Population: row.value,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      FunnelStage: row.step,
+      Population: row.value,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1239,16 +1319,18 @@ const funnelSpec = defineChartExampleSpec<FunnelSample>({
 const gaugeSpec = defineChartExampleSpec<readonly GaugeSample[]>({
   chartType: 'gauge',
   echartsExampleUrl: echartsExample('gauge'),
-  description: 'Health log metrics -- demonstrates gauge charts with different aggregations and color bands.',
+  description:
+    'Health log metrics -- demonstrates gauge charts with different aggregations and color bands.',
   arbitrary: gaugeChartArbitrary,
   notePrefix: 'Health-Log',
-  toRows: (sample: readonly GaugeSample[]) => sample.map((item, _idx) => ({
-    Date: item.date,
-    Steps: item.steps,
-    Weight: item.weight,
-    SleepScore: item.sleepScore,
-    WaterIntake: item.waterIntake,
-  })),
+  toRows: (sample: readonly GaugeSample[]) =>
+    sample.map((item, _idx) => ({
+      Date: item.date,
+      Steps: item.steps,
+      Weight: item.weight,
+      SleepScore: item.sleepScore,
+      WaterIntake: item.waterIntake,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1319,20 +1401,26 @@ const gaugeSpec = defineChartExampleSpec<readonly GaugeSample[]>({
 })
 
 interface HeatmapSample {
-  readonly data: ReadonlyArray<{ readonly day: string, readonly hour: string, readonly activity: number }>
+  readonly data: ReadonlyArray<{
+    readonly day: string
+    readonly hour: string
+    readonly activity: number
+  }>
 }
 
 const heatmapSpec = defineChartExampleSpec<HeatmapSample>({
   chartType: 'heatmap',
   echartsExampleUrl: echartsExample('heatmap-cartesian'),
-  description: 'Server load heatmap -- demonstrates a heatmap chart over a day x hour activity grid.',
+  description:
+    'Server load heatmap -- demonstrates a heatmap chart over a day x hour activity grid.',
   arbitrary: heatmapChartArbitrary,
   notePrefix: 'Server-Load',
-  toRows: sample => sample.data.map(row => ({
-    Time: row.hour,
-    Server: row.day,
-    Load: row.activity,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Time: row.hour,
+      Server: row.day,
+      Load: row.activity,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1378,20 +1466,26 @@ const heatmapSpec = defineChartExampleSpec<HeatmapSample>({
 })
 
 interface PolarLineSample {
-  readonly data: ReadonlyArray<{ readonly time: string, readonly server: string, readonly load: number }>
+  readonly data: ReadonlyArray<{
+    readonly time: string
+    readonly server: string
+    readonly load: number
+  }>
 }
 
 const polarLineSpec = defineChartExampleSpec<PolarLineSample>({
   chartType: 'polar-line',
   echartsExampleUrl: echartsExample('line-polar'),
-  description: 'Server load across time-of-day buckets -- demonstrates a polar-line chart over a time x server cross-product.',
+  description:
+    'Server load across time-of-day buckets -- demonstrates a polar-line chart over a time x server cross-product.',
   arbitrary: polarLineChartArbitrary,
   notePrefix: 'Server-Load',
-  toRows: sample => sample.data.map(row => ({
-    Time: row.time,
-    Server: row.server,
-    Load: row.load,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Time: row.time,
+      Server: row.server,
+      Load: row.load,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1448,26 +1542,29 @@ const polarLineSpec = defineChartExampleSpec<PolarLineSample>({
         stack: true,
         areaStyle: true,
         title: 'Total server load by time of day (stacked)',
-        description: 'Each server\'s load stacks on the others; the outer edge is the fleet total for that time bucket.',
+        description:
+          "Each server's load stacks on the others; the outer edge is the fleet total for that time bucket.",
       },
     },
   ],
 })
 
 interface CalendarSample {
-  readonly data: ReadonlyArray<{ readonly date: string, readonly mood: number }>
+  readonly data: ReadonlyArray<{ readonly date: string; readonly mood: number }>
 }
 
 const calendarSpec = defineChartExampleSpec<CalendarSample>({
   chartType: 'calendar',
   echartsExampleUrl: echartsExample('calendar-heatmap'),
-  description: 'Daily mood journal (1..5) -- demonstrates a calendar chart mapping a full year of daily values onto a sequential ramp.',
+  description:
+    'Daily mood journal (1..5) -- demonstrates a calendar chart mapping a full year of daily values onto a sequential ramp.',
   arbitrary: calendarChartArbitrary,
   notePrefix: 'Mood-Day',
-  toRows: sample => sample.data.map(row => ({
-    Date: Temporal.PlainDate.from(row.date),
-    Mood: row.mood,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Date: Temporal.PlainDate.from(row.date),
+      Mood: row.mood,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1524,13 +1621,14 @@ const candlestickSpec = defineChartExampleSpec<CandlestickSample>({
   description: 'AAPL stock analysis -- demonstrates a candlestick chart.',
   arbitrary: candlestickChartArbitrary,
   notePrefix: 'AAPL-Day',
-  toRows: sample => sample.data.map(row => ({
-    Date: Temporal.PlainDate.from(row.date),
-    Open: row.open,
-    Close: row.close,
-    High: row.high,
-    Low: row.low,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Date: Temporal.PlainDate.from(row.date),
+      Open: row.open,
+      Close: row.close,
+      High: row.high,
+      Low: row.low,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1579,7 +1677,11 @@ const candlestickSpec = defineChartExampleSpec<CandlestickSample>({
 })
 
 interface StackedAreaSample {
-  readonly data: ReadonlyArray<{ readonly date: string, readonly region: string, readonly revenue: number }>
+  readonly data: ReadonlyArray<{
+    readonly date: string
+    readonly region: string
+    readonly revenue: number
+  }>
 }
 
 // area-chart is a rendering variant of line-chart, but ships a multi-series
@@ -1589,14 +1691,16 @@ interface StackedAreaSample {
 const areaSpec = defineChartExampleSpec<StackedAreaSample>({
   chartType: 'area',
   echartsExampleUrl: echartsExample('area-basic'),
-  description: 'Monthly revenue by region -- demonstrates a multi-series area chart, unstacked and stacked.',
+  description:
+    'Monthly revenue by region -- demonstrates a multi-series area chart, unstacked and stacked.',
   arbitrary: stackedAreaChartArbitrary,
   notePrefix: 'Area-Revenue',
-  toRows: sample => sample.data.map(row => ({
-    Date: Temporal.PlainDate.from(row.date),
-    Region: row.region,
-    Revenue: row.revenue,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Date: Temporal.PlainDate.from(row.date),
+      Region: row.region,
+      Revenue: row.revenue,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1683,14 +1787,15 @@ const bulletSpec = defineChartExampleSpec<BulletSample>({
   description: 'KPI metrics against targets and range bands -- demonstrates a bullet chart.',
   arbitrary: bulletChartArbitrary,
   notePrefix: 'KPI',
-  toRows: sample => sample.data.map(row => ({
-    Metric: row.metric,
-    Value: row.value,
-    Target: row.target,
-    RangeLow: row.rangeLow,
-    RangeMid: row.rangeMid,
-    RangeHigh: row.rangeHigh,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Metric: row.metric,
+      Value: row.value,
+      Target: row.target,
+      RangeLow: row.rangeLow,
+      RangeMid: row.rangeMid,
+      RangeHigh: row.rangeHigh,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1722,16 +1827,18 @@ interface GanttSample {
 const ganttSpec = defineChartExampleSpec<GanttSample>({
   chartType: 'gantt',
   echartsExampleUrl: echartsExample('custom-gantt-flight'),
-  description: 'Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart.',
+  description:
+    'Product delivery timeline -- each deliverable runs through Plan/Develop/Test/Release phases, demonstrating a multi-color phased gantt chart.',
   arbitrary: ganttChartArbitrary,
   notePrefix: 'Task',
-  toRows: sample => sample.data.map(row => ({
-    Task: row.task,
-    Phase: row.phase,
-    Start: Temporal.PlainDate.from(row.start),
-    End: Temporal.PlainDate.from(row.end),
-    Project: row.project,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Task: row.task,
+      Phase: row.phase,
+      Start: Temporal.PlainDate.from(row.start),
+      End: Temporal.PlainDate.from(row.end),
+      Project: row.project,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1793,20 +1900,26 @@ const ganttSpec = defineChartExampleSpec<GanttSample>({
 })
 
 interface ThemeRiverSample {
-  readonly data: ReadonlyArray<{ readonly date: string, readonly topic: string, readonly mentions: number }>
+  readonly data: ReadonlyArray<{
+    readonly date: string
+    readonly topic: string
+    readonly mentions: number
+  }>
 }
 
 const themeRiverSpec = defineChartExampleSpec<ThemeRiverSample>({
   chartType: 'theme-river',
   echartsExampleUrl: echartsExample('themeRiver-basic'),
-  description: 'News topic mentions over a month -- demonstrates a theme river chart over a date x topic cross-product.',
+  description:
+    'News topic mentions over a month -- demonstrates a theme river chart over a date x topic cross-product.',
   arbitrary: themeRiverChartArbitrary,
   notePrefix: 'News-Day',
-  toRows: sample => sample.data.map(row => ({
-    Date: Temporal.PlainDate.from(row.date),
-    Topic: row.topic,
-    Mentions: row.mentions,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Date: Temporal.PlainDate.from(row.date),
+      Topic: row.topic,
+      Mentions: row.mentions,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1825,7 +1938,8 @@ const themeRiverSpec = defineChartExampleSpec<ThemeRiverSample>({
         showLegend: true,
         legendPosition: 'bottom',
         title: 'News topics over time',
-        description: 'Each band is a topic; its thickness is that day\'s mention count. Bands stack to show total news volume.',
+        description:
+          "Each band is a topic; its thickness is that day's mention count. Bands stack to show total news volume.",
       },
     },
     {
@@ -1868,7 +1982,7 @@ const themeRiverSpec = defineChartExampleSpec<ThemeRiverSample>({
 })
 
 interface WordCloudSample {
-  readonly data: ReadonlyArray<{ readonly word: string, readonly frequency: number }>
+  readonly data: ReadonlyArray<{ readonly word: string; readonly frequency: number }>
 }
 
 const wordCloudSpec = defineChartExampleSpec<WordCloudSample>({
@@ -1881,10 +1995,11 @@ const wordCloudSpec = defineChartExampleSpec<WordCloudSample>({
   description: 'Keyword frequency -- demonstrates a word cloud chart.',
   arbitrary: wordCloudChartArbitrary,
   notePrefix: 'Keyword',
-  toRows: sample => sample.data.map(row => ({
-    Word: row.word,
-    Frequency: row.frequency,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Word: row.word,
+      Frequency: row.frequency,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1902,21 +2017,23 @@ const wordCloudSpec = defineChartExampleSpec<WordCloudSample>({
 const mapSpec = defineChartExampleSpec<MapSample>({
   chartType: 'map',
   echartsExampleUrl: echartsExample('map-usa'),
-  description: 'Chicago landmarks by event count -- demonstrates a map chart over a real GeoJSON asset.',
+  description:
+    'Chicago landmarks by event count -- demonstrates a map chart over a real GeoJSON asset.',
   arbitrary: mapChartArbitrary,
   notePrefix: 'Chicago-Landmark',
-  toRows: sample => sample.data.map(row => ({
-    Landmark: row.landmark,
-    Category: row.category,
-    Season: row.season,
-    EventType: row.eventType,
-    EventCount: row.eventCount,
-    Attendance: row.attendance,
-    Rating: row.rating,
-    TicketPrice: row.ticketPrice,
-    Latitude: row.lat,
-    Longitude: row.lon,
-  })),
+  toRows: sample =>
+    sample.data.map(row => ({
+      Landmark: row.landmark,
+      Category: row.category,
+      Season: row.season,
+      EventType: row.eventType,
+      EventCount: row.eventCount,
+      Attendance: row.attendance,
+      Rating: row.rating,
+      TicketPrice: row.ticketPrice,
+      Latitude: row.lat,
+      Longitude: row.lon,
+    })),
   variants: [
     {
       fileName: 'Basic.base',
@@ -1984,7 +2101,8 @@ const mapSpec = defineChartExampleSpec<MapSample>({
         visualMapColor: '#e0f3db,#a8ddb5,#4eb3d3,#0868ac',
         valueFormat: 'currency:USD',
         title: 'Average Event Ticket Price by Landmark',
-        description: 'Piecewise vertical visual map banding landmarks by average ticket price (USD)',
+        description:
+          'Piecewise vertical visual map banding landmarks by average ticket price (USD)',
       },
       filters: ['note.Landmark != null'],
     },
@@ -2001,12 +2119,10 @@ const mapSpec = defineChartExampleSpec<MapSample>({
         visualMapColor: '#edf8fb,#b2e2e2,#66c2a4,#2ca25f,#006d2c',
         valueFormat: 'compact',
         title: 'Peak Summer Lakefront Landmarks',
-        description: 'Filtered to Peak Summer outdoor venues highlighting seasonal attendance concentration',
+        description:
+          'Filtered to Peak Summer outdoor venues highlighting seasonal attendance concentration',
       },
-      filters: [
-        'note.Landmark != null',
-        'note.Season == "Peak Summer"',
-      ],
+      filters: ['note.Landmark != null', 'note.Season == "Peak Summer"'],
     },
   ],
 })

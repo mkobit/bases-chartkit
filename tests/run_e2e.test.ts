@@ -87,9 +87,7 @@ describe('Command line argument parsing', () => {
   })
 
   test('throws error on invalid theme name', () => {
-    expect(() => parseCliArgs(['--theme', 'sepia'])).toThrow(
-      '--theme must be "light" or "dark"',
-    )
+    expect(() => parseCliArgs(['--theme', 'sepia'])).toThrow('--theme must be "light" or "dark"')
   })
 })
 
@@ -178,7 +176,7 @@ describe('Ephemeral port finding', () => {
 describe('Chrome DevTools Protocol readiness wait', () => {
   test('rejects immediately when process exited early with code', async () => {
     const proc = childProcess.spawn('true')
-    await new Promise<void>((resolve) => {
+    await new Promise<void>(resolve => {
       proc.once('exit', () => resolve())
     })
 
@@ -187,17 +185,17 @@ describe('Chrome DevTools Protocol readiness wait', () => {
   })
 
   test('rejects with timeout error when CDP endpoint does not respond', async () => {
-    const proc = childProcess.spawn('bun', ['-e', 'await new Promise(() => {})'], { detached: true })
+    const proc = childProcess.spawn('bun', ['-e', 'await new Promise(() => {})'], {
+      detached: true,
+    })
     try {
       const attempt = waitForCdpReady(9_999, proc, { timeoutMs: 50, pollIntervalMs: 10 })
       expect(attempt).rejects.toThrow('Timed out waiting for Obsidian CDP endpoint on port 9999')
-    }
-    finally {
+    } finally {
       if (proc.pid !== undefined) {
         try {
           process.kill(-proc.pid, 'SIGKILL')
-        }
-        catch (err: unknown) {
+        } catch (err: unknown) {
           // Process may have exited
           void err
         }
@@ -212,17 +210,19 @@ describe('Chrome DevTools Protocol readiness wait', () => {
         message(ws, raw) {
           const parsed: unknown = JSON.parse(String(raw))
           if (
-            typeof parsed === 'object'
-            && parsed !== null
-            && 'method' in parsed
-            && parsed.method === 'Runtime.evaluate'
-            && 'id' in parsed
-            && typeof parsed.id === 'number'
+            typeof parsed === 'object' &&
+            parsed !== null &&
+            'method' in parsed &&
+            parsed.method === 'Runtime.evaluate' &&
+            'id' in parsed &&
+            typeof parsed.id === 'number'
           ) {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: { result: { type: 'boolean', value: true } },
-            }))
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: { result: { type: 'boolean', value: true } },
+              }),
+            )
           }
         },
       },
@@ -244,18 +244,18 @@ describe('Chrome DevTools Protocol readiness wait', () => {
       },
     })
 
-    const proc = childProcess.spawn('bun', ['-e', 'await new Promise(() => {})'], { detached: true })
+    const proc = childProcess.spawn('bun', ['-e', 'await new Promise(() => {})'], {
+      detached: true,
+    })
     const port = server.port ?? 0
 
     try {
       await waitForCdpReady(port, proc, { timeoutMs: 2_000, pollIntervalMs: 50 })
-    }
-    finally {
+    } finally {
       if (proc.pid !== undefined) {
         try {
           process.kill(-proc.pid, 'SIGKILL')
-        }
-        catch (err: unknown) {
+        } catch (err: unknown) {
           // Process may have exited
           void err
         }
@@ -273,20 +273,26 @@ describe('Obsidian process termination and cleanup', () => {
     await stopObsidian(proc, tempDir, undefined, 500)
 
     expect(proc.exitCode !== null || proc.signalCode !== null).toBe(true)
-    const exists = await fs.access(tempDir).then(() => true).catch(() => false)
+    const exists = await fs
+      .access(tempDir)
+      .then(() => true)
+      .catch(() => false)
     expect(exists).toBe(false)
   })
 
   test('handles already stopped process cleanly', async () => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-e2e-dead-test-'))
     const proc = childProcess.spawn('true')
-    await new Promise<void>((resolve) => {
+    await new Promise<void>(resolve => {
       proc.once('exit', () => resolve())
     })
 
     await stopObsidian(proc, tempDir, undefined, 500)
 
-    const exists = await fs.access(tempDir).then(() => true).catch(() => false)
+    const exists = await fs
+      .access(tempDir)
+      .then(() => true)
+      .catch(() => false)
     expect(exists).toBe(false)
   })
 

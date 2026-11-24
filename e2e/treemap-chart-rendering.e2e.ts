@@ -1,6 +1,13 @@
 import { test, expect } from './fixtures/obsidian'
 import type { Page } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface TreemapSeriesLike {
   readonly type?: string
@@ -29,81 +36,89 @@ interface HierarchyLeaf {
  * as hoverable as a top-level node.
  */
 async function findHierarchyLeaf(page: Page, seriesIndex = 0): Promise<HierarchyLeaf | null> {
-  return evaluateObsidian(page, (app, a: { seriesIndex: number }) => {
-    interface TreeNodeLike {
-      readonly name: string
-      readonly children: readonly TreeNodeLike[]
-      readonly dataIndex: number
-      readonly getValue: () => unknown
-    }
-    interface SeriesDataLike {
-      readonly tree?: { readonly root: TreeNodeLike }
-    }
-    interface SeriesModelLike {
-      readonly getData: () => SeriesDataLike
-    }
-    interface EChartsModelLike {
-      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
-    }
-    interface ChartLike {
-      readonly chart: { readonly getModel: () => EChartsModelLike } | null
-    }
-
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+  return evaluateObsidian(
+    page,
+    (app, a: { seriesIndex: number }) => {
+      interface TreeNodeLike {
+        readonly name: string
+        readonly children: readonly TreeNodeLike[]
+        readonly dataIndex: number
+        readonly getValue: () => unknown
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
+      interface SeriesDataLike {
+        readonly tree?: { readonly root: TreeNodeLike }
       }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
-
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      interface SeriesModelLike {
+        readonly getData: () => SeriesDataLike
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
+      interface EChartsModelLike {
+        readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
       }
-      if (isChartView(obj)) {
-        return obj
+      interface ChartLike {
+        readonly chart: { readonly getModel: () => EChartsModelLike } | null
       }
-      const nextVisited = [...visited, obj]
-      const values: readonly unknown[] = Object.values(obj)
-      return values
-        .map(value => findChartView(value, depth + 1, nextVisited))
-        .find((found): found is ChartLike => found !== undefined)
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves
-      .map(leaf => leaf ? findChartView(leaf.view, 0, []) : undefined)
-      .find((view): view is ChartLike => view !== undefined)
-
-    const root = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData().tree?.root
-    if (!root) {
-      return null
-    }
-
-    // Depth-first, first-child-first: return the first node with no
-    // children of its own and a finite numeric value.
-    const findLeaf = (node: TreeNodeLike): HierarchyLeaf | undefined => {
-      if (node.children.length === 0) {
-        const value = node.getValue()
-        return typeof value === 'number' && Number.isFinite(value)
-          ? { name: node.name, value, dataIndex: node.dataIndex }
-          : undefined
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
       }
-      return node.children.map(findLeaf).find((found): found is HierarchyLeaf => found !== undefined)
-    }
 
-    return findLeaf(root) ?? null
-  }, { seriesIndex })
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        const values: readonly unknown[] = Object.values(obj)
+        return values
+          .map(value => findChartView(value, depth + 1, nextVisited))
+          .find((found): found is ChartLike => found !== undefined)
+      }
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves
+        .map(leaf => (leaf ? findChartView(leaf.view, 0, []) : undefined))
+        .find((view): view is ChartLike => view !== undefined)
+
+      const root = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
+        .tree?.root
+      if (!root) {
+        return null
+      }
+
+      // Depth-first, first-child-first: return the first node with no
+      // children of its own and a finite numeric value.
+      const findLeaf = (node: TreeNodeLike): HierarchyLeaf | undefined => {
+        if (node.children.length === 0) {
+          const value = node.getValue()
+          return typeof value === 'number' && Number.isFinite(value)
+            ? { name: node.name, value, dataIndex: node.dataIndex }
+            : undefined
+        }
+        return node.children
+          .map(findLeaf)
+          .find((found): found is HierarchyLeaf => found !== undefined)
+      }
+
+      return findLeaf(root) ?? null
+    },
+    { seriesIndex },
+  )
 }
 
 test.describe('treemap chart rendering', () => {
@@ -114,30 +129,42 @@ test.describe('treemap chart rendering', () => {
   // internal tree), so this asserts on a field that does survive round-trip
   // to prove the view->transformer pipeline still renders successfully with
   // real options flowing through instead of {}.
-  test('treemap renders with real common options flowing through', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('treemap renders with real common options flowing through', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
-        return option?.series?.length ?? 0
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: 30_000 },
-    ).toBeGreaterThan(0)
+      { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' },
+    )
 
-    const option = asOptionLike<{ readonly series: readonly TreemapSeriesLike[] }>(await getChartOption(page))
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly unknown[] }>(
+            await getChartOption(page),
+          )
+          return option?.series?.length ?? 0
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0)
+
+    const option = asOptionLike<{ readonly series: readonly TreemapSeriesLike[] }>(
+      await getChartOption(page),
+    )
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -159,23 +186,28 @@ test.describe('treemap chart rendering', () => {
 
   // Regression coverage for bck-44j: extends the bar/radar hover-tooltip
   // pattern to treemap's 'treemap' series.
-  test('hovering a leaf node shows its name and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' })
+  test('hovering a leaf node shows its name and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'treemap/Basic.base', viewName: 'Org headcount treemap' },
+    )
 
-    await expect.poll(
-      () => findHierarchyLeaf(page),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).not.toBeNull()
+    await expect
+      .poll(() => findHierarchyLeaf(page), { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS })
+      .not.toBeNull()
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds a leaf -- a
@@ -192,7 +224,10 @@ test.describe('treemap chart rendering', () => {
       throw new Error('no leaf node found in the treemap series after polling succeeded')
     }
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: leafNode.dataIndex })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: leafNode.dataIndex,
+    })
 
     expect(tooltipText).toContain(`${leafNode.name}: ${leafNode.value}`)
   })

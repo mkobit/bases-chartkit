@@ -33,16 +33,10 @@ describe('chart programmability and formatters', () => {
   ]
 
   test('applies xAxisFormat and yAxisFormat to cartesian chart options', () => {
-    const opt = createCartesianChartOption(
-      sampleData,
-      'Department',
-      'Spend',
-      'bar',
-      {
-        xAxisFormat: 'compact',
-        yAxisFormat: 'currency:USD',
-      },
-    )
+    const opt = createCartesianChartOption(sampleData, 'Department', 'Spend', 'bar', {
+      xAxisFormat: 'compact',
+      yAxisFormat: 'currency:USD',
+    })
 
     expect(opt.xAxis).toBeDefined()
     expect(opt.yAxis).toBeDefined()
@@ -57,15 +51,9 @@ describe('chart programmability and formatters', () => {
   })
 
   test('applies date formatting to cartesian category x-axis', () => {
-    const opt = createCartesianChartOption(
-      sampleData,
-      'Date',
-      'Spend',
-      'line',
-      {
-        xAxisFormat: 'YYYY-MM-DD',
-      },
-    )
+    const opt = createCartesianChartOption(sampleData, 'Date', 'Spend', 'line', {
+      xAxisFormat: 'YYYY-MM-DD',
+    })
 
     const formatter = categoryXAxis(opt).axisLabel?.formatter
     if (typeof formatter !== 'function') {
@@ -76,9 +64,7 @@ describe('chart programmability and formatters', () => {
   })
 
   test('formats duration in gantt chart tooltip and respects custom valueFormat', () => {
-    const ganttData: BasesData = [
-      { Task: 'Design', Start: '2024-01-01', End: '2024-01-06' },
-    ]
+    const ganttData: BasesData = [{ Task: 'Design', Start: '2024-01-01', End: '2024-01-06' }]
 
     const opt = createGanttChartOption(ganttData, {
       taskProp: 'Task',
@@ -90,19 +76,17 @@ describe('chart programmability and formatters', () => {
   })
 
   test('deep merges raw ECharts option override into chart options', () => {
-    const baseOpt = createCartesianChartOption(
-      sampleData,
-      'Department',
-      'Spend',
-      'bar',
-    )
+    const baseOpt = createCartesianChartOption(sampleData, 'Department', 'Spend', 'bar')
 
     const rawOverride = JSON.stringify({
       title: { text: 'Custom Department Spend' },
       grid: { bottom: 80 },
     })
 
-    const parsedOverride: { readonly title: { readonly text: string }, readonly grid: { readonly bottom: number } } = JSON.parse(rawOverride)
+    const parsedOverride: {
+      readonly title: { readonly text: string }
+      readonly grid: { readonly bottom: number }
+    } = JSON.parse(rawOverride)
     const merged = R.mergeDeep(baseOpt, parsedOverride)
 
     expect(merged.title?.text).toBe('Custom Department Spend')

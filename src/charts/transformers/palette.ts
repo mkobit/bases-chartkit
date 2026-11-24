@@ -16,12 +16,13 @@ export const DEFAULT_CATEGORICAL_PALETTE: readonly string[] = COLOR_TOKENS.palet
  */
 export function getCategoricalColor(key: string | number): string {
   const str = String(key)
-  const hash = str.split('').reduce(
-    (acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0,
-    0,
-  )
+  const hash = str.split('').reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0, 0)
   const idx = Math.abs(hash) % DEFAULT_CATEGORICAL_PALETTE.length
-  return DEFAULT_CATEGORICAL_PALETTE[idx] ?? DEFAULT_CATEGORICAL_PALETTE[0] ?? COLOR_TOKENS.palettes.categorical[0]
+  return (
+    DEFAULT_CATEGORICAL_PALETTE[idx] ??
+    DEFAULT_CATEGORICAL_PALETTE[0] ??
+    COLOR_TOKENS.palettes.categorical[0]
+  )
 }
 
 /**

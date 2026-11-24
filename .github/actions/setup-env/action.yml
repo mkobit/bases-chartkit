@@ -1,7 +1,7 @@
 name: 'Setup Bun and Install'
 description: 'Sets up Bun and installs dependencies'
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install Bun
       uses: oven-sh/setup-bun@v2.2.0

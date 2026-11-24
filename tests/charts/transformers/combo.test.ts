@@ -1,15 +1,33 @@
 import { describe, it, expect } from 'bun:test'
 import { createComboChartOption } from '../../../src/charts/transformers/combo'
-import type { BarSeriesOption, EChartsOption, LineSeriesOption, ScatterSeriesOption, YAXisComponentOption } from 'echarts'
+import type {
+  BarSeriesOption,
+  EChartsOption,
+  LineSeriesOption,
+  ScatterSeriesOption,
+  YAXisComponentOption,
+} from 'echarts'
 import { isRecord } from '../../../src/charts/transformers/bases-values'
 
-function getSeriesList(option: EChartsOption): readonly (BarSeriesOption | LineSeriesOption | ScatterSeriesOption)[] {
-  const series = Array.isArray(option.series) ? option.series : option.series === undefined ? [] : [option.series]
-  return series.flatMap(s => (s.type === 'bar' || s.type === 'line' || s.type === 'scatter') ? [s] : [])
+function getSeriesList(
+  option: EChartsOption,
+): readonly (BarSeriesOption | LineSeriesOption | ScatterSeriesOption)[] {
+  const series = Array.isArray(option.series)
+    ? option.series
+    : option.series === undefined
+      ? []
+      : [option.series]
+  return series.flatMap(s =>
+    s.type === 'bar' || s.type === 'line' || s.type === 'scatter' ? [s] : [],
+  )
 }
 
 function getYAxes(option: EChartsOption): readonly YAXisComponentOption[] {
-  return Array.isArray(option.yAxis) ? option.yAxis : option.yAxis === undefined ? [] : [option.yAxis]
+  return Array.isArray(option.yAxis)
+    ? option.yAxis
+    : option.yAxis === undefined
+      ? []
+      : [option.yAxis]
 }
 
 function isTooltipFormatter(value: unknown): value is (params: unknown) => string {

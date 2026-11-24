@@ -1,6 +1,18 @@
-import type { EChartsOption, EffectScatterSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
+import type {
+  EChartsOption,
+  EffectScatterSeriesOption,
+  DatasetComponentOption,
+  VisualMapComponentOption,
+} from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
-import { extractRowMetadata, getNestedValue, isNumericAxisValues, isRecord, safeToString, toFiniteNumber } from './bases-values'
+import {
+  extractRowMetadata,
+  getNestedValue,
+  isNumericAxisValues,
+  isRecord,
+  safeToString,
+  toFiniteNumber,
+} from './bases-values'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatCompactVisualMapLabel } from './visual-map'
@@ -37,7 +49,12 @@ export interface EffectScatterTooltipParam {
 }
 
 // See scatter.ts's identical comment for why this is required at all.
-function formatTooltip(param: EffectScatterTooltipParam, xLabel: string, yLabel: string, sizeLabel?: string): string {
+function formatTooltip(
+  param: EffectScatterTooltipParam,
+  xLabel: string,
+  yLabel: string,
+  sizeLabel?: string,
+): string {
   const row = isScatterDataPoint(param.value) ? param.value : null
   if (!row) {
     return ''
@@ -46,7 +63,10 @@ function formatTooltip(param: EffectScatterTooltipParam, xLabel: string, yLabel:
   const header = param.seriesName ? `${marker}<b>${param.seriesName}</b><br/>` : ''
   const xText = row.x === null ? '-' : String(row.x)
   const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
-  const sizeLine = sizeLabel && row.size !== undefined ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}` : ''
+  const sizeLine =
+    sizeLabel && row.size !== undefined
+      ? `<br/>${sizeLabel}: ${row.size.toLocaleString('en-US')}`
+      : ''
   return `${header}${xLabel}: ${xText}<br/>${yLabel}: ${yText}${sizeLine}`
 }
 
@@ -67,39 +87,23 @@ export function createEffectScatterChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const xAxisRotate = options?.xAxisLabelRotate ?? 0
 
-  const isNumericX = isNumericAxisValues(
-    R.map(data, item => getNestedValue(item, xProp)),
-  )
+  const isNumericX = isNumericAxisValues(R.map(data, item => getNestedValue(item, xProp)))
 
   const normalizedData: ReadonlyArray<ScatterDataPoint> = R.map(
     data,
     (item, index): ScatterDataPoint => {
-      const xRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yRaw = Number(getNestedValue(
-        item,
-        yProp,
-      ))
-      const sRaw = seriesProp
-        ? getNestedValue(
-            item,
-            seriesProp,
-          )
-        : undefined
-      const sizeRaw = sizeProp
-        ? Number(getNestedValue(
-            item,
-            sizeProp,
-          ))
-        : undefined
+      const xRaw = getNestedValue(item, xProp)
+      const yRaw = Number(getNestedValue(item, yProp))
+      const sRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
+      const sizeRaw = sizeProp ? Number(getNestedValue(item, sizeProp)) : undefined
       const meta = extractRowMetadata(item, index)
 
       return {
         x: isNumericX
           ? toFiniteNumber(xRaw)
-          : (xRaw === undefined || xRaw === null ? 'Unknown' : safeToString(xRaw)),
+          : xRaw === undefined || xRaw === null
+            ? 'Unknown'
+            : safeToString(xRaw),
         y: Number.isNaN(yRaw) ? null : yRaw,
         s: seriesProp && sRaw !== undefined && sRaw !== null ? safeToString(sRaw) : yAxisLabel,
         ...(sizeProp ? { size: Number.isNaN(sizeRaw) ? 0 : sizeRaw } : {}),
@@ -129,87 +133,77 @@ export function createEffectScatterChartOption(
     source: normalizedData as unknown as Record<string, unknown>[],
   }
 
-  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesNames.map((name): DatasetComponentOption => ({
-    transform: {
-      type: 'filter',
-      config: { dimension: 's',
-        value: name },
-    },
-  }))
-
-  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
-    ...filterDatasets]
-
-  const visualMapOption: Readonly<VisualMapComponentOption> | undefined = (!sizeProp && !options?.visualMapType)
-    ? undefined
-    : ((): VisualMapComponentOption => {
-        const sizes: readonly number[] = sizeProp
-          ? R.pipe(
-              normalizedData,
-              R.map(d => d.size),
-              R.filter((d): d is number => d !== undefined),
-            )
-          : []
-        const dataMin = sizes.length > 0 ? Math.min(...sizes) : 0
-        const dataMax = sizes.length > 0 ? Math.max(...sizes) : 10
-
-        const finalMinVal = options?.visualMapMin !== undefined ? options.visualMapMin : dataMin
-        const finalMaxVal = options?.visualMapMax !== undefined ? options.visualMapMax : dataMax
-
-        return {
-          min: finalMinVal,
-          max: finalMaxVal,
-          calculable: true,
-          orient: options?.visualMapOrient ?? 'horizontal',
-          left: options?.visualMapLeft ?? 'center',
-          bottom: options?.visualMapTop !== undefined ? undefined : '0%',
-          top: options?.visualMapTop,
-          type: options?.visualMapType ?? 'continuous',
-          formatter: formatCompactVisualMapLabel,
-          dimension: sizeProp ? getDimension('size') : undefined,
-          inRange: {
-            ...(options?.visualMapColor ? { color: [...options.visualMapColor] } : {}),
-            ...(sizeProp
-              ? { symbolSize: [10,
-                  50] }
-              : {}),
-          },
-        }
-      })()
-
-  const seriesOptions: ReadonlyArray<EffectScatterSeriesOption> = seriesNames.map((name, idx): EffectScatterSeriesOption => {
-    const datasetIndex = idx + 1
-
-    return {
-      name: name,
-      type: 'effectScatter',
-      datasetIndex: datasetIndex,
-      encode: {
-        x: 'x',
-        y: 'y',
-        tooltip: sizeProp
-          ? ['x',
-              'y',
-              'size',
-              's']
-          : ['x',
-              'y',
-              's'],
+  const filterDatasets: ReadonlyArray<DatasetComponentOption> = seriesNames.map(
+    (name): DatasetComponentOption => ({
+      transform: {
+        type: 'filter',
+        config: { dimension: 's', value: name },
       },
-      ...(sizeProp && !visualMapOption
-        ? {
-            symbolSize: (val: unknown) => {
-              return (isScatterDataPoint(val) && val.size !== undefined)
-                ? Math.max(
-                    0,
-                    Number(val.size),
-                  )
-                : 10
+    }),
+  )
+
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset, ...filterDatasets]
+
+  const visualMapOption: Readonly<VisualMapComponentOption> | undefined =
+    !sizeProp && !options?.visualMapType
+      ? undefined
+      : ((): VisualMapComponentOption => {
+          const sizes: readonly number[] = sizeProp
+            ? R.pipe(
+                normalizedData,
+                R.map(d => d.size),
+                R.filter((d): d is number => d !== undefined),
+              )
+            : []
+          const dataMin = sizes.length > 0 ? Math.min(...sizes) : 0
+          const dataMax = sizes.length > 0 ? Math.max(...sizes) : 10
+
+          const finalMinVal = options?.visualMapMin !== undefined ? options.visualMapMin : dataMin
+          const finalMaxVal = options?.visualMapMax !== undefined ? options.visualMapMax : dataMax
+
+          return {
+            min: finalMinVal,
+            max: finalMaxVal,
+            calculable: true,
+            orient: options?.visualMapOrient ?? 'horizontal',
+            left: options?.visualMapLeft ?? 'center',
+            bottom: options?.visualMapTop !== undefined ? undefined : '0%',
+            top: options?.visualMapTop,
+            type: options?.visualMapType ?? 'continuous',
+            formatter: formatCompactVisualMapLabel,
+            dimension: sizeProp ? getDimension('size') : undefined,
+            inRange: {
+              ...(options?.visualMapColor ? { color: [...options.visualMapColor] } : {}),
+              ...(sizeProp ? { symbolSize: [10, 50] } : {}),
             },
           }
-        : {}),
-    }
-  })
+        })()
+
+  const seriesOptions: ReadonlyArray<EffectScatterSeriesOption> = seriesNames.map(
+    (name, idx): EffectScatterSeriesOption => {
+      const datasetIndex = idx + 1
+
+      return {
+        name: name,
+        type: 'effectScatter',
+        datasetIndex: datasetIndex,
+        encode: {
+          x: 'x',
+          y: 'y',
+          tooltip: sizeProp ? ['x', 'y', 'size', 's'] : ['x', 'y', 's'],
+        },
+        ...(sizeProp && !visualMapOption
+          ? {
+              symbolSize: (val: unknown) => {
+                return isScatterDataPoint(val) && val.size !== undefined
+                  ? Math.max(0, Number(val.size))
+                  : 10
+              },
+            }
+          : {}),
+      }
+    },
+  )
 
   const opt: EChartsOption = {
     dataset: [...datasets],
@@ -235,7 +229,14 @@ export function createEffectScatterChartOption(
     series: [...seriesOptions],
     tooltip: {
       trigger: 'item',
-      formatter: asTooltipFormatter((param: EffectScatterTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, sizeProp ? (options?.sizeLabel ?? sizeProp) : undefined)),
+      formatter: asTooltipFormatter((param: EffectScatterTooltipParam) =>
+        formatTooltip(
+          param,
+          xAxisLabel,
+          yAxisLabel,
+          sizeProp ? (options?.sizeLabel ?? sizeProp) : undefined,
+        ),
+      ),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(visualMapOption ? { visualMap: visualMapOption } : {}),

@@ -8,48 +8,45 @@ import { NEWS_TOPICS } from './themes'
 const ANCHOR_DATE = Temporal.PlainDate.from('2024-01-01')
 const DAY_COUNT = 30
 
-const DATES = Array.from(
-  { length: DAY_COUNT },
-  (_, i) => ANCHOR_DATE.add({ days: i }).toString(),
-)
+const DATES = Array.from({ length: DAY_COUNT }, (_, i) => ANCHOR_DATE.add({ days: i }).toString())
 
 // Every Date x Topic combination, generated once so sampled mention counts
 // can be paired onto it via R.zip below -- same cross-product technique as
 // heatmap.ts's DAY_HOUR_COMBINATIONS.
-const DATE_TOPIC_COMBINATIONS = DATES.flatMap(date =>
-  NEWS_TOPICS.map(topic => ({ date, topic })))
+const DATE_TOPIC_COMBINATIONS = DATES.flatMap(date => NEWS_TOPICS.map(topic => ({ date, topic })))
 
 /**
  * Arbitrary for Theme River chart data.
  * Generates mention counts for a Date x Topic cross-product.
  */
-export const themeRiverChartArbitrary = fc.record({
-  maxVal: fc.integer({ min: 50,
-    max: 150 }),
-}).chain((config) => {
-  return fc.array(
-    fc.integer({ min: 5,
-      max: config.maxVal }),
-    { minLength: DATE_TOPIC_COMBINATIONS.length,
-      maxLength: DATE_TOPIC_COMBINATIONS.length },
-  ).map((values) => {
-    const data = R.zip(DATE_TOPIC_COMBINATIONS, values).map(([combo, rawMentions], idx) => {
-      const topicIndex = NEWS_TOPICS.indexOf(combo.topic)
-      const dayIndex = Math.floor(idx / NEWS_TOPICS.length)
-      // Phase-shifted wave per topic to produce non-monotonic, organic flow curves
-      const wave = Math.round(20 * Math.sin((dayIndex + topicIndex * 4) / 4))
-      const mentions = Math.max(2, rawMentions + wave)
-
-      return {
-        date: combo.date,
-        topic: combo.topic,
-        mentions,
-      }
-    })
-
-    return {
-      type: 'themeRiver',
-      data,
-    }
+export const themeRiverChartArbitrary = fc
+  .record({
+    maxVal: fc.integer({ min: 50, max: 150 }),
   })
-})
+  .chain(config => {
+    return fc
+      .array(fc.integer({ min: 5, max: config.maxVal }), {
+        minLength: DATE_TOPIC_COMBINATIONS.length,
+        maxLength: DATE_TOPIC_COMBINATIONS.length,
+      })
+      .map(values => {
+        const data = R.zip(DATE_TOPIC_COMBINATIONS, values).map(([combo, rawMentions], idx) => {
+          const topicIndex = NEWS_TOPICS.indexOf(combo.topic)
+          const dayIndex = Math.floor(idx / NEWS_TOPICS.length)
+          // Phase-shifted wave per topic to produce non-monotonic, organic flow curves
+          const wave = Math.round(20 * Math.sin((dayIndex + topicIndex * 4) / 4))
+          const mentions = Math.max(2, rawMentions + wave)
+
+          return {
+            date: combo.date,
+            topic: combo.topic,
+            mentions,
+          }
+        })
+
+        return {
+          type: 'themeRiver',
+          data,
+        }
+      })
+  })

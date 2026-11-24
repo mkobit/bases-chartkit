@@ -1,12 +1,19 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, getMapSeriesState, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  evaluateObsidian,
+  getMapSeriesState,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 import type { MapSeriesState } from './helpers/evaluate'
 import * as R from 'remeda'
 
 // Narrows out the ECharts-auto-filled "Chicago" boundary entry (which carries
 // no EventCount) and its still-unresolved (null) siblings, so downstream code
 // sees `value: number` instead of `number | null` -- not just a boolean filter.
-const isResolvedLandmark = (item: MapSeriesState['items'][number]): item is { readonly name: string, readonly value: number } =>
+const isResolvedLandmark = (
+  item: MapSeriesState['items'][number],
+): item is { readonly name: string; readonly value: number } =>
   item.name !== 'Chicago' && item.value !== null
 
 test.describe('map chart rendering', () => {
@@ -17,30 +24,38 @@ test.describe('map chart rendering', () => {
   // static output against synthetic data -- a malformed asset or a
   // regionProp/GeoJSON name mismatch only surfaces once the real map file is
   // loaded and registered by the live chart.
-  test('registers the real GeoJSON asset and resolves every landmark region', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('registers the real GeoJSON asset and resolves every landmark region', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' },
+    )
 
     // registerMap (asset load) and Bases' query (note data) resolve on
     // separate async paths, so item values stay null until both settle.
-    await expect.poll(
-      async () => {
-        const state = await getMapSeriesState(page, { seriesIndex: 0 })
-        return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBe(5)
+    await expect
+      .poll(
+        async () => {
+          const state = await getMapSeriesState(page, { seriesIndex: 0 })
+          return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBe(5)
 
     const state = await getMapSeriesState(page, { seriesIndex: 0 })
 
@@ -49,7 +64,14 @@ test.describe('map chart rendering', () => {
 
     // The full set of features actually present in the registered GeoJSON --
     // proves the real asset (not a stub) parsed successfully, in file order.
-    expect(state?.regionNames).toEqual(['Chicago', 'Millennium Park', 'Navy Pier', 'Wrigley Field', 'Grant Park', 'Lincoln Park'])
+    expect(state?.regionNames).toEqual([
+      'Chicago',
+      'Millennium Park',
+      'Navy Pier',
+      'Wrigley Field',
+      'Grant Park',
+      'Lincoln Park',
+    ])
 
     // Each landmark note's Landmark value must resolve to one of those real
     // features -- a typo here would silently leave the region unhighlighted.
@@ -62,8 +84,16 @@ test.describe('map chart rendering', () => {
       R.filter(isResolvedLandmark),
       R.mapToObj(item => [item.name, item.value]),
     )
-    const EXPECTED_LANDMARK_NAMES = ['Millennium Park', 'Navy Pier', 'Wrigley Field', 'Grant Park', 'Lincoln Park']
-    expect(R.sortBy(R.keys(landmarkValuesByName), x => x)).toEqual(R.sortBy(EXPECTED_LANDMARK_NAMES, x => x))
+    const EXPECTED_LANDMARK_NAMES = [
+      'Millennium Park',
+      'Navy Pier',
+      'Wrigley Field',
+      'Grant Park',
+      'Lincoln Park',
+    ]
+    expect(R.sortBy(R.keys(landmarkValuesByName), x => x)).toEqual(
+      R.sortBy(EXPECTED_LANDMARK_NAMES, x => x),
+    )
     for (const name of EXPECTED_LANDMARK_NAMES) {
       expect(landmarkValuesByName[name]).toBeGreaterThan(0)
       expect(state?.regionNames).toContain(name)
@@ -80,34 +110,45 @@ test.describe('map chart rendering', () => {
   // already proves resolves names/values -- returns a real, hit-testable
   // Group for a named region, directly compatible with the existing
   // Group-traversal heuristic proven for radar.
-  test('hovering a landmark region shows its name and event count in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('hovering a landmark region shows its name and event count in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' })
-
-    await expect.poll(
-      async () => {
-        const state = await getMapSeriesState(page, { seriesIndex: 0 })
-        return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBe(5)
+      { path: 'map/Basic.base', viewName: 'Chicago landmarks by event count' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const state = await getMapSeriesState(page, { seriesIndex: 0 })
+          return R.pipe(state?.items ?? [], R.filter(isResolvedLandmark), R.length())
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBe(5)
 
     const state = await getMapSeriesState(page, { seriesIndex: 0 })
     const targetIndex = state?.items.findIndex(item => item.name === 'Grant Park') ?? -1
     expect(targetIndex).toBeGreaterThanOrEqual(0)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: targetIndex })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: targetIndex,
+    })
 
     expect(tooltipText).toContain('Grant Park')
     expect(tooltipText).toContain('91')

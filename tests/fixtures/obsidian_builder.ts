@@ -4,15 +4,15 @@ import * as R from 'remeda'
  * Represents the valid types for Obsidian frontmatter properties.
  * Now includes Temporal types.
  */
-export type FrontmatterValue
-  = | string
-    | number
-    | boolean
-    | null
-    | Temporal.PlainDate
-    | Temporal.ZonedDateTime
-    | Temporal.Instant
-    | readonly FrontmatterValue[]
+export type FrontmatterValue =
+  | string
+  | number
+  | boolean
+  | null
+  | Temporal.PlainDate
+  | Temporal.ZonedDateTime
+  | Temporal.Instant
+  | readonly FrontmatterValue[]
 
 /**
  * A strongly-typed representation of an Obsidian frontmatter block.
@@ -51,28 +51,22 @@ export class ObsidianFileBuilder {
   }
 
   withPath(segments: readonly string[]): ObsidianFileBuilder {
-    this.file = { ...this.file,
-      path: segments }
+    this.file = { ...this.file, path: segments }
     return this
   }
 
   withProperty(key: string, value: FrontmatterValue): ObsidianFileBuilder {
-    this.file = { ...this.file,
-      frontmatter: { ...this.file.frontmatter,
-        [key]: value } }
+    this.file = { ...this.file, frontmatter: { ...this.file.frontmatter, [key]: value } }
     return this
   }
 
   withFrontmatter(frontmatter: Frontmatter): ObsidianFileBuilder {
-    this.file = { ...this.file,
-      frontmatter: { ...this.file.frontmatter,
-        ...frontmatter } }
+    this.file = { ...this.file, frontmatter: { ...this.file.frontmatter, ...frontmatter } }
     return this
   }
 
   withContent(content: string): ObsidianFileBuilder {
-    this.file = { ...this.file,
-      content: content }
+    this.file = { ...this.file, content: content }
     return this
   }
 
@@ -86,16 +80,17 @@ export class ObsidianFileBuilder {
 
   toRawString(): string {
     const fmKeys = Object.keys(this.file.frontmatter)
-    const yamlBlock = fmKeys.length > 0
-      ? R.pipe(
-          fmKeys,
-          R.filter(key => this.file.frontmatter[key] !== undefined),
-          // @ts-expect-error - suppress strictNullChecks/type errors
-          R.map(key => `${key}: ${this.formatYamlValue(this.file.frontmatter[key])}`),
-          R.join('\n'),
-          content => `---\n${content}\n---\n`,
-        )
-      : ''
+    const yamlBlock =
+      fmKeys.length > 0
+        ? R.pipe(
+            fmKeys,
+            R.filter(key => this.file.frontmatter[key] !== undefined),
+            // @ts-expect-error - suppress strictNullChecks/type errors
+            R.map(key => `${key}: ${this.formatYamlValue(this.file.frontmatter[key])}`),
+            R.join('\n'),
+            content => `---\n${content}\n---\n`,
+          )
+        : ''
 
     return yamlBlock + (this.file.content || '')
   }
@@ -105,9 +100,11 @@ export class ObsidianFileBuilder {
       return 'null'
     }
 
-    if (val instanceof Temporal.PlainDate
-      || val instanceof Temporal.ZonedDateTime
-      || val instanceof Temporal.Instant) {
+    if (
+      val instanceof Temporal.PlainDate ||
+      val instanceof Temporal.ZonedDateTime ||
+      val instanceof Temporal.Instant
+    ) {
       return String(val)
     }
 

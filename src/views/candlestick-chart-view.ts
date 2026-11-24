@@ -1,6 +1,4 @@
-import type {
-  BasesOptions,
-} from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import type { EChartsOption } from 'echarts'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -26,19 +24,13 @@ export class CandlestickChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      '',
-      'candlestick',
-      {
-        ...this.getCommonTransformerOptions(),
-        openProp,
-        closeProp,
-        lowProp,
-        highProp,
-      },
-    )
+    return transformDataToChartOption(data, xProp, '', 'candlestick', {
+      ...this.getCommonTransformerOptions(),
+      openProp,
+      closeProp,
+      lowProp,
+      highProp,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

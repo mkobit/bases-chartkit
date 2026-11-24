@@ -47,10 +47,7 @@ export function buildHierarchy(
     data,
     R.map((item, index) => {
       const meta = extractRowMetadata(item, index)
-      const pathRaw = getNestedValue(
-        item,
-        pathProp,
-      )
+      const pathRaw = getNestedValue(item, pathProp)
       // `pathRaw` is typically a Bases `Value` wrapper (from `.get()`), not a
       // raw string -- unwrap it via `safeToString` the same way every other
       // transformer does before treating it as text to split on '/'.
@@ -62,12 +59,7 @@ export function buildHierarchy(
             return parts.length === 0
               ? null
               : (() => {
-                  const valNum = valueProp
-                    ? Number(getNestedValue(
-                        item,
-                        valueProp,
-                      ))
-                    : Number.NaN
+                  const valNum = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
                   const value = Number.isNaN(valNum) ? undefined : valNum
 
                   return {
@@ -86,21 +78,14 @@ export function buildHierarchy(
     // Group by current level name. Iterate over keys + index lookup rather than
     // R.entries()' [key, group] tuples, which this eslint version reports as
     // mutable.
-    const grouped = R.groupBy(
-      items,
-      item => item.parts[0],
-    )
+    const grouped = R.groupBy(items, item => item.parts[0])
     return R.pipe(
       R.keys(grouped),
       R.map((name): HierarchyNode => {
         const group: readonly PathItem[] = grouped[name] ?? []
         const leafItems: readonly PathItem[] = group.filter(item => item.parts.length === 1)
-        const leafValue = leafItems.length > 0
-          ? R.sumBy(
-              leafItems,
-              item => item.value ?? 0,
-            )
-          : undefined
+        const leafValue =
+          leafItems.length > 0 ? R.sumBy(leafItems, item => item.value ?? 0) : undefined
 
         const childrenItems: readonly PathItem[] = group
           .filter(item => item.parts.length > 1)
@@ -125,15 +110,10 @@ export function buildHierarchy(
             : {}),
         }
 
-        const nodeWithValue = (leafValue !== undefined && leafValue > 0)
-          ? { ...node,
-              value: leafValue }
-          : node
+        const nodeWithValue =
+          leafValue !== undefined && leafValue > 0 ? { ...node, value: leafValue } : node
 
-        const nodeWithChildren = children
-          ? { ...nodeWithValue,
-              children }
-          : nodeWithValue
+        const nodeWithChildren = children ? { ...nodeWithValue, children } : nodeWithValue
 
         return nodeWithChildren
       }),
@@ -149,11 +129,7 @@ export function createSunburstChartOption(
   options?: SunburstTransformerOptions,
 ): EChartsOption {
   const valueProp = options?.valueProp
-  const hierarchyData = buildHierarchy(
-    data,
-    pathProp,
-    valueProp,
-  )
+  const hierarchyData = buildHierarchy(data, pathProp, valueProp)
 
   const circularLayout = resolveCircularLayout(
     options ? { ...options, legend: false } : undefined,
@@ -165,8 +141,7 @@ export function createSunburstChartOption(
     data: asSunburstData(hierarchyData),
     colorBy: 'data',
     center: circularLayout.center,
-    radius: [0,
-      circularLayout.radius],
+    radius: [0, circularLayout.radius],
     label: {
       rotate: 'radial',
       fontSize: 10,
@@ -191,15 +166,10 @@ export function createTreeChartOption(
   pathProp: string,
   _options?: TreeTransformerOptions,
 ): EChartsOption {
-  const hierarchyDataRaw = buildHierarchy(
-    data,
-    pathProp,
-  )
+  const hierarchyDataRaw = buildHierarchy(data, pathProp)
 
-  const hierarchyData = hierarchyDataRaw.length > 1
-    ? [{ name: 'Root',
-        children: hierarchyDataRaw }]
-    : hierarchyDataRaw
+  const hierarchyData =
+    hierarchyDataRaw.length > 1 ? [{ name: 'Root', children: hierarchyDataRaw }] : hierarchyDataRaw
 
   const seriesItem: TreeSeriesOption = {
     type: 'tree',

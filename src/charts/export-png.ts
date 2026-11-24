@@ -37,8 +37,7 @@ function decodeBase64Png(base64: string): Blob | null {
     const binary = atob(base64)
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0))
     return new Blob([bytes], { type: 'image/png' })
-  }
-  catch {
+  } catch {
     return null
   }
 }
@@ -47,11 +46,7 @@ export function resolveExportBackgroundColor(
   theme: string | undefined,
   isDarkMode: boolean,
 ): string | undefined {
-  return theme !== undefined
-    ? undefined
-    : isDarkMode
-      ? '#1e1e1e'
-      : '#ffffff'
+  return theme !== undefined ? undefined : isDarkMode ? '#1e1e1e' : '#ffffff'
 }
 
 function defaultCreateClipboardItem(items: Record<string, Blob>): ClipboardItem {
@@ -62,8 +57,10 @@ export async function copyChartAsPng(
   chart: ChartImageSource,
   options?: CopyChartAsPngOptions,
 ): Promise<boolean> {
-  const clipboard = options?.clipboard ?? (typeof navigator !== 'undefined' ? navigator.clipboard : undefined)
-  const canCreateItem = options?.createClipboardItem !== undefined || typeof ClipboardItem !== 'undefined'
+  const clipboard =
+    options?.clipboard ?? (typeof navigator !== 'undefined' ? navigator.clipboard : undefined)
+  const canCreateItem =
+    options?.createClipboardItem !== undefined || typeof ClipboardItem !== 'undefined'
 
   return !clipboard || typeof clipboard.write !== 'function' || !canCreateItem
     ? false
@@ -88,11 +85,8 @@ async function writeChartPngToClipboard(
       ...(options?.backgroundColor ? { backgroundColor: options.backgroundColor } : {}),
     })
     const blob = dataUrlToPngBlob(dataUrl)
-    return blob
-      ? await writeBlob(clipboard, createClipboardItem, blob)
-      : false
-  }
-  catch {
+    return blob ? await writeBlob(clipboard, createClipboardItem, blob) : false
+  } catch {
     return false
   }
 }

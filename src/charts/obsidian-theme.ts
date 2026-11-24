@@ -37,7 +37,12 @@ interface CanvasLike {
 }
 
 function isCanvasLike(el: unknown): el is CanvasLike {
-  return typeof el === 'object' && el !== null && 'getContext' in el && typeof el.getContext === 'function'
+  return (
+    typeof el === 'object' &&
+    el !== null &&
+    'getContext' in el &&
+    typeof el.getContext === 'function'
+  )
 }
 
 function normalizeWithCanvas(ctx: CanvasContext2dLike, color: string): string {
@@ -56,11 +61,11 @@ function normalizeWithCanvas(ctx: CanvasContext2dLike, color: string): string {
       })()
 }
 
-function createColorNormalizer(
-  doc: { readonly createElement?: (tagName: string) => unknown },
-): (color: string) => string {
+function createColorNormalizer(doc: {
+  readonly createElement?: (tagName: string) => unknown
+}): (color: string) => string {
   const canvas = typeof doc.createElement === 'function' ? doc.createElement('canvas') : null
-  const ctx = isCanvasLike(canvas) ? canvas.getContext?.('2d') ?? null : null
+  const ctx = isCanvasLike(canvas) ? (canvas.getContext?.('2d') ?? null) : null
   return !ctx
     ? color => color
     : (color: string): string => (!color ? color : normalizeWithCanvas(ctx, color))
@@ -73,7 +78,12 @@ interface StyleContextView {
 }
 
 function isStyleContextView(view: unknown): view is StyleContextView {
-  return typeof view === 'object' && view !== null && 'getComputedStyle' in view && typeof view.getComputedStyle === 'function'
+  return (
+    typeof view === 'object' &&
+    view !== null &&
+    'getComputedStyle' in view &&
+    typeof view.getComputedStyle === 'function'
+  )
 }
 
 export interface ObsidianEChartsTheme {
@@ -168,17 +178,27 @@ function assembleTokens(
   textNormal: string,
   backgroundPrimary: string,
   interactiveAccent: string,
-  doc: { readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null },
+  doc: {
+    readonly body?: {
+      readonly classList?: { readonly contains: (token: string) => boolean }
+    } | null
+  },
 ): ObsidianCssTokens {
   const isDark = doc.body?.classList?.contains('theme-dark') ?? false
   const resolvedTextNormal = normalizeColor(textNormal) || (isDark ? '#dcddde' : '#222222')
   const textMuted = normalizeColor(getProp('--text-muted')) || resolvedTextNormal
   const textFaint = normalizeColor(getProp('--text-faint')) || textMuted
   const resolvedAccent = normalizeColor(interactiveAccent) || '#705dcf'
-  const textAccent = normalizeColor(getProp('--text-accent')) || resolvedAccent || resolvedTextNormal
-  const resolvedBackgroundPrimary = normalizeColor(backgroundPrimary) || (isDark ? '#1e1e1e' : '#ffffff')
-  const backgroundSecondary = normalizeColor(getProp('--background-secondary')) || resolvedBackgroundPrimary || (isDark ? '#202020' : '#f4f4f4')
-  const backgroundModifierBorder = normalizeColor(getProp('--background-modifier-border')) || textFaint
+  const textAccent =
+    normalizeColor(getProp('--text-accent')) || resolvedAccent || resolvedTextNormal
+  const resolvedBackgroundPrimary =
+    normalizeColor(backgroundPrimary) || (isDark ? '#1e1e1e' : '#ffffff')
+  const backgroundSecondary =
+    normalizeColor(getProp('--background-secondary')) ||
+    resolvedBackgroundPrimary ||
+    (isDark ? '#202020' : '#f4f4f4')
+  const backgroundModifierBorder =
+    normalizeColor(getProp('--background-modifier-border')) || textFaint
   const fontFamily = getProp('--font-interface') || getProp('--font-text') || undefined
 
   const rawColors = [
@@ -194,9 +214,7 @@ function assembleTokens(
   ]
   const obsidianColors = R.filter(rawColors, (c: string): boolean => c.length > 0)
 
-  const palette = obsidianColors.length >= 3
-    ? obsidianColors
-    : DEFAULT_CATEGORICAL_PALETTE
+  const palette = obsidianColors.length >= 3 ? obsidianColors : DEFAULT_CATEGORICAL_PALETTE
 
   return {
     darkMode: isDark,
@@ -216,7 +234,9 @@ function assembleTokens(
 function parseTokens(
   computed: { readonly getPropertyValue: (prop: string) => string },
   doc: {
-    readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null
+    readonly body?: {
+      readonly classList?: { readonly contains: (token: string) => boolean }
+    } | null
     readonly createElement?: (tagName: string) => unknown
   },
 ): ObsidianCssTokens | null {
@@ -228,21 +248,28 @@ function parseTokens(
 
   return !textNormal && !backgroundPrimary && !interactiveAccent
     ? null
-    : assembleTokens(getProp, createColorNormalizer(doc), textNormal, backgroundPrimary, interactiveAccent, doc)
+    : assembleTokens(
+        getProp,
+        createColorNormalizer(doc),
+        textNormal,
+        backgroundPrimary,
+        interactiveAccent,
+        doc,
+      )
 }
 
 function extractTokensFromView(
   el: unknown,
   doc: {
-    readonly body?: { readonly classList?: { readonly contains: (token: string) => boolean } } | null
+    readonly body?: {
+      readonly classList?: { readonly contains: (token: string) => boolean }
+    } | null
     readonly createElement?: (tagName: string) => unknown
   },
   view: StyleContextView,
 ): ObsidianCssTokens | null {
   const computed = view.getComputedStyle(el)
-  return !computed
-    ? null
-    : parseTokens(computed, doc)
+  return !computed ? null : parseTokens(computed, doc)
 }
 
 /**
@@ -250,15 +277,17 @@ function extractTokensFromView(
  * Returns null if key Obsidian CSS properties are absent, indicating that
  * fallback to the default binary light/dark mode is appropriate.
  */
-export function extractObsidianCssTokens(target?: StyleResolverTarget | Element | null): ObsidianCssTokens | null {
+export function extractObsidianCssTokens(
+  target?: StyleResolverTarget | Element | null,
+): ObsidianCssTokens | null {
   const win = typeof window !== 'undefined' ? window : undefined
-  const doc = target?.ownerDocument ?? (typeof activeDocument !== 'undefined' ? activeDocument : win?.document)
+  const doc =
+    target?.ownerDocument ??
+    (typeof activeDocument !== 'undefined' ? activeDocument : win?.document)
   const el = target ?? doc?.body
   const view = doc?.defaultView ?? win
 
-  return !el || !doc || !isStyleContextView(view)
-    ? null
-    : extractTokensFromView(el, doc, view)
+  return !el || !doc || !isStyleContextView(view) ? null : extractTokensFromView(el, doc, view)
 }
 
 /**
@@ -406,7 +435,8 @@ export interface ResolvedThemeContext {
 }
 
 export function isObsidianDarkMode(target?: StyleResolverTarget | Element | null): boolean {
-  const doc = target?.ownerDocument ?? (typeof activeDocument !== 'undefined' ? activeDocument : undefined)
+  const doc =
+    target?.ownerDocument ?? (typeof activeDocument !== 'undefined' ? activeDocument : undefined)
   return doc?.body?.classList?.contains('theme-dark') ?? false
 }
 
@@ -419,8 +449,8 @@ export function resolveThemeContext(
   const autoTheme = tokens ? buildEChartsThemeFromObsidian(tokens) : undefined
   const dark = isObsidianDarkMode(target)
   const theme = resolveTheme(chartTheme, pluginTheme, tokens !== null, dark)
-  const isDarkMode = theme === 'dark'
-    || ((theme === OBSIDIAN_AUTO_THEME_NAME || theme === undefined) && dark)
+  const isDarkMode =
+    theme === 'dark' || ((theme === OBSIDIAN_AUTO_THEME_NAME || theme === undefined) && dark)
 
   return {
     theme,
@@ -435,11 +465,13 @@ export interface CustomThemeInput {
 }
 
 export interface ParsedCustomThemes {
-  readonly valid: readonly { readonly name: string, readonly theme: object }[]
+  readonly valid: readonly { readonly name: string; readonly theme: object }[]
   readonly invalidNames: readonly string[]
 }
 
-export function partitionCustomThemes(customThemes: readonly CustomThemeInput[]): ParsedCustomThemes {
+export function partitionCustomThemes(
+  customThemes: readonly CustomThemeInput[],
+): ParsedCustomThemes {
   const parsed = R.map(customThemes, entry => ({
     name: entry.name,
     theme: parseTheme(entry.json),
@@ -447,7 +479,7 @@ export function partitionCustomThemes(customThemes: readonly CustomThemeInput[])
 
   const [valid, invalid] = R.partition(
     parsed,
-    (entry): entry is { readonly name: string, readonly theme: object } => entry.theme !== null,
+    (entry): entry is { readonly name: string; readonly theme: object } => entry.theme !== null,
   )
 
   return {

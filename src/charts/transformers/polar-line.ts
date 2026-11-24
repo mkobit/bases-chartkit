@@ -37,26 +37,18 @@ export function createPolarLineChartOption(
   const normalizedData: ReadonlyArray<PolarLineDataPoint> = R.map(
     data,
     (item, index): PolarLineDataPoint => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yValRaw = Number(getNestedValue(
-        item,
-        yProp,
-      ))
-      const sValRaw = seriesProp
-        ? getNestedValue(
-            item,
-            seriesProp,
-          )
-        : undefined
+      const xValRaw = getNestedValue(item, xProp)
+      const yValRaw = Number(getNestedValue(item, yProp))
+      const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
       const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        s:
+          seriesProp && sValRaw !== undefined && sValRaw !== null
+            ? safeToString(sValRaw)
+            : yAxisLabel,
         rowIndex: meta.rowIndex,
         ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
@@ -84,30 +76,29 @@ export function createPolarLineChartOption(
     ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
-          config: { dimension: 's',
-            value: name },
+          config: { dimension: 's', value: name },
         },
       }))
     : []
 
-  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
-    ...filterDatasets]
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset, ...filterDatasets]
 
-  const seriesOptions: ReadonlyArray<LineSeriesOption> = seriesNames.map((name, idx): LineSeriesOption => {
-    const datasetIndex = seriesProp ? idx + 1 : 0
+  const seriesOptions: ReadonlyArray<LineSeriesOption> = seriesNames.map(
+    (name, idx): LineSeriesOption => {
+      const datasetIndex = seriesProp ? idx + 1 : 0
 
-    return {
-      type: 'line',
-      name: name,
-      coordinateSystem: 'polar',
-      datasetIndex: datasetIndex,
-      encode: { angle: 'x',
-        radius: 'y' },
-      smooth: isSmooth,
-      areaStyle: hasAreaStyle ? {} : undefined,
-      ...(isStacked ? { stack: 'total' } : {}),
-    }
-  })
+      return {
+        type: 'line',
+        name: name,
+        coordinateSystem: 'polar',
+        datasetIndex: datasetIndex,
+        encode: { angle: 'x', radius: 'y' },
+        smooth: isSmooth,
+        areaStyle: hasAreaStyle ? {} : undefined,
+        ...(isStacked ? { stack: 'total' } : {}),
+      }
+    },
+  )
 
   const title = getTitleOption(options)
   const circularLayout = resolveCircularLayout(options)

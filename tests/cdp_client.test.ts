@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import {
-  connectCdp,
-  fetchCdpTargets,
-  findPageTarget,
-} from '../e2e/cdp/client'
+import { connectCdp, fetchCdpTargets, findPageTarget } from '../e2e/cdp/client'
 import type { CdpTarget } from '../e2e/cdp/client'
 
 interface CapturedMouseEvent {
@@ -98,8 +94,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
       const targets = await fetchCdpTargets(port)
       expect(targets).toHaveLength(1)
       expect(targets[0]?.id).toBe('test-1')
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -115,8 +110,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
     const port = server.port ?? 0
     try {
       expect(fetchCdpTargets(port)).rejects.toThrow('Failed to fetch CDP targets')
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -132,8 +126,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
     const port = server.port ?? 0
     try {
       expect(fetchCdpTargets(port)).rejects.toThrow('Invalid CDP response')
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -155,10 +148,12 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Custom.echo') {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: { echo: parsed.params },
-            }))
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: { echo: parsed.params },
+              }),
+            )
           }
         },
       },
@@ -166,12 +161,14 @@ describe('Chrome DevTools Protocol client session', () => {
 
     try {
       const client = await connectCdp(`ws://127.0.0.1:${server.port}`)
-      const response = await client.send<{ readonly echo: { readonly value: number } }>('Custom.echo', { value: 42 })
+      const response = await client.send<{ readonly echo: { readonly value: number } }>(
+        'Custom.echo',
+        { value: 42 },
+      )
 
       expect(response.echo.value).toBe(42)
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -191,15 +188,17 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Runtime.evaluate') {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
                 result: {
-                  type: 'string',
-                  value: 'evaluation-result',
+                  result: {
+                    type: 'string',
+                    value: 'evaluation-result',
+                  },
                 },
-              },
-            }))
+              }),
+            )
           }
         },
       },
@@ -211,8 +210,7 @@ describe('Chrome DevTools Protocol client session', () => {
 
       expect(result).toBe('evaluation-result')
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -232,17 +230,19 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Runtime.evaluate') {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                exceptionDetails: {
-                  text: 'Uncaught ReferenceError',
-                  exception: {
-                    description: 'ReferenceError: invalidVariable is not defined',
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: {
+                  exceptionDetails: {
+                    text: 'Uncaught ReferenceError',
+                    exception: {
+                      description: 'ReferenceError: invalidVariable is not defined',
+                    },
                   },
                 },
-              },
-            }))
+              }),
+            )
           }
         },
       },
@@ -250,16 +250,18 @@ describe('Chrome DevTools Protocol client session', () => {
 
     try {
       const client = await connectCdp(`ws://127.0.0.1:${server.port}`)
-      expect(client.evaluate('invalidVariable')).rejects.toThrow('ReferenceError: invalidVariable is not defined')
+      expect(client.evaluate('invalidVariable')).rejects.toThrow(
+        'ReferenceError: invalidVariable is not defined',
+      )
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
 
   test('captures screenshots as buffer from base64 response', async () => {
-    const base64Pixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const base64Pixel =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
     const server = Bun.serve({
       port: 0,
@@ -275,12 +277,14 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
 
           if (parsed.method === 'Page.captureScreenshot') {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                data: base64Pixel,
-              },
-            }))
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: {
+                  data: base64Pixel,
+                },
+              }),
+            )
           }
         },
       },
@@ -293,8 +297,7 @@ describe('Chrome DevTools Protocol client session', () => {
       expect(buffer).toBeInstanceOf(Uint8Array)
       expect(buffer.length).toBeGreaterThan(0)
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -316,10 +319,12 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
           sink.record(parsed)
 
-          ws.send(JSON.stringify({
-            id: parsed.id,
-            result: {},
-          }))
+          ws.send(
+            JSON.stringify({
+              id: parsed.id,
+              result: {},
+            }),
+          )
         },
       },
     })
@@ -342,8 +347,7 @@ describe('Chrome DevTools Protocol client session', () => {
       }
 
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -365,10 +369,12 @@ describe('Chrome DevTools Protocol client session', () => {
           const parsed = JSON.parse(raw)
           sink.record(parsed)
 
-          ws.send(JSON.stringify({
-            id: parsed.id,
-            result: {},
-          }))
+          ws.send(
+            JSON.stringify({
+              id: parsed.id,
+              result: {},
+            }),
+          )
         },
       },
     })
@@ -390,8 +396,7 @@ describe('Chrome DevTools Protocol client session', () => {
       }
 
       await client.close()
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })
@@ -442,8 +447,7 @@ describe('Chrome DevTools Protocol client session', () => {
       const response = await client.send<{ readonly connected: boolean }>('Custom.test')
       expect(response.connected).toBe(true)
       await client.close()
-    }
-    finally {
+    } finally {
       await httpServer.stop(true)
       await wsServer.stop(true)
     }
@@ -469,8 +473,7 @@ describe('Chrome DevTools Protocol client session', () => {
     try {
       const client = await connectCdp(`ws://127.0.0.1:${server.port}`)
       expect(client.send('Test.neverResponds')).rejects.toThrow('closed')
-    }
-    finally {
+    } finally {
       await server.stop(true)
     }
   })

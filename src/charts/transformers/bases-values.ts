@@ -65,24 +65,19 @@ export function getNestedValue(obj: unknown, path: string): unknown {
   // file.ctime, file.mtime, file.folder) live in TFile stats/parents rather
   // than top-level file.* fields.
   if (
-    (path.startsWith('formula.') || path.startsWith('file.'))
-    && isRecord(obj)
-    && isRecordWithGetValueAccessor(obj)
+    (path.startsWith('formula.') || path.startsWith('file.')) &&
+    isRecord(obj) &&
+    isRecordWithGetValueAccessor(obj)
   ) {
     return obj.getValue(path)
   }
-  return path.split('.').reduce(
-    (o: unknown, key: string): unknown => {
-      if (!isRecord(o)) {
-        return undefined
-      }
-      const direct = key in o ? o[key] : undefined
-      return direct !== undefined
-        ? direct
-        : isRecordWithGetAccessor(o) ? o.get(key) : undefined
-    },
-    obj,
-  )
+  return path.split('.').reduce((o: unknown, key: string): unknown => {
+    if (!isRecord(o)) {
+      return undefined
+    }
+    const direct = key in o ? o[key] : undefined
+    return direct !== undefined ? direct : isRecordWithGetAccessor(o) ? o.get(key) : undefined
+  }, obj)
 }
 
 export function extractFilePath(item: unknown): string | undefined {

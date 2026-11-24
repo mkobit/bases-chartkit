@@ -20,19 +20,13 @@ export class LineChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'line',
-      {
-        ...this.getCommonTransformerOptions(),
-        smooth,
-        showSymbol,
-        areaStyle,
-        seriesProp,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'line', {
+      ...this.getCommonTransformerOptions(),
+      smooth,
+      showSymbol,
+      areaStyle,
+      seriesProp,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

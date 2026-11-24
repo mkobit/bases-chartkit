@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'bun:test'
-import { getAxisLabelOverlapOptions, MANY_CATEGORIES_THRESHOLD } from '../src/charts/transformers/axis-labels'
+import {
+  getAxisLabelOverlapOptions,
+  MANY_CATEGORIES_THRESHOLD,
+} from '../src/charts/transformers/axis-labels'
 import {
   safeToString,
   isRecord,
@@ -140,9 +143,7 @@ describe('Transformer Modules', () => {
       // Sales-Dashboard.base where item.note.Date returned undefined.
       const basesNote = {
         get(key: string): unknown {
-          return key === 'Date'
-            ? '2023-01-01'
-            : key === 'Revenue' ? 1335 : undefined
+          return key === 'Date' ? '2023-01-01' : key === 'Revenue' ? 1335 : undefined
         },
       }
       const item = { note: basesNote }
@@ -311,7 +312,11 @@ describe('Transformer Modules', () => {
       })
 
       it('should override deduced orientation with legendOrient', () => {
-        const result = getLegendOption({ legend: true, legendPosition: 'left', legendOrient: 'horizontal' })
+        const result = getLegendOption({
+          legend: true,
+          legendPosition: 'left',
+          legendOrient: 'horizontal',
+        })
         expect(result).toBeDefined()
         if (result) {
           expect(result.left).toBe(0)
@@ -397,18 +402,21 @@ describe('Transformer Modules', () => {
     })
 
     it('should parse an ISO instant string via Temporal.Instant', () => {
-      expect(parseDateToEpochMs('2023-01-01T00:00:00Z'))
-        .toBe(Temporal.Instant.from('2023-01-01T00:00:00Z').epochMilliseconds)
+      expect(parseDateToEpochMs('2023-01-01T00:00:00Z')).toBe(
+        Temporal.Instant.from('2023-01-01T00:00:00Z').epochMilliseconds,
+      )
     })
 
     it('should fall back to Temporal.PlainDateTime for a bare datetime string', () => {
-      expect(parseDateToEpochMs('2023-01-01T14:30:00'))
-        .toBe(Temporal.PlainDateTime.from('2023-01-01T14:30:00').toZonedDateTime('UTC').epochMilliseconds)
+      expect(parseDateToEpochMs('2023-01-01T14:30:00')).toBe(
+        Temporal.PlainDateTime.from('2023-01-01T14:30:00').toZonedDateTime('UTC').epochMilliseconds,
+      )
     })
 
     it('should fall back to Temporal.PlainDate for a bare calendar date string', () => {
-      expect(parseDateToEpochMs('2023-01-01'))
-        .toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
+      expect(parseDateToEpochMs('2023-01-01')).toBe(
+        Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
+      )
     })
 
     it('should unwrap an Obsidian Value-wrapper date property', () => {
@@ -420,8 +428,9 @@ describe('Transformer Modules', () => {
         renderTo: () => undefined,
         toString: () => '2023-01-01',
       }
-      expect(parseDateToEpochMs(wrapped))
-        .toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
+      expect(parseDateToEpochMs(wrapped)).toBe(
+        Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
+      )
     })
 
     it('should return null for a value that is not a real, parseable date', () => {
@@ -439,7 +448,12 @@ describe('Transformer Modules', () => {
     })
 
     it('should auto-thin and rotate labels when category count exceeds threshold', () => {
-      const options = getAxisLabelOverlapOptions(MANY_CATEGORIES_THRESHOLD + 1, false, undefined, false)
+      const options = getAxisLabelOverlapOptions(
+        MANY_CATEGORIES_THRESHOLD + 1,
+        false,
+        undefined,
+        false,
+      )
       expect(options.interval).toBe('auto')
       expect(options.rotate).toBe(45)
     })
@@ -464,8 +478,16 @@ describe('Transformer Modules', () => {
 
     it('should rotate wide labels on short category lists when horizontal labels would overlap', () => {
       const departments = [
-        'Engineering', 'Sales', 'Support', 'Legal', 'Operations',
-        'Design', 'IT', 'Security', 'Infrastructure', 'Compliance',
+        'Engineering',
+        'Sales',
+        'Support',
+        'Legal',
+        'Operations',
+        'Design',
+        'IT',
+        'Security',
+        'Infrastructure',
+        'Compliance',
       ]
       const options = getAxisLabelOverlapOptions(departments.length, false, undefined, false, {
         labels: departments,
@@ -488,8 +510,16 @@ describe('Transformer Modules', () => {
 
     it('should auto-thin when user explicitly forces rotate 0 on overlapping labels', () => {
       const departments = [
-        'Engineering', 'Sales', 'Support', 'Legal', 'Operations',
-        'Design', 'IT', 'Security', 'Infrastructure', 'Compliance',
+        'Engineering',
+        'Sales',
+        'Support',
+        'Legal',
+        'Operations',
+        'Design',
+        'IT',
+        'Security',
+        'Infrastructure',
+        'Compliance',
       ]
       const options = getAxisLabelOverlapOptions(departments.length, false, 0, false, {
         labels: departments,
@@ -561,29 +591,37 @@ describe('Transformer Modules', () => {
     })
 
     it('should prioritize _file over filePath, file.path, and file', () => {
-      expect(extractFilePath({
-        _file: 'notes/from-underscore.md',
-        filePath: 'notes/from-filePath.md',
-        file: { path: 'notes/from-nested.md' },
-      })).toBe('notes/from-underscore.md')
+      expect(
+        extractFilePath({
+          _file: 'notes/from-underscore.md',
+          filePath: 'notes/from-filePath.md',
+          file: { path: 'notes/from-nested.md' },
+        }),
+      ).toBe('notes/from-underscore.md')
 
-      expect(extractFilePath({
-        _file: '',
-        filePath: 'notes/from-filePath.md',
-        file: 'notes/from-file.md',
-      })).toBe('notes/from-filePath.md')
+      expect(
+        extractFilePath({
+          _file: '',
+          filePath: 'notes/from-filePath.md',
+          file: 'notes/from-file.md',
+        }),
+      ).toBe('notes/from-filePath.md')
     })
   })
 
   describe('extractTargetFilePath', () => {
     it('should return undefined when data is omitted and _file is absent', () => {
       expect(extractTargetFilePath({ dataIndex: 0, data: { value: 42 } })).toBeUndefined()
-      expect(extractTargetFilePath({ dataIndex: 0, data: { _file: 'notes/dataset.md' } })).toBe('notes/dataset.md')
+      expect(extractTargetFilePath({ dataIndex: 0, data: { _file: 'notes/dataset.md' } })).toBe(
+        'notes/dataset.md',
+      )
     })
 
     it('should preserve dataIndex fallback when data is provided for preset views', () => {
       const data = [{ file: { path: 'notes/preset.md' } }]
-      expect(extractTargetFilePath({ dataIndex: 0, data: { value: 42 } }, data)).toBe('notes/preset.md')
+      expect(extractTargetFilePath({ dataIndex: 0, data: { value: 42 } }, data)).toBe(
+        'notes/preset.md',
+      )
     })
   })
 

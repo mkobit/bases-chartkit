@@ -24,10 +24,7 @@ export const VAULT_INDEXED_POLL_TIMEOUT_MS = 100_000
 // Unified runner: evaluates `fn` inside the Obsidian renderer. When `args` is
 // omitted the function receives only `app`. Args must be JSON-serializable
 // since they're shipped over CDP.
-export async function evaluateObsidian<T>(
-  page: Page,
-  fn: (app: App) => T | Promise<T>,
-): Promise<T>
+export async function evaluateObsidian<T>(page: Page, fn: (app: App) => T | Promise<T>): Promise<T>
 export async function evaluateObsidian<T, A>(
   page: Page,
   fn: (app: App, args: A) => T | Promise<T>,
@@ -39,13 +36,16 @@ export async function evaluateObsidian<T, A>(
   args?: A,
 ): Promise<T> {
   const fnSrc = fn.toString()
-  return page.evaluate(([src, fnArgs]) => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `new Function(...)()` is typed `any` by TypeScript with no way to narrow it further; `fn`'s own signature is the source of truth for what was serialized above.
-    const fnObj = new Function(`return (${src})`)() as (app: App, a?: unknown) => T | Promise<T>
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `activeWindow` is Obsidian's global, typed as a bare `Window` with no `.app` -- the extension is a real Obsidian runtime property with no public type declaration to import instead.
-    const obsidianApp = (activeWindow as Window & { app: App }).app
-    return fnObj(obsidianApp, fnArgs)
-  }, [fnSrc, args] as const)
+  return page.evaluate(
+    ([src, fnArgs]) => {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `new Function(...)()` is typed `any` by TypeScript with no way to narrow it further; `fn`'s own signature is the source of truth for what was serialized above.
+      const fnObj = new Function(`return (${src})`)() as (app: App, a?: unknown) => T | Promise<T>
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- `activeWindow` is Obsidian's global, typed as a bare `Window` with no `.app` -- the extension is a real Obsidian runtime property with no public type declaration to import instead.
+      const obsidianApp = (activeWindow as Window & { app: App }).app
+      return fnObj(obsidianApp, fnArgs)
+    },
+    [fnSrc, args] as const,
+  )
 }
 
 /**
@@ -70,7 +70,7 @@ export function asOptionLike<T>(option: unknown): T | null {
  * This reads the live options configured on the actual ECharts instance.
  */
 export async function getChartOption(page: Page): Promise<unknown> {
-  return evaluateObsidian(page, (app) => {
+  return evaluateObsidian(page, app => {
     interface ChartLike {
       readonly chart: { readonly getOption: () => unknown } | null
     }
@@ -85,7 +85,11 @@ export async function getChartOption(page: Page): Promise<unknown> {
       return typeof obj.getChartOption === 'function' && obj.chart !== undefined
     }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
+    const findChartView = (
+      obj: unknown,
+      depth: number,
+      visited: readonly unknown[],
+    ): ChartLike | undefined => {
       if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
         return undefined
       }
@@ -112,10 +116,7 @@ export async function getChartOption(page: Page): Promise<unknown> {
       )
     }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
+    const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
 
     const chartView = leaves.reduce<ChartLike | undefined>(
       (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
@@ -137,76 +138,83 @@ export async function getChartOption(page: Page): Promise<unknown> {
  */
 export async function getSeriesVisualValues(
   page: Page,
-  args: { readonly seriesIndex: number, readonly visualKey: string },
+  args: { readonly seriesIndex: number; readonly visualKey: string },
 ): Promise<ReadonlyArray<unknown>> {
-  return evaluateObsidian(page, (app, a) => {
-    interface SeriesDataLike {
-      readonly count: () => number
-      readonly getItemVisual: (idx: number, key: string) => unknown
-    }
-    interface SeriesModelLike {
-      readonly getData: () => SeriesDataLike
-    }
-    interface EChartsModelLike {
-      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
-    }
-    interface ChartLike {
-      readonly chart: { readonly getModel: () => EChartsModelLike } | null
-    }
+  return evaluateObsidian(
+    page,
+    (app, a) => {
+      interface SeriesDataLike {
+        readonly count: () => number
+        readonly getItemVisual: (idx: number, key: string) => unknown
+      }
+      interface SeriesModelLike {
+        readonly getData: () => SeriesDataLike
+      }
+      interface EChartsModelLike {
+        readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+      }
+      interface ChartLike {
+        readonly chart: { readonly getModel: () => EChartsModelLike } | null
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
+        // no index-signature overload for a plain, non-indexed object type.
+        // Annotating immediately contains that `any` leak instead of letting it
+        // propagate through the rest of the traversal.
+        const values: readonly unknown[] = Object.values(obj)
+        // Short-circuit at the first match (bck-b39): `??` skips the recursive
+        // call for every remaining value once one is found, so this stops
+        // descending instead of walking the whole ~90k-node live ECharts/zrender
+        // object graph. `.map().find()` evaluated every branch fully before
+        // selecting one -- ~10s per call while the chart was still animating.
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
-      }
-      if (isChartView(obj)) {
-        return obj
-      }
-      const nextVisited = [...visited, obj]
-      // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
-      // no index-signature overload for a plain, non-indexed object type.
-      // Annotating immediately contains that `any` leak instead of letting it
-      // propagate through the rest of the traversal.
-      const values: readonly unknown[] = Object.values(obj)
-      // Short-circuit at the first match (bck-b39): `??` skips the recursive
-      // call for every remaining value once one is found, so this stops
-      // descending instead of walking the whole ~90k-node live ECharts/zrender
-      // object graph. `.map().find()` evaluated every branch fully before
-      // selecting one -- ~10s per call while the chart was still animating.
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
-    if (!seriesData) {
-      return []
-    }
-    return Array.from({ length: seriesData.count() }, (_, idx) => seriesData.getItemVisual(idx, a.visualKey))
-  }, args)
+      const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
+      if (!seriesData) {
+        return []
+      }
+      return Array.from({ length: seriesData.count() }, (_, idx) =>
+        seriesData.getItemVisual(idx, a.visualKey),
+      )
+    },
+    args,
+  )
 }
 
 /**
@@ -226,66 +234,71 @@ export async function getSeriesDataCount(
   page: Page,
   args: { readonly seriesIndex: number },
 ): Promise<number> {
-  return evaluateObsidian(page, (app, a) => {
-    interface SeriesDataLike {
-      readonly count: () => number
-    }
-    interface SeriesModelLike {
-      readonly getData: () => SeriesDataLike
-    }
-    interface EChartsModelLike {
-      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
-    }
-    interface ChartLike {
-      readonly chart: { readonly getModel: () => EChartsModelLike } | null
-    }
+  return evaluateObsidian(
+    page,
+    (app, a) => {
+      interface SeriesDataLike {
+        readonly count: () => number
+      }
+      interface SeriesModelLike {
+        readonly getData: () => SeriesDataLike
+      }
+      interface EChartsModelLike {
+        readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+      }
+      interface ChartLike {
+        readonly chart: { readonly getModel: () => EChartsModelLike } | null
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        const values: readonly unknown[] = Object.values(obj)
+        // Short-circuit at the first match (bck-b39): `??` skips the recursive
+        // call for every remaining value once one is found, so this stops
+        // descending instead of walking the whole ~90k-node live ECharts/zrender
+        // object graph. `.map().find()` evaluated every branch fully before
+        // selecting one -- ~10s per call while the chart was still animating.
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
-      }
-      if (isChartView(obj)) {
-        return obj
-      }
-      const nextVisited = [...visited, obj]
-      const values: readonly unknown[] = Object.values(obj)
-      // Short-circuit at the first match (bck-b39): `??` skips the recursive
-      // call for every remaining value once one is found, so this stops
-      // descending instead of walking the whole ~90k-node live ECharts/zrender
-      // object graph. `.map().find()` evaluated every branch fully before
-      // selecting one -- ~10s per call while the chart was still animating.
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
-    return seriesData?.count() ?? 0
-  }, args)
+      const seriesData = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)?.getData()
+      return seriesData?.count() ?? 0
+    },
+    args,
+  )
 }
 
 /**
@@ -300,96 +313,101 @@ export async function getSeriesDataCount(
  * attached), so a stuck render can't hang the caller indefinitely.
  */
 export async function waitForChartFinished(page: Page, timeoutMs = 1_500): Promise<void> {
-  return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
-    interface EChartsInstanceLike {
-      readonly on: (event: string, handler: () => void) => void
-      readonly off: (event: string, handler: () => void) => void
-    }
-    interface ChartLike {
-      readonly chart: EChartsInstanceLike | null
-    }
+  return evaluateObsidian(
+    page,
+    (app, a: { timeoutMs: number }) => {
+      interface EChartsInstanceLike {
+        readonly on: (event: string, handler: () => void) => void
+        readonly off: (event: string, handler: () => void) => void
+      }
+      interface ChartLike {
+        readonly chart: EChartsInstanceLike | null
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
+        // no index-signature overload for a plain, non-indexed object type.
+        // Annotating immediately contains that `any` leak instead of letting it
+        // propagate through the rest of the traversal.
+        const values: readonly unknown[] = Object.values(obj)
+        // Short-circuit at the first match (bck-b39): `??` skips the recursive
+        // call for every remaining value once one is found, so this stops
+        // descending instead of walking the whole ~90k-node live ECharts/zrender
+        // object graph. `.map().find()` evaluated every branch fully before
+        // selecting one -- ~10s per call while the chart was still animating.
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
-      }
-      if (isChartView(obj)) {
-        return obj
-      }
-      const nextVisited = [...visited, obj]
-      // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
-      // no index-signature overload for a plain, non-indexed object type.
-      // Annotating immediately contains that `any` leak instead of letting it
-      // propagate through the rest of the traversal.
-      const values: readonly unknown[] = Object.values(obj)
-      // Short-circuit at the first match (bck-b39): `??` skips the recursive
-      // call for every remaining value once one is found, so this stops
-      // descending instead of walking the whole ~90k-node live ECharts/zrender
-      // object graph. `.map().find()` evaluated every branch fully before
-      // selecting one -- ~10s per call while the chart was still animating.
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const chart = chartView?.chart
-    if (!chart) {
-      return Promise.resolve()
-    }
-
-    return new Promise<void>((resolve) => {
-      let settled = false
-      const onFinished = () => {
-        if (settled) {
-          return
-        }
-        settled = true
-        chart.off('finished', onFinished)
-        resolve()
+      const chart = chartView?.chart
+      if (!chart) {
+        return Promise.resolve()
       }
-      const onTimeout = () => {
-        if (settled) {
-          return
+
+      return new Promise<void>(resolve => {
+        let settled = false
+        const onFinished = () => {
+          if (settled) {
+            return
+          }
+          settled = true
+          chart.off('finished', onFinished)
+          resolve()
         }
-        settled = true
-        chart.off('finished', onFinished)
-        resolve()
-      }
-      chart.on('finished', onFinished)
-      setTimeout(onTimeout, a.timeoutMs)
-    })
-  }, { timeoutMs })
+        const onTimeout = () => {
+          if (settled) {
+            return
+          }
+          settled = true
+          chart.off('finished', onFinished)
+          resolve()
+        }
+        chart.on('finished', onFinished)
+        setTimeout(onTimeout, a.timeoutMs)
+      })
+    },
+    { timeoutMs },
+  )
 }
 
 export interface MapSeriesState {
   readonly subType: string | undefined
   readonly mapName: string | undefined
   readonly regionNames: ReadonlyArray<string>
-  readonly items: ReadonlyArray<{ readonly name: string, readonly value: number | null }>
+  readonly items: ReadonlyArray<{ readonly name: string; readonly value: number | null }>
 }
 
 /**
@@ -409,99 +427,104 @@ export async function getMapSeriesState(
   page: Page,
   args: { readonly seriesIndex: number },
 ): Promise<MapSeriesState | null> {
-  return evaluateObsidian(page, (app, a) => {
-    interface GeoRegionLike {
-      readonly name: string
-    }
-    interface SeriesDataLike {
-      readonly count: () => number
-      readonly getName: (idx: number) => string
-      readonly get: (dimension: string, idx: number) => unknown
-    }
-    interface SeriesModelLike {
-      readonly subType?: unknown
-      readonly get: (key: string) => unknown
-      readonly getData: () => SeriesDataLike
-      readonly coordinateSystem?: { readonly regions?: readonly GeoRegionLike[] }
-    }
-    interface EChartsModelLike {
-      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
-    }
-    interface ChartLike {
-      readonly chart: { readonly getModel: () => EChartsModelLike } | null
-    }
+  return evaluateObsidian(
+    page,
+    (app, a) => {
+      interface GeoRegionLike {
+        readonly name: string
+      }
+      interface SeriesDataLike {
+        readonly count: () => number
+        readonly getName: (idx: number) => string
+        readonly get: (dimension: string, idx: number) => unknown
+      }
+      interface SeriesModelLike {
+        readonly subType?: unknown
+        readonly get: (key: string) => unknown
+        readonly getData: () => SeriesDataLike
+        readonly coordinateSystem?: { readonly regions?: readonly GeoRegionLike[] }
+      }
+      interface EChartsModelLike {
+        readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+      }
+      interface ChartLike {
+        readonly chart: { readonly getModel: () => EChartsModelLike } | null
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
+        // no index-signature overload for a plain, non-indexed object type.
+        // Annotating immediately contains that `any` leak instead of letting it
+        // propagate through the rest of the traversal.
+        const values: readonly unknown[] = Object.values(obj)
+        // Short-circuit at the first match (bck-b39): `??` skips the recursive
+        // call for every remaining value once one is found, so this stops
+        // descending instead of walking the whole ~90k-node live ECharts/zrender
+        // object graph. `.map().find()` evaluated every branch fully before
+        // selecting one -- ~10s per call while the chart was still animating.
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
-      }
-      if (isChartView(obj)) {
-        return obj
-      }
-      const nextVisited = [...visited, obj]
-      // Object.values(o: {}) resolves to `any[]`, not `unknown[]` -- there's
-      // no index-signature overload for a plain, non-indexed object type.
-      // Annotating immediately contains that `any` leak instead of letting it
-      // propagate through the rest of the traversal.
-      const values: readonly unknown[] = Object.values(obj)
-      // Short-circuit at the first match (bck-b39): `??` skips the recursive
-      // call for every remaining value once one is found, so this stops
-      // descending instead of walking the whole ~90k-node live ECharts/zrender
-      // object graph. `.map().find()` evaluated every branch fully before
-      // selecting one -- ~10s per call while the chart was still animating.
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const series = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)
-    if (!series) {
-      return null
-    }
-
-    const seriesData = series.getData()
-    const items = Array.from({ length: seriesData.count() }, (_, idx) => {
-      const rawValue = seriesData.get('value', idx)
-      return {
-        name: seriesData.getName(idx),
-        value: typeof rawValue === 'number' && !Number.isNaN(rawValue) ? rawValue : null,
+      const series = chartView?.chart?.getModel().getSeriesByIndex(a.seriesIndex)
+      if (!series) {
+        return null
       }
-    })
 
-    const mapNameRaw = series.get('map')
-    const subTypeRaw = series.subType
+      const seriesData = series.getData()
+      const items = Array.from({ length: seriesData.count() }, (_, idx) => {
+        const rawValue = seriesData.get('value', idx)
+        return {
+          name: seriesData.getName(idx),
+          value: typeof rawValue === 'number' && !Number.isNaN(rawValue) ? rawValue : null,
+        }
+      })
 
-    return {
-      subType: typeof subTypeRaw === 'string' ? subTypeRaw : undefined,
-      mapName: typeof mapNameRaw === 'string' ? mapNameRaw : undefined,
-      regionNames: series.coordinateSystem?.regions?.map(region => region.name) ?? [],
-      items,
-    }
-  }, args)
+      const mapNameRaw = series.get('map')
+      const subTypeRaw = series.subType
+
+      return {
+        subType: typeof subTypeRaw === 'string' ? subTypeRaw : undefined,
+        mapName: typeof mapNameRaw === 'string' ? mapNameRaw : undefined,
+        regionNames: series.coordinateSystem?.regions?.map(region => region.name) ?? [],
+        items,
+      }
+    },
+    args,
+  )
 }
 
 /**
@@ -521,35 +544,42 @@ export async function getMapSeriesState(
  * `getCache`-based synchronous check in the same tick (no `await` between
  * them) closes that race -- no event can land in the gap.
  */
-export async function waitForVaultIndexed(page: Page, timeoutMs = VAULT_INDEXED_POLL_TIMEOUT_MS): Promise<void> {
-  return evaluateObsidian(page, (app, a: { timeoutMs: number }) => {
-    const isFullyResolved = () =>
-      app.vault.getMarkdownFiles().every(file => app.metadataCache.getCache(file.path) !== null)
+export async function waitForVaultIndexed(
+  page: Page,
+  timeoutMs = VAULT_INDEXED_POLL_TIMEOUT_MS,
+): Promise<void> {
+  return evaluateObsidian(
+    page,
+    (app, a: { timeoutMs: number }) => {
+      const isFullyResolved = () =>
+        app.vault.getMarkdownFiles().every(file => app.metadataCache.getCache(file.path) !== null)
 
-    return new Promise<void>((resolve) => {
-      let settled = false
-      const finish = () => {
-        if (settled) {
-          return
+      return new Promise<void>(resolve => {
+        let settled = false
+        const finish = () => {
+          if (settled) {
+            return
+          }
+          settled = true
+          app.metadataCache.off('resolved', onResolved)
+          clearTimeout(timeoutHandle)
+          resolve()
         }
-        settled = true
-        app.metadataCache.off('resolved', onResolved)
-        clearTimeout(timeoutHandle)
-        resolve()
-      }
-      const onResolved = () => {
+        const onResolved = () => {
+          if (isFullyResolved()) {
+            finish()
+          }
+        }
+
+        app.metadataCache.on('resolved', onResolved)
+        const timeoutHandle = setTimeout(finish, a.timeoutMs)
         if (isFullyResolved()) {
           finish()
         }
-      }
-
-      app.metadataCache.on('resolved', onResolved)
-      const timeoutHandle = setTimeout(finish, a.timeoutMs)
-      if (isFullyResolved()) {
-        finish()
-      }
-    })
-  }, { timeoutMs })
+      })
+    },
+    { timeoutMs },
+  )
 }
 
 export interface ScreenPosition {
@@ -575,221 +605,260 @@ export interface ScreenPosition {
  */
 export async function getSeriesItemScreenPosition(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
+  args: { readonly seriesIndex: number; readonly dataIndex: number; readonly vertexIndex?: number },
 ): Promise<ScreenPosition | null> {
-  return evaluateObsidian(page, (app, a) => {
-    interface BoundingRect { readonly x: number, readonly y: number, readonly width: number, readonly height: number }
-    interface GraphicElLike {
-      readonly type?: string
-      readonly getBoundingRect?: () => BoundingRect
-      // zrender's Transformable#updateTransform composes each element's local
-      // matrix with its parent's during render, so by the time an element is
-      // actually on-screen this 6-value affine matrix ([a,b,c,d,e,f], applied
-      // as x'=a*x+c*y+e, y'=b*x+d*y+f) is already the full local-to-global
-      // transform -- not just this element's own local one. Required for
-      // anything nested inside a rotated/translated group (polar coordinate
-      // systems: radar, rose, polar-line/scatter, radial-bar, sunburst), where
-      // the raw bounding rect alone (cartesian bars' common case) is off.
-      readonly transform?: readonly [number, number, number, number, number, number]
-      // Present on zrender Group elements (e.g. radar/parallel: one whole
-      // multi-vertex shape per dataIndex, grouping its outline path plus a
-      // sub-group of small per-vertex symbol dots).
-      readonly childCount?: () => number
-      readonly childAt?: (idx: number) => GraphicElLike | undefined
-      // zrender's own raycast (Displayable#contain) skips an element (and
-      // everything under it) when either is set -- e.g. radar's polygon has
-      // `ignore = true` whenever no areaStyle is configured, since an unfilled
-      // polygon has nothing to paint. A bounding-rect center inside an
-      // ignored/invisible shape will never register a real mouse hit, so it
-      // must be excluded rather than left to lose the smallest-area tie-break
-      // by coincidence.
-      readonly ignore?: boolean
-      readonly invisible?: boolean
-      // zrender Sector shapes (sunburst's per-node piece extends
-      // graphic.Sector, confirmed in
-      // node_modules/echarts/lib/chart/sunburst/SunburstPiece.js) expose
-      // their own local geometry here. A bounding-rect center is wrong for
-      // these: a sector's rectangular bbox is the bounding box of the whole
-      // annular wedge, and for a wide-angle wedge that center point commonly
-      // falls inside a DIFFERENT, smaller-radius ring's sector instead of
-      // the wedge it's meant to identify -- confirmed via bck-44x hovering
-      // sunburst's widest top-level child consistently landed on its own
-      // parent ring. The angle/radius midpoint of the sector itself is
-      // always inside the wedge regardless of its angular width.
-      readonly shape?: {
-        readonly cx: number
-        readonly cy: number
-        readonly r0: number
-        readonly r: number
-        readonly startAngle: number
-        readonly endAngle: number
-      } | {
-        // zrender Polyline shapes (parallel's per-row line, confirmed in
-        // node_modules/echarts/lib/chart/parallel/ParallelView.js's addEl:
-        // one flat graphic.Polyline per dataIndex, one point per axis
-        // crossing, no per-vertex children). A bounding-rect center is wrong
-        // here too, for the same reason as sunburst's Sector: the polyline
-        // zigzags across every parallel axis, so its bbox center generally
-        // lands in empty space between axes rather than on the line itself.
-        // The exact vertex ECharts computed for one axis crossing is already
-        // sitting in this array -- no coordinate-system math needed.
-        readonly points: ReadonlyArray<readonly [number, number]>
+  return evaluateObsidian(
+    page,
+    (app, a) => {
+      interface BoundingRect {
+        readonly x: number
+        readonly y: number
+        readonly width: number
+        readonly height: number
       }
-    }
-
-    interface LeafShape extends GraphicElLike {
-      readonly getBoundingRect: () => BoundingRect
-    }
-
-    function isSector(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly cx: number, readonly cy: number, readonly r0: number, readonly r: number, readonly startAngle: number, readonly endAngle: number } } {
-      return candidate.type === 'sector' && candidate.shape !== undefined && 'cx' in candidate.shape
-    }
-
-    function isPolyline(candidate: GraphicElLike): candidate is GraphicElLike & { readonly shape: { readonly points: ReadonlyArray<readonly [number, number]> } } {
-      return candidate.type === 'polyline' && candidate.shape !== undefined && 'points' in candidate.shape
-    }
-
-    function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
-      return typeof candidate.getBoundingRect === 'function'
-    }
-
-    function isHitTestable(candidate: GraphicElLike): boolean {
-      return candidate.ignore !== true && candidate.invisible !== true
-    }
-
-    // getItemGraphicEl can return a zrender Group rather than a single drawable
-    // shape (true for radar/parallel, where one dataIndex is a whole
-    // multi-point shape, not a discrete per-point mark). A group's own
-    // aggregate bounding-rect center is frequently empty space -- e.g. a
-    // radar polygon with no areaStyle is hollow, so its visual center hits
-    // nothing. Recurse to the actual hit-testable leaf shapes and hover the
-    // smallest one: small leaves are the individual point/symbol marks; large
-    // ones (the connecting polyline/polygon outline) span the whole shape and
-    // are much more likely to have an empty center.
-    function collectLeafShapes(candidate: GraphicElLike): readonly LeafShape[] {
-      if (!isHitTestable(candidate)) {
-        return []
+      interface GraphicElLike {
+        readonly type?: string
+        readonly getBoundingRect?: () => BoundingRect
+        // zrender's Transformable#updateTransform composes each element's local
+        // matrix with its parent's during render, so by the time an element is
+        // actually on-screen this 6-value affine matrix ([a,b,c,d,e,f], applied
+        // as x'=a*x+c*y+e, y'=b*x+d*y+f) is already the full local-to-global
+        // transform -- not just this element's own local one. Required for
+        // anything nested inside a rotated/translated group (polar coordinate
+        // systems: radar, rose, polar-line/scatter, radial-bar, sunburst), where
+        // the raw bounding rect alone (cartesian bars' common case) is off.
+        readonly transform?: readonly [number, number, number, number, number, number]
+        // Present on zrender Group elements (e.g. radar/parallel: one whole
+        // multi-vertex shape per dataIndex, grouping its outline path plus a
+        // sub-group of small per-vertex symbol dots).
+        readonly childCount?: () => number
+        readonly childAt?: (idx: number) => GraphicElLike | undefined
+        // zrender's own raycast (Displayable#contain) skips an element (and
+        // everything under it) when either is set -- e.g. radar's polygon has
+        // `ignore = true` whenever no areaStyle is configured, since an unfilled
+        // polygon has nothing to paint. A bounding-rect center inside an
+        // ignored/invisible shape will never register a real mouse hit, so it
+        // must be excluded rather than left to lose the smallest-area tie-break
+        // by coincidence.
+        readonly ignore?: boolean
+        readonly invisible?: boolean
+        // zrender Sector shapes (sunburst's per-node piece extends
+        // graphic.Sector, confirmed in
+        // node_modules/echarts/lib/chart/sunburst/SunburstPiece.js) expose
+        // their own local geometry here. A bounding-rect center is wrong for
+        // these: a sector's rectangular bbox is the bounding box of the whole
+        // annular wedge, and for a wide-angle wedge that center point commonly
+        // falls inside a DIFFERENT, smaller-radius ring's sector instead of
+        // the wedge it's meant to identify -- confirmed via bck-44x hovering
+        // sunburst's widest top-level child consistently landed on its own
+        // parent ring. The angle/radius midpoint of the sector itself is
+        // always inside the wedge regardless of its angular width.
+        readonly shape?:
+          | {
+              readonly cx: number
+              readonly cy: number
+              readonly r0: number
+              readonly r: number
+              readonly startAngle: number
+              readonly endAngle: number
+            }
+          | {
+              // zrender Polyline shapes (parallel's per-row line, confirmed in
+              // node_modules/echarts/lib/chart/parallel/ParallelView.js's addEl:
+              // one flat graphic.Polyline per dataIndex, one point per axis
+              // crossing, no per-vertex children). A bounding-rect center is wrong
+              // here too, for the same reason as sunburst's Sector: the polyline
+              // zigzags across every parallel axis, so its bbox center generally
+              // lands in empty space between axes rather than on the line itself.
+              // The exact vertex ECharts computed for one axis crossing is already
+              // sitting in this array -- no coordinate-system math needed.
+              readonly points: ReadonlyArray<readonly [number, number]>
+            }
       }
-      const count = candidate.childCount ? candidate.childCount() : 0
-      if (count === 0) {
-        return hasBoundingRect(candidate) ? [candidate] : []
-      }
-      return Array.from({ length: count }, (_, i) => candidate.childAt?.(i))
-        .filter((child): child is GraphicElLike => child !== undefined)
-        .flatMap(collectLeafShapes)
-    }
 
-    function smallestLeafShape(candidate: GraphicElLike): GraphicElLike {
-      const leafShapes = collectLeafShapes(candidate)
-      return leafShapes.length === 0
-        ? candidate
-        : leafShapes.reduce((smallest, next) => {
-            const smallestRect = smallest.getBoundingRect()
-            const nextRect = next.getBoundingRect()
-            return (nextRect.width * nextRect.height) < (smallestRect.width * smallestRect.height) ? next : smallest
-          })
-    }
-    interface SeriesDataLike {
-      readonly getItemGraphicEl: (idx: number) => GraphicElLike | undefined
-    }
-    interface SeriesModelLike {
-      readonly getData: () => SeriesDataLike
-    }
-    interface EChartsModelLike {
-      readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
-    }
-    interface ChartLike {
-      readonly chart: {
-        readonly getModel: () => EChartsModelLike
-        readonly getDom: () => HTMLElement
-      } | null
-    }
+      interface LeafShape extends GraphicElLike {
+        readonly getBoundingRect: () => BoundingRect
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      function isSector(candidate: GraphicElLike): candidate is GraphicElLike & {
+        readonly shape: {
+          readonly cx: number
+          readonly cy: number
+          readonly r0: number
+          readonly r: number
+          readonly startAngle: number
+          readonly endAngle: number
+        }
+      } {
+        return (
+          candidate.type === 'sector' && candidate.shape !== undefined && 'cx' in candidate.shape
+        )
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
+      function isPolyline(candidate: GraphicElLike): candidate is GraphicElLike & {
+        readonly shape: { readonly points: ReadonlyArray<readonly [number, number]> }
+      } {
+        return (
+          candidate.type === 'polyline' &&
+          candidate.shape !== undefined &&
+          'points' in candidate.shape
+        )
       }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
+
+      function hasBoundingRect(candidate: GraphicElLike): candidate is LeafShape {
+        return typeof candidate.getBoundingRect === 'function'
       }
-      if (isChartView(obj)) {
-        return obj
+
+      function isHitTestable(candidate: GraphicElLike): boolean {
+        return candidate.ignore !== true && candidate.invisible !== true
       }
-      const nextVisited = [...visited, obj]
-      const values: readonly unknown[] = Object.values(obj)
-      // Short-circuit at the first match (bck-b39): `??` skips the recursive
-      // call for every remaining value once one is found, so this stops
-      // descending instead of walking the whole ~90k-node live ECharts/zrender
-      // object graph. `.map().find()` evaluated every branch fully before
-      // selecting one -- ~10s per call while the chart was still animating.
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+
+      // getItemGraphicEl can return a zrender Group rather than a single drawable
+      // shape (true for radar/parallel, where one dataIndex is a whole
+      // multi-point shape, not a discrete per-point mark). A group's own
+      // aggregate bounding-rect center is frequently empty space -- e.g. a
+      // radar polygon with no areaStyle is hollow, so its visual center hits
+      // nothing. Recurse to the actual hit-testable leaf shapes and hover the
+      // smallest one: small leaves are the individual point/symbol marks; large
+      // ones (the connecting polyline/polygon outline) span the whole shape and
+      // are much more likely to have an empty center.
+      function collectLeafShapes(candidate: GraphicElLike): readonly LeafShape[] {
+        if (!isHitTestable(candidate)) {
+          return []
+        }
+        const count = candidate.childCount ? candidate.childCount() : 0
+        if (count === 0) {
+          return hasBoundingRect(candidate) ? [candidate] : []
+        }
+        return Array.from({ length: count }, (_, i) => candidate.childAt?.(i))
+          .filter((child): child is GraphicElLike => child !== undefined)
+          .flatMap(collectLeafShapes)
+      }
+
+      function smallestLeafShape(candidate: GraphicElLike): GraphicElLike {
+        const leafShapes = collectLeafShapes(candidate)
+        return leafShapes.length === 0
+          ? candidate
+          : leafShapes.reduce((smallest, next) => {
+              const smallestRect = smallest.getBoundingRect()
+              const nextRect = next.getBoundingRect()
+              return nextRect.width * nextRect.height < smallestRect.width * smallestRect.height
+                ? next
+                : smallest
+            })
+      }
+      interface SeriesDataLike {
+        readonly getItemGraphicEl: (idx: number) => GraphicElLike | undefined
+      }
+      interface SeriesModelLike {
+        readonly getData: () => SeriesDataLike
+      }
+      interface EChartsModelLike {
+        readonly getSeriesByIndex: (index: number) => SeriesModelLike | undefined
+      }
+      interface ChartLike {
+        readonly chart: {
+          readonly getModel: () => EChartsModelLike
+          readonly getDom: () => HTMLElement
+        } | null
+      }
+
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
+        }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+      }
+
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        const values: readonly unknown[] = Object.values(obj)
+        // Short-circuit at the first match (bck-b39): `??` skips the recursive
+        // call for every remaining value once one is found, so this stops
+        // descending instead of walking the whole ~90k-node live ECharts/zrender
+        // object graph. `.map().find()` evaluated every branch fully before
+        // selecting one -- ~10s per call while the chart was still animating.
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
+      }
+
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const chart = chartView?.chart
-    if (!chart) {
-      return null
-    }
-
-    const chartDomRect = chart.getDom().getBoundingClientRect()
-    function toScreenPosition(localX: number, localY: number, transform: GraphicElLike['transform']): ScreenPosition {
-      const [m0, m1, m2, m3, m4, m5] = transform ?? [1, 0, 0, 1, 0, 0]
-      const globalX = m0 * localX + m2 * localY + m4
-      const globalY = m1 * localX + m3 * localY + m5
-      return {
-        pageX: chartDomRect.left + globalX,
-        pageY: chartDomRect.top + globalY,
+      const chart = chartView?.chart
+      if (!chart) {
+        return null
       }
-    }
 
-    const el = chart.getModel().getSeriesByIndex(a.seriesIndex)?.getData().getItemGraphicEl(a.dataIndex)
-    if (!el || !hasBoundingRect(el)) {
-      return null
-    }
-    const target = smallestLeafShape(el)
-    if (isSector(target)) {
-      const { cx, cy, r0, r, startAngle, endAngle } = target.shape
-      const midAngle = (startAngle + endAngle) / 2
-      const midRadius = (r0 + r) / 2
-      return toScreenPosition(
-        cx + midRadius * Math.cos(midAngle),
-        cy + midRadius * Math.sin(midAngle),
-        target.transform,
-      )
-    }
-    if (isPolyline(target)) {
-      const point = target.shape.points[a.vertexIndex ?? 0]
-      return point ? toScreenPosition(point[0], point[1], target.transform) : null
-    }
-    if (!hasBoundingRect(target)) {
-      return null
-    }
+      const chartDomRect = chart.getDom().getBoundingClientRect()
+      function toScreenPosition(
+        localX: number,
+        localY: number,
+        transform: GraphicElLike['transform'],
+      ): ScreenPosition {
+        const [m0, m1, m2, m3, m4, m5] = transform ?? [1, 0, 0, 1, 0, 0]
+        const globalX = m0 * localX + m2 * localY + m4
+        const globalY = m1 * localX + m3 * localY + m5
+        return {
+          pageX: chartDomRect.left + globalX,
+          pageY: chartDomRect.top + globalY,
+        }
+      }
 
-    const rect = target.getBoundingRect()
-    return toScreenPosition(rect.x + rect.width / 2, rect.y + rect.height / 2, target.transform)
-  }, args)
+      const el = chart
+        .getModel()
+        .getSeriesByIndex(a.seriesIndex)
+        ?.getData()
+        .getItemGraphicEl(a.dataIndex)
+      if (!el || !hasBoundingRect(el)) {
+        return null
+      }
+      const target = smallestLeafShape(el)
+      if (isSector(target)) {
+        const { cx, cy, r0, r, startAngle, endAngle } = target.shape
+        const midAngle = (startAngle + endAngle) / 2
+        const midRadius = (r0 + r) / 2
+        return toScreenPosition(
+          cx + midRadius * Math.cos(midAngle),
+          cy + midRadius * Math.sin(midAngle),
+          target.transform,
+        )
+      }
+      if (isPolyline(target)) {
+        const point = target.shape.points[a.vertexIndex ?? 0]
+        return point ? toScreenPosition(point[0], point[1], target.transform) : null
+      }
+      if (!hasBoundingRect(target)) {
+        return null
+      }
+
+      const rect = target.getBoundingRect()
+      return toScreenPosition(rect.x + rect.width / 2, rect.y + rect.height / 2, target.transform)
+    },
+    args,
+  )
 }
 
 /**
@@ -832,72 +901,77 @@ export async function getTooltipText(page: Page): Promise<string | null> {
  * Returns false when the series is not a force graph or when the simulation stops.
  */
 export async function isGraphLayouting(page: Page, seriesIndex = 0): Promise<boolean> {
-  return evaluateObsidian(page, (app, a: { readonly seriesIndex: number }) => {
-    interface SeriesModelLike {
-      readonly mainType?: string
-      readonly subType?: string
-    }
-    interface GraphViewLike {
-      readonly _layouting?: boolean
-    }
-    interface ChartLike {
-      readonly chart: {
-        readonly getModel: () => {
-          readonly getSeriesByIndex: (idx: number) => SeriesModelLike | undefined
+  return evaluateObsidian(
+    page,
+    (app, a: { readonly seriesIndex: number }) => {
+      interface SeriesModelLike {
+        readonly mainType?: string
+        readonly subType?: string
+      }
+      interface GraphViewLike {
+        readonly _layouting?: boolean
+      }
+      interface ChartLike {
+        readonly chart: {
+          readonly getModel: () => {
+            readonly getSeriesByIndex: (idx: number) => SeriesModelLike | undefined
+          }
+          readonly getViewOfSeriesModel: (seriesModel: SeriesModelLike) => GraphViewLike | undefined
+        } | null
+      }
+
+      const isChartView = (obj: unknown): obj is ChartLike => {
+        if (obj === null || typeof obj !== 'object') {
+          return false
         }
-        readonly getViewOfSeriesModel: (seriesModel: SeriesModelLike) => GraphViewLike | undefined
-      } | null
-    }
+        if (!('getChartOption' in obj) || !('chart' in obj)) {
+          return false
+        }
+        return typeof obj.getChartOption === 'function' && obj.chart !== undefined
+      }
 
-    const isChartView = (obj: unknown): obj is ChartLike => {
-      if (obj === null || typeof obj !== 'object') {
-        return false
+      const findChartView = (
+        obj: unknown,
+        depth: number,
+        visited: readonly unknown[],
+      ): ChartLike | undefined => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
+          return undefined
+        }
+        if (depth > 8 || visited.includes(obj)) {
+          return undefined
+        }
+        if (isChartView(obj)) {
+          return obj
+        }
+        const nextVisited = [...visited, obj]
+        const values: readonly unknown[] = Object.values(obj)
+        return values.reduce<ChartLike | undefined>(
+          (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+          undefined,
+        )
       }
-      if (!('getChartOption' in obj) || !('chart' in obj)) {
-        return false
-      }
-      return typeof obj.getChartOption === 'function' && obj.chart !== undefined
-    }
 
-    const findChartView = (obj: unknown, depth: number, visited: readonly unknown[]): ChartLike | undefined => {
-      if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
-        return undefined
-      }
-      if (depth > 8 || visited.includes(obj)) {
-        return undefined
-      }
-      if (isChartView(obj)) {
-        return obj
-      }
-      const nextVisited = [...visited, obj]
-      const values: readonly unknown[] = Object.values(obj)
-      return values.reduce<ChartLike | undefined>(
-        (found, value) => found ?? findChartView(value, depth + 1, nextVisited),
+      const leaves = [app.workspace.getLeaf(false), ...app.workspace.getLeavesOfType('bases')]
+
+      const chartView = leaves.reduce<ChartLike | undefined>(
+        (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
         undefined,
       )
-    }
 
-    const leaves = [
-      app.workspace.getLeaf(false),
-      ...app.workspace.getLeavesOfType('bases'),
-    ]
-
-    const chartView = leaves.reduce<ChartLike | undefined>(
-      (found, leaf) => found ?? (leaf ? findChartView(leaf.view, 0, []) : undefined),
-      undefined,
-    )
-
-    const chart = chartView?.chart
-    if (!chart) {
-      return false
-    }
-    const seriesModel = chart.getModel().getSeriesByIndex(a.seriesIndex)
-    if (!seriesModel || seriesModel.subType !== 'graph') {
-      return false
-    }
-    const view = chart.getViewOfSeriesModel(seriesModel)
-    return view?._layouting === true
-  }, { seriesIndex })
+      const chart = chartView?.chart
+      if (!chart) {
+        return false
+      }
+      const seriesModel = chart.getModel().getSeriesByIndex(a.seriesIndex)
+      if (!seriesModel || seriesModel.subType !== 'graph') {
+        return false
+      }
+      const view = chart.getViewOfSeriesModel(seriesModel)
+      return view?._layouting === true
+    },
+    { seriesIndex },
+  )
 }
 
 /**
@@ -932,7 +1006,7 @@ export async function isGraphLayouting(page: Page, seriesIndex = 0): Promise<boo
  */
 export async function hoverChartDataPointAndGetTooltip(
   page: Page,
-  args: { readonly seriesIndex: number, readonly dataIndex: number, readonly vertexIndex?: number },
+  args: { readonly seriesIndex: number; readonly dataIndex: number; readonly vertexIndex?: number },
   // `page.mouse.move` sends a single instantaneous mousemove by
   // default (no intermediate events). That's sufficient to trigger every
   // trigger:'item' and cartesian trigger:'axis' tooltip in this codebase,
@@ -947,10 +1021,9 @@ export async function hoverChartDataPointAndGetTooltip(
 ): Promise<string> {
   await waitForVaultIndexed(page)
 
-  await expect.poll(
-    () => getSeriesItemScreenPosition(page, args),
-    { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-  ).not.toBeNull()
+  await expect
+    .poll(() => getSeriesItemScreenPosition(page, args), { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS })
+    .not.toBeNull()
 
   // For charts with force simulation (e.g. graph with layout: 'force'), wait
   // for the physics simulation's step loop to finish completely (~510 steps / ~8s)
@@ -958,38 +1031,45 @@ export async function hoverChartDataPointAndGetTooltip(
   // Otherwise, intermediate oscillation turnarounds satisfy the position-stability
   // poll below while nodes are still moving, causing the pointer to land on an
   // adjacent moving node (bck-bpe).
-  await expect.poll(
-    () => isGraphLayouting(page, args.seriesIndex),
-    { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-  ).toBe(false)
+  await expect
+    .poll(() => isGraphLayouting(page, args.seriesIndex), {
+      timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+    })
+    .toBe(false)
 
   let previous: ScreenPosition | null = null
-  await expect.poll(async () => {
-    const current = await getSeriesItemScreenPosition(page, args)
-    const stable = current !== null && previous !== null
-      && Math.abs(current.pageX - previous.pageX) < 0.5
-      && Math.abs(current.pageY - previous.pageY) < 0.5
-    previous = current
-    return stable
-  // Same VAULT_INDEXED_POLL_TIMEOUT_MS budget as the existence poll above,
-  // not a short fixed window -- confirmed via a live failure screenshot that
-  // Obsidian's "Indexing vault..." banner was still active when a 5000ms
-  // budget ran out, meaning Bases can still be restarting entrance
-  // animations via repeated setOption calls well past 5s in a loaded
-  // environment.
-  }, { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS, intervals: [100] }).toBe(true)
+  await expect
+    .poll(
+      async () => {
+        const current = await getSeriesItemScreenPosition(page, args)
+        const stable =
+          current !== null &&
+          previous !== null &&
+          Math.abs(current.pageX - previous.pageX) < 0.5 &&
+          Math.abs(current.pageY - previous.pageY) < 0.5
+        previous = current
+        return stable
+        // Same VAULT_INDEXED_POLL_TIMEOUT_MS budget as the existence poll above,
+        // not a short fixed window -- confirmed via a live failure screenshot that
+        // Obsidian's "Indexing vault..." banner was still active when a 5000ms
+        // budget ran out, meaning Bases can still be restarting entrance
+        // animations via repeated setOption calls well past 5s in a loaded
+        // environment.
+      },
+      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS, intervals: [100] },
+    )
+    .toBe(true)
 
   const target = await getSeriesItemScreenPosition(page, args)
   if (!target) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-    throw new Error(`no rendered graphic element for seriesIndex=${args.seriesIndex} dataIndex=${args.dataIndex} even after polling succeeded`)
+    throw new Error(
+      `no rendered graphic element for seriesIndex=${args.seriesIndex} dataIndex=${args.dataIndex} even after polling succeeded`,
+    )
   }
   await page.mouse.move(target.pageX, target.pageY, { steps: moveSteps })
 
-  await expect.poll(
-    () => getTooltipText(page),
-    { timeout: 5000 },
-  ).not.toBeNull()
+  await expect.poll(() => getTooltipText(page), { timeout: 5000 }).not.toBeNull()
 
   const text = await getTooltipText(page)
   if (text === null) {
@@ -1023,7 +1103,7 @@ export function findIsolatedScatterTarget<TRow extends ScatterDatasetRowLike>(
   sourceRows: readonly TRow[],
 ): ScatterTarget<TRow> {
   const numericRows = sourceRows.filter(
-    (row): row is TRow & { readonly x: number, readonly y: number } =>
+    (row): row is TRow & { readonly x: number; readonly y: number } =>
       typeof row.x === 'number' && row.y !== null,
   )
   if (numericRows.length === 0) {
@@ -1035,7 +1115,7 @@ export function findIsolatedScatterTarget<TRow extends ScatterDatasetRowLike>(
   const xSpan = Math.max(...xs) - Math.min(...xs) || 1
   const ySpan = Math.max(...ys) - Math.min(...ys) || 1
 
-  const candidates = numericRows.map((row) => {
+  const candidates = numericRows.map(row => {
     const minSqDist = numericRows.reduce((best, other) => {
       if (other === row) {
         return best

@@ -5,8 +5,7 @@ import { isRecord } from './transformers/bases-values'
 function parseJsonOverride(rawOverride: unknown): unknown {
   try {
     return typeof rawOverride === 'string' ? JSON.parse(rawOverride) : rawOverride
-  }
-  catch {
+  } catch {
     return null
   }
 }
@@ -24,9 +23,5 @@ export function applyOptionOverride(
   const parsed = parseJsonOverride(rawOverride)
   const parsedOverride = isRecord(parsed) && !Array.isArray(parsed) ? parsed : null
 
-  return !option
-    ? null
-    : !parsedOverride
-        ? option
-        : R.mergeDeep(option, parsedOverride)
+  return !option ? null : !parsedOverride ? option : R.mergeDeep(option, parsedOverride)
 }

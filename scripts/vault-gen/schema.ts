@@ -13,19 +13,23 @@ export const FrontmatterValueSchema = z.union([
 
 export type FrontmatterValue = z.infer<typeof FrontmatterValueSchema>
 
-export const PathSchema = z.object({
-  dir: z.string(),
-  name: z.string(),
-  ext: z.string(),
-  base: z.string(),
-}).readonly()
+export const PathSchema = z
+  .object({
+    dir: z.string(),
+    name: z.string(),
+    ext: z.string(),
+    base: z.string(),
+  })
+  .readonly()
 
 export type Path = z.infer<typeof PathSchema>
 
-export const NoteDefinitionSchema = z.object({
-  relativePath: PathSchema,
-  frontmatter: z.record(z.string(), FrontmatterValueSchema).readonly(),
-  body: z.string().optional(),
-}).readonly()
+export const NoteDefinitionSchema = z
+  .object({
+    relativePath: PathSchema,
+    frontmatter: z.record(z.string(), FrontmatterValueSchema).readonly(),
+    body: z.string().optional(),
+  })
+  .readonly()
 
 export type NoteDefinition = z.infer<typeof NoteDefinitionSchema>

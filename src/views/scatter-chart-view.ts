@@ -17,19 +17,13 @@ export class ScatterChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'scatter',
-      {
-        ...this.getCommonTransformerOptions(),
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-        sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
-        sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
-        ...this.getVisualMapTransformerOptions(),
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'scatter', {
+      ...this.getCommonTransformerOptions(),
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+      sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
+      sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
+      ...this.getVisualMapTransformerOptions(),
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

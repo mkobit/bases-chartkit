@@ -83,9 +83,9 @@ function computeNodeSymbolSizes(
           ? R.fromKeys(nodeNames, _name => DEFAULT_NODE_SYMBOL_SIZE)
           : R.mapValues(weightsByNode, weight =>
               Math.round(
-                MIN_NODE_SYMBOL_SIZE
-                + ((weight - minWeight) / (maxWeight - minWeight))
-                * (MAX_NODE_SYMBOL_SIZE - MIN_NODE_SYMBOL_SIZE),
+                MIN_NODE_SYMBOL_SIZE +
+                  ((weight - minWeight) / (maxWeight - minWeight)) *
+                    (MAX_NODE_SYMBOL_SIZE - MIN_NODE_SYMBOL_SIZE),
               ),
             )
       })()
@@ -103,40 +103,24 @@ export function createGraphChartOption(
   const processedData: ReadonlyArray<GraphLinkRow> = R.pipe(
     data,
     R.map((item): GraphLinkRow | null => {
-      const sourceRaw = getNestedValue(
-        item,
-        sourceProp,
-      )
-      const targetRaw = getNestedValue(
-        item,
-        targetProp,
-      )
+      const sourceRaw = getNestedValue(item, sourceProp)
+      const targetRaw = getNestedValue(item, targetProp)
 
-      return (sourceRaw !== null && sourceRaw !== undefined && targetRaw !== null && targetRaw !== undefined)
+      return sourceRaw !== null &&
+        sourceRaw !== undefined &&
+        targetRaw !== null &&
+        targetRaw !== undefined
         ? (() => {
             const source = safeToString(sourceRaw)
             const target = safeToString(targetRaw)
 
-            const valNum = valueProp
-              ? Number(getNestedValue(
-                  item,
-                  valueProp,
-                ))
-              : Number.NaN
+            const valNum = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
             const val = Number.isNaN(valNum) ? undefined : valNum
 
-            const cRaw = categoryProp
-              ? getNestedValue(
-                  item,
-                  categoryProp,
-                )
-              : undefined
-            const cat = (cRaw !== undefined && cRaw !== null) ? safeToString(cRaw) : undefined
+            const cRaw = categoryProp ? getNestedValue(item, categoryProp) : undefined
+            const cat = cRaw !== undefined && cRaw !== null ? safeToString(cRaw) : undefined
 
-            return { source,
-              target,
-              value: val,
-              category: cat }
+            return { source, target, value: val, category: cat }
           })()
         : null
     }),
@@ -145,25 +129,20 @@ export function createGraphChartOption(
 
   const links: ReadonlyArray<GraphLink> = R.map(
     processedData,
-    ({ source, target, value }): GraphLink => ({ source,
-      target,
-      value }),
+    ({ source, target, value }): GraphLink => ({ source, target, value }),
   )
 
-  const sources: ReadonlyArray<GraphNodeRef> = R.map(
-    processedData,
-    (x): GraphNodeRef => ({ name: x.source,
-      category: x.category }),
-  )
-  const targets: ReadonlyArray<GraphNodeRef> = R.map(
-    processedData,
-    (x): GraphNodeRef => ({ name: x.target,
-      category: undefined }),
-  ) // Target categories unknown from this link unless it appears as source elsewhere
+  const sources: ReadonlyArray<GraphNodeRef> = R.map(processedData, (x): GraphNodeRef => ({
+    name: x.source,
+    category: x.category,
+  }))
+  const targets: ReadonlyArray<GraphNodeRef> = R.map(processedData, (x): GraphNodeRef => ({
+    name: x.target,
+    category: undefined,
+  })) // Target categories unknown from this link unless it appears as source elsewhere
 
   const groupedNodes = R.pipe(
-    [...sources,
-      ...targets],
+    [...sources, ...targets],
     R.groupBy(x => x.name),
   )
 
@@ -194,9 +173,8 @@ export function createGraphChartOption(
 
   const hasCategories = categoriesList.length > 0
 
-  const finalNodesData: ReadonlyArray<GraphNode> = R.map(
-    nodesData,
-    (node): GraphNode => node.category !== undefined
+  const finalNodesData: ReadonlyArray<GraphNode> = R.map(nodesData, (node): GraphNode =>
+    node.category !== undefined
       ? node
       : {
           ...node,
@@ -247,11 +225,14 @@ export function createGraphChartOption(
   const valueFormat = options?.valueFormat
 
   const opt: EChartsOption = {
-    tooltip: valueFormat !== undefined
-      ? {
-          formatter: asTooltipFormatter((param: GraphTooltipParam) => formatGraphTooltip(param, valueFormat)),
-        }
-      : {},
+    tooltip:
+      valueFormat !== undefined
+        ? {
+            formatter: asTooltipFormatter((param: GraphTooltipParam) =>
+              formatGraphTooltip(param, valueFormat),
+            ),
+          }
+        : {},
     ...(getLegendOption(options) && hasCategories
       ? {
           legend: {

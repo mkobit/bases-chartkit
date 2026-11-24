@@ -49,7 +49,11 @@ export interface ChartViewRegistration {
   readonly type: RegisteredChartViewType
   readonly getName: () => string
   readonly icon: string
-  readonly factory: (controller: QueryController, containerEl: HTMLElement, plugin: BarePlugin) => BasesView
+  readonly factory: (
+    controller: QueryController,
+    containerEl: HTMLElement,
+    plugin: BarePlugin,
+  ) => BasesView
   readonly options: (plugin: BarePlugin) => BasesOptions[]
 }
 
@@ -75,34 +79,94 @@ export const CHART_VIEW_REGISTRATIONS: readonly ChartViewRegistration[] = [
   standardView('lines-chart', () => t('views.lines.name'), 'route', LinesChartView),
   standardView('pie-chart', () => t('views.pie.name'), 'pie-chart', PieChartView),
   standardView('rose-chart', () => t('views.rose.name'), 'aperture', RoseChartView),
-  standardView('pictorial-bar-chart', () => t('views.pictorial_bar.name'), 'image', PictorialBarChartView),
-  standardView('stacked-bar-chart', () => t('views.stacked_bar.name'), 'bar-chart-2', StackedBarChartView),
+  standardView(
+    'pictorial-bar-chart',
+    () => t('views.pictorial_bar.name'),
+    'image',
+    PictorialBarChartView,
+  ),
+  standardView(
+    'stacked-bar-chart',
+    () => t('views.stacked_bar.name'),
+    'bar-chart-2',
+    StackedBarChartView,
+  ),
   standardView('combo-chart', () => t('views.combo.name'), 'layers', ComboChartView),
   standardView('area-chart', () => t('views.area.name'), 'mountain', AreaChartView),
   standardView('scatter-chart', () => t('views.scatter.name'), 'crosshair', ScatterChartView),
-  standardView('effect-scatter-chart', () => t('views.effect_scatter.name'), 'disc', EffectScatterChartView),
+  standardView(
+    'effect-scatter-chart',
+    () => t('views.effect_scatter.name'),
+    'disc',
+    EffectScatterChartView,
+  ),
   standardView('bubble-chart', () => t('views.bubble.name'), 'circle', BubbleChartView),
   standardView('radar-chart', () => t('views.radar.name'), 'hexagon', RadarChartView),
   standardView('funnel-chart', () => t('views.funnel.name'), 'filter', FunnelChartView),
   standardView('gauge-chart', () => t('views.gauge.name'), 'gauge', GaugeChartView),
   standardView('heatmap-chart', () => t('views.heatmap.name'), 'grid', HeatmapChartView),
-  standardView('candlestick-chart', () => t('views.candlestick.name'), 'bar-chart', CandlestickChartView),
+  standardView(
+    'candlestick-chart',
+    () => t('views.candlestick.name'),
+    'bar-chart',
+    CandlestickChartView,
+  ),
   standardView('boxplot-chart', () => t('views.boxplot.name'), 'box-select', BoxplotChartView),
   standardView('sankey-chart', () => t('views.sankey.name'), 'git-merge', SankeyChartView),
   standardView('graph-chart', () => t('views.graph.name'), 'git-fork', GraphChartView),
   standardView('sunburst-chart', () => t('views.sunburst.name'), 'disc', SunburstChartView),
   standardView('tree-chart', () => t('views.tree.name'), 'network', TreeChartView),
-  standardView('theme-river-chart', () => t('views.theme_river.name'), 'waves', ThemeRiverChartView),
+  standardView(
+    'theme-river-chart',
+    () => t('views.theme_river.name'),
+    'waves',
+    ThemeRiverChartView,
+  ),
   standardView('calendar-chart', () => t('views.calendar.name'), 'calendar', CalendarChartView),
-  standardView('parallel-chart', () => t('views.parallel.name'), 'sliders-horizontal', ParallelChartView),
+  standardView(
+    'parallel-chart',
+    () => t('views.parallel.name'),
+    'sliders-horizontal',
+    ParallelChartView,
+  ),
   standardView('gantt-chart', () => t('views.gantt.name'), 'calendar-clock', GanttChartView),
-  standardView('waterfall-chart', () => t('views.waterfall.name'), 'trending-down', WaterfallChartView),
-  standardView('pareto-chart', () => t('views.pareto.name'), 'bar-chart-horizontal', ParetoChartView),
-  standardView('histogram-chart', () => t('views.histogram.name'), 'bar-chart-big', HistogramChartView),
+  standardView(
+    'waterfall-chart',
+    () => t('views.waterfall.name'),
+    'trending-down',
+    WaterfallChartView,
+  ),
+  standardView(
+    'pareto-chart',
+    () => t('views.pareto.name'),
+    'bar-chart-horizontal',
+    ParetoChartView,
+  ),
+  standardView(
+    'histogram-chart',
+    () => t('views.histogram.name'),
+    'bar-chart-big',
+    HistogramChartView,
+  ),
   standardView('bullet-chart', () => t('views.bullet.name'), 'crosshair', BulletChartView),
-  standardView('radial-bar-chart', () => t('views.radial_bar.name'), 'circle-dot', RadialBarChartView),
-  standardView('polar-line-chart', () => t('views.polar_line.name'), 'activity', PolarLineChartView),
-  standardView('polar-scatter-chart', () => t('views.polar_scatter.name'), 'crosshair', PolarScatterChartView),
+  standardView(
+    'radial-bar-chart',
+    () => t('views.radial_bar.name'),
+    'circle-dot',
+    RadialBarChartView,
+  ),
+  standardView(
+    'polar-line-chart',
+    () => t('views.polar_line.name'),
+    'activity',
+    PolarLineChartView,
+  ),
+  standardView(
+    'polar-scatter-chart',
+    () => t('views.polar_scatter.name'),
+    'crosshair',
+    PolarScatterChartView,
+  ),
   standardView('map-chart', () => t('views.map.name'), 'map', MapChartView),
   standardView('word-cloud-chart', () => t('views.word_cloud.name'), 'cloud', WordCloudChartView),
   {
@@ -115,7 +179,7 @@ export const CHART_VIEW_REGISTRATIONS: readonly ChartViewRegistration[] = [
 ]
 
 export function registerChartViews(plugin: BarePlugin): void {
-  CHART_VIEW_REGISTRATIONS.forEach((registration) => {
+  CHART_VIEW_REGISTRATIONS.forEach(registration => {
     plugin.registerBasesView(registration.type, {
       name: registration.getName(),
       icon: registration.icon,

@@ -1,6 +1,12 @@
 import * as R from 'remeda'
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface ParallelSeriesLike {
   readonly data?: readonly unknown[]
@@ -18,26 +24,36 @@ test.describe('parallel chart rendering', () => {
   // falls in empty space between axes. vertexIndex: 1 (the middle axis,
   // Intelligence) exercises an interior vertex, not an edge one a bbox
   // heuristic might accidentally land on.
-  test('hovering a character\'s line at an interior axis shows the whole row in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'parallel/Basic.base', viewName: 'Character stats (parallel)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly ParallelSeriesLike[] }>(await getChartOption(page))
-        return option?.series?.[0]?.data?.length ?? 0
+  test("hovering a character's line at an interior axis shows the whole row in the tooltip", async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'parallel/Basic.base', viewName: 'Character stats (parallel)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly ParallelSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // vertexIndex 1 targets an interior axis vertex (bck-44x: exercises the
     // isPolyline branch reading the exact rendered vertex, not a bounding-rect
@@ -52,10 +68,18 @@ test.describe('parallel chart rendering', () => {
     // under full-suite load). So derive the target row FROM the option rather
     // than hardcoding a class or index.
     const option = asOptionLike<{
-      readonly series?: ReadonlyArray<{ readonly name?: string, readonly data?: ReadonlyArray<ReadonlyArray<number | string>> }>
+      readonly series?: ReadonlyArray<{
+        readonly name?: string
+        readonly data?: ReadonlyArray<ReadonlyArray<number | string>>
+      }>
     }>(await getChartOption(page))
     const rows = (option?.series ?? []).flatMap((series, seriesIndex) =>
-      (series.data ?? []).map((values, dataIndex) => ({ seriesIndex, dataIndex, name: series.name ?? '', values })),
+      (series.data ?? []).map((values, dataIndex) => ({
+        seriesIndex,
+        dataIndex,
+        name: series.name ?? '',
+        values,
+      })),
     )
     expect(rows.length).toBeGreaterThan(0)
 
@@ -66,7 +90,9 @@ test.describe('parallel chart rendering', () => {
     // Pick a row whose interior-axis value is UNIQUE across all characters, so no other line
     // touches that vertex and the resolved tooltip is deterministic.
     const interiorValueCounts = R.countBy(rows, row => String(row.values[interiorVertexIndex]))
-    const target = rows.find(row => interiorValueCounts[String(row.values[interiorVertexIndex])] === 1)
+    const target = rows.find(
+      row => interiorValueCounts[String(row.values[interiorVertexIndex])] === 1,
+    )
     expect(target, 'no row has a unique interior-axis value to hover unambiguously').toBeTruthy()
     if (!target) {
       return
@@ -79,7 +105,11 @@ test.describe('parallel chart rendering', () => {
     // cross the line reliably.
     const tooltipText = await hoverChartDataPointAndGetTooltip(
       page,
-      { seriesIndex: target.seriesIndex, dataIndex: target.dataIndex, vertexIndex: interiorVertexIndex },
+      {
+        seriesIndex: target.seriesIndex,
+        dataIndex: target.dataIndex,
+        vertexIndex: interiorVertexIndex,
+      },
       10,
     )
 

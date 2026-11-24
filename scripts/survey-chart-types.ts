@@ -23,7 +23,11 @@ import type { ViewMode } from '../shared/appearance'
 import { connectCdp } from '../e2e/cdp/client'
 import { createObsidianPage } from '../e2e/fixtures/obsidian'
 import type { ObsidianPage } from '../e2e/fixtures/obsidian'
-import { evaluateObsidian, waitForChartFinished, waitForVaultIndexed } from '../e2e/helpers/evaluate'
+import {
+  evaluateObsidian,
+  waitForChartFinished,
+  waitForVaultIndexed,
+} from '../e2e/helpers/evaluate'
 import { launchObsidianForSuite, stopObsidian, waitForCdpReady } from './run-e2e'
 
 type SurveyPage = ObsidianPage['page']
@@ -55,13 +59,15 @@ export function resolveSurveyTheme(
   rawSurveyTheme: string | undefined = process.env.SURVEY_THEME,
   rootDir: string = ROOT_DIR,
 ): ResolvedSurveyTheme {
-  const warning = rawSurveyTheme !== undefined && rawSurveyTheme !== 'dark'
-    ? `[survey-chart-types] SURVEY_THEME=${rawSurveyTheme} is not "dark"; falling back to light mode\n`
-    : undefined
+  const warning =
+    rawSurveyTheme !== undefined && rawSurveyTheme !== 'dark'
+      ? `[survey-chart-types] SURVEY_THEME=${rawSurveyTheme} is not "dark"; falling back to light mode\n`
+      : undefined
   const theme: ViewMode | undefined = rawSurveyTheme === 'dark' ? 'dark' : undefined
-  const outputDir = theme === 'dark'
-    ? path.join(rootDir, '.test-output', 'chart-types-dark')
-    : path.join(rootDir, 'docs', 'images', 'chart-types')
+  const outputDir =
+    theme === 'dark'
+      ? path.join(rootDir, '.test-output', 'chart-types-dark')
+      : path.join(rootDir, 'docs', 'images', 'chart-types')
   return {
     theme,
     outputDir,
@@ -79,14 +85,24 @@ const isBaseView = (value: unknown): value is BaseView => {
   if (value === null || typeof value !== 'object') {
     return false
   }
-  return 'type' in value && 'name' in value && typeof value.type === 'string' && typeof value.name === 'string'
+  return (
+    'type' in value &&
+    'name' in value &&
+    typeof value.type === 'string' &&
+    typeof value.name === 'string'
+  )
 }
 
 // Narrows the parsed YAML document down to its `views` array without casting
 // -- Bun.YAML.parse returns `unknown`, so this is the boundary that proves
 // `views` exists and is an array before any element-level narrowing happens.
 const getViews = (parsed: unknown): ReadonlyArray<unknown> => {
-  if (parsed === null || typeof parsed !== 'object' || !('views' in parsed) || !Array.isArray(parsed.views)) {
+  if (
+    parsed === null ||
+    typeof parsed !== 'object' ||
+    !('views' in parsed) ||
+    !Array.isArray(parsed.views)
+  ) {
     return []
   }
   return parsed.views
@@ -106,7 +122,7 @@ export function collectChartViews(vaultDir: string = VAULT_DIR): ReadonlyArray<C
 
   return R.pipe(
     baseFiles,
-    R.flatMap((baseFile) => {
+    R.flatMap(baseFile => {
       const raw = fs.readFileSync(path.join(vaultDir, baseFile), 'utf8')
       const parsed = Bun.YAML.parse(raw)
       return R.pipe(
@@ -173,7 +189,10 @@ async function timeoutAfter(ms: number, label: string): Promise<never> {
   fail(`timed out after ${ms}ms waiting on: ${label}`)
 }
 
-async function waitForCanvasPresent(page: SurveyPage, timeoutMs: number = CANVAS_MOUNT_TIMEOUT_MS): Promise<void> {
+async function waitForCanvasPresent(
+  page: SurveyPage,
+  timeoutMs: number = CANVAS_MOUNT_TIMEOUT_MS,
+): Promise<void> {
   const startTime = Temporal.Now.instant().epochMilliseconds
   const deadline = startTime + timeoutMs
 
@@ -259,14 +278,18 @@ export async function captureView(
         // returns an existing navigable leaf rather than creating a new one
         // (unlike getLeaf('tab'), which always opens a fresh tab -- calling
         // that once per view would leak 36 tabs over the sweep).
-        await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-          const leaf = app.workspace.getLeaf(false)
-          await leaf.setViewState({
-            type: 'bases',
-            state: { file: args.path, viewName: args.viewName },
-            active: true,
-          })
-        }, { path: entry.baseFile, viewName: entry.viewName })
+        await evaluateObsidian(
+          page,
+          async (app, args: { path: string; viewName: string }) => {
+            const leaf = app.workspace.getLeaf(false)
+            await leaf.setViewState({
+              type: 'bases',
+              state: { file: args.path, viewName: args.viewName },
+              active: true,
+            })
+          },
+          { path: entry.baseFile, viewName: entry.viewName },
+        )
 
         await waitForCanvasPresent(page)
 
@@ -283,10 +306,11 @@ export async function captureView(
 
     process.stderr.write(`[survey-chart-types] ok: ${entry.baseFile} :: ${entry.viewName}\n`)
     return { entry, fileName, ok: true }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
-    process.stderr.write(`[survey-chart-types] failed to capture "${entry.viewName}" (${entry.baseFile}, type=${entry.chartType}): ${message}\n`)
+    process.stderr.write(
+      `[survey-chart-types] failed to capture "${entry.viewName}" (${entry.baseFile}, type=${entry.chartType}): ${message}\n`,
+    )
     return { entry, fileName, ok: false, error: message }
   }
 }
@@ -319,8 +343,8 @@ export async function runSurvey(): Promise<number> {
 
       // Waits for the workspace to finish loading, then opens the single tab
       // that every subsequent capture reuses via getLeaf(false) (see captureView).
-      await evaluateObsidian(page, async (app) => {
-        await new Promise<void>((resolve) => {
+      await evaluateObsidian(page, async app => {
+        await new Promise<void>(resolve => {
           app.workspace.onLayoutReady(() => resolve())
         })
         app.workspace.getLeaf('tab')
@@ -337,33 +361,32 @@ export async function runSurvey(): Promise<number> {
       // across all views. Reduce-over-a-promise chains each capture after the
       // previous one settles, appending immutably instead of mutating an
       // accumulator array.
-      const results = await entries.reduce(
-        async (accPromise, entry) => {
-          const acc = await accPromise
-          const result = await captureView(page, entry, outputDir)
-          return [...acc, result]
-        },
-        Promise.resolve<ReadonlyArray<CaptureResult>>([]),
-      )
+      const results = await entries.reduce(async (accPromise, entry) => {
+        const acc = await accPromise
+        const result = await captureView(page, entry, outputDir)
+        return [...acc, result]
+      }, Promise.resolve<ReadonlyArray<CaptureResult>>([]))
 
       const succeeded = results.filter(r => r.ok)
       const failed = results.filter(r => !r.ok)
 
-      process.stderr.write(`[survey-chart-types] captured ${succeeded.length}/${entries.length} screenshots\n`)
+      process.stderr.write(
+        `[survey-chart-types] captured ${succeeded.length}/${entries.length} screenshots\n`,
+      )
       if (failed.length > 0) {
         process.stderr.write('[survey-chart-types] failures:\n')
         for (const failure of failed) {
-          process.stderr.write(`  - ${failure.entry.baseFile} :: ${failure.entry.viewName} (type=${failure.entry.chartType}): ${failure.error ?? 'unknown error'}\n`)
+          process.stderr.write(
+            `  - ${failure.entry.baseFile} :: ${failure.entry.viewName} (type=${failure.entry.chartType}): ${failure.error ?? 'unknown error'}\n`,
+          )
         }
       }
 
       return succeeded.length > 0 ? 0 : 1
-    }
-    finally {
+    } finally {
       await client.close()
     }
-  }
-  finally {
+  } finally {
     launched.removeSignalHandlers()
     await stopObsidian(launched.proc, launched.configDir, launched.vault)
   }
@@ -376,7 +399,10 @@ async function main(): Promise<void> {
 
 if (import.meta.main) {
   main().catch((err: unknown) => {
-    console.error('Fatal error in survey-chart-types:', err instanceof Error ? err.message : String(err))
+    console.error(
+      'Fatal error in survey-chart-types:',
+      err instanceof Error ? err.message : String(err),
+    )
     process.exit(1)
   })
 }

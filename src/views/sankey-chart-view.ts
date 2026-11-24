@@ -39,16 +39,10 @@ export class SankeyChartView extends BaseChartView {
     }
     this.lastCycleNoticeSignature = null
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'sankey',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp: valueProp,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'sankey', {
+      ...this.getCommonTransformerOptions(),
+      valueProp: valueProp,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
@@ -59,9 +53,6 @@ export class SankeyChartView extends BaseChartView {
       placeholder: t('views.sankey.value_placeholder'),
     }
 
-    return [
-      ...BaseChartView.getCommonViewOptions(),
-      valueOption,
-    ]
+    return [...BaseChartView.getCommonViewOptions(), valueOption]
   }
 }

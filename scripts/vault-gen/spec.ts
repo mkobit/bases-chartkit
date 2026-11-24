@@ -31,33 +31,31 @@ export type FrontmatterRow = Readonly<Record<string, FrontmatterValue>>
 // Split into data + behavior halves via intersection (rather than one
 // interface mixing plain fields and a function field) per this repo's
 // eslint-plugin-functional/no-mixed-types rule.
-export type ChartExampleSpec
-  = & Readonly<{
-    chartType: string
-    description: string
-    notePrefix: string
-    variants: readonly ChartVariantSpec[]
-    // Link to the canonical Apache ECharts gallery example this chart type
-    // is modeled after, so a maintainer can visually/behaviorally compare
-    // this plugin's rendering against ECharts' own reference (bck-i9b.6).
-    // Omitted for chart types with no confirmed 1:1 gallery example -- see
-    // the comment on `echartsExample` below for why this is never derived
-    // from `chartType` automatically.
-    echartsExampleUrl?: string
-  }>
-  & Readonly<{
+export type ChartExampleSpec = Readonly<{
+  chartType: string
+  description: string
+  notePrefix: string
+  variants: readonly ChartVariantSpec[]
+  // Link to the canonical Apache ECharts gallery example this chart type
+  // is modeled after, so a maintainer can visually/behaviorally compare
+  // this plugin's rendering against ECharts' own reference (bck-i9b.6).
+  // Omitted for chart types with no confirmed 1:1 gallery example -- see
+  // the comment on `echartsExample` below for why this is never derived
+  // from `chartType` automatically.
+  echartsExampleUrl?: string
+}> &
+  Readonly<{
     sampleRows: (seed: number) => readonly FrontmatterRow[]
   }>
 
-export type ChartExampleSpecConfig<T>
-  = & Readonly<{
-    chartType: string
-    description: string
-    notePrefix: string
-    variants: readonly ChartVariantSpec[]
-    echartsExampleUrl?: string
-  }>
-  & Readonly<{
+export type ChartExampleSpecConfig<T> = Readonly<{
+  chartType: string
+  description: string
+  notePrefix: string
+  variants: readonly ChartVariantSpec[]
+  echartsExampleUrl?: string
+}> &
+  Readonly<{
     arbitrary: fc.Arbitrary<T>
     toRows: (sample: T) => readonly FrontmatterRow[]
   }>
@@ -89,7 +87,7 @@ export function defineChartExampleSpec<T>(config: ChartExampleSpecConfig<T>): Ch
     notePrefix: config.notePrefix,
     variants: config.variants,
     echartsExampleUrl: config.echartsExampleUrl,
-    sampleRows: (seed) => {
+    sampleRows: seed => {
       const subSeed = deriveSubSeed(seed, config.chartType)
       const sample = getDeterministicSample(config.arbitrary, subSeed)
       return config.toRows(sample)

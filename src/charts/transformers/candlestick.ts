@@ -74,12 +74,14 @@ function formatTooltip(
   const marker = first.marker ?? ''
   // Conventional Open/High/Low/Close reading order (the "OHLC" acronym), rather
   // than the dataset's own open/close/low/high key order.
-  return `${marker}<b>${row.x}</b><br/>`
-    + `Open: ${row.open.toLocaleString('en-US')}<br/>`
-    + `High: ${row.high.toLocaleString('en-US')}<br/>`
-    + `Low: ${row.low.toLocaleString('en-US')}<br/>`
-    + `Close: ${row.close.toLocaleString('en-US')}<br/>`
-    + formatChangeLine(row.open, row.close, upColor, downColor)
+  return (
+    `${marker}<b>${row.x}</b><br/>` +
+    `Open: ${row.open.toLocaleString('en-US')}<br/>` +
+    `High: ${row.high.toLocaleString('en-US')}<br/>` +
+    `Low: ${row.low.toLocaleString('en-US')}<br/>` +
+    `Close: ${row.close.toLocaleString('en-US')}<br/>` +
+    formatChangeLine(row.open, row.close, upColor, downColor)
+  )
 }
 
 export function createCandlestickChartOption(
@@ -102,32 +104,22 @@ export function createCandlestickChartOption(
   const normalizedData: ReadonlyArray<CandlestickRow> = R.pipe(
     data,
     R.map((item, index) => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
+      const xValRaw = getNestedValue(item, xProp)
 
-      const openRaw = getNestedValue(
-        item,
-        openProp,
-      )
-      const closeRaw = getNestedValue(
-        item,
-        closeProp,
-      )
-      const lowRaw = getNestedValue(
-        item,
-        lowProp,
-      )
-      const highRaw = getNestedValue(
-        item,
-        highProp,
-      )
+      const openRaw = getNestedValue(item, openProp)
+      const closeRaw = getNestedValue(item, closeProp)
+      const lowRaw = getNestedValue(item, lowProp)
+      const highRaw = getNestedValue(item, highProp)
 
-      const rawValuesValid = openRaw !== null && openRaw !== undefined
-        && closeRaw !== null && closeRaw !== undefined
-        && lowRaw !== null && lowRaw !== undefined
-        && highRaw !== null && highRaw !== undefined
+      const rawValuesValid =
+        openRaw !== null &&
+        openRaw !== undefined &&
+        closeRaw !== null &&
+        closeRaw !== undefined &&
+        lowRaw !== null &&
+        lowRaw !== undefined &&
+        highRaw !== null &&
+        highRaw !== undefined
       const meta = extractRowMetadata(item, index)
 
       return rawValuesValid
@@ -137,7 +129,11 @@ export function createCandlestickChartOption(
             const lowVal = Number(lowRaw)
             const highVal = Number(highRaw)
 
-            const isNum = !Number.isNaN(openVal) && !Number.isNaN(closeVal) && !Number.isNaN(lowVal) && !Number.isNaN(highVal)
+            const isNum =
+              !Number.isNaN(openVal) &&
+              !Number.isNaN(closeVal) &&
+              !Number.isNaN(lowVal) &&
+              !Number.isNaN(highVal)
 
             return isNum
               ? {
@@ -173,10 +169,7 @@ export function createCandlestickChartOption(
     datasetIndex: 0,
     encode: {
       x: 'x',
-      y: ['open',
-        'close',
-        'low',
-        'high'],
+      y: ['open', 'close', 'low', 'high'],
       // Without this, ECharts' dimension inference locks in `name` from
       // this dataset's own object-row keys (open/close/low/high) before
       // WhiskerBoxCommonMixin's defaultTooltip:true template dims
@@ -188,10 +181,7 @@ export function createCandlestickChartOption(
       // `resultItem.name == null` gate and dimensionHelper.js's
       // defaultedLabel/defaultedTooltip fallback). Declaring the tooltip
       // dims explicitly bypasses that whole detection path.
-      tooltip: ['open',
-        'close',
-        'low',
-        'high'],
+      tooltip: ['open', 'close', 'low', 'high'],
     },
     itemStyle: {
       color: upColor,
@@ -202,16 +192,21 @@ export function createCandlestickChartOption(
   }
 
   const opt: EChartsOption = {
-    dataset: [{
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
-      source: normalizedData as unknown as Record<string, unknown>[],
-    }],
+    dataset: [
+      {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax -- normalizedData's row shape varies per chart; ECharts dataset.source just needs plain records.
+        source: normalizedData as unknown as Record<string, unknown>[],
+      },
+    ],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
         type: 'cross',
       },
-      formatter: asTooltipFormatter((params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>) => formatTooltip(params, upColor, downColor)),
+      formatter: asTooltipFormatter(
+        (params: CandlestickTooltipParam | ReadonlyArray<CandlestickTooltipParam>) =>
+          formatTooltip(params, upColor, downColor),
+      ),
     },
     xAxis: {
       type: 'category',

@@ -6,18 +6,15 @@ import type {
   HoverPopover,
   UserEvent,
 } from 'obsidian'
-import {
-  BasesView,
-  ExtraButtonComponent,
-  Keymap,
-  Menu,
-  Notice,
-  Platform,
-} from 'obsidian'
+import { BasesView, ExtraButtonComponent, Keymap, Menu, Notice, Platform } from 'obsidian'
 import * as echarts from 'echarts'
 import type BarePlugin from '../main'
 import type { EChartsOption } from 'echarts'
-import type { BasesData, BaseTransformerOptions, VisualMapOptions } from '../charts/transformers/base'
+import type {
+  BasesData,
+  BaseTransformerOptions,
+  VisualMapOptions,
+} from '../charts/transformers/base'
 import { openChartFullscreenModal } from './chart-modal'
 import { ChartResizeController } from './chart-resize'
 import { t } from '../lang/text'
@@ -84,7 +81,11 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   public static readonly VISUAL_MAP_ORIENT_KEY = 'visualMapOrient'
   public static readonly VISUAL_MAP_TYPE_KEY = 'visualMapType'
 
-  constructor(controller: Readonly<QueryController>, scrollEl: Readonly<HTMLElement>, plugin: Readonly<BarePlugin>) {
+  constructor(
+    controller: Readonly<QueryController>,
+    scrollEl: Readonly<HTMLElement>,
+    plugin: Readonly<BarePlugin>,
+  ) {
     super(controller)
     this.scrollEl = scrollEl
     this.plugin = plugin
@@ -118,11 +119,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       this.plugin.setActiveChartView(this)
     })
 
-    this.registerEvent(this.app.workspace.on(
-      'css-change',
-      this.updateChartTheme,
-      this,
-    ))
+    this.registerEvent(this.app.workspace.on('css-change', this.updateChartTheme, this))
 
     this.resizeController = new ChartResizeController(this.containerEl, () => {
       // Only resize an already-mounted chart. Don't initiate the first render
@@ -219,11 +216,24 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   }
 
   protected getVisualMapTransformerOptions(): VisualMapOptions {
-    const visualMapMin = this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)) : undefined
-    const visualMapMax = this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY) ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)) : undefined
-    const visualMapColor = this.getStringOption(BaseChartView.VISUAL_MAP_COLOR_KEY)?.split(',').map(s => s.trim()).filter(Boolean)
-    const visualMapOrient = this.getLiteralOption(BaseChartView.VISUAL_MAP_ORIENT_KEY, ['horizontal', 'vertical'] as const)
-    const visualMapType = this.getLiteralOption(BaseChartView.VISUAL_MAP_TYPE_KEY, ['continuous', 'piecewise'] as const)
+    const visualMapMin = this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY)
+      ? Number(this.config.get(BaseChartView.VISUAL_MAP_MIN_KEY))
+      : undefined
+    const visualMapMax = this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY)
+      ? Number(this.config.get(BaseChartView.VISUAL_MAP_MAX_KEY))
+      : undefined
+    const visualMapColor = this.getStringOption(BaseChartView.VISUAL_MAP_COLOR_KEY)
+      ?.split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+    const visualMapOrient = this.getLiteralOption(BaseChartView.VISUAL_MAP_ORIENT_KEY, [
+      'horizontal',
+      'vertical',
+    ] as const)
+    const visualMapType = this.getLiteralOption(BaseChartView.VISUAL_MAP_TYPE_KEY, [
+      'continuous',
+      'piecewise',
+    ] as const)
 
     return {
       visualMapMin: !Number.isNaN(visualMapMin) ? visualMapMin : undefined,
@@ -241,11 +251,23 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       title: this.getStringOption(BaseChartView.TITLE_KEY),
       description: this.getStringOption(BaseChartView.DESCRIPTION_KEY),
       legend: this.getBooleanOption(BaseChartView.LEGEND_KEY),
-      legendPosition: this.getLiteralOption(BaseChartView.LEGEND_POSITION_KEY, ['top', 'bottom', 'left', 'right'] as const),
-      legendOrient: this.getLiteralOption(BaseChartView.LEGEND_ORIENT_KEY, ['horizontal', 'vertical'] as const),
+      legendPosition: this.getLiteralOption(BaseChartView.LEGEND_POSITION_KEY, [
+        'top',
+        'bottom',
+        'left',
+        'right',
+      ] as const),
+      legendOrient: this.getLiteralOption(BaseChartView.LEGEND_ORIENT_KEY, [
+        'horizontal',
+        'vertical',
+      ] as const),
       flipAxis: this.getBooleanOption(BaseChartView.FLIP_AXIS_KEY),
-      xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.X_AXIS_PROP_KEY),
-      yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY),
+      xAxisLabel:
+        this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ??
+        this.getPropDisplayName(BaseChartView.X_AXIS_PROP_KEY),
+      yAxisLabel:
+        this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ??
+        this.getPropDisplayName(BaseChartView.Y_AXIS_PROP_KEY),
       xAxisFormat: this.getStringOption(BaseChartView.X_AXIS_FORMAT_KEY),
       yAxisFormat: this.getStringOption(BaseChartView.Y_AXIS_FORMAT_KEY),
       valueFormat: this.getStringOption(BaseChartView.VALUE_FORMAT_KEY),
@@ -323,10 +345,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   }
 
   private initChart(): echarts.ECharts {
-    const chart = echarts.init(
-      this.chartEl,
-      this.getTheme(),
-    )
+    const chart = echarts.init(this.chartEl, this.getTheme())
     this.setupInteractivity(chart)
     return chart
   }
@@ -366,7 +385,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       return
     }
     const menu = new Menu()
-    populateDisambiguationMenu(menu, filePaths, (filePath) => {
+    populateDisambiguationMenu(menu, filePaths, filePath => {
       void this.app.workspace.openLinkText(filePath, '', mod)
     })
     if (rawEvent instanceof MouseEvent) {
@@ -384,7 +403,10 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     if (!filePath) {
       return
     }
-    const targetEl = (rawEvent instanceof MouseEvent && rawEvent.target instanceof HTMLElement ? rawEvent.target : undefined) ?? this.chartEl
+    const targetEl =
+      (rawEvent instanceof MouseEvent && rawEvent.target instanceof HTMLElement
+        ? rawEvent.target
+        : undefined) ?? this.chartEl
     this.app.workspace.trigger('hover-link', {
       event: rawEvent,
       source: 'bases-chartkit',
@@ -423,7 +445,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     }
 
     const menu = new Menu()
-    populateDisambiguationMenu(menu, filePaths, (filePath) => {
+    populateDisambiguationMenu(menu, filePaths, filePath => {
       void this.app.workspace.openLinkText(filePath, '', false)
     })
     const files = R.pipe(
@@ -441,7 +463,8 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   }
 
   protected executeRender(): void {
-    const height = this.getStringOption(BaseChartView.HEIGHT_KEY) || this.plugin.settings.defaultHeight
+    const height =
+      this.getStringOption(BaseChartView.HEIGHT_KEY) || this.plugin.settings.defaultHeight
     this.chartEl.style.height = height
 
     const data = this.getBasesData()
@@ -465,10 +488,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
 
   protected applyResolvedChartOption(option: EChartsOption | null): void {
     if (option) {
-      this.ensureChart().setOption(
-        option,
-        true,
-      )
+      this.ensureChart().setOption(option, true)
       return
     }
     this.chart?.clear()
@@ -481,11 +501,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   protected abstract getChartOption(data: BasesData): EChartsOption | null
 
   private readonly updateChartTheme = (): void => {
-    this.chart && (
-      this.chart.dispose(),
-      this.chart = this.initChart(),
-      this.renderChart()
-    )
+    this.chart && (this.chart.dispose(), (this.chart = this.initChart()), this.renderChart())
   }
 
   private resolveRegisteredThemeName(name: string | undefined): string | undefined {
@@ -520,7 +536,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     }
 
     if (plugin) {
-      plugin.settings.customThemes.forEach((t) => {
+      plugin.settings.customThemes.forEach(t => {
         themeOptions[t.name] = t.name
       })
     }

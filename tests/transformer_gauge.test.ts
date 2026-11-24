@@ -14,433 +14,266 @@ function firstGaugeSeries(option: EChartsOption): GaugeSeriesOption {
   return series
 }
 
-describe(
-  'Transformer: Gauge',
-  () => {
-    it(
-      'should sum all values into a single total from data',
-      () => {
-        const data = [
-          { value: 10 },
-          { value: 20 },
-          { value: 15 },
-        ]
+describe('Transformer: Gauge', () => {
+  it('should sum all values into a single total from data', () => {
+    const data = [{ value: 10 }, { value: 20 }, { value: 15 }]
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'value',
-          'gauge',
-        )
+    const option = transformDataToChartOption(data, '', 'value', 'gauge')
 
-        const series = firstGaugeSeries(option)
-        expect(series.data).toBeDefined()
+    const series = firstGaugeSeries(option)
+    expect(series.data).toBeDefined()
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const seriesData = series.data[0]
-        // @ts-expect-error - value property access
-        expect(seriesData.value).toBe(45)
-        // @ts-expect-error - name property access
-        expect(seriesData.name).toBe('value')
-      },
-    )
+    // @ts-expect-error - suppress strictNullChecks in tests
+    const seriesData = series.data[0]
+    // @ts-expect-error - value property access
+    expect(seriesData.value).toBe(45)
+    // @ts-expect-error - name property access
+    expect(seriesData.name).toBe('value')
+  })
 
-    it(
-      'should skip NaN values and not add them to total',
-      () => {
-        const data = [
-          { val: 10 },
-          { val: 'invalid' },
-          { val: 30 },
-          { val: undefined },
-        ]
+  it('should skip NaN values and not add them to total', () => {
+    const data = [{ val: 10 }, { val: 'invalid' }, { val: 30 }, { val: undefined }]
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'val',
-          'gauge',
-        )
+    const option = transformDataToChartOption(data, '', 'val', 'gauge')
 
-        const series = firstGaugeSeries(option)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const seriesData = series.data[0]
-        // @ts-expect-error - value property access
-        expect(seriesData.value).toBe(40)
-      },
-    )
+    const series = firstGaugeSeries(option)
+    // @ts-expect-error - suppress strictNullChecks in tests
+    const seriesData = series.data[0]
+    // @ts-expect-error - value property access
+    expect(seriesData.value).toBe(40)
+  })
 
-    it(
-      'should result in a total of 0 for empty data',
-      () => {
-        const data: readonly Record<string, unknown>[] = []
+  it('should result in a total of 0 for empty data', () => {
+    const data: readonly Record<string, unknown>[] = []
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'count',
-          'gauge',
-        )
+    const option = transformDataToChartOption(data, '', 'count', 'gauge')
 
-        const series = firstGaugeSeries(option)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        const seriesData = series.data[0]
-        // @ts-expect-error - value property access
-        expect(seriesData.value).toBe(0)
-      },
-    )
+    const series = firstGaugeSeries(option)
+    // @ts-expect-error - suppress strictNullChecks in tests
+    const seriesData = series.data[0]
+    // @ts-expect-error - value property access
+    expect(seriesData.value).toBe(0)
+  })
 
-    it(
-      'should apply custom min/max options',
-      () => {
-        const data = [
-          { val: 50 },
-        ]
+  it('should apply custom min/max options', () => {
+    const data = [{ val: 50 }]
 
-        const options: GaugeTransformerOptions = {
-          min: -100,
-          max: 200,
-        }
+    const options: GaugeTransformerOptions = {
+      min: -100,
+      max: 200,
+    }
 
-        const chartOption = transformDataToChartOption(
-          data,
-          '',
-          'val',
-          'gauge',
-          options,
-        )
+    const chartOption = transformDataToChartOption(data, '', 'val', 'gauge', options)
 
-        const series = firstGaugeSeries(chartOption)
-        expect(series.min).toBe(-100)
-        expect(series.max).toBe(200)
-      },
-    )
+    const series = firstGaugeSeries(chartOption)
+    expect(series.min).toBe(-100)
+    expect(series.max).toBe(200)
+  })
 
-    it(
-      'should default min=0 and max=100 when options omitted',
-      () => {
-        const data = [
-          { val: 75 },
-        ]
+  it('should default min=0 and max=100 when options omitted', () => {
+    const data = [{ val: 75 }]
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'val',
-          'gauge',
-        )
+    const option = transformDataToChartOption(data, '', 'val', 'gauge')
 
-        const series = firstGaugeSeries(option)
-        expect(series.min).toBe(0)
-        expect(series.max).toBe(100)
-      },
-    )
+    const series = firstGaugeSeries(option)
+    expect(series.min).toBe(0)
+    expect(series.max).toBe(100)
+  })
 
-    it(
-      'should use yAxisLabel as the data point name instead of the raw prop key',
-      () => {
-        // Regression (fs4.11): the gauge view never resolved a friendly
-        // display name, so the data point name always fell back to the raw
-        // property path (e.g. 'note.Load' instead of 'Load').
-        const data = [{ val: 50 }]
+  it('should use yAxisLabel as the data point name instead of the raw prop key', () => {
+    // Regression (fs4.11): the gauge view never resolved a friendly
+    // display name, so the data point name always fell back to the raw
+    // property path (e.g. 'note.Load' instead of 'Load').
+    const data = [{ val: 50 }]
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'val',
-          'gauge',
-          { yAxisLabel: 'Load' },
-        )
+    const option = transformDataToChartOption(data, '', 'val', 'gauge', { yAxisLabel: 'Load' })
 
-        const series = firstGaugeSeries(option)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series.data[0].name).toBe('Load')
-      },
-    )
+    const series = firstGaugeSeries(option)
+    // @ts-expect-error - suppress strictNullChecks in tests
+    expect(series.data[0].name).toBe('Load')
+  })
 
-    it(
-      'should fall back to the raw prop key when yAxisLabel is not provided',
-      () => {
-        const data = [{ val: 50 }]
+  it('should fall back to the raw prop key when yAxisLabel is not provided', () => {
+    const data = [{ val: 50 }]
 
-        const option = transformDataToChartOption(
-          data,
-          '',
-          'val',
-          'gauge',
-        )
+    const option = transformDataToChartOption(data, '', 'val', 'gauge')
 
-        const series = firstGaugeSeries(option)
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(series.data[0].name).toBe('val')
-      },
-    )
+    const series = firstGaugeSeries(option)
+    // @ts-expect-error - suppress strictNullChecks in tests
+    expect(series.data[0].name).toBe('val')
+  })
 
-    describe(
-      'aggregation option (fs4.13)',
-      () => {
-        // Regression: gauge always summed every matching row into one total,
-        // with no way to average, which silently blew past a 0-100 scale for
-        // rate/percentage metrics (e.g. server load % across several rows).
-        const data = [
-          { val: 50 },
-          { val: 20 },
-          { val: 80 },
-        ]
+  describe('aggregation option (fs4.13)', () => {
+    // Regression: gauge always summed every matching row into one total,
+    // with no way to average, which silently blew past a 0-100 scale for
+    // rate/percentage metrics (e.g. server load % across several rows).
+    const data = [{ val: 50 }, { val: 20 }, { val: 80 }]
 
-        it(
-          'should default to sum when aggregation is omitted',
-          () => {
-            const option = transformDataToChartOption(data, '', 'val', 'gauge')
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(150)
-          },
-        )
+    it('should default to sum when aggregation is omitted', () => {
+      const option = transformDataToChartOption(data, '', 'val', 'gauge')
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(150)
+    })
 
-        it(
-          'should average values when aggregation is avg',
-          () => {
-            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'avg' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(50)
-          },
-        )
+    it('should average values when aggregation is avg', () => {
+      const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'avg' })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(50)
+    })
 
-        it(
-          'should round average values to at most 1 decimal place',
-          () => {
-            const fractionalData = [
-              { val: 10 },
-              { val: 20 },
-              { val: 25 },
-            ]
-            const option = transformDataToChartOption(fractionalData, '', 'val', 'gauge', { aggregation: 'avg' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(18.3)
-          },
-        )
+    it('should round average values to at most 1 decimal place', () => {
+      const fractionalData = [{ val: 10 }, { val: 20 }, { val: 25 }]
+      const option = transformDataToChartOption(fractionalData, '', 'val', 'gauge', {
+        aggregation: 'avg',
+      })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(18.3)
+    })
 
-        it(
-          'should take the minimum when aggregation is min',
-          () => {
-            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'min' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(20)
-          },
-        )
+    it('should take the minimum when aggregation is min', () => {
+      const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'min' })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(20)
+    })
 
-        it(
-          'should take the maximum when aggregation is max',
-          () => {
-            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'max' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(80)
-          },
-        )
+    it('should take the maximum when aggregation is max', () => {
+      const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'max' })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(80)
+    })
 
-        it(
-          'should take the last value when aggregation is last',
-          () => {
-            const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'last' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(80)
-          },
-        )
+    it('should take the last value when aggregation is last', () => {
+      const option = transformDataToChartOption(data, '', 'val', 'gauge', { aggregation: 'last' })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(80)
+    })
 
-        it(
-          'should result in 0 for any aggregation when data is empty',
-          () => {
-            const option = transformDataToChartOption([], '', 'val', 'gauge', { aggregation: 'avg' })
-            const series = firstGaugeSeries(option)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(series.data[0].value).toBe(0)
-          },
-        )
-      },
-    )
+    it('should result in 0 for any aggregation when data is empty', () => {
+      const option = transformDataToChartOption([], '', 'val', 'gauge', { aggregation: 'avg' })
+      const series = firstGaugeSeries(option)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(series.data[0].value).toBe(0)
+    })
+  })
 
-    describe(
-      'colorBands option',
-      () => {
-        it(
-          'should convert absolute thresholds into axisLine fractions of the min-max range',
-          () => {
-            const option = transformDataToChartOption(
-              [{ val: 50 }],
-              '',
-              'val',
-              'gauge',
-              {
-                colorBands: [
-                  { threshold: 30, color: '#67e0e3' },
-                  { threshold: 70, color: '#37a2da' },
-                  { threshold: 100, color: '#fd666d' },
-                ],
-              },
-            )
+  describe('colorBands option', () => {
+    it('should convert absolute thresholds into axisLine fractions of the min-max range', () => {
+      const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge', {
+        colorBands: [
+          { threshold: 30, color: '#67e0e3' },
+          { threshold: 70, color: '#37a2da' },
+          { threshold: 100, color: '#fd666d' },
+        ],
+      })
 
-            const series = firstGaugeSeries(option)
-            expect(series.axisLine?.lineStyle?.color).toEqual([
-              [0.3, '#67e0e3'],
-              [0.7, '#37a2da'],
-              [1, '#fd666d'],
-            ])
-          },
-        )
+      const series = firstGaugeSeries(option)
+      expect(series.axisLine?.lineStyle?.color).toEqual([
+        [0.3, '#67e0e3'],
+        [0.7, '#37a2da'],
+        [1, '#fd666d'],
+      ])
+    })
 
-        it(
-          'should sort bands by threshold regardless of input order',
-          () => {
-            const option = transformDataToChartOption(
-              [{ val: 50 }],
-              '',
-              'val',
-              'gauge',
-              {
-                colorBands: [
-                  { threshold: 100, color: '#fd666d' },
-                  { threshold: 30, color: '#67e0e3' },
-                ],
-              },
-            )
+    it('should sort bands by threshold regardless of input order', () => {
+      const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge', {
+        colorBands: [
+          { threshold: 100, color: '#fd666d' },
+          { threshold: 30, color: '#67e0e3' },
+        ],
+      })
 
-            const series = firstGaugeSeries(option)
-            expect(series.axisLine?.lineStyle?.color).toEqual([
-              [0.3, '#67e0e3'],
-              [1, '#fd666d'],
-            ])
-          },
-        )
+      const series = firstGaugeSeries(option)
+      expect(series.axisLine?.lineStyle?.color).toEqual([
+        [0.3, '#67e0e3'],
+        [1, '#fd666d'],
+      ])
+    })
 
-        it(
-          'should convert thresholds relative to a custom min/max range, not always 0-100',
-          () => {
-            const option = transformDataToChartOption(
-              [{ val: 50 }],
-              '',
-              'val',
-              'gauge',
-              {
-                min: -100,
-                max: 200,
-                colorBands: [{ threshold: 50, color: '#37a2da' }],
-              },
-            )
+    it('should convert thresholds relative to a custom min/max range, not always 0-100', () => {
+      const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge', {
+        min: -100,
+        max: 200,
+        colorBands: [{ threshold: 50, color: '#37a2da' }],
+      })
 
-            const series = firstGaugeSeries(option)
-            // (50 - -100) / (200 - -100) = 0.5
-            expect(series.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
-          },
-        )
+      const series = firstGaugeSeries(option)
+      // (50 - -100) / (200 - -100) = 0.5
+      expect(series.axisLine?.lineStyle?.color).toEqual([[0.5, '#37a2da']])
+    })
 
-        it(
-          'should parse valid threshold:color pairs and filter invalid ones',
-          () => {
-            expect(parseColorBands('60:#e6a23c,80:#409eff,100:#67c23a')).toEqual([
-              { threshold: 60, color: '#e6a23c' },
-              { threshold: 80, color: '#409eff' },
-              { threshold: 100, color: '#67c23a' },
-            ])
-            expect(parseColorBands('')).toBeUndefined()
-            expect(parseColorBands('invalid')).toBeUndefined()
-          },
-        )
+    it('should parse valid threshold:color pairs and filter invalid ones', () => {
+      expect(parseColorBands('60:#e6a23c,80:#409eff,100:#67c23a')).toEqual([
+        { threshold: 60, color: '#e6a23c' },
+        { threshold: 80, color: '#409eff' },
+        { threshold: 100, color: '#67c23a' },
+      ])
+      expect(parseColorBands('')).toBeUndefined()
+      expect(parseColorBands('invalid')).toBeUndefined()
+    })
 
-        it(
-          'should parse colorBands string and normalize thresholds against min-max range',
-          () => {
-            const bands = parseColorBands('5000:#fd666d,9000:#fac858,12000:#91cc75')
-            expect(bands).toBeDefined()
-            const option = transformDataToChartOption(
-              [{ val: 8000 }],
-              '',
-              'val',
-              'gauge',
-              {
-                min: 0,
-                max: 12000,
-                colorBands: bands,
-              },
-            )
+    it('should parse colorBands string and normalize thresholds against min-max range', () => {
+      const bands = parseColorBands('5000:#fd666d,9000:#fac858,12000:#91cc75')
+      expect(bands).toBeDefined()
+      const option = transformDataToChartOption([{ val: 8000 }], '', 'val', 'gauge', {
+        min: 0,
+        max: 12000,
+        colorBands: bands,
+      })
 
-            const series = firstGaugeSeries(option)
-            const colors = series.axisLine?.lineStyle?.color
-            expect(colors).toBeDefined()
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(colors[0][0]).toBeCloseTo(5000 / 12000, 5)
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(colors[0][1]).toBe('#fd666d')
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(colors[1]).toEqual([0.75, '#fac858'])
-            // @ts-expect-error - suppress strictNullChecks in tests
-            expect(colors[2]).toEqual([1, '#91cc75'])
-          },
-        )
+      const series = firstGaugeSeries(option)
+      const colors = series.axisLine?.lineStyle?.color
+      expect(colors).toBeDefined()
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(colors[0][0]).toBeCloseTo(5000 / 12000, 5)
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(colors[0][1]).toBe('#fd666d')
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(colors[1]).toEqual([0.75, '#fac858'])
+      // @ts-expect-error - suppress strictNullChecks in tests
+      expect(colors[2]).toEqual([1, '#91cc75'])
+    })
 
-        it(
-          'should clamp normalized threshold fractions between 0 and 1',
-          () => {
-            const option = transformDataToChartOption(
-              [{ val: 50 }],
-              '',
-              'val',
-              'gauge',
-              {
-                min: 10,
-                max: 100,
-                colorBands: [
-                  { threshold: 0, color: '#ff0000' },
-                  { threshold: 150, color: '#00ff00' },
-                ],
-              },
-            )
+    it('should clamp normalized threshold fractions between 0 and 1', () => {
+      const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge', {
+        min: 10,
+        max: 100,
+        colorBands: [
+          { threshold: 0, color: '#ff0000' },
+          { threshold: 150, color: '#00ff00' },
+        ],
+      })
 
-            const series = firstGaugeSeries(option)
-            expect(series.axisLine?.lineStyle?.color).toEqual([
-              [0, '#ff0000'],
-              [1, '#00ff00'],
-            ])
-          },
-        )
+      const series = firstGaugeSeries(option)
+      expect(series.axisLine?.lineStyle?.color).toEqual([
+        [0, '#ff0000'],
+        [1, '#00ff00'],
+      ])
+    })
 
-        it(
-          'should leave axisLine unset and enable progress when no color bands are configured',
-          () => {
-            const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge')
-            const series = firstGaugeSeries(option)
-            expect(series.axisLine).toBeUndefined()
-            expect(series.progress?.show).toBe(true)
-          },
-        )
+    it('should leave axisLine unset and enable progress when no color bands are configured', () => {
+      const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge')
+      const series = firstGaugeSeries(option)
+      expect(series.axisLine).toBeUndefined()
+      expect(series.progress?.show).toBe(true)
+    })
 
-        it(
-          'should disable progress.show when colorBands are configured so the progress arc does not obscure the bands',
-          () => {
-            const option = transformDataToChartOption(
-              [{ val: 75 }],
-              '',
-              'val',
-              'gauge',
-              {
-                colorBands: [
-                  { threshold: 60, color: '#e6a23c' },
-                  { threshold: 80, color: '#409eff' },
-                  { threshold: 100, color: '#67c23a' },
-                ],
-              },
-            )
-            const series = firstGaugeSeries(option)
-            expect(series.axisLine?.lineStyle?.color).toBeDefined()
-            expect(series.progress?.show).toBe(false)
-          },
-        )
-      },
-    )
-  },
-)
+    it('should disable progress.show when colorBands are configured so the progress arc does not obscure the bands', () => {
+      const option = transformDataToChartOption([{ val: 75 }], '', 'val', 'gauge', {
+        colorBands: [
+          { threshold: 60, color: '#e6a23c' },
+          { threshold: 80, color: '#409eff' },
+          { threshold: 100, color: '#67c23a' },
+        ],
+      })
+      const series = firstGaugeSeries(option)
+      expect(series.axisLine?.lineStyle?.color).toBeDefined()
+      expect(series.progress?.show).toBe(false)
+    })
+  })
+})

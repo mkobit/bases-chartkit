@@ -2,7 +2,11 @@ import { describe, it, expect } from 'bun:test'
 import { createPolarScatterChartOption } from '../../src/charts/transformers/polar-scatter'
 import type { BasesData } from '../../src/charts/transformers/base'
 import { formatCompactVisualMapLabel } from '../../src/charts/transformers/visual-map'
-import type { ContinuousVisualMapComponentOption, EChartsOption, ScatterSeriesOption } from 'echarts'
+import type {
+  ContinuousVisualMapComponentOption,
+  EChartsOption,
+  ScatterSeriesOption,
+} from 'echarts'
 
 // EChartsOption['series'] is a `type`-discriminated union, so this needs no
 // cast -- checking the literal `type` narrows the element to ScatterSeriesOption.
@@ -49,146 +53,87 @@ function firstContinuousVisualMap(option: EChartsOption): ContinuousVisualMapCom
   return visualMap
 }
 
-describe(
-  'createPolarScatterChartOption',
-  () => {
-    const data: BasesData = [
-      { angle: 'A',
-        radius: 10,
-        group: 'G1',
-        size: 20 },
-      { angle: 'B',
-        radius: 20,
-        group: 'G1',
-        size: 15 },
-      { angle: 'C',
-        radius: 30,
-        group: 'G2',
-        size: 25 },
+describe('createPolarScatterChartOption', () => {
+  const data: BasesData = [
+    { angle: 'A', radius: 10, group: 'G1', size: 20 },
+    { angle: 'B', radius: 20, group: 'G1', size: 15 },
+    { angle: 'C', radius: 30, group: 'G2', size: 25 },
+  ]
+
+  it('should create a basic polar scatter chart', () => {
+    const option = createPolarScatterChartOption(data, 'angle', 'radius')
+
+    expect(option.polar).toBeDefined()
+    expect(option.angleAxis).toBeDefined()
+    expect(option.radiusAxis).toBeDefined()
+
+    const angleAxis = firstCategoryAngleAxis(option)
+    const radiusAxis = firstValueRadiusAxis(option)
+    expect(angleAxis.type).toBe('category')
+    expect(radiusAxis.type).toBe('value')
+    expect(option.series).toBeDefined()
+    expect(option.series).toHaveLength(1)
+
+    const series = scatterSeriesAt(option, 0)
+    expect(series.type).toBe('scatter')
+    expect(series.coordinateSystem).toBe('polar')
+    expect(series.encode).toEqual({
+      angle: 'x',
+      radius: 'y',
+      tooltip: ['x', 'y', 's'],
+    })
+  })
+
+  it('should handle series grouping', () => {
+    const option = createPolarScatterChartOption(data, 'angle', 'radius', {
+      seriesProp: 'group',
+    })
+
+    expect(option.series).toHaveLength(2) // G1, G2
+
+    const s1 = scatterSeriesAt(option, 0)
+    const s2 = scatterSeriesAt(option, 1)
+
+    expect(s1.name).toBe('G1')
+    expect(s2.name).toBe('G2')
+  })
+
+  it('should handle size property and visual map', () => {
+    const option = createPolarScatterChartOption(data, 'angle', 'radius', {
+      sizeProp: 'size',
+    })
+
+    expect(option.visualMap).toBeDefined()
+
+    const series = scatterSeriesAt(option, 0)
+    expect(series.encode?.tooltip).toContain('size')
+
+    const visualMap = firstContinuousVisualMap(option)
+    expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
+  })
+
+  it('should hide overlapping angle-axis labels (large numeric categories)', () => {
+    const option = createPolarScatterChartOption(data, 'angle', 'radius')
+
+    const angleAxis = firstCategoryAngleAxis(option)
+    expect(angleAxis.axisLabel?.hideOverlap).toBe(true)
+  })
+
+  it('should use value angleAxis with numeric data when angle property is numeric', () => {
+    const numericData: BasesData = [
+      { gdp: 50000, lifeExpectancy: 81.2 },
+      { gdp: 12000, lifeExpectancy: 72.5 },
     ]
+    const option = createPolarScatterChartOption(numericData, 'gdp', 'lifeExpectancy')
 
-    it(
-      'should create a basic polar scatter chart',
-      () => {
-        const option = createPolarScatterChartOption(
-          data,
-          'angle',
-          'radius',
-        )
+    const angleAxis = Array.isArray(option.angleAxis) ? option.angleAxis[0] : option.angleAxis
+    expect(angleAxis?.type).toBe('value')
+    expect(angleAxis !== undefined && 'data' in angleAxis).toBe(false)
 
-        expect(option.polar).toBeDefined()
-        expect(option.angleAxis).toBeDefined()
-        expect(option.radiusAxis).toBeDefined()
-
-        const angleAxis = firstCategoryAngleAxis(option)
-        const radiusAxis = firstValueRadiusAxis(option)
-        expect(angleAxis.type).toBe('category')
-        expect(radiusAxis.type).toBe('value')
-        expect(option.series).toBeDefined()
-        expect(option.series).toHaveLength(1)
-
-        const series = scatterSeriesAt(option, 0)
-        expect(series.type).toBe('scatter')
-        expect(series.coordinateSystem).toBe('polar')
-        expect(series.encode).toEqual({
-          angle: 'x',
-          radius: 'y',
-          tooltip: ['x',
-            'y',
-            's'],
-        })
-      },
-    )
-
-    it(
-      'should handle series grouping',
-      () => {
-        const option = createPolarScatterChartOption(
-          data,
-          'angle',
-          'radius',
-          {
-            seriesProp: 'group',
-          },
-        )
-
-        expect(option.series).toHaveLength(2) // G1, G2
-
-        const s1 = scatterSeriesAt(option, 0)
-        const s2 = scatterSeriesAt(option, 1)
-
-        expect(s1.name).toBe('G1')
-        expect(s2.name).toBe('G2')
-      },
-    )
-
-    it(
-      'should handle size property and visual map',
-      () => {
-        const option = createPolarScatterChartOption(
-          data,
-          'angle',
-          'radius',
-          {
-            sizeProp: 'size',
-          },
-        )
-
-        expect(option.visualMap).toBeDefined()
-
-        const series = scatterSeriesAt(option, 0)
-        expect(series.encode?.tooltip).toContain('size')
-
-        const visualMap = firstContinuousVisualMap(option)
-        expect(visualMap.formatter).toBe(formatCompactVisualMapLabel)
-      },
-    )
-
-    it(
-      'should hide overlapping angle-axis labels (large numeric categories)',
-      () => {
-        const option = createPolarScatterChartOption(
-          data,
-          'angle',
-          'radius',
-        )
-
-        const angleAxis = firstCategoryAngleAxis(option)
-        expect(angleAxis.axisLabel?.hideOverlap).toBe(true)
-      },
-    )
-
-    it(
-      'should use value angleAxis with numeric data when angle property is numeric',
-      () => {
-        const numericData: BasesData = [
-          { gdp: 50000,
-            lifeExpectancy: 81.2 },
-          { gdp: 12000,
-            lifeExpectancy: 72.5 },
-        ]
-        const option = createPolarScatterChartOption(
-          numericData,
-          'gdp',
-          'lifeExpectancy',
-        )
-
-        const angleAxis = Array.isArray(option.angleAxis) ? option.angleAxis[0] : option.angleAxis
-        expect(angleAxis?.type).toBe('value')
-        expect(angleAxis !== undefined && 'data' in angleAxis).toBe(false)
-
-        const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
-        expect(dataset?.source).toEqual([
-          { x: 50000,
-            y: 81.2,
-            s: 'lifeExpectancy',
-            rowIndex: 0 },
-          { x: 12000,
-            y: 72.5,
-            s: 'lifeExpectancy',
-            rowIndex: 1 },
-        ])
-      },
-    )
-  },
-)
+    const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+    expect(dataset?.source).toEqual([
+      { x: 50000, y: 81.2, s: 'lifeExpectancy', rowIndex: 0 },
+      { x: 12000, y: 72.5, s: 'lifeExpectancy', rowIndex: 1 },
+    ])
+  })
+})

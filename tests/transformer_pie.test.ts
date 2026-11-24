@@ -23,15 +23,20 @@ function firstPieSeries(option: EChartsOption): PieSeriesOption {
 // can check, so narrow each row to PieSourceRow with a runtime guard and
 // flatMap (filter's type-guard overload rejects a plain interface here).
 function isPieSourceRow(value: unknown): value is PieSourceRow {
-  return typeof value === 'object' && value !== null
-    && 'name' in value && typeof value.name === 'string'
-    && 'value' in value && typeof value.value === 'number'
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    'value' in value &&
+    typeof value.value === 'number'
+  )
 }
 
 function pieDatasetSource(option: EChartsOption): readonly PieSourceRow[] {
   const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
   const source = dataset?.source
-  return Array.isArray(source) ? source.flatMap(row => isPieSourceRow(row) ? [row] : []) : []
+  return Array.isArray(source) ? source.flatMap(row => (isPieSourceRow(row) ? [row] : [])) : []
 }
 
 function optionTheme(option: EChartsOption): unknown {
@@ -40,592 +45,344 @@ function optionTheme(option: EChartsOption): unknown {
     : undefined
 }
 
-describe(
-  'Transformer: Pie',
-  () => {
-    it(
-      'should create basic pie series from name and value data',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-          { name: 'B',
-            value: 20 },
-        ]
+describe('Transformer: Pie', () => {
+  it('should create basic pie series from name and value data', () => {
+    const data = [
+      { name: 'A', value: 10 },
+      { name: 'B', value: 20 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie')
 
-        expect(option.series).toBeDefined()
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-        expect(option.series).toHaveLength(1)
+    expect(option.series).toBeDefined()
+    expect(Array.isArray(option.series)).toBe(true)
+    if (!Array.isArray(option.series)) {
+      return
+    }
+    expect(option.series).toHaveLength(1)
 
-        const series = firstPieSeries(option)
-        expect(series.type).toBe('pie')
+    const series = firstPieSeries(option)
+    expect(series.type).toBe('pie')
 
-        expect(option.dataset).toBeDefined()
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset)) {
-          return
-        }
-        const source = pieDatasetSource(option)
-        expect(source).toHaveLength(2)
-        expect(source[0]).toEqual({ name: 'A',
-          value: 10 })
-        expect(source[1]).toEqual({ name: 'B',
-          value: 20 })
+    expect(option.dataset).toBeDefined()
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset)) {
+      return
+    }
+    const source = pieDatasetSource(option)
+    expect(source).toHaveLength(2)
+    expect(source[0]).toEqual({ name: 'A', value: 10 })
+    expect(source[1]).toEqual({ name: 'B', value: 20 })
+  })
+
+  it('should handle multiple categories', () => {
+    const data = [
+      { cat: 'Cat1', val: 100 },
+      { cat: 'Cat2', val: 200 },
+      { cat: 'Cat3', val: 300 },
+    ]
+
+    const option = transformDataToChartOption(data, 'cat', 'val', 'pie')
+
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset)) {
+      return
+    }
+    const source = pieDatasetSource(option)
+
+    expect(source).toHaveLength(3)
+    expect(source[0]?.name).toBe('Cat1')
+    expect(source[1]?.name).toBe('Cat2')
+    expect(source[2]?.name).toBe('Cat3')
+  })
+
+  it('should handle empty data set gracefully', () => {
+    const data: Record<string, unknown>[] = []
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie')
+
+    expect(Array.isArray(option.series)).toBe(true)
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset) || !Array.isArray(option.series)) {
+      return
+    }
+
+    const source = pieDatasetSource(option)
+    expect(source).toHaveLength(0)
+
+    const series = firstPieSeries(option)
+    expect(series.type).toBe('pie')
+  })
+
+  it('should handle numeric vs string values and coerce properly', () => {
+    const data = [
+      { name: 123, value: '456' }, // name is number, value is string
+    ]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie')
+
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset)) {
+      return
+    }
+    const source = pieDatasetSource(option)
+
+    expect(source).toHaveLength(1)
+    expect(source[0]).toEqual({ name: '123', value: 456 })
+  })
+
+  it('should handle missing or null values', () => {
+    const data = [
+      { name: null, value: undefined },
+      { name: undefined, value: null },
+      { missingName: 'Test', missingValue: 123 }, // properties don't match
+    ]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie')
+
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset)) {
+      return
+    }
+    const source = pieDatasetSource(option)
+
+    // All three rows fall back to name 'Unknown', so they aggregate into
+    // a single slice rather than three separate 'Unknown' slices.
+    expect(source).toHaveLength(1)
+    expect(source[0]).toEqual({ name: 'Unknown', value: 0 })
+  })
+
+  it('should aggregate duplicate categories by summing their values', () => {
+    const data = [
+      { region: 'North', revenue: 100 },
+      { region: 'South', revenue: 50 },
+      { region: 'North', revenue: 75 },
+    ]
+
+    const option = transformDataToChartOption(data, 'region', 'revenue', 'pie')
+
+    expect(Array.isArray(option.dataset)).toBe(true)
+    if (!Array.isArray(option.dataset)) {
+      return
+    }
+    const source = pieDatasetSource(option)
+
+    expect(source).toHaveLength(2)
+    expect(source[0]).toEqual({ name: 'North', value: 175 })
+    expect(source[1]).toEqual({ name: 'South', value: 50 })
+  })
+
+  it('should apply roseType option if provided', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const optionRadius = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      roseType: 'radius',
+    })
+
+    expect(Array.isArray(optionRadius.series)).toBe(true)
+    if (!Array.isArray(optionRadius.series)) {
+      return
+    }
+    const seriesRadius = firstPieSeries(optionRadius)
+    // @ts-ignore
+    expect(seriesRadius.roseType).toBe('radius')
+    expect(seriesRadius.radius).toEqual([20, '75%'])
+
+    const optionArea = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      roseType: 'area',
+    })
+
+    expect(Array.isArray(optionArea.series)).toBe(true)
+    if (!Array.isArray(optionArea.series)) {
+      return
+    }
+    const seriesArea = firstPieSeries(optionArea)
+    // @ts-ignore
+    expect(seriesArea.roseType).toBe('area')
+  })
+
+  it('should apply showLegend option if true', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const optionWithoutLegend = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      legend: false,
+    })
+    expect(optionWithoutLegend.legend).toBeUndefined()
+
+    const optionWithLegend = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      legend: true,
+    })
+    expect(optionWithLegend.legend).toBeDefined()
+    // @ts-ignore
+    expect(optionWithLegend.legend.type).toBe('scroll')
+  })
+
+  it('should configure donut styling with default donut radius', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie', { donut: true })
+
+    const series = firstPieSeries(option)
+    expect(series.radius).toEqual(['40%', '70%'])
+  })
+
+  it('should configure custom innerRadius and outerRadius', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      innerRadius: '35%',
+      outerRadius: '65%',
+    })
+
+    const series = firstPieSeries(option)
+    expect(series.radius).toEqual(['35%', '65%'])
+  })
+
+  it('should configure radius directly as string or tuple', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const tupleOption = transformDataToChartOption(data, 'name', 'value', 'pie', {
+      radius: ['25%', '50%'],
+    })
+    expect(firstPieSeries(tupleOption).radius).toEqual(['25%', '50%'])
+
+    const stringOption = transformDataToChartOption(data, 'name', 'value', 'pie', { radius: '60%' })
+    expect(firstPieSeries(stringOption).radius).toBe('60%')
+  })
+
+  it('should configure padAngle when provided', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie', { padAngle: 5 })
+
+    const series = firstPieSeries(option)
+    expect(series.padAngle).toBe(5)
+  })
+
+  it('should configure borderRadius on itemStyle when provided', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie', { borderRadius: 8 })
+
+    const series = firstPieSeries(option)
+    expect(series.itemStyle?.borderRadius).toBe(8)
+  })
+
+  it('should set theme option when provided', () => {
+    const data = [{ name: 'A', value: 10 }]
+
+    const option = transformDataToChartOption(data, 'name', 'value', 'pie', { theme: 'Vintage' })
+
+    expect(optionTheme(option)).toBe('Vintage')
+  })
+
+  it('should sum multiple occurrences of duplicate categories across arbitrary order', () => {
+    const data = [
+      { cat: 'Alpha', val: 10 },
+      { cat: 'Beta', val: 20 },
+      { cat: 'Alpha', val: 30 },
+      { cat: 'Gamma', val: 5 },
+      { cat: 'Beta', val: 15 },
+      { cat: 'Alpha', val: 5 },
+    ]
+
+    const option = transformDataToChartOption(data, 'cat', 'val', 'pie')
+
+    const source = pieDatasetSource(option)
+    expect(source).toHaveLength(3)
+    expect(source[0]).toEqual({ name: 'Alpha', value: 45 })
+    expect(source[1]).toEqual({ name: 'Beta', value: 35 })
+    expect(source[2]).toEqual({ name: 'Gamma', value: 5 })
+  })
+
+  it('should create rose chart with area roseType and default rose radius', () => {
+    const data = [
+      { Department: 'Engineering', Spend: 15000 },
+      { Department: 'Marketing', Spend: 8000 },
+    ]
+
+    const option = transformDataToChartOption(data, 'Department', 'Spend', 'rose')
+
+    const series = firstPieSeries(option)
+    expect(series.roseType).toBe('area')
+    expect(series.radius).toEqual([20, '75%'])
+  })
+
+  it('should configure rose chart with area variant options: padAngle and borderRadius', () => {
+    const data = [{ Department: 'Engineering', Spend: 15000 }]
+
+    const option = transformDataToChartOption(data, 'Department', 'Spend', 'rose', {
+      roseType: 'area',
+      padAngle: 2,
+      borderRadius: 4,
+    })
+
+    const series = firstPieSeries(option)
+    expect(series.roseType).toBe('area')
+    expect(series.padAngle).toBe(2)
+    expect(series.itemStyle?.borderRadius).toBe(4)
+  })
+
+  it('should configure rose chart with custom theme variant option', () => {
+    const data = [{ Department: 'Engineering', Spend: 15000 }]
+
+    const option = transformDataToChartOption(data, 'Department', 'Spend', 'rose', {
+      theme: 'Vintage',
+    })
+
+    expect(optionTheme(option)).toBe('Vintage')
+  })
+
+  it('should clearly distinguish value and percentage in rose/pie tooltip', () => {
+    const formatted = formatTooltip({
+      marker: '● ',
+      name: 'Engineering',
+      value: { name: 'Engineering', value: 15017 },
+      percent: 23.4,
+    })
+
+    expect(formatted).toBe('● Engineering: 15,017 (23.4%)')
+  })
+
+  it('should apply valueFormat to value while preserving percentage in tooltip', () => {
+    const formatted = formatTooltip(
+      {
+        marker: '● ',
+        name: 'Engineering',
+        value: { name: 'Engineering', value: 15017 },
+        percent: 23.4,
       },
+      'currency:USD',
     )
 
-    it(
-      'should handle multiple categories',
-      () => {
-        const data = [
-          { cat: 'Cat1',
-            val: 100 },
-          { cat: 'Cat2',
-            val: 200 },
-          { cat: 'Cat3',
-            val: 300 },
-        ]
+    expect(formatted).toBe('● Engineering: $15,017.00 (23.4%)')
+  })
 
-        const option = transformDataToChartOption(
-          data,
-          'cat',
-          'val',
-          'pie',
-        )
+  it('should handle tooltip without percent or without marker gracefully', () => {
+    const formatted = formatTooltip({
+      name: 'Support',
+      value: { name: 'Support', value: 5000 },
+    })
 
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset)) {
-          return
-        }
-        const source = pieDatasetSource(option)
+    expect(formatted).toBe('Support: 5,000')
+  })
 
-        expect(source).toHaveLength(3)
-        expect(source[0]?.name).toBe('Cat1')
-        expect(source[1]?.name).toBe('Cat2')
-        expect(source[2]?.name).toBe('Cat3')
-      },
-    )
+  it('should format rose chart hover via option tooltip formatter function', () => {
+    const data = [{ Department: 'Engineering', Spend: 15000 }]
 
-    it(
-      'should handle empty data set gracefully',
-      () => {
-        const data: Record<string, unknown>[] = []
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-        )
+    const option = transformDataToChartOption(data, 'Department', 'Spend', 'rose')
 
-        expect(Array.isArray(option.series)).toBe(true)
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset) || !Array.isArray(option.series)) {
-          return
-        }
-
-        const source = pieDatasetSource(option)
-        expect(source).toHaveLength(0)
-
-        const series = firstPieSeries(option)
-        expect(series.type).toBe('pie')
-      },
-    )
-
-    it(
-      'should handle numeric vs string values and coerce properly',
-      () => {
-        const data = [
-          { name: 123,
-            value: '456' }, // name is number, value is string
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-        )
-
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset)) {
-          return
-        }
-        const source = pieDatasetSource(option)
-
-        expect(source).toHaveLength(1)
-        expect(source[0]).toEqual({ name: '123',
-          value: 456 })
-      },
-    )
-
-    it(
-      'should handle missing or null values',
-      () => {
-        const data = [
-          { name: null,
-            value: undefined },
-          { name: undefined,
-            value: null },
-          { missingName: 'Test',
-            missingValue: 123 }, // properties don't match
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-        )
-
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset)) {
-          return
-        }
-        const source = pieDatasetSource(option)
-
-        // All three rows fall back to name 'Unknown', so they aggregate into
-        // a single slice rather than three separate 'Unknown' slices.
-        expect(source).toHaveLength(1)
-        expect(source[0]).toEqual({ name: 'Unknown',
-          value: 0 })
-      },
-    )
-
-    it(
-      'should aggregate duplicate categories by summing their values',
-      () => {
-        const data = [
-          { region: 'North',
-            revenue: 100 },
-          { region: 'South',
-            revenue: 50 },
-          { region: 'North',
-            revenue: 75 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'region',
-          'revenue',
-          'pie',
-        )
-
-        expect(Array.isArray(option.dataset)).toBe(true)
-        if (!Array.isArray(option.dataset)) {
-          return
-        }
-        const source = pieDatasetSource(option)
-
-        expect(source).toHaveLength(2)
-        expect(source[0]).toEqual({ name: 'North',
-          value: 175 })
-        expect(source[1]).toEqual({ name: 'South',
-          value: 50 })
-      },
-    )
-
-    it(
-      'should apply roseType option if provided',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const optionRadius = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { roseType: 'radius' },
-        )
-
-        expect(Array.isArray(optionRadius.series)).toBe(true)
-        if (!Array.isArray(optionRadius.series)) {
-          return
-        }
-        const seriesRadius = firstPieSeries(optionRadius)
-        // @ts-ignore
-        expect(seriesRadius.roseType).toBe('radius')
-        expect(seriesRadius.radius).toEqual([20,
-          '75%'])
-
-        const optionArea = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { roseType: 'area' },
-        )
-
-        expect(Array.isArray(optionArea.series)).toBe(true)
-        if (!Array.isArray(optionArea.series)) {
-          return
-        }
-        const seriesArea = firstPieSeries(optionArea)
-        // @ts-ignore
-        expect(seriesArea.roseType).toBe('area')
-      },
-    )
-
-    it(
-      'should apply showLegend option if true',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const optionWithoutLegend = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { legend: false },
-        )
-        expect(optionWithoutLegend.legend).toBeUndefined()
-
-        const optionWithLegend = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { legend: true },
-        )
-        expect(optionWithLegend.legend).toBeDefined()
-        // @ts-ignore
-        expect(optionWithLegend.legend.type).toBe('scroll')
-      },
-    )
-
-    it(
-      'should configure donut styling with default donut radius',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { donut: true },
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.radius).toEqual(['40%',
-          '70%'])
-      },
-    )
-
-    it(
-      'should configure custom innerRadius and outerRadius',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { innerRadius: '35%',
-            outerRadius: '65%' },
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.radius).toEqual(['35%',
-          '65%'])
-      },
-    )
-
-    it(
-      'should configure radius directly as string or tuple',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const tupleOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { radius: ['25%',
-            '50%'] },
-        )
-        expect(firstPieSeries(tupleOption).radius).toEqual(['25%',
-          '50%'])
-
-        const stringOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { radius: '60%' },
-        )
-        expect(firstPieSeries(stringOption).radius).toBe('60%')
-      },
-    )
-
-    it(
-      'should configure padAngle when provided',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { padAngle: 5 },
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.padAngle).toBe(5)
-      },
-    )
-
-    it(
-      'should configure borderRadius on itemStyle when provided',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { borderRadius: 8 },
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.itemStyle?.borderRadius).toBe(8)
-      },
-    )
-
-    it(
-      'should set theme option when provided',
-      () => {
-        const data = [
-          { name: 'A',
-            value: 10 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'pie',
-          { theme: 'Vintage' },
-        )
-
-        expect(optionTheme(option)).toBe('Vintage')
-      },
-    )
-
-    it(
-      'should sum multiple occurrences of duplicate categories across arbitrary order',
-      () => {
-        const data = [
-          { cat: 'Alpha',
-            val: 10 },
-          { cat: 'Beta',
-            val: 20 },
-          { cat: 'Alpha',
-            val: 30 },
-          { cat: 'Gamma',
-            val: 5 },
-          { cat: 'Beta',
-            val: 15 },
-          { cat: 'Alpha',
-            val: 5 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'cat',
-          'val',
-          'pie',
-        )
-
-        const source = pieDatasetSource(option)
-        expect(source).toHaveLength(3)
-        expect(source[0]).toEqual({ name: 'Alpha',
-          value: 45 })
-        expect(source[1]).toEqual({ name: 'Beta',
-          value: 35 })
-        expect(source[2]).toEqual({ name: 'Gamma',
-          value: 5 })
-      },
-    )
-
-    it(
-      'should create rose chart with area roseType and default rose radius',
-      () => {
-        const data = [
-          { Department: 'Engineering',
-            Spend: 15000 },
-          { Department: 'Marketing',
-            Spend: 8000 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'Department',
-          'Spend',
-          'rose',
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.roseType).toBe('area')
-        expect(series.radius).toEqual([20,
-          '75%'])
-      },
-    )
-
-    it(
-      'should configure rose chart with area variant options: padAngle and borderRadius',
-      () => {
-        const data = [
-          { Department: 'Engineering',
-            Spend: 15000 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'Department',
-          'Spend',
-          'rose',
-          {
-            roseType: 'area',
-            padAngle: 2,
-            borderRadius: 4,
-          },
-        )
-
-        const series = firstPieSeries(option)
-        expect(series.roseType).toBe('area')
-        expect(series.padAngle).toBe(2)
-        expect(series.itemStyle?.borderRadius).toBe(4)
-      },
-    )
-
-    it(
-      'should configure rose chart with custom theme variant option',
-      () => {
-        const data = [
-          { Department: 'Engineering',
-            Spend: 15000 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'Department',
-          'Spend',
-          'rose',
-          { theme: 'Vintage' },
-        )
-
-        expect(optionTheme(option)).toBe('Vintage')
-      },
-    )
-
-    it(
-      'should clearly distinguish value and percentage in rose/pie tooltip',
-      () => {
-        const formatted = formatTooltip({
+    const tooltip = Array.isArray(option.tooltip) ? option.tooltip[0] : option.tooltip
+    expect(typeof tooltip?.formatter).toBe('function')
+    if (typeof tooltip?.formatter === 'function') {
+      const result: unknown = Reflect.apply(tooltip.formatter, undefined, [
+        {
           marker: '● ',
           name: 'Engineering',
-          value: { name: 'Engineering',
-            value: 15017 },
-          percent: 23.4,
-        })
-
-        expect(formatted).toBe('● Engineering: 15,017 (23.4%)')
-      },
-    )
-
-    it(
-      'should apply valueFormat to value while preserving percentage in tooltip',
-      () => {
-        const formatted = formatTooltip(
-          {
-            marker: '● ',
-            name: 'Engineering',
-            value: { name: 'Engineering',
-              value: 15017 },
-            percent: 23.4,
-          },
-          'currency:USD',
-        )
-
-        expect(formatted).toBe('● Engineering: $15,017.00 (23.4%)')
-      },
-    )
-
-    it(
-      'should handle tooltip without percent or without marker gracefully',
-      () => {
-        const formatted = formatTooltip({
-          name: 'Support',
-          value: { name: 'Support',
-            value: 5000 },
-        })
-
-        expect(formatted).toBe('Support: 5,000')
-      },
-    )
-
-    it(
-      'should format rose chart hover via option tooltip formatter function',
-      () => {
-        const data = [
-          { Department: 'Engineering',
-            Spend: 15000 },
-        ]
-
-        const option = transformDataToChartOption(
-          data,
-          'Department',
-          'Spend',
-          'rose',
-        )
-
-        const tooltip = Array.isArray(option.tooltip) ? option.tooltip[0] : option.tooltip
-        expect(typeof tooltip?.formatter).toBe('function')
-        if (typeof tooltip?.formatter === 'function') {
-          const result: unknown = Reflect.apply(tooltip.formatter, undefined, [{
-            marker: '● ',
-            name: 'Engineering',
-            value: { name: 'Engineering',
-              value: 15000 },
-            percent: 45.2,
-          }])
-          expect(result).toBe('● Engineering: 15,000 (45.2%)')
-        }
-      },
-    )
-  },
-)
+          value: { name: 'Engineering', value: 15000 },
+          percent: 45.2,
+        },
+      ])
+      expect(result).toBe('● Engineering: 15,000 (45.2%)')
+    }
+  })
+})

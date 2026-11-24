@@ -6,7 +6,13 @@ import * as R from 'remeda'
 export type GaugeAggregation = 'sum' | 'avg' | 'min' | 'max' | 'last'
 export type Aggregation = GaugeAggregation
 
-export const AGGREGATIONS: readonly GaugeAggregation[] = ['sum', 'avg', 'min', 'max', 'last'] as const
+export const AGGREGATIONS: readonly GaugeAggregation[] = [
+  'sum',
+  'avg',
+  'min',
+  'max',
+  'last',
+] as const
 
 export function isAggregation(value: unknown): value is GaugeAggregation {
   return typeof value === 'string' && AGGREGATIONS.some(a => a === value)
@@ -32,7 +38,7 @@ export function parseColorBands(raw: unknown): ReadonlyArray<GaugeColorBand> | u
     .map((pair): GaugeColorBand | null => {
       const [thresholdStr, color] = pair.split(':').map(s => s.trim())
       const threshold = Number(thresholdStr)
-      return (thresholdStr && color && !Number.isNaN(threshold)) ? { threshold, color } : null
+      return thresholdStr && color && !Number.isNaN(threshold) ? { threshold, color } : null
     })
     .filter((band): band is GaugeColorBand => band !== null)
 
@@ -97,24 +103,23 @@ export function createGaugeChartOption(
   // (e.g. "70" on a 0-100 gauge), so convert here, sorting first since
   // ECharts requires ascending stops to render correctly.
   const colorBands = options?.colorBands
-  const axisLineColor: ReadonlyArray<MutableGaugeColorStopOption> | undefined = colorBands && colorBands.length > 0
-    ? R.pipe(
-        colorBands,
-        R.sortBy(band => band.threshold),
-        R.map((band): MutableGaugeColorStopOption => [
-          Math.min(1, Math.max(0, (band.threshold - min) / (max - min))),
-          band.color,
-        ]),
-      )
-    : undefined
+  const axisLineColor: ReadonlyArray<MutableGaugeColorStopOption> | undefined =
+    colorBands && colorBands.length > 0
+      ? R.pipe(
+          colorBands,
+          R.sortBy(band => band.threshold),
+          R.map((band): MutableGaugeColorStopOption => [
+            Math.min(1, Math.max(0, (band.threshold - min) / (max - min))),
+            band.color,
+          ]),
+        )
+      : undefined
 
   const seriesItem: GaugeSeriesOption = {
     type: 'gauge',
     min: min,
     max: max,
-    ...(axisLineColor
-      ? { axisLine: { lineStyle: { color: [...axisLineColor] } } }
-      : {}),
+    ...(axisLineColor ? { axisLine: { lineStyle: { color: [...axisLineColor] } } } : {}),
     // Disable the solid progress arc when colorBands are configured so it does
     // not paint over axisLine.lineStyle.color; the gauge pointer needle remains
     // visible against the banded arc.

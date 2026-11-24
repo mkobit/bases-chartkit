@@ -41,4 +41,4 @@ export const REGISTERED_CHART_VIEW_TYPES = [
   'word-cloud-chart',
 ] as const
 
-export type RegisteredChartViewType = typeof REGISTERED_CHART_VIEW_TYPES[number]
+export type RegisteredChartViewType = (typeof REGISTERED_CHART_VIEW_TYPES)[number]

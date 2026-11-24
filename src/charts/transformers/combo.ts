@@ -80,12 +80,14 @@ function formatComboTooltip(
     return ''
   })()
 
-  const lines = list.map((param) => {
-    const marker = param.marker ?? ''
-    const seriesName = param.seriesName ?? ''
-    const valText = formatTooltipValue(param.value)
-    return `${marker}${seriesName}: ${valText}`
-  }).join('<br/>')
+  const lines = list
+    .map(param => {
+      const marker = param.marker ?? ''
+      const seriesName = param.seriesName ?? ''
+      const valText = formatTooltipValue(param.value)
+      return `${marker}${seriesName}: ${valText}`
+    })
+    .join('<br/>')
 
   return category ? `<b>${xAxisLabel}: ${category}</b><br/>${lines}` : lines
 }
@@ -98,35 +100,35 @@ export function createComboChartOption(
 ): EChartsOption {
   const seriesProp = options?.seriesProp
   const primaryType = options?.primaryType ?? 'bar'
-  const primaryStack = options?.primaryStack ?? (seriesProp !== undefined)
+  const primaryStack = options?.primaryStack ?? seriesProp !== undefined
   const overlayProp = options?.overlayProp
   const overlayType = options?.overlayType ?? 'line'
   const overlayDualAxis = options?.overlayDualAxis ?? true
 
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
-  const overlayYAxisLabel = options?.overlayYAxisLabel ?? (overlayProp ?? 'Overlay')
+  const overlayYAxisLabel = options?.overlayYAxisLabel ?? overlayProp ?? 'Overlay'
 
   const isMobile = options?.isMobile ?? false
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  const normalizedData: ReadonlyArray<NormalizedRow> = R.map(
-    data,
-    (item): NormalizedRow => {
-      const xValRaw = getNestedValue(item, xProp)
-      const primaryRaw = Number(getNestedValue(item, yProp))
-      const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
-      const overlayRaw = overlayProp ? Number(getNestedValue(item, overlayProp)) : null
+  const normalizedData: ReadonlyArray<NormalizedRow> = R.map(data, (item): NormalizedRow => {
+    const xValRaw = getNestedValue(item, xProp)
+    const primaryRaw = Number(getNestedValue(item, yProp))
+    const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
+    const overlayRaw = overlayProp ? Number(getNestedValue(item, overlayProp)) : null
 
-      return {
-        x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
-        primaryY: Number.isNaN(primaryRaw) ? null : primaryRaw,
-        series: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
-        overlayY: overlayRaw === null || Number.isNaN(overlayRaw) ? null : overlayRaw,
-      }
-    },
-  )
+    return {
+      x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
+      primaryY: Number.isNaN(primaryRaw) ? null : primaryRaw,
+      series:
+        seriesProp && sValRaw !== undefined && sValRaw !== null
+          ? safeToString(sValRaw)
+          : yAxisLabel,
+      overlayY: overlayRaw === null || Number.isNaN(overlayRaw) ? null : overlayRaw,
+    }
+  })
 
   const xAxisData: readonly string[] = R.pipe(
     normalizedData,
@@ -143,16 +145,10 @@ export function createComboChartOption(
     interval: xAxisInterval,
     rotate: xAxisRotate,
     hideOverlap: xAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    xAxisData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    false,
-    {
-      labels: formattedXLabels,
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(xAxisData.length, isCompact, options?.xAxisLabelRotate, false, {
+    labels: formattedXLabels,
+    containerWidth,
+  })
 
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
@@ -162,7 +158,7 @@ export function createComboChartOption(
 
   const primarySeriesList: ReadonlyArray<SeriesOption> = seriesNames.map((name): SeriesOption => {
     const seriesRows = normalizedData.filter(d => d.series === name)
-    const seriesData: readonly (number | null)[] = xAxisData.map((cat) => {
+    const seriesData: readonly (number | null)[] = xAxisData.map(cat => {
       const match = seriesRows.find(r => r.x === cat)
       return match?.primaryY ?? null
     })
@@ -191,7 +187,7 @@ export function createComboChartOption(
     ? [
         overlayType === 'bar'
           ? ((): BarSeriesOption => {
-              const overlayData: readonly (number | null)[] = xAxisData.map((cat) => {
+              const overlayData: readonly (number | null)[] = xAxisData.map(cat => {
                 const match = normalizedData.find(d => d.x === cat && d.overlayY !== null)
                 return match?.overlayY ?? null
               })
@@ -204,7 +200,7 @@ export function createComboChartOption(
             })()
           : overlayType === 'scatter'
             ? ((): ScatterSeriesOption => {
-                const overlayData: readonly (number | null)[] = xAxisData.map((cat) => {
+                const overlayData: readonly (number | null)[] = xAxisData.map(cat => {
                   const match = normalizedData.find(d => d.x === cat && d.overlayY !== null)
                   return match?.overlayY ?? null
                 })
@@ -216,7 +212,7 @@ export function createComboChartOption(
                 }
               })()
             : ((): LineSeriesOption => {
-                const overlayData: readonly (number | null)[] = xAxisData.map((cat) => {
+                const overlayData: readonly (number | null)[] = xAxisData.map(cat => {
                   const match = normalizedData.find(d => d.x === cat && d.overlayY !== null)
                   return match?.overlayY ?? null
                 })
@@ -237,31 +233,38 @@ export function createComboChartOption(
   const yAxisFormat = options?.yAxisFormat ?? options?.valueFormat
   const overlayYAxisFormat = options?.overlayYAxisFormat
 
-  const yAxes: ReadonlyArray<YAXisComponentOption> = overlayProp && overlayDualAxis
-    ? [
-        {
-          type: 'value',
-          name: yAxisLabel,
-          position: 'left',
-          alignTicks: true,
-          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
-        },
-        {
-          type: 'value',
-          name: overlayYAxisLabel,
-          position: 'right',
-          alignTicks: true,
-          ...(overlayYAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, overlayYAxisFormat) } } : {}),
-        },
-      ]
-    : [
-        {
-          type: 'value',
-          name: yAxisLabel,
-          position: 'left',
-          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
-        },
-      ]
+  const yAxes: ReadonlyArray<YAXisComponentOption> =
+    overlayProp && overlayDualAxis
+      ? [
+          {
+            type: 'value',
+            name: yAxisLabel,
+            position: 'left',
+            alignTicks: true,
+            ...(yAxisFormat
+              ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } }
+              : {}),
+          },
+          {
+            type: 'value',
+            name: overlayYAxisLabel,
+            position: 'right',
+            alignTicks: true,
+            ...(overlayYAxisFormat
+              ? { axisLabel: { formatter: (val: unknown) => formatValue(val, overlayYAxisFormat) } }
+              : {}),
+          },
+        ]
+      : [
+          {
+            type: 'value',
+            name: yAxisLabel,
+            position: 'left',
+            ...(yAxisFormat
+              ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } }
+              : {}),
+          },
+        ]
 
   const dataZoomOptions: ReadonlyArray<DataZoomComponentOption> = isCompact
     ? [
@@ -304,8 +307,9 @@ export function createComboChartOption(
       axisPointer: {
         type: 'cross',
       },
-      formatter: asTooltipFormatter((params: ComboTooltipParam | ReadonlyArray<ComboTooltipParam>) =>
-        formatComboTooltip(params, xAxisLabel),
+      formatter: asTooltipFormatter(
+        (params: ComboTooltipParam | ReadonlyArray<ComboTooltipParam>) =>
+          formatComboTooltip(params, xAxisLabel),
       ),
     },
     grid: getCartesianGridOption(options, { hasDataZoomSlider: isCompact }),

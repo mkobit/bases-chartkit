@@ -1,4 +1,4 @@
-"@typescript-eslint/consistent-type-assertions":
+'@typescript-eslint/consistent-type-assertions':
   - tests/fixtures/chart_data.ts
   - tests/heatmap_chart.test.ts
   - tests/transformer_candlestick.test.ts

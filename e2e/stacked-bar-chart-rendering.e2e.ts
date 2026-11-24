@@ -1,5 +1,12 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface StackedBarSeriesLike {
   readonly name?: string
@@ -28,26 +35,36 @@ test.describe('stacked-bar chart rendering', () => {
   // live option -- read series[0]'s resolved name (a region) and dataset[0]'s
   // first row for that region, hover exactly that point, and assert the
   // tooltip reflects those same dynamically-read values.
-  test('hovering the first bar of the first region series shows its region, quarter, and revenue in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'stacked-bar/Basic.base', viewName: 'Revenue by quarter (stacked)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('hovering the first bar of the first region series shows its region, quarter, and revenue in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'stacked-bar/Basic.base', viewName: 'Revenue by quarter (stacked)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds a non-empty
@@ -65,7 +82,10 @@ test.describe('stacked-bar chart rendering', () => {
     // describe the exact same render the tooltip came from. seriesIndex 0
     // and dataIndex 0 are fixed/known ahead of time, so this doesn't need
     // the resolved region name/row to start the hover.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     const option = asOptionLike<{
       readonly series: readonly StackedBarSeriesLike[]
@@ -97,30 +117,40 @@ test.describe('stacked-bar chart rendering', () => {
     expect(tooltipText).toContain(`${region}: ${firstRegionRow.y.toLocaleString('en-US')}`)
   })
 
-  test('the flipped-axis variant renders the category axis on y and the value axis on x with stacked bars', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'stacked-bar/FlippedAxis.base', viewName: 'Revenue by quarter (flipped axis)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the flipped-axis variant renders the category axis on y and the value axis on x with stacked bars', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'stacked-bar/FlippedAxis.base', viewName: 'Revenue by quarter (flipped axis)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string }[]
-      readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+      readonly yAxis?: readonly { readonly type?: string; readonly data?: readonly unknown[] }[]
       readonly series?: readonly { readonly stack?: string }[]
     }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.type).toBe('value')
@@ -129,26 +159,36 @@ test.describe('stacked-bar chart rendering', () => {
     expect(option?.series?.every(s => s.stack === 'total')).toBe(true)
   })
 
-  test('the rotated-labels variant applies xAxisLabelRotate to category labels', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'stacked-bar/RotatedLabels.base', viewName: 'Revenue by quarter (rotated labels)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the rotated-labels variant applies xAxisLabelRotate to category labels', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'stacked-bar/RotatedLabels.base', viewName: 'Revenue by quarter (rotated labels)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<{
       readonly xAxis?: readonly { readonly axisLabel?: { readonly rotate?: number } }[]

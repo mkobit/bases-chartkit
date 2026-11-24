@@ -81,13 +81,25 @@ function paethPredictor(a: number, b: number, c: number): number {
   return c
 }
 
-function reconstructByte(filterType: number, x: number, a: number, b: number, c: number, row: number): number {
+function reconstructByte(
+  filterType: number,
+  x: number,
+  a: number,
+  b: number,
+  c: number,
+  row: number,
+): number {
   switch (filterType) {
-    case 0: return x
-    case 1: return x + a
-    case 2: return x + b
-    case 3: return x + Math.floor((a + b) / 2)
-    case 4: return x + paethPredictor(a, b, c)
+    case 0:
+      return x
+    case 1:
+      return x + a
+    case 2:
+      return x + b
+    case 3:
+      return x + Math.floor((a + b) / 2)
+    case 4:
+      return x + paethPredictor(a, b, c)
     default:
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- plain `new Error(...)`; pre-existing false positive, see e2e/fixtures/obsidian.ts.
       throw new Error(`unsupported PNG filter type ${filterType} at row ${row}`)
@@ -169,7 +181,10 @@ function parseChunks(buf: Buffer, offset: number, state: ChunkParseState): Chunk
     })
   }
   if (type === 'IDAT') {
-    return parseChunks(buf, nextOffset, { ...state, idatChunks: [...state.idatChunks, Buffer.from(data)] })
+    return parseChunks(buf, nextOffset, {
+      ...state,
+      idatChunks: [...state.idatChunks, Buffer.from(data)],
+    })
   }
   if (type === 'IEND') {
     return { ...state, done: true }
@@ -191,7 +206,9 @@ async function decodePng(filePath: string): Promise<DecodedPng> {
   }
   if (ihdr.bitDepth !== 8) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- plain `new Error(...)`; pre-existing false positive, see e2e/fixtures/obsidian.ts.
-    throw new Error(`${filePath}: unsupported bit depth ${ihdr.bitDepth} (only 8-bit PNGs are supported)`)
+    throw new Error(
+      `${filePath}: unsupported bit depth ${ihdr.bitDepth} (only 8-bit PNGs are supported)`,
+    )
   }
   if (ihdr.interlace !== 0) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- plain `new Error(...)`; pre-existing false positive, see e2e/fixtures/obsidian.ts.
@@ -199,7 +216,9 @@ async function decodePng(filePath: string): Promise<DecodedPng> {
   }
   if (ihdr.colorType !== 2 && ihdr.colorType !== 6) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- plain `new Error(...)`; pre-existing false positive, see e2e/fixtures/obsidian.ts.
-    throw new Error(`${filePath}: unsupported color type ${ihdr.colorType} (only truecolor/truecolor+alpha are supported)`)
+    throw new Error(
+      `${filePath}: unsupported color type ${ihdr.colorType} (only truecolor/truecolor+alpha are supported)`,
+    )
   }
 
   const channels: 3 | 4 = ihdr.colorType === 6 ? 4 : 3
@@ -244,7 +263,12 @@ function comparePixels(a: DecodedPng, b: DecodedPng, threshold: number): Compare
     }
   }
 
-  return { totalPixels, diffPixels: totals.diffPixels, maxDelta: totals.maxDelta, diffPercent: (totals.diffPixels / totalPixels) * 100 }
+  return {
+    totalPixels,
+    diffPixels: totals.diffPixels,
+    maxDelta: totals.maxDelta,
+    diffPercent: (totals.diffPixels / totalPixels) * 100,
+  }
 }
 
 interface ReportRow extends CompareResult {
@@ -253,8 +277,9 @@ interface ReportRow extends CompareResult {
 
 function formatReport(rows: ReadonlyArray<ReportRow>, threshold: number): string {
   const header = `${'file'.padEnd(60)} ${'diff%'.padStart(8)} ${'diffPx'.padStart(10)} ${'total'.padStart(10)} ${'maxDelta'.padStart(9)}`
-  const lines = rows.map(r =>
-    `${r.file.padEnd(60)} ${r.diffPercent.toFixed(2).padStart(7)}% ${String(r.diffPixels).padStart(10)} ${String(r.totalPixels).padStart(10)} ${String(r.maxDelta).padStart(9)}`,
+  const lines = rows.map(
+    r =>
+      `${r.file.padEnd(60)} ${r.diffPercent.toFixed(2).padStart(7)}% ${String(r.diffPixels).padStart(10)} ${String(r.totalPixels).padStart(10)} ${String(r.maxDelta).padStart(9)}`,
   )
   const identical = rows.filter(r => r.diffPixels === 0).length
   return [
@@ -291,18 +316,28 @@ async function main(): Promise<void> {
     console.warn(`only in ${dirB}: ${onlyInB.join(', ')}`)
   }
 
-  const rows = await Promise.all(common.map(async (file): Promise<ReportRow> => {
-    const [a, b] = await Promise.all([
-      decodePng(path.join(dirA, file)),
-      decodePng(path.join(dirB, file)),
-    ])
-    return { file, ...comparePixels(a, b, threshold) }
-  }))
+  const rows = await Promise.all(
+    common.map(async (file): Promise<ReportRow> => {
+      const [a, b] = await Promise.all([
+        decodePng(path.join(dirA, file)),
+        decodePng(path.join(dirB, file)),
+      ])
+      return { file, ...comparePixels(a, b, threshold) }
+    }),
+  )
 
-  console.log(formatReport(rows.toSorted((r1, r2) => r2.diffPercent - r1.diffPercent), threshold))
+  console.log(
+    formatReport(
+      rows.toSorted((r1, r2) => r2.diffPercent - r1.diffPercent),
+      threshold,
+    ),
+  )
 }
 
 main().catch((err: unknown) => {
-  console.error('Fatal error in compare-screenshots:', err instanceof Error ? err.message : String(err))
+  console.error(
+    'Fatal error in compare-screenshots:',
+    err instanceof Error ? err.message : String(err),
+  )
   process.exit(1)
 })

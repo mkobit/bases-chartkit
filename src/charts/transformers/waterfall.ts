@@ -47,25 +47,20 @@ export function createWaterfallChartOption(
   const yAxisLabel = options?.yAxisLabel ?? yProp
   const totalProp = options?.totalProp
   const isDarkMode = options?.isDarkMode ?? false
-  const hasCustomTheme = Boolean(options?.theme)
-    && options?.theme !== 'default'
-    && options?.theme !== 'dark'
-    && options?.theme !== OBSIDIAN_AUTO_THEME_NAME
+  const hasCustomTheme =
+    Boolean(options?.theme) &&
+    options?.theme !== 'default' &&
+    options?.theme !== 'dark' &&
+    options?.theme !== OBSIDIAN_AUTO_THEME_NAME
   const isMobile = options?.isMobile ?? false
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
   const validData: readonly WaterfallDataPoint[] = R.pipe(
     data,
-    R.map((item) => {
-      const xVal = getNestedValue(
-        item,
-        xProp,
-      )
-      const yVal = getNestedValue(
-        item,
-        yProp,
-      )
+    R.map(item => {
+      const xVal = getNestedValue(item, xProp)
+      const yVal = getNestedValue(item, yProp)
       // Bases hands property values back as Value wrappers, not raw JS
       // primitives, so a boolean checkbox property is not `=== true`. Coerce
       // through safeToString (which renders a wrapper via its toString) and
@@ -74,23 +69,21 @@ export function createWaterfallChartOption(
       const totalRaw = totalProp ? getNestedValue(item, totalProp) : undefined
       const isTotal = safeToString(totalRaw).trim().toLowerCase() === 'true'
 
-      return (xVal === null || xVal === undefined || yVal === null || yVal === undefined || yVal === '')
+      return xVal === null ||
+        xVal === undefined ||
+        yVal === null ||
+        yVal === undefined ||
+        yVal === ''
         ? null
-        : { xVal,
-            yVal,
-            isTotal }
+        : { xVal, yVal, isTotal }
     }),
-    R.map((item) => {
+    R.map(item => {
       if (item === null) {
         return null
       }
       const name = safeToString(item.xVal)
       const val = Number(item.yVal)
-      return (!name || Number.isNaN(val))
-        ? null
-        : { name,
-            value: val,
-            isTotal: item.isTotal }
+      return !name || Number.isNaN(val) ? null : { name, value: val, isTotal: item.isTotal }
     }),
     R.filter((x): x is WaterfallDataPoint => x !== null),
   )
@@ -117,24 +110,18 @@ export function createWaterfallChartOption(
       const nextSum = isTotal ? value : prevSum + value
 
       const isRising = value >= 0
-      const baseVal = isTotal ? 0 : (isRising ? prevSum : nextSum)
-      const riseVal = (!isTotal && isRising) ? value : '-'
-      const fallVal = (!isTotal && !isRising) ? Math.abs(value) : '-'
+      const baseVal = isTotal ? 0 : isRising ? prevSum : nextSum
+      const riseVal = !isTotal && isRising ? value : '-'
+      const fallVal = !isTotal && !isRising ? Math.abs(value) : '-'
       const totalVal = isTotal ? value : '-'
 
       return {
-        baseData: [...acc.baseData,
-          baseVal],
-        riseData: [...acc.riseData,
-          riseVal],
-        fallData: [...acc.fallData,
-          fallVal],
-        totalData: [...acc.totalData,
-          totalVal],
-        xData: [...acc.xData,
-          name],
-        sums: [...acc.sums,
-          nextSum],
+        baseData: [...acc.baseData, baseVal],
+        riseData: [...acc.riseData, riseVal],
+        fallData: [...acc.fallData, fallVal],
+        totalData: [...acc.totalData, totalVal],
+        xData: [...acc.xData, name],
+        sums: [...acc.sums, nextSum],
         currentSum: nextSum,
       }
     },
@@ -160,11 +147,9 @@ export function createWaterfallChartOption(
   // Typed off BarSeriesOption's own markLine.data so the paired-endpoint tuple
   // form is checked structurally without a cast.
   type ConnectorPair = NonNullable<NonNullable<BarSeriesOption['markLine']>['data']>[number]
-  const connectorData: ReadonlyArray<ConnectorPair>
-    = sums.slice(0, -1).map((sum, i): ConnectorPair => [
-      { coord: [i, sum] },
-      { coord: [i + 1, sum] },
-    ])
+  const connectorData: ReadonlyArray<ConnectorPair> = sums
+    .slice(0, -1)
+    .map((sum, i): ConnectorPair => [{ coord: [i, sum] }, { coord: [i + 1, sum] }])
 
   const baseSeries: BarSeriesOption = {
     name: '_base',
@@ -186,8 +171,7 @@ export function createWaterfallChartOption(
     ...(connectorData.length > 0
       ? {
           markLine: {
-            symbol: ['none',
-              'none'],
+            symbol: ['none', 'none'],
             silent: true,
             label: { show: false },
             lineStyle: {
@@ -205,16 +189,10 @@ export function createWaterfallChartOption(
     interval: xAxisInterval,
     rotate: xAxisRotate,
     hideOverlap: xAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    xData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    false,
-    {
-      labels: xData,
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(xData.length, isCompact, options?.xAxisLabelRotate, false, {
+    labels: xData,
+    containerWidth,
+  })
 
   const insideBarLabel: Pick<BarSeriesOption, 'label' | 'labelLayout'> = {
     label: {
@@ -223,22 +201,23 @@ export function createWaterfallChartOption(
     },
     // Suppress inside labels when a bar is shorter or narrower than the text
     // so small deltas (e.g. -8 or -2) do not overlap thin bars and connectors.
-    labelLayout: (params): Readonly<{ readonly fontSize?: number }> => (
+    labelLayout: (params): Readonly<{ readonly fontSize?: number }> =>
       params.rect.height < params.labelRect.height + 4 || params.rect.width < params.labelRect.width
         ? { fontSize: 0 }
-        : {}
-    ),
+        : {},
   }
 
   const totalSeries: readonly BarSeriesOption[] = hasTotals
-    ? [{
-        name: 'Total',
-        type: 'bar',
-        stack: 'total',
-        ...insideBarLabel,
-        data: [...totalData],
-        ...(hasCustomTheme ? {} : { itemStyle: { color: totalBarColor(isDarkMode) } }),
-      }]
+    ? [
+        {
+          name: 'Total',
+          type: 'bar',
+          stack: 'total',
+          ...insideBarLabel,
+          data: [...totalData],
+          ...(hasCustomTheme ? {} : { itemStyle: { color: totalBarColor(isDarkMode) } }),
+        },
+      ]
     : []
 
   const series: readonly BarSeriesOption[] = [
@@ -249,7 +228,9 @@ export function createWaterfallChartOption(
       stack: 'total',
       ...insideBarLabel,
       data: [...riseData],
-      ...(hasCustomTheme ? {} : { itemStyle: { color: options?.upColor ?? COLOR_TOKENS.status.up } }),
+      ...(hasCustomTheme
+        ? {}
+        : { itemStyle: { color: options?.upColor ?? COLOR_TOKENS.status.up } }),
     },
     {
       name: 'Decrease',
@@ -257,7 +238,9 @@ export function createWaterfallChartOption(
       stack: 'total',
       ...insideBarLabel,
       data: [...fallData],
-      ...(hasCustomTheme ? {} : { itemStyle: { color: options?.downColor ?? COLOR_TOKENS.status.down } }),
+      ...(hasCustomTheme
+        ? {}
+        : { itemStyle: { color: options?.downColor ?? COLOR_TOKENS.status.down } }),
     },
     ...totalSeries,
   ]
@@ -297,7 +280,9 @@ export function createWaterfallChartOption(
 
         const value = isRising
           ? Number(riseParam?.value)
-          : (fallParam && fallParam.value !== '-' ? -Number(fallParam.value) : 0)
+          : fallParam && fallParam.value !== '-'
+            ? -Number(fallParam.value)
+            : 0
 
         const type = isRising ? 'Increase' : 'Decrease'
         const activeParam = isRising ? riseParam : fallParam

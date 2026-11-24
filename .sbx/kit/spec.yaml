@@ -1,7 +1,7 @@
-schemaVersion: "2"
+schemaVersion: '2'
 kind: mixin
 name: bases-chartkit-toolchain
-version: "0.1.0"
+version: '0.1.0'
 description: Bootstrap mise, bun, beads, and virtual display environment for Obsidian and bases-chartkit
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
       - mise.jdx.dev
       - github.com
       - api.github.com
-      - "*.githubusercontent.com"
+      - '*.githubusercontent.com'
       - registry.npmjs.org
       - bun.sh
       - releases.obsidian.md
@@ -20,8 +20,8 @@ permissions:
 environment:
   variables:
     PATH: /home/agent/.local/share/mise/shims:/home/agent/.local/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    MISE_YES: "1"
-    DISPLAY: ":99"
+    MISE_YES: '1'
+    DISPLAY: ':99'
     XDG_RUNTIME_DIR: /tmp/runtime-agent
 
 setup:
@@ -71,21 +71,26 @@ setup:
           fonts-liberation \
           fonts-noto-color-emoji && \
         sudo rm -rf /var/lib/apt/lists/*
-      description: "Install prerequisite system packages, virtual display server, and Electron runtime dependencies"
+      description: 'Install prerequisite system packages, virtual display server, and Electron runtime dependencies'
     - command: |
         curl -fsSL https://mise.run | MISE_VERSION=v2026.8.14 MISE_INSTALL_PATH=/usr/local/bin/mise sh
         echo 'if command -v mise >/dev/null 2>&1; then eval "$(mise activate bash)"; fi' | sudo tee /etc/profile.d/mise.sh > /dev/null
         printf '%s\n' 'export PATH="/home/agent/.local/share/mise/shims:/home/agent/.local/bin:/usr/local/share/npm-global/bin:$PATH"' >> /etc/sandbox-persistent.sh
-      description: "Install mise into /usr/local/bin and configure profile"
-    - command: "mise settings set paranoid false && mise settings set yes true && mise use -g bun@1.4.4 && mise use -g github:gastownhall/beads@1.3.1"
-      user: "1000"
-      description: "Install bun 1.4.4 and beads 1.3.1 for agent"
-    - command: "mkdir -p -m 0700 /tmp/runtime-agent && chown -R 1000:1000 /tmp/runtime-agent"
-      description: "Initialize runtime directory for Obsidian CLI IPC sockets"
+      description: 'Install mise into /usr/local/bin and configure profile'
+    - command: 'mise settings set paranoid false && mise settings set yes true && mise use -g bun@1.4.4 && mise use -g github:gastownhall/beads@1.3.1'
+      user: '1000'
+      description: 'Install bun 1.4.4 and beads 1.3.1 for agent'
+    - command: 'mkdir -p -m 0700 /tmp/runtime-agent && chown -R 1000:1000 /tmp/runtime-agent'
+      description: 'Initialize runtime directory for Obsidian CLI IPC sockets'
   startup:
-    - command: ["bash", "-c", "sudo /etc/init.d/dbus start >/dev/null 2>&1 || true; rm -f /tmp/.X99-lock /tmp/.X11-unix/X99; Xvfb :99 -screen 0 1920x1080x24 -listen tcp -ac & sleep 1 && fluxbox & sleep 1 && env -u WAYLAND_DISPLAY x11vnc -display :99 -forever -shared -rfbport 5900 -nopw & websockify --web /usr/share/novnc 6080 localhost:5900"]
+    - command:
+        [
+          'bash',
+          '-c',
+          'sudo /etc/init.d/dbus start >/dev/null 2>&1 || true; rm -f /tmp/.X99-lock /tmp/.X11-unix/X99; Xvfb :99 -screen 0 1920x1080x24 -listen tcp -ac & sleep 1 && fluxbox & sleep 1 && env -u WAYLAND_DISPLAY x11vnc -display :99 -forever -shared -rfbport 5900 -nopw & websockify --web /usr/share/novnc 6080 localhost:5900',
+        ]
       background: true
-      description: "Launch virtual display, window manager, and noVNC streaming server"
+      description: 'Launch virtual display, window manager, and noVNC streaming server'
     - command:
         - sh
         - -c
@@ -100,5 +105,5 @@ setup:
               chmod 600 "$target"
             fi
           fi
-      user: "1000"
-      description: "Seed host AGY OAuth token into agent home if mounted"
+      user: '1000'
+      description: 'Seed host AGY OAuth token into agent home if mounted'

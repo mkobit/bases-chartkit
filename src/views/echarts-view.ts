@@ -13,10 +13,10 @@ import {
 import { t } from '../lang/text'
 import { BaseChartView } from './base-chart-view'
 
-export type EChartsViewState
-  = | { readonly kind: 'empty' }
-    | { readonly kind: 'error', readonly message: string }
-    | { readonly kind: 'ready' }
+export type EChartsViewState =
+  | { readonly kind: 'empty' }
+  | { readonly kind: 'error'; readonly message: string }
+  | { readonly kind: 'ready' }
 
 export interface ResolveEChartsOptionResult {
   readonly state: EChartsViewState
@@ -24,12 +24,10 @@ export interface ResolveEChartsOptionResult {
 }
 
 function isEmptyYamlOption(raw: string): boolean {
-  return raw
-    .split('\n')
-    .every((line) => {
-      const trimmed = line.trim()
-      return trimmed.length === 0 || trimmed.startsWith('#')
-    })
+  return raw.split('\n').every(line => {
+    const trimmed = line.trim()
+    return trimmed.length === 0 || trimmed.startsWith('#')
+  })
 }
 
 export function formatEChartsErrorMessage(err: unknown, fallback: string): string {
@@ -52,11 +50,10 @@ export function mergeOrderedProperties(
 function parseRawOption(
   rawOption: string,
   parseYamlFn: (yaml: string) => unknown,
-): { readonly ok: true, readonly value: unknown } | { readonly ok: false, readonly error: string } {
+): { readonly ok: true; readonly value: unknown } | { readonly ok: false; readonly error: string } {
   try {
     return { ok: true, value: parseYamlFn(rawOption) }
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     return {
       ok: false,
       error: t('views.echarts.error_yaml_parse', {
@@ -84,9 +81,10 @@ export function resolveEChartsOptionState(
     return { state: { kind: 'empty' }, option: null }
   }
 
-  const parsedResult = typeof rawOption === 'string'
-    ? parseRawOption(rawOption, parseYamlFn)
-    : { ok: true as const, value: rawOption }
+  const parsedResult =
+    typeof rawOption === 'string'
+      ? parseRawOption(rawOption, parseYamlFn)
+      : { ok: true as const, value: rawOption }
 
   if (!parsedResult.ok) {
     return {
@@ -127,7 +125,11 @@ export class EChartsView extends BaseChartView {
   private readonly statusEl: HTMLElement
   private viewState: EChartsViewState = { kind: 'empty' }
 
-  constructor(controller: Readonly<QueryController>, scrollEl: Readonly<HTMLElement>, plugin: Readonly<BarePlugin>) {
+  constructor(
+    controller: Readonly<QueryController>,
+    scrollEl: Readonly<HTMLElement>,
+    plugin: Readonly<BarePlugin>,
+  ) {
     super(controller, scrollEl, plugin)
     this.statusEl = this.containerEl.createDiv({ cls: 'bases-echarts-prompt bases-echarts-hidden' })
   }
@@ -146,10 +148,7 @@ export class EChartsView extends BaseChartView {
       return null
     }
 
-    const properties = mergeOrderedProperties(
-      this.data.properties ?? [],
-      this.allProperties ?? [],
-    )
+    const properties = mergeOrderedProperties(this.data.properties ?? [], this.allProperties ?? [])
     const result = resolveEChartsOptionState(
       this.config.get(BaseChartView.ECHARTS_OPTION_KEY),
       this.data.data ?? [],
@@ -165,8 +164,7 @@ export class EChartsView extends BaseChartView {
       this.chartEl.classList.remove('bases-echarts-hidden')
       try {
         this.ensureChart().setOption(option, true)
-      }
-      catch (err: unknown) {
+      } catch (err: unknown) {
         this.chart?.dispose()
         this.chart = null
         this.showError(

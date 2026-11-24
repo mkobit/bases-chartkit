@@ -48,16 +48,10 @@ export class GraphChartView extends BaseChartView {
       return {}
     }
 
-    return transformDataToChartOption(
-      data,
-      sourceProp,
-      targetProp,
-      'graph',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp,
-        categoryProp,
-      },
-    )
+    return transformDataToChartOption(data, sourceProp, targetProp, 'graph', {
+      ...this.getCommonTransformerOptions(),
+      valueProp,
+      categoryProp,
+    })
   }
 }

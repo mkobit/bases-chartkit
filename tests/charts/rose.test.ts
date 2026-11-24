@@ -21,67 +21,41 @@ function firstDatasetSource(option: EChartsOption): readonly unknown[] {
   return Array.isArray(source) ? source : []
 }
 
-describe(
-  'Rose Chart Transformer',
-  () => {
-    it(
-      'should create a rose chart with roseType: area',
-      () => {
-        const data = [
-          { category: 'A',
-            value: 10 },
-          { category: 'B',
-            value: 20 },
-        ]
+describe('Rose Chart Transformer', () => {
+  it('should create a rose chart with roseType: area', () => {
+    const data = [
+      { category: 'A', value: 10 },
+      { category: 'B', value: 20 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'category',
-          'value',
-          'rose',
-        )
+    const option = transformDataToChartOption(data, 'category', 'value', 'rose')
 
-        expect(option.series).toBeDefined()
-        expect(option.series).toHaveLength(1)
+    expect(option.series).toBeDefined()
+    expect(option.series).toHaveLength(1)
 
-        const series = firstPieSeries(option)
-        expect(series.type).toBe('pie')
-        expect(series.roseType).toBe('area')
-        expect(series.radius).toEqual([20,
-          '75%'])
-      },
-    )
+    const series = firstPieSeries(option)
+    expect(series.type).toBe('pie')
+    expect(series.roseType).toBe('area')
+    expect(series.radius).toEqual([20, '75%'])
+  })
 
-    it(
-      'should map data correctly via dataset',
-      () => {
-        const data = [
-          { category: 'A',
-            value: 10 },
-          { category: 'B',
-            value: 20 },
-        ]
+  it('should map data correctly via dataset', () => {
+    const data = [
+      { category: 'A', value: 10 },
+      { category: 'B', value: 20 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'category',
-          'value',
-          'rose',
-        )
-        const series = firstPieSeries(option)
+    const option = transformDataToChartOption(data, 'category', 'value', 'rose')
+    const series = firstPieSeries(option)
 
-        expect(series.datasetIndex).toBe(0)
-        expect(option.dataset).toBeDefined()
+    expect(series.datasetIndex).toBe(0)
+    expect(option.dataset).toBeDefined()
 
-        const source = firstDatasetSource(option)
-        expect(source).toHaveLength(2)
-        expect(source).toEqual([
-          { name: 'A',
-            value: 10 },
-          { name: 'B',
-            value: 20 },
-        ])
-      },
-    )
-  },
-)
+    const source = firstDatasetSource(option)
+    expect(source).toHaveLength(2)
+    expect(source).toEqual([
+      { name: 'A', value: 10 },
+      { name: 'B', value: 20 },
+    ])
+  })
+})

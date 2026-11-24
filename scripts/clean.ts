@@ -15,7 +15,9 @@ const CLEAN_TARGETS = [
 
 async function main(): Promise<void> {
   await Promise.all(
-    CLEAN_TARGETS.map(target => fs.rm(path.join(ROOT_DIR, target), { recursive: true, force: true })),
+    CLEAN_TARGETS.map(target =>
+      fs.rm(path.join(ROOT_DIR, target), { recursive: true, force: true }),
+    ),
   )
   console.log(`Removed: ${CLEAN_TARGETS.join(', ')}`)
 }

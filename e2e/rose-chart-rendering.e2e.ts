@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface LegendOptionLike {
   readonly orient?: string
@@ -15,33 +21,45 @@ test.describe('rose chart rendering', () => {
   // every other chart view -- this locks in that a configured legendPosition
   // actually reaches the rendered legend instead of always falling back to
   // the default top position.
-  test('respects a configured legendPosition instead of falling back to the default', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('respects a configured legendPosition instead of falling back to the default', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'rose/Basic.base', viewName: 'Department spend (rose)' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'rose/Basic.base', viewName: 'Department spend (rose)' },
+    )
 
     // rose/ sorts alphabetically after calendar/ and heatmap/ (both
     // large-volume directories), so it carries the same cold-start indexing
     // risk as radar/ and map/.
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
-        return option?.series?.length ?? 0
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly unknown[] }>(
+            await getChartOption(page),
+          )
+          return option?.series?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
-    const option = asOptionLike<{ readonly legend?: LegendOptionLike | readonly LegendOptionLike[] }>(await getChartOption(page))
+    const option = asOptionLike<{
+      readonly legend?: LegendOptionLike | readonly LegendOptionLike[]
+    }>(await getChartOption(page))
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -69,27 +87,37 @@ test.describe('rose chart rendering', () => {
   // (roseType: 'area' keeps angle constant) vs. radius encoding makes the
   // raw value alone ambiguous, so pie.ts's custom formatter (shared with
   // pie) appends a percent-of-total.
-  test('hovering the first slice shows its department and spend in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'rose/Basic.base', viewName: 'Department spend (rose)' })
+  test('hovering the first slice shows its department and spend in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'rose/Basic.base', viewName: 'Department spend (rose)' },
+    )
 
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
 
     // Dept-Spend-0.md (the vault's deterministically-generated first note
     // for this chart type) is { Department: "Engineering", Spend: 15017 }.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain('Engineering')
     expect(tooltipText).toContain('15,017')

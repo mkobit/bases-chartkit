@@ -1,5 +1,12 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface HistogramSeriesLike {
   readonly type?: string
@@ -21,27 +28,37 @@ test.describe('histogram chart rendering', () => {
   // hover the most-populated bin (any zero-count bin would still render but
   // as a zero-height bar, a less reliable hover target), and assert the
   // tooltip reflects that same bin label/count.
-  test('hovering the most populated bin shows its range and count in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'histogram/Basic.base', viewName: 'Score distribution' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly HistogramSeriesLike[] }>(await getChartOption(page))
-        const barSeries = option?.series?.find(s => s.type === 'bar')
-        return barSeries?.data?.length ?? 0
+  test('hovering the most populated bin shows its range and count in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'histogram/Basic.base', viewName: 'Score distribution' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly HistogramSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          const barSeries = option?.series?.find(s => s.type === 'bar')
+          return barSeries?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds non-empty bins --

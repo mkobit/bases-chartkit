@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('theme river chart rendering', () => {
   // Regression coverage for bck-44j. createThemeRiverChartOption builds ONE
@@ -41,28 +47,41 @@ test.describe('theme river chart rendering', () => {
   // boxplot's dataIndex-addressable data). This still exercises the real
   // hover+tooltip path and confirms every topic resolves its display name,
   // analogous in spirit to radar's indicator-name-resolution test.
-  test('hovering the river shows every topic\'s name in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'theme-river/Basic.base', viewName: 'News topics river' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> }>(await getChartOption(page))
-        return option?.series?.[0]?.data?.length ?? 0
+  test("hovering the river shows every topic's name in the tooltip", async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'theme-river/Basic.base', viewName: 'News topics river' },
+    )
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }>
+          }>(await getChartOption(page))
+          return option?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
+
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain('Politics')
     expect(tooltipText).toContain('Technology')
@@ -74,52 +93,72 @@ test.describe('theme river chart rendering', () => {
   // Explainability enrichment (bck-aie.33): the Basic view carries a title +
   // subtext so a first-time reader knows what a theme river encodes. Assert the
   // live-rendered option surfaces them rather than screenshotting the chrome.
-  test('the basic view renders an explanatory title and subtext', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'theme-river/Basic.base', viewName: 'News topics river' })
+  test('the basic view renders an explanatory title and subtext', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'theme-river/Basic.base', viewName: 'News topics river' },
+    )
 
     // chart.getOption() normalizes single components into arrays, so title is
     // [{...}] here (unlike the raw transformer output the unit tests assert).
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly title?: ReadonlyArray<{ readonly text?: string }> }>(await getChartOption(page))
-        return option?.title?.[0]?.text ?? ''
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBe('News topics over time')
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly title?: ReadonlyArray<{ readonly text?: string }>
+          }>(await getChartOption(page))
+          return option?.title?.[0]?.text ?? ''
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBe('News topics over time')
   })
 
   // Flipped-axis variant (bck-aie.33): flipAxis pivots the singleAxis time flow
   // to vertical. Assert the resolved orient rather than pixel geometry.
-  test('the vertical variant pivots the single time axis to vertical', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'theme-river/Vertical.base', viewName: 'News topics river (vertical)' })
+  test('the vertical variant pivots the single time axis to vertical', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'theme-river/Vertical.base', viewName: 'News topics river (vertical)' },
+    )
 
     // getOption() normalizes singleAxis into an array of axis components.
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly singleAxis?: ReadonlyArray<{ readonly orient?: string }> }>(await getChartOption(page))
-        return option?.singleAxis?.[0]?.orient ?? ''
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBe('vertical')
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly singleAxis?: ReadonlyArray<{ readonly orient?: string }>
+          }>(await getChartOption(page))
+          return option?.singleAxis?.[0]?.orient ?? ''
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBe('vertical')
   })
 })

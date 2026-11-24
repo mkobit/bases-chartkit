@@ -1,0 +1,13 @@
+[install]
+minimumReleaseAge = 1814400 # unit is time in seconds (21 days)
+
+[fmt]
+printWidth = 100
+tabWidth = 2
+useTabs = false
+semi = false
+singleQuote = true
+quoteProps = "consistent"
+trailingComma = "all"
+arrowParens = "avoid"
+endOfLine = "lf"

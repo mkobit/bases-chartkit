@@ -146,8 +146,7 @@ describe('Chart view style options', () => {
   afterAll(() => {
     if (!hadActiveDocument) {
       Reflect.deleteProperty(globalThis, 'activeDocument')
-    }
-    else {
+    } else {
       Reflect.set(globalThis, 'activeDocument', previousActiveDocument)
     }
   })
@@ -173,7 +172,7 @@ describe('Chart view style options', () => {
   function configureView(
     view: any,
     entries: Readonly<Record<string, unknown>>,
-    data: { readonly data: readonly unknown[], readonly properties: readonly string[] },
+    data: { readonly data: readonly unknown[]; readonly properties: readonly string[] },
   ): void {
     Reflect.set(view, 'config', {
       get: (key: string) => entries[key],
@@ -225,9 +224,7 @@ describe('Chart view style options', () => {
         areaStyle: true,
       },
       {
-        data: [
-          { note: { Name: 'Hero', Strength: 18, Dexterity: 14 } },
-        ],
+        data: [{ note: { Name: 'Hero', Strength: 18, Dexterity: 14 } }],
         properties: ['note.Name', 'note.Strength', 'note.Dexterity'],
       },
     )
@@ -307,13 +304,21 @@ describe('Chart view style options', () => {
         customThemes: [
           {
             name: 'Vintage',
-            json: JSON.stringify({ color: ['#d87c7c', '#919e8b'], backgroundColor: 'rgba(254,248,239,1)' }),
+            json: JSON.stringify({
+              color: ['#d87c7c', '#919e8b'],
+              backgroundColor: 'rgba(254,248,239,1)',
+            }),
           },
         ],
       },
     }
 
-    const ssrChart = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 100, height: 100 })
+    const ssrChart = echarts.init(null, undefined, {
+      renderer: 'svg',
+      ssr: true,
+      width: 100,
+      height: 100,
+    })
     const initSpy = spyOn(echarts, 'init').mockReturnValue(ssrChart)
 
     try {
@@ -334,8 +339,7 @@ describe('Chart view style options', () => {
       view.onDataUpdated()
       expect(initSpy).toHaveBeenCalled()
       expect(initSpy.mock.calls[0]?.[1]).toBe('Vintage')
-    }
-    finally {
+    } finally {
       initSpy.mockRestore()
       ssrChart.dispose()
     }

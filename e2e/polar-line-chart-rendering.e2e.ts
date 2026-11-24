@@ -1,5 +1,12 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface PolarLineSeriesLike {
   readonly name?: string
@@ -59,26 +66,36 @@ test.describe('polar-line chart rendering', () => {
   // axis-pointer had no way to resolve which category was actually meant.
   // Fixed at the source in scripts/generators/polar.ts (load's min is now 1,
   // never 0).
-  test('hovering the first point of the first server series shows its server, time, and load in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'polar-line/Basic.base', viewName: 'Server load (polar line)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('hovering the first point of the first server series shows its server, time, and load in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'polar-line/Basic.base', viewName: 'Server load (polar line)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds a non-empty
@@ -89,7 +106,11 @@ test.describe('polar-line chart rendering', () => {
     // wait observe the same, final state.
     await waitForVaultIndexed(page)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 }, 10)
+    const tooltipText = await hoverChartDataPointAndGetTooltip(
+      page,
+      { seriesIndex: 0, dataIndex: 0 },
+      10,
+    )
 
     const option = asOptionLike<{
       readonly series: readonly PolarLineSeriesLike[]
@@ -121,79 +142,96 @@ test.describe('polar-line chart rendering', () => {
   // subtext, and the angle/radius axes are named, so a first-time reader knows
   // what a polar line encodes without hovering. Assert the live-rendered
   // option surfaces them rather than screenshotting the chrome.
-  test('the basic view renders an explanatory title and named angle/radius axes', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'polar-line/Basic.base', viewName: 'Server load (polar line)' })
+  test('the basic view renders an explanatory title and named angle/radius axes', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'polar-line/Basic.base', viewName: 'Server load (polar line)' },
+    )
 
     // chart.getOption() normalizes single components into arrays, so
     // title/angleAxis/radiusAxis are [{...}] here (unlike the raw transformer
     // output the unit tests assert).
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{
-          readonly title?: ReadonlyArray<{ readonly text?: string }>
-          readonly angleAxis?: ReadonlyArray<{ readonly name?: string }>
-          readonly radiusAxis?: ReadonlyArray<{ readonly name?: string }>
-        }>(await getChartOption(page))
-        return {
-          title: option?.title?.[0]?.text ?? '',
-          angleAxisName: option?.angleAxis?.[0]?.name ?? '',
-          radiusAxisName: option?.radiusAxis?.[0]?.name ?? '',
-        }
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toEqual({
-      title: 'Server load across time of day',
-      angleAxisName: 'Time',
-      radiusAxisName: 'Load',
-    })
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly title?: ReadonlyArray<{ readonly text?: string }>
+            readonly angleAxis?: ReadonlyArray<{ readonly name?: string }>
+            readonly radiusAxis?: ReadonlyArray<{ readonly name?: string }>
+          }>(await getChartOption(page))
+          return {
+            title: option?.title?.[0]?.text ?? '',
+            angleAxisName: option?.angleAxis?.[0]?.name ?? '',
+            radiusAxisName: option?.radiusAxis?.[0]?.name ?? '',
+          }
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toEqual({
+        title: 'Server load across time of day',
+        angleAxisName: 'Time',
+        radiusAxisName: 'Load',
+      })
   })
 
   // Domain-specific stacking variant (bck-aie.27): stack + areaStyle turns the
   // per-server lines into a filled composition. Assert the resolved series
   // shape rather than pixel geometry.
-  test('the stacked view renders each server series with stack and areaStyle', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'polar-line/Stacked.base', viewName: 'Total server load by time of day (stacked)' })
+  test('the stacked view renders each server series with stack and areaStyle', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'polar-line/Stacked.base', viewName: 'Total server load by time of day (stacked)' },
+    )
 
     // Poll on the full 4-server series count, not just non-empty -- Bases can
     // still be re-rendering (an earlier setOption call with a partial series
     // list) even after the first non-empty read (see the same caveat in the
     // hover test above).
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{
-          readonly series?: ReadonlyArray<{ readonly stack?: string
-            readonly areaStyle?: unknown }>
-        }>(await getChartOption(page))
-        return option?.series?.length ?? 0
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBe(4)
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly series?: ReadonlyArray<{
+              readonly stack?: string
+              readonly areaStyle?: unknown
+            }>
+          }>(await getChartOption(page))
+          return option?.series?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBe(4)
 
     await waitForVaultIndexed(page)
 
     const option = asOptionLike<{
-      readonly series: ReadonlyArray<{ readonly stack?: string
-        readonly areaStyle?: unknown }>
+      readonly series: ReadonlyArray<{ readonly stack?: string; readonly areaStyle?: unknown }>
     }>(await getChartOption(page))
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.

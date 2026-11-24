@@ -1,9 +1,17 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 import * as R from 'remeda'
 
 interface WordCloudOptionLike {
-  readonly series?: ReadonlyArray<{ readonly data?: ReadonlyArray<{ readonly name?: string, readonly value?: number }> }>
+  readonly series?: ReadonlyArray<{
+    readonly data?: ReadonlyArray<{ readonly name?: string; readonly value?: number }>
+  }>
 }
 
 test.describe('word cloud chart rendering', () => {
@@ -20,26 +28,34 @@ test.describe('word cloud chart rendering', () => {
   // no room left. Hovering the single largest-frequency word sidesteps that
   // risk entirely: it's placed first, onto a still-empty grid, so it always
   // gets a graphic element regardless of how the rest of the layout resolves.
-  test('hovering the highest-frequency word shows it and its count in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'word-cloud/Basic.base', viewName: 'Keyword frequency (word cloud)' })
-
-    await expect.poll(
-      async () => {
-        const opt = asOptionLike<WordCloudOptionLike>(await getChartOption(page))
-        return opt?.series?.[0]?.data?.length ?? 0
+  test('hovering the highest-frequency word shows it and its count in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'word-cloud/Basic.base', viewName: 'Keyword frequency (word cloud)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const opt = asOptionLike<WordCloudOptionLike>(await getChartOption(page))
+          return opt?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Keyword-04.md ({ Word: "Templates", Frequency: 100 }) is the highest
     // frequency among the committed vault notes -- but the option's data
@@ -52,7 +68,10 @@ test.describe('word cloud chart rendering', () => {
     const maxIndex = maxWord ? words.indexOf(maxWord) : -1
     expect(maxIndex).toBeGreaterThanOrEqual(0)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: maxIndex })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: maxIndex,
+    })
 
     expect(tooltipText).toContain(maxWord?.name ?? '')
     expect(tooltipText).toContain((maxWord?.value ?? 0).toLocaleString('en-US'))

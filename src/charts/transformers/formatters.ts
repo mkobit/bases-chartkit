@@ -106,7 +106,10 @@ export function formatNumericValue(val: number, pattern: string): string {
     return `${num.toFixed(1)}%`
   }
   if (pattern === 'compact') {
-    return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(val)
+    return new Intl.NumberFormat(undefined, {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(val)
   }
   if (pattern.includes('{value}')) {
     return pattern.replace('{value}', String(val))
@@ -139,7 +142,14 @@ export function formatValue(val: unknown, formatPattern?: string): string {
   }
 
   const dateParsed = parseDateToEpochMs(val)
-  if (dateParsed !== null && (pattern.includes('Y') || pattern.includes('M') || pattern.includes('D') || pattern.includes('d') || pattern.includes('Q'))) {
+  if (
+    dateParsed !== null &&
+    (pattern.includes('Y') ||
+      pattern.includes('M') ||
+      pattern.includes('D') ||
+      pattern.includes('d') ||
+      pattern.includes('Q'))
+  ) {
     return formatDateValue(val, pattern)
   }
 

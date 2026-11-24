@@ -27,28 +27,35 @@ export function extractTargetFilePaths(
     ? []
     : (() => {
         const itemData = params.data
-        const fromFilePaths: readonly string[] = isRecord(itemData) && Array.isArray(itemData.filePaths)
-          ? R.pipe(
-              itemData.filePaths,
-              R.filter((p): p is string => typeof p === 'string' && p.length > 0),
-              R.unique(),
-            )
-          : []
+        const fromFilePaths: readonly string[] =
+          isRecord(itemData) && Array.isArray(itemData.filePaths)
+            ? R.pipe(
+                itemData.filePaths,
+                R.filter((p): p is string => typeof p === 'string' && p.length > 0),
+                R.unique(),
+              )
+            : []
 
-        const fromRowIndices: readonly string[] = isRecord(itemData) && Array.isArray(itemData.rowIndices) && data
-          ? R.pipe(
-              itemData.rowIndices,
-              R.filter((idx): idx is number => typeof idx === 'number' && Number.isInteger(idx) && idx >= 0 && idx < data.length),
-              R.map(idx => extractFilePath(data[idx])),
-              R.filter((p): p is string => typeof p === 'string' && p.length > 0),
-              R.unique(),
-            )
-          : []
+        const fromRowIndices: readonly string[] =
+          isRecord(itemData) && Array.isArray(itemData.rowIndices) && data
+            ? R.pipe(
+                itemData.rowIndices,
+                R.filter(
+                  (idx): idx is number =>
+                    typeof idx === 'number' &&
+                    Number.isInteger(idx) &&
+                    idx >= 0 &&
+                    idx < data.length,
+                ),
+                R.map(idx => extractFilePath(data[idx])),
+                R.filter((p): p is string => typeof p === 'string' && p.length > 0),
+                R.unique(),
+              )
+            : []
 
         const singlePath = extractTargetFilePath(params, data)
-        const fallbackPaths: readonly string[] = singlePath !== undefined && singlePath.length > 0
-          ? [singlePath]
-          : []
+        const fallbackPaths: readonly string[] =
+          singlePath !== undefined && singlePath.length > 0 ? [singlePath] : []
 
         return fromFilePaths.length > 0
           ? fromFilePaths
@@ -115,7 +122,7 @@ export function populateDisambiguationMenu<T extends DisambiguationMenuLike>(
   return R.pipe(
     buildDisambiguationChoices(filePaths),
     R.reduce((currentMenu, choice) => {
-      void currentMenu.addItem((item) => {
+      void currentMenu.addItem(item => {
         void item.setTitle(choice.title)
         void item.setIcon?.('file-text')
         void item.onClick(_evt => onSelect(choice.filePath))
@@ -142,20 +149,23 @@ export function extractTargetFilePath(
     : (() => {
         const itemData = params.data
         const fromItem = isRecord(itemData)
-          ? (extractFilePath(itemData) ?? (
-              typeof itemData.rowIndex === 'number' && data && itemData.rowIndex >= 0 && itemData.rowIndex < data.length
-                ? extractFilePath(data[itemData.rowIndex])
-                : undefined
-            ))
+          ? (extractFilePath(itemData) ??
+            (typeof itemData.rowIndex === 'number' &&
+            data &&
+            itemData.rowIndex >= 0 &&
+            itemData.rowIndex < data.length
+              ? extractFilePath(data[itemData.rowIndex])
+              : undefined))
           : undefined
 
         return fromItem !== undefined
           ? fromItem
-          : (
-              typeof params.dataIndex === 'number' && data && params.dataIndex >= 0 && params.dataIndex < data.length
-                ? extractFilePath(data[params.dataIndex])
-                : undefined
-            )
+          : typeof params.dataIndex === 'number' &&
+              data &&
+              params.dataIndex >= 0 &&
+              params.dataIndex < data.length
+            ? extractFilePath(data[params.dataIndex])
+            : undefined
       })()
 }
 
@@ -166,10 +176,10 @@ export function extractRawMouseEvent(params: unknown): RawMouseEventData | undef
   return !isRecord(params)
     ? undefined
     : !isRecord(params.event)
-        ? undefined
-        : isRecord(params.event.event)
-          ? params.event.event
-          : params.event
+      ? undefined
+      : isRecord(params.event.event)
+        ? params.event.event
+        : params.event
 }
 
 /**
@@ -179,7 +189,7 @@ export function resolveModClickLeaf<T>(
   evt: RawMouseEventData | undefined,
   isModEvent: (evt?: RawMouseEventData | null) => T | boolean,
 ): T | boolean | null {
-  return !evt ? null : (isModEvent(evt) || null)
+  return !evt ? null : isModEvent(evt) || null
 }
 
 export interface FileLookupApp<TFile = unknown> {
@@ -198,6 +208,8 @@ export function resolveSourceNoteFile<TFile = unknown>(
   app: FileLookupApp<TFile>,
   filePath: string,
 ): TFile | null {
-  return app.vault.getAbstractFileByPath(filePath)
-    ?? app.metadataCache.getFirstLinkpathDest(filePath, '')
+  return (
+    app.vault.getAbstractFileByPath(filePath) ??
+    app.metadataCache.getFirstLinkpathDest(filePath, '')
+  )
 }

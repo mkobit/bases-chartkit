@@ -16,6 +16,15 @@ description = "Run ESLint checks"
 sources = ["src/**/*", "tests/**/*", "e2e/**/*", "scripts/**/*", "shared/quality-ratchet.ts", "quality-ratchet.yaml", "eslint.config.mts", "package.json", "bun.lock"]
 run = "bun run lint"
 
+[tasks.fmt]
+description = "Format source files with bun fmt"
+run = "bun run fmt"
+
+[tasks."fmt:check"]
+description = "Check source file formatting with bun fmt"
+sources = ["src/**/*", "tests/**/*", "e2e/**/*", "scripts/**/*", "shared/**/*", "*.json", "*.mjs", "*.mts", ".github/**/*", ".sbx/**/*", "bunfig.toml", ".prettierignore"]
+run = "bun run fmt:check"
+
 [tasks."check:quality-ratchet"]
 description = "Check quality ratchet exemptions for stale entries"
 sources = ["src/**/*", "tests/**/*", "e2e/**/*", "scripts/**/*", "shared/**/*", "quality-ratchet.yaml", "eslint.config.mts", "package.json", "bun.lock"]
@@ -110,6 +119,7 @@ description = "Run all verification, linting, budget, specification, and unit te
 depends = [
   "typecheck",
   "lint",
+  "fmt:check",
   "check:quality-ratchet",
   "openspec:validate",
   "test"

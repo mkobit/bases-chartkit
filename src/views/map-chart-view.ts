@@ -39,25 +39,21 @@ export class MapChartView extends BaseChartView {
     // redundant vault read + re-registration.
     void (async () => {
       try {
-        await acquireMap(
-          mapFile,
-          async () => {
-            const adapter = this.plugin.app.vault.adapter
-            if (!(await adapter.exists(mapFile))) {
-              // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-              throw new Error(t('views.map.file_not_found', { file: mapFile }))
-            }
-            const content = await adapter.read(mapFile)
-            const geoJson = geoJsonSchema.parse(content)
-            // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
-            return (geoJson as unknown) as Parameters<typeof echarts.registerMap>[1]
-          },
-        )
+        await acquireMap(mapFile, async () => {
+          const adapter = this.plugin.app.vault.adapter
+          if (!(await adapter.exists(mapFile))) {
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
+            throw new Error(t('views.map.file_not_found', { file: mapFile }))
+          }
+          const content = await adapter.read(mapFile)
+          const geoJson = geoJsonSchema.parse(content)
+          // eslint-disable-next-line no-restricted-syntax, @typescript-eslint/consistent-type-assertions -- zod parse yields a generic GeoJSON object; ECharts' registerMap parameter type is an unexported internal shape that overlaps.
+          return geoJson as unknown as Parameters<typeof echarts.registerMap>[1]
+        })
 
         this.registeredMapName = mapFile
         this.executeRender()
-      }
-      catch (e) {
+      } catch (e) {
         new Notice(t('views.map.load_error', { error: e instanceof Error ? e.message : String(e) }))
       }
     })()
@@ -112,9 +108,13 @@ export class MapChartView extends BaseChartView {
         key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.map.value_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((o) => {
+      ...BaseChartView.getCommonViewOptions().filter(o => {
         const key = o.key
-        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+        return (
+          key !== BaseChartView.X_AXIS_PROP_KEY &&
+          key !== BaseChartView.Y_AXIS_PROP_KEY &&
+          key !== BaseChartView.SERIES_PROP_KEY
+        )
       }),
       ...BaseChartView.getVisualMapViewOptions(),
     ]

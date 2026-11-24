@@ -23,11 +23,7 @@ export function createTreemapChartOption(
   // this shared options plumbing provides.
   options?: TreemapTransformerOptions,
 ): EChartsOption {
-  const hierarchyData = buildHierarchy(
-    data,
-    pathProp,
-    valueProp,
-  )
+  const hierarchyData = buildHierarchy(data, pathProp, valueProp)
 
   const hasTitle = Boolean(options?.title)
   const hasSubtitle = Boolean(options?.description)

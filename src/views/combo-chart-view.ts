@@ -27,35 +27,35 @@ export class ComboChartView extends BaseChartView {
       return null
     }
 
-    const primaryType = this.getLiteralOption(ComboChartView.PRIMARY_TYPE_KEY, ['bar', 'line'] as const) ?? 'bar'
-    const primaryStack = this.getBooleanOption(ComboChartView.PRIMARY_STACK_KEY) ?? (seriesProp !== undefined)
+    const primaryType =
+      this.getLiteralOption(ComboChartView.PRIMARY_TYPE_KEY, ['bar', 'line'] as const) ?? 'bar'
+    const primaryStack =
+      this.getBooleanOption(ComboChartView.PRIMARY_STACK_KEY) ?? seriesProp !== undefined
     const overlayProp = this.getStringOption(ComboChartView.OVERLAY_PROP_KEY)
-    const overlayType = this.getLiteralOption(ComboChartView.OVERLAY_TYPE_KEY, ['line', 'bar', 'scatter'] as const) ?? 'line'
+    const overlayType =
+      this.getLiteralOption(ComboChartView.OVERLAY_TYPE_KEY, ['line', 'bar', 'scatter'] as const) ??
+      'line'
     const overlayDualAxis = this.getBooleanOption(ComboChartView.OVERLAY_DUAL_AXIS_KEY) ?? true
-    const overlayYAxisLabel = this.getStringOption(ComboChartView.OVERLAY_Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(ComboChartView.OVERLAY_PROP_KEY)
+    const overlayYAxisLabel =
+      this.getStringOption(ComboChartView.OVERLAY_Y_AXIS_LABEL_KEY) ??
+      this.getPropDisplayName(ComboChartView.OVERLAY_PROP_KEY)
     const overlayYAxisFormat = this.getStringOption(ComboChartView.OVERLAY_Y_AXIS_FORMAT_KEY)
     const smooth = this.getBooleanOption(ComboChartView.SMOOTH_KEY)
     const showSymbol = this.getBooleanOption(ComboChartView.SHOW_SYMBOL_KEY)
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'combo',
-      {
-        ...this.getCommonTransformerOptions(),
-        seriesProp,
-        primaryType,
-        primaryStack,
-        overlayProp,
-        overlayType,
-        overlayDualAxis,
-        overlayYAxisLabel,
-        overlayYAxisFormat,
-        smooth,
-        showSymbol,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'combo', {
+      ...this.getCommonTransformerOptions(),
+      seriesProp,
+      primaryType,
+      primaryStack,
+      overlayProp,
+      overlayType,
+      overlayDualAxis,
+      overlayYAxisLabel,
+      overlayYAxisFormat,
+      smooth,
+      showSymbol,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

@@ -22,28 +22,21 @@ export class HistogramChartView extends BaseChartView {
 
     const binCountStr = this.getStringOption(HistogramChartView.BIN_COUNT_KEY)
     // Invalid or empty stays undefined so the transformer falls back to Sturges.
-    const parsedBinCount = binCountStr
-      ? parseInt(
-          binCountStr,
-          10,
-        )
-      : NaN
-    const binCount = (!Number.isNaN(parsedBinCount) && parsedBinCount > 0)
-      ? parsedBinCount
-      : undefined
+    const parsedBinCount = binCountStr ? parseInt(binCountStr, 10) : NaN
+    const binCount =
+      !Number.isNaN(parsedBinCount) && parsedBinCount > 0 ? parsedBinCount : undefined
 
     const options = {
       ...this.getCommonTransformerOptions(),
       binCount,
       yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? 'Frequency',
-      xAxisLabel: this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? valueProp,
+      xAxisLabel:
+        this.getStringOption(BaseChartView.X_AXIS_LABEL_KEY) ??
+        this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ??
+        valueProp,
     }
 
-    return createHistogramChartOption(
-      data,
-      valueProp,
-      options,
-    )
+    return createHistogramChartOption(data, valueProp, options)
   }
 
   static getViewOptions(): BasesOptions[] {

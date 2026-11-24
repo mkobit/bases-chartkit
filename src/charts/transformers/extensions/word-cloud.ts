@@ -7,7 +7,8 @@ import { getCategoricalColor, getParamKey } from '../palette'
 import { COLOR_TOKENS, STYLE_TOKENS } from '../tokens'
 
 export interface WordCloudTransformerOptions extends BaseTransformerOptions {
-  readonly shape?: 'circle' | 'cardioid' | 'diamond' | 'triangle-forward' | 'triangle' | 'pentagon' | 'star'
+  readonly shape?:
+    'circle' | 'cardioid' | 'diamond' | 'triangle-forward' | 'triangle' | 'pentagon' | 'star'
   readonly gridSize?: number
   readonly sizeRangeMin?: number
   readonly sizeRangeMax?: number
@@ -48,12 +49,8 @@ export function createWordCloudChartOption(
   const seriesItem = {
     type: 'wordCloud' as const,
     gridSize: options?.gridSize ?? 2,
-    sizeRange: [
-      options?.sizeRangeMin ?? 12,
-      options?.sizeRangeMax ?? 60],
-    rotationRange: [
-      options?.rotationRangeMin ?? -90,
-      options?.rotationRangeMax ?? 90],
+    sizeRange: [options?.sizeRangeMin ?? 12, options?.sizeRangeMax ?? 60],
+    rotationRange: [options?.rotationRangeMin ?? -90, options?.rotationRangeMax ?? 90],
     rotationStep: options?.rotationStep ?? 45,
     shape: options?.shape ?? 'circle',
     drawOutOfBound: false,

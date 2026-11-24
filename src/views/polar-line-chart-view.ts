@@ -18,24 +18,21 @@ export class PolarLineChartView extends BaseChartView {
     const hasAreaStyle = this.getBooleanOption('areaStyle') ?? false
     const isStacked = this.getBooleanOption('stack') ?? false
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'polarLine',
-      {
-        ...this.getCommonTransformerOptions(),
-        // getCommonTransformerOptions()'s yAxisLabel default resolves
-        // Y_AXIS_PROP_KEY, but polar-line's radius value comes from
-        // VALUE_PROP_KEY (there's no cartesian y-axis prop here) -- same
-        // override bullet-chart-view.ts uses for the same reason.
-        yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? yProp,
-        seriesProp,
-        smooth: isSmooth,
-        areaStyle: hasAreaStyle,
-        stack: isStacked,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'polarLine', {
+      ...this.getCommonTransformerOptions(),
+      // getCommonTransformerOptions()'s yAxisLabel default resolves
+      // Y_AXIS_PROP_KEY, but polar-line's radius value comes from
+      // VALUE_PROP_KEY (there's no cartesian y-axis prop here) -- same
+      // override bullet-chart-view.ts uses for the same reason.
+      yAxisLabel:
+        this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ??
+        this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ??
+        yProp,
+      seriesProp,
+      smooth: isSmooth,
+      areaStyle: hasAreaStyle,
+      stack: isStacked,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

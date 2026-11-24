@@ -1,24 +1,36 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('radar chart rendering', () => {
   // Regression test for obsidian-bases-charts-769: wide-format (metricProps)
   // radar charts must resolve each indicator axis through the Bases-configured
   // display name, not show the raw property path (e.g. 'note.Strength').
-  test('resolves display names for wide-format metricProps indicator axes', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('resolves display names for wide-format metricProps indicator axes', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'radar/Basic.base', viewName: 'Character stats radar' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'radar/Basic.base', viewName: 'Character stats radar' },
+    )
 
     // Wait for the radar's indicator axes to be populated before asserting.
     // ECharts' getOption() always returns 'radar' as an array (it supports
@@ -26,15 +38,23 @@ test.describe('radar chart rendering', () => {
     // only configures one. radar/ sorts alphabetically after calendar/ and
     // heatmap/ (both large-volume directories), so this test is at risk of a
     // cold-start indexing timeout, same as rose/ and effect-scatter/.
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> }>(await getChartOption(page))
-        return option?.radar?.[0]?.indicator?.length ?? 0
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }>
+          }>(await getChartOption(page))
+          return option?.radar?.[0]?.indicator?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
-    const option = asOptionLike<{ readonly radar: ReadonlyArray<{ readonly indicator: ReadonlyArray<{ readonly name: string }> }> }>(await getChartOption(page))
+    const option = asOptionLike<{
+      readonly radar: ReadonlyArray<{
+        readonly indicator: ReadonlyArray<{ readonly name: string }>
+      }>
+    }>(await getChartOption(page))
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -60,31 +80,44 @@ test.describe('radar chart rendering', () => {
   // non-hit-testable polygon + a group of small per-vertex symbol dots, not
   // one discrete shape like a bar). Confirms hoverChartDataPointAndGetTooltip's
   // leaf-shape traversal lands on an actual hoverable vertex symbol.
-  test('hovering a character\'s radar shape shows its name and stat values in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'radar/Basic.base', viewName: 'Character stats radar' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }> }>(await getChartOption(page))
-        return option?.radar?.[0]?.indicator?.length ?? 0
+  test("hovering a character's radar shape shows its name and stat values in the tooltip", async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'radar/Basic.base', viewName: 'Character stats radar' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly radar?: ReadonlyArray<{ readonly indicator?: readonly unknown[] }>
+          }>(await getChartOption(page))
+          return option?.radar?.[0]?.indicator?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Character-0.md ({ Name: "Gandalf", Strength: 17, Dexterity: 6,
     // Constitution: 16, Intelligence: 15, Wisdom: 4, Charisma: 16 })
     // resolves to dataIndex 0.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain('Gandalf')
     expect(tooltipText).toContain('Strength')
