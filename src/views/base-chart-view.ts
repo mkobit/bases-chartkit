@@ -159,6 +159,29 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     return typeof val === 'string' ? val : undefined
   }
 
+  protected getNumberOption(key: string): number | undefined {
+    const val = this.config.get(key)
+    if (typeof val === 'number') {
+      return Number.isNaN(val) ? undefined : val
+    }
+    if (typeof val === 'string' && val.trim() !== '') {
+      const parsed = Number(val)
+      return Number.isNaN(parsed) ? undefined : parsed
+    }
+    return undefined
+  }
+
+  protected getStringOrNumberOption(key: string): string | number | undefined {
+    const val = this.config.get(key)
+    if (typeof val === 'number') {
+      return Number.isNaN(val) ? undefined : val
+    }
+    if (typeof val === 'string' && val.trim() !== '') {
+      return val
+    }
+    return undefined
+  }
+
   // Bases dropdown values are stored as arbitrary user-editable YAML (the
   // `.base` file), not validated against the dropdown's own `options` map --
   // narrows to one of the caller's allowed literals, falling back to

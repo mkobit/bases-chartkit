@@ -7,6 +7,10 @@ import { t } from '../lang/text'
 
 export class RadarChartView extends BaseChartView {
   public static readonly METRIC_PROPS_KEY = 'metricProps'
+  public static readonly SHAPE_KEY = 'shape'
+  public static readonly AREA_STYLE_KEY = 'areaStyle'
+  public static readonly FILL_AREA_KEY = 'fillArea'
+  public static readonly AREA_OPACITY_KEY = 'areaOpacity'
 
   readonly type = 'radar-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
@@ -15,6 +19,17 @@ export class RadarChartView extends BaseChartView {
 
     if (typeof xProp !== 'string') {
       return null
+    }
+
+    const shape = this.getLiteralOption(RadarChartView.SHAPE_KEY, ['polygon', 'circle'] as const)
+    const areaStyle = this.getBooleanOption(RadarChartView.AREA_STYLE_KEY)
+    const fillArea = this.getBooleanOption(RadarChartView.FILL_AREA_KEY)
+    const areaOpacity = this.getNumberOption(RadarChartView.AREA_OPACITY_KEY)
+    const styleOptions = {
+      ...(shape !== undefined ? { shape } : {}),
+      ...(areaStyle !== undefined ? { areaStyle } : {}),
+      ...(fillArea !== undefined ? { fillArea } : {}),
+      ...(areaOpacity !== undefined ? { areaOpacity } : {}),
     }
 
     // One row per entity with a metric per column (e.g. one row per
@@ -34,6 +49,7 @@ export class RadarChartView extends BaseChartView {
             'radar',
             {
               ...this.getCommonTransformerOptions(),
+              ...styleOptions,
               metricProps,
               metricLabels,
             },
@@ -52,6 +68,7 @@ export class RadarChartView extends BaseChartView {
           'radar',
           {
             ...this.getCommonTransformerOptions(),
+            ...styleOptions,
             seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
           },
         )
