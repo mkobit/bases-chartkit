@@ -115,8 +115,11 @@ export function createGaugeChartOption(
     ...(axisLineColor
       ? { axisLine: { lineStyle: { color: [...axisLineColor] } } }
       : {}),
+    // Disable the solid progress arc when colorBands are configured so it does
+    // not paint over axisLine.lineStyle.color; the gauge pointer needle remains
+    // visible against the banded arc.
     progress: {
-      show: true,
+      show: !axisLineColor,
     },
     detail: {
       valueAnimation: true,

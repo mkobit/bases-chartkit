@@ -295,4 +295,49 @@ describe('Chart view style options', () => {
     const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
     expect(xAxis?.axisLabel?.rotate).toBe(45)
   })
+
+  it('resolves gauge theme case-insensitively to the registered custom theme name', async () => {
+    const echarts = await import('echarts')
+    const { GaugeChartView } = await import('../../src/views/gauge-chart-view')
+    const basePlugin = makePluginStub()
+    const plugin = {
+      ...basePlugin,
+      settings: {
+        ...basePlugin.settings,
+        customThemes: [
+          {
+            name: 'Vintage',
+            json: JSON.stringify({ color: ['#d87c7c', '#919e8b'], backgroundColor: 'rgba(254,248,239,1)' }),
+          },
+        ],
+      },
+    }
+
+    const ssrChart = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 100, height: 100 })
+    const initSpy = spyOn(echarts, 'init').mockReturnValue(ssrChart)
+
+    try {
+      const view: any = new GaugeChartView(makeControllerStub(), makeScrollElStub(), plugin)
+      configureView(
+        view,
+        {
+          yAxisProp: 'note.SleepScore',
+          theme: 'vintage',
+          colorBands: '60:#e6a23c,80:#409eff,100:#67c23a',
+        },
+        {
+          data: [{ note: { SleepScore: 82 } }],
+          properties: ['note.SleepScore'],
+        },
+      )
+
+      view.onDataUpdated()
+      expect(initSpy).toHaveBeenCalled()
+      expect(initSpy.mock.calls[0]?.[1]).toBe('Vintage')
+    }
+    finally {
+      initSpy.mockRestore()
+      ssrChart.dispose()
+    }
+  })
 })

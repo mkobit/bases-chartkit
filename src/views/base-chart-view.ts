@@ -235,7 +235,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
   }
 
   protected getCommonTransformerOptions(): BaseTransformerOptions {
-    const { isDarkMode } = this.getThemeContext()
+    const { theme, isDarkMode } = this.getThemeContext()
 
     const options: BaseTransformerOptions = {
       title: this.getStringOption(BaseChartView.TITLE_KEY),
@@ -259,6 +259,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       // prioritizes over the OS dark-mode fallback -- isn't overridden by an
       // unrelated dark/light mismatch here.
       isDarkMode,
+      ...(theme ? { theme } : {}),
     }
 
     if (this.isFullScreenGeneration) {
@@ -487,11 +488,21 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
     )
   }
 
+  private resolveRegisteredThemeName(name: string | undefined): string | undefined {
+    if (!name) {
+      return undefined
+    }
+    const match = this.plugin.settings.customThemes?.find(
+      ct => ct.name.toLowerCase() === name.toLowerCase(),
+    )
+    return match ? match.name : name
+  }
+
   private getThemeContext(): ResolvedThemeContext {
     const context = resolveThemeContext(
       this.containerEl,
-      this.getStringOption(BaseChartView.THEME_KEY),
-      this.plugin.settings.selectedTheme,
+      this.resolveRegisteredThemeName(this.getStringOption(BaseChartView.THEME_KEY)),
+      this.resolveRegisteredThemeName(this.plugin.settings.selectedTheme),
     )
     if (context.autoTheme) {
       echarts.registerTheme(OBSIDIAN_AUTO_THEME_NAME, context.autoTheme)

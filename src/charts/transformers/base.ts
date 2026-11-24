@@ -28,6 +28,7 @@ export interface BaseTransformerOptions extends VisualMapOptions {
   readonly upColor?: string
   readonly downColor?: string
   readonly isDarkMode?: boolean
+  readonly theme?: string
   readonly xAxisFormat?: string
   readonly yAxisFormat?: string
   readonly valueFormat?: string

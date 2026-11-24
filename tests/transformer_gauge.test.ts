@@ -410,11 +410,34 @@ describe(
         )
 
         it(
-          'should leave axisLine unset when no color bands are configured',
+          'should leave axisLine unset and enable progress when no color bands are configured',
           () => {
             const option = transformDataToChartOption([{ val: 50 }], '', 'val', 'gauge')
             const series = firstGaugeSeries(option)
             expect(series.axisLine).toBeUndefined()
+            expect(series.progress?.show).toBe(true)
+          },
+        )
+
+        it(
+          'should disable progress.show when colorBands are configured so the progress arc does not obscure the bands',
+          () => {
+            const option = transformDataToChartOption(
+              [{ val: 75 }],
+              '',
+              'val',
+              'gauge',
+              {
+                colorBands: [
+                  { threshold: 60, color: '#e6a23c' },
+                  { threshold: 80, color: '#409eff' },
+                  { threshold: 100, color: '#67c23a' },
+                ],
+              },
+            )
+            const series = firstGaugeSeries(option)
+            expect(series.axisLine?.lineStyle?.color).toBeDefined()
+            expect(series.progress?.show).toBe(false)
           },
         )
       },
