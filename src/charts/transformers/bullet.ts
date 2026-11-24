@@ -1,6 +1,8 @@
-import type { EChartsOption, DatasetComponentOption, BarSeriesOption, ScatterSeriesOption } from 'echarts'
+import type { EChartsOption, DatasetComponentOption, BarSeriesOption, CustomSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { extractRowMetadata, getNestedValue, safeToString } from './bases-values'
+import { getAxisLabelOverlapOptions } from './axis-labels'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
@@ -37,6 +39,9 @@ export function createBulletChartOption(
   const xAxisLabel = options?.xAxisLabel ?? categoryProp
   const yAxisLabel = options?.yAxisLabel ?? valueProp
   const flipAxis = options?.flipAxis ?? false
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth
+  const isCompact = isMobile || (containerWidth !== undefined && containerWidth < 600)
 
   const normalizedData: ReadonlyArray<BulletDataPoint> = R.map(
     data,
@@ -129,6 +134,7 @@ export function createBulletChartOption(
   const createRangeSeries = (key: 'r1' | 'r2' | 'r3', color: string): BarSeriesOption => ({
     type: 'bar',
     stack: 'range',
+    ...(flipAxis ? { yAxisIndex: 1 } : { xAxisIndex: 1 }),
     silent: true,
     barWidth: STYLE_TOKENS.barWidth.bulletRange,
     z: 0,
@@ -166,6 +172,9 @@ export function createBulletChartOption(
   const barSeries: BarSeriesOption = {
     name: yAxisLabel,
     type: 'bar',
+    ...(hasRanges
+      ? (flipAxis ? { yAxisIndex: 0 } : { xAxisIndex: 0 })
+      : {}),
     encode: flipAxis
       ? { x: 'y',
           y: 'x' }
@@ -173,54 +182,120 @@ export function createBulletChartOption(
           y: 'y' },
     barWidth: hasRanges ? STYLE_TOKENS.barWidth.bulletValue : STYLE_TOKENS.barWidth.bulletSoloValue,
     z: 2,
-    ...(hasRanges ? { barGap: '-100%' } : {}),
   }
 
-  const scatterSeries: ScatterSeriesOption = {
+  const targetColor = isDarkMode
+    ? COLOR_TOKENS.chrome.targetMarker.dark
+    : COLOR_TOKENS.chrome.targetMarker.light
+  const targetSpanRatio = hasRanges ? 0.65 : 0.75
+  const targetThickness = 4
+
+  const targetSeries: CustomSeriesOption = {
     name: options?.targetLabel ?? 'Target',
-    type: 'scatter',
+    type: 'custom',
+    ...(hasRanges
+      ? (flipAxis ? { yAxisIndex: 0 } : { xAxisIndex: 0 })
+      : {}),
     encode: flipAxis
       ? { x: 't',
           y: 'x' }
       : { x: 'x',
           y: 't' },
-    symbol: 'rect',
-    symbolSize: flipAxis
-      ? [4,
-          hasRanges ? 30 : 40]
-      : [hasRanges ? 30 : 40,
-          4],
     z: 3,
-    itemStyle: {
-      color: isDarkMode ? COLOR_TOKENS.chrome.targetMarker.dark : COLOR_TOKENS.chrome.targetMarker.light,
+    color: targetColor,
+    renderItem: (params, api) => {
+      const encode = params.encode
+      const xDim = encode?.x?.[0] ?? 0
+      const yDim = encode?.y?.[0] ?? 1
+      const xVal = api.value(xDim)
+      const yVal = api.value(yDim)
+      const targetVal = flipAxis ? xVal : yVal
+      if (targetVal === null || targetVal === undefined || Number.isNaN(Number(targetVal))) {
+        return null
+      }
+      const [cx = 0, cy = 0] = api.coord([xVal, yVal])
+      const bandSize = api.size?.(flipAxis ? [0, 1] : [1, 0])
+      const bandWidth = (Array.isArray(bandSize)
+        ? (flipAxis ? bandSize[1] : bandSize[0])
+        : bandSize) ?? 0
+      const span = bandWidth * targetSpanRatio
+      return {
+        type: 'rect',
+        shape: flipAxis
+          ? {
+              x: cx - targetThickness / 2,
+              y: cy - span / 2,
+              width: targetThickness,
+              height: span,
+            }
+          : {
+              x: cx - span / 2,
+              y: cy - targetThickness / 2,
+              width: span,
+              height: targetThickness,
+            },
+        style: {
+          fill: targetColor,
+        },
+      }
     },
   }
 
-  const series: ReadonlyArray<BarSeriesOption | ScatterSeriesOption> = [
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
+    categories.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    flipAxis,
+    {
+      labels: categories,
+      containerWidth,
+    },
+  )
+
+  const categoryAxisOption = {
+    type: 'category' as const,
+    data: [...categories],
+    name: xAxisLabel,
+    axisLabel: {
+      rotate: xAxisRotate,
+      interval: xAxisInterval,
+      hideOverlap: xAxisHideOverlap,
+    },
+  }
+
+  const hiddenCategoryAxisOption = {
+    type: 'category' as const,
+    data: [...categories],
+    show: false,
+  }
+
+  const valueAxisOption = {
+    type: 'value' as const,
+    name: yAxisLabel,
+    ...(flipAxis ? { axisLabel: { hideOverlap: xAxisHideOverlap } } : {}),
+  }
+
+  const series: ReadonlyArray<BarSeriesOption | CustomSeriesOption> = [
     ...rangeSeries,
     barSeries,
-    ...(targetProp ? [scatterSeries] : []),
+    ...(targetProp ? [targetSeries] : []),
   ]
 
   return {
     dataset: [dataset],
     tooltip: { trigger: 'axis' },
     xAxis: flipAxis
-      ? { type: 'value',
-          name: yAxisLabel }
-      : { type: 'category',
-          data: [...categories],
-          name: xAxisLabel },
+      ? valueAxisOption
+      : (hasRanges ? [categoryAxisOption, hiddenCategoryAxisOption] : categoryAxisOption),
     yAxis: flipAxis
-      ? { type: 'category',
-          data: [...categories],
-          name: xAxisLabel }
-      : { type: 'value',
-          name: yAxisLabel },
+      ? (hasRanges ? [categoryAxisOption, hiddenCategoryAxisOption] : categoryAxisOption)
+      : valueAxisOption,
     series: [...series],
-    grid: {
-      containLabel: true,
-    },
+    grid: getCartesianGridOption(options),
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
   }
 }

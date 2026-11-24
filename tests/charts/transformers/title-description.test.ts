@@ -175,7 +175,7 @@ describe('Chart titles and explainability descriptions', () => {
         rangeHighProp: 'RangeHigh',
       })
       expect(bulletOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
-      expect(bulletOpt.grid).toMatchObject({ containLabel: true, top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
+      expect(bulletOpt.grid).toMatchObject({ top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
 
       const ganttData = [
         { Task: 'Design', Start: '2026-01-01', End: '2026-02-01', Project: 'Core' },
