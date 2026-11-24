@@ -1,7 +1,9 @@
 import type { EChartsOption, BarSeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BasesData, BaseTransformerOptions } from './base'
+import { getAxisLabelOverlapOptions } from './axis-labels'
 import { getNestedValue } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 
@@ -101,6 +103,24 @@ export function createHistogramChartOption(
     b => b.count,
   )
 
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
+    xAxisData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    false,
+    {
+      labels: xAxisData,
+      containerWidth,
+    },
+  )
+
   const series: BarSeriesOption = {
     name: options?.yAxisLabel ?? 'Frequency',
     type: 'bar',
@@ -118,18 +138,15 @@ export function createHistogramChartOption(
       axisPointer: { type: 'shadow' },
     },
     legend: getLegendOption(options),
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true,
-    },
+    grid: getCartesianGridOption(options),
     xAxis: {
       type: 'category',
       data: [...xAxisData],
       name: options?.xAxisLabel,
       axisLabel: {
-        rotate: options?.xAxisLabelRotate ?? 0,
+        rotate: xAxisRotate,
+        interval: xAxisInterval,
+        hideOverlap: xAxisHideOverlap,
       },
       axisTick: {
         alignWithLabel: true,

@@ -201,7 +201,7 @@ describe('Chart titles and explainability descriptions', () => {
         legendPosition: 'top',
       })
       expect(barOpt.legend).toMatchObject({ top: 0, left: 'center' })
-      expect(barOpt.grid).toMatchObject({ containLabel: true })
+      expect(barOpt.grid).toMatchObject({ outerBoundsMode: 'same', outerBoundsContain: 'all' })
       expect(barOpt.grid).not.toHaveProperty('top')
     })
   })

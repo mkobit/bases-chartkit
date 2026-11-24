@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import * as echarts from 'echarts'
 import type { BarSeriesOption, EChartsOption } from 'echarts'
 import { createWaterfallChartOption } from '../../../src/charts/transformers/waterfall'
 
@@ -241,6 +242,49 @@ describe(
         const series = waterfallSeries(option)
         const totalSeries = seriesNamed(series, 'Total')
         expect(totalSeries.data).toEqual([42])
+      },
+    )
+
+    it(
+      'renders all 8 step labels, keeps Step unclipped, and suppresses overlapping labels on thin bars in SVG',
+      () => {
+        const budgetData = [
+          { Step: 'Starting Balance', Change: 500, IsTotal: true },
+          { Step: 'Q1 Gross Revenue', Change: 33, IsTotal: false },
+          { Step: 'R&D Operations', Change: -228, IsTotal: false },
+          { Step: 'Marketing Campaign', Change: 312, IsTotal: false },
+          { Step: 'Q2 Gross Revenue', Change: -8, IsTotal: false },
+          { Step: 'Infrastructure Cost', Change: 354, IsTotal: false },
+          { Step: 'Tax & Interest', Change: -2, IsTotal: false },
+          { Step: 'Net Balance', Change: 961, IsTotal: true },
+        ]
+        const option = createWaterfallChartOption(budgetData, 'Step', 'Change', {
+          totalProp: 'IsTotal',
+          containerWidth: 668,
+        })
+
+        const chart = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 668, height: 501 })
+        try {
+          chart.setOption(option)
+          const svg = chart.renderToSVGString()
+          expect(svg).toContain('>Step<')
+          for (const row of budgetData) {
+            expect(svg).toContain(row.Step.replace('&', '&amp;'))
+          }
+          expect(svg).toContain('>500<')
+          expect(svg).toContain('>228<')
+          expect(svg).toContain('>961<')
+          expect(svg).not.toContain('>8<')
+          expect(svg).not.toContain('>2<')
+
+          const stepMatch = svg.match(/<text[^>]*transform="translate\(([^)]+)\)"[^>]*>Step<\/text>/)
+          expect(stepMatch).not.toBeNull()
+          const [stepX] = (stepMatch?.[1] ?? '0 0').split(/\s+/).map(Number)
+          expect(stepX).toBeLessThanOrEqual(668 - 30)
+        }
+        finally {
+          chart.dispose()
+        }
       },
     )
   },

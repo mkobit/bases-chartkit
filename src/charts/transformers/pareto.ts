@@ -2,6 +2,7 @@ import type { EChartsOption, BarSeriesOption, LineSeriesOption } from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { getNestedValue, safeToString } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import * as R from 'remeda'
 
@@ -76,14 +77,22 @@ export function createParetoChartOption(
     x => x.result,
   )
 
-  // Smart axis label overlap avoidance: rotate/thin once compact mode or
-  // category count makes rendering every label at 0deg unreadable. Pareto's
-  // x-axis is always categories (never flippable), so flipAxis is always false.
-  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+  // Smart axis label overlap avoidance: rotate/thin once compact mode,
+  // category count, or label widths make rendering every label at 0deg unreadable.
+  // Pareto's x-axis is always categories (never flippable), so flipAxis is always false.
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
     finalData.length,
     isCompact,
     options?.xAxisLabelRotate,
     false,
+    {
+      labels: finalData.map(item => item.name),
+      containerWidth,
+    },
   )
 
   const barSeries: BarSeriesOption = {
@@ -117,9 +126,7 @@ export function createParetoChartOption(
         type: 'cross',
       },
     },
-    grid: {
-      containLabel: true,
-    },
+    grid: getCartesianGridOption(options),
     xAxis: {
       type: 'category',
       name: xAxisLabel,
@@ -128,6 +135,7 @@ export function createParetoChartOption(
       axisLabel: {
         interval: xAxisInterval,
         rotate: xAxisRotate,
+        hideOverlap: xAxisHideOverlap,
       },
     },
     yAxis: [
@@ -135,7 +143,6 @@ export function createParetoChartOption(
         type: 'value',
         name: yAxisLabel,
         position: 'left',
-        alignTicks: true,
         axisLine: {
           show: true,
         },
@@ -148,8 +155,11 @@ export function createParetoChartOption(
         name: 'Cumulative %',
         min: 0,
         max: 100,
+        interval: 20,
         position: 'right',
-        alignTicks: true,
+        splitLine: {
+          show: false,
+        },
         axisLine: {
           show: true,
         },

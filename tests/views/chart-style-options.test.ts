@@ -272,4 +272,27 @@ describe('Chart view style options', () => {
       expect(series.itemStyle?.borderRadius).toBe(4)
     }
   })
+
+  it('auto-rotates many-category x-axis labels when xAxisLabelRotate is omitted on a view', async () => {
+    const { LineChartView } = await import('../../src/views/line-chart-view')
+    const view: any = new LineChartView(makeControllerStub(), makeScrollElStub(), makePluginStub())
+    const rows = Array.from({ length: 25 }, (_, i) => ({
+      note: { Date: `2024-01-${String(i + 1).padStart(2, '0')}`, Revenue: 100 + i },
+    }))
+    configureView(
+      view,
+      {
+        xAxisProp: 'note.Date',
+        yAxisProp: 'note.Revenue',
+      },
+      {
+        data: rows,
+        properties: ['note.Date', 'note.Revenue'],
+      },
+    )
+
+    const option = renderAndCaptureOption(view)
+    const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+    expect(xAxis?.axisLabel?.rotate).toBe(45)
+  })
 })

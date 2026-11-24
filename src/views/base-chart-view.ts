@@ -249,7 +249,7 @@ export abstract class BaseChartView extends BasesView implements HoverParent {
       xAxisFormat: this.getStringOption(BaseChartView.X_AXIS_FORMAT_KEY),
       yAxisFormat: this.getStringOption(BaseChartView.Y_AXIS_FORMAT_KEY),
       valueFormat: this.getStringOption(BaseChartView.VALUE_FORMAT_KEY),
-      xAxisLabelRotate: Number(this.config.get(BaseChartView.X_AXIS_LABEL_ROTATE_KEY) || 0),
+      xAxisLabelRotate: this.getNumberOption(BaseChartView.X_AXIS_LABEL_ROTATE_KEY),
       isMobile: Platform.isMobile,
       containerWidth: this.containerEl ? this.containerEl.clientWidth : 0,
       upColor: this.plugin.settings.upColor,

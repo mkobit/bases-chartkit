@@ -2,6 +2,7 @@ import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, Da
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
@@ -117,13 +118,27 @@ export function createCartesianChartOption(
     R.unique(),
   )
 
-  // Smart axis label overlap avoidance: rotate/thin once compact mode or
-  // category count makes rendering every label at 0deg unreadable.
-  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+  const xAxisFormat = options?.xAxisFormat
+  const yAxisFormat = options?.yAxisFormat ?? options?.valueFormat
+  const formattedXLabels = xAxisFormat
+    ? xAxisData.map(val => formatValue(val, xAxisFormat))
+    : xAxisData
+
+  // Smart axis label overlap avoidance: rotate/thin once compact mode,
+  // category count, or label widths make rendering every label at 0deg unreadable.
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
     xAxisData.length,
     isCompact,
     options?.xAxisLabelRotate,
     flipAxis,
+    {
+      labels: formattedXLabels,
+      containerWidth,
+    },
   )
 
   const seriesNames: readonly string[] = R.pipe(
@@ -208,16 +223,16 @@ export function createCartesianChartOption(
       ]
     : []
 
-  const xAxisFormat = options?.xAxisFormat
-  const yAxisFormat = options?.yAxisFormat ?? options?.valueFormat
-
   const opt: EChartsOption = {
     dataset: [...datasets],
     xAxis: flipAxis
       ? {
           type: 'value',
           name: yAxisLabel,
-          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
+          axisLabel: {
+            hideOverlap: xAxisHideOverlap,
+            ...(yAxisFormat ? { formatter: (val: unknown) => formatValue(val, yAxisFormat) } : {}),
+          },
         }
       : {
           type: 'category',
@@ -226,6 +241,7 @@ export function createCartesianChartOption(
           axisLabel: {
             rotate: xAxisRotate,
             interval: xAxisInterval,
+            hideOverlap: xAxisHideOverlap,
             ...(xAxisFormat ? { formatter: (val: unknown) => formatValue(val, xAxisFormat) } : {}),
           },
         },
@@ -249,10 +265,7 @@ export function createCartesianChartOption(
       trigger: 'axis',
       formatter: asTooltipFormatter((params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>) => formatTooltip(params, xAxisLabel)),
     },
-    grid: {
-      containLabel: true,
-      bottom: (isCompact && !flipAxis) ? 40 : undefined, // Make room for slider
-    },
+    grid: getCartesianGridOption(options, { hasDataZoomSlider: isCompact && !flipAxis }),
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(dataZoomOptions.length > 0 ? { dataZoom: [...dataZoomOptions] } : {}),
   }

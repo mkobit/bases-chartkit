@@ -459,6 +459,45 @@ describe('Transformer Modules', () => {
     it('should honor explicit rotate parameter', () => {
       const options = getAxisLabelOverlapOptions(20, false, 90, false)
       expect(options.rotate).toBe(90)
+      expect(options.hideOverlap).toBe(true)
+    })
+
+    it('should rotate wide labels on short category lists when horizontal labels would overlap', () => {
+      const departments = [
+        'Engineering', 'Sales', 'Support', 'Legal', 'Operations',
+        'Design', 'IT', 'Security', 'Infrastructure', 'Compliance',
+      ]
+      const options = getAxisLabelOverlapOptions(departments.length, false, undefined, false, {
+        labels: departments,
+        containerWidth: 668,
+      })
+      expect(options.rotate).toBe(45)
+      expect(options.interval).toBe(0)
+      expect(options.hideOverlap).toBe(true)
+    })
+
+    it('should keep short, wide-spaced labels unrotated at 0 degrees', () => {
+      const quarters = ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024']
+      const options = getAxisLabelOverlapOptions(quarters.length, false, undefined, false, {
+        labels: quarters,
+        containerWidth: 668,
+      })
+      expect(options.rotate).toBe(0)
+      expect(options.interval).toBe(0)
+    })
+
+    it('should auto-thin when user explicitly forces rotate 0 on overlapping labels', () => {
+      const departments = [
+        'Engineering', 'Sales', 'Support', 'Legal', 'Operations',
+        'Design', 'IT', 'Security', 'Infrastructure', 'Compliance',
+      ]
+      const options = getAxisLabelOverlapOptions(departments.length, false, 0, false, {
+        labels: departments,
+        containerWidth: 668,
+      })
+      expect(options.rotate).toBe(0)
+      expect(options.interval).toBe('auto')
+      expect(options.hideOverlap).toBe(true)
     })
   })
 

@@ -10,6 +10,7 @@ import type {
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { getNestedValue, isRecord, safeToString } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import { formatValue } from './formatters'
@@ -133,11 +134,24 @@ export function createComboChartOption(
     R.unique(),
   )
 
-  const { interval: xAxisInterval, rotate: xAxisRotate } = getAxisLabelOverlapOptions(
+  const xAxisFormat = options?.xAxisFormat
+  const formattedXLabels = xAxisFormat
+    ? xAxisData.map(val => formatValue(val, xAxisFormat))
+    : xAxisData
+
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
     xAxisData.length,
     isCompact,
     options?.xAxisLabelRotate,
     false,
+    {
+      labels: formattedXLabels,
+      containerWidth,
+    },
   )
 
   const seriesNames: readonly string[] = R.pipe(
@@ -265,16 +279,21 @@ export function createComboChartOption(
       ]
     : []
 
-  const xAxisFormat = options?.xAxisFormat
-
   const opt: EChartsOption = {
     xAxis: {
       type: 'category',
       data: [...xAxisData],
       name: xAxisLabel,
+      ...(overlayProp && overlayDualAxis
+        ? {
+            nameLocation: 'middle',
+            nameGap: 30,
+          }
+        : {}),
       axisLabel: {
         rotate: xAxisRotate,
         interval: xAxisInterval,
+        hideOverlap: xAxisHideOverlap,
         ...(xAxisFormat ? { formatter: (val: unknown) => formatValue(val, xAxisFormat) } : {}),
       },
     },
@@ -289,10 +308,7 @@ export function createComboChartOption(
         formatComboTooltip(params, xAxisLabel),
       ),
     },
-    grid: {
-      containLabel: true,
-      bottom: isCompact ? 40 : undefined,
-    },
+    grid: getCartesianGridOption(options, { hasDataZoomSlider: isCompact }),
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(dataZoomOptions.length > 0 ? { dataZoom: [...dataZoomOptions] } : {}),
   }
