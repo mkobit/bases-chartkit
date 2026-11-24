@@ -72,10 +72,7 @@ function parseThemeValue(value: string | undefined): SuiteName {
  * Parses command line arguments into test orchestrator options.
  */
 export function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
-  const consume = (
-    args: readonly string[],
-    acc: ParsedCliArgs,
-  ): ParsedCliArgs => {
+  const consume = (args: readonly string[], acc: ParsedCliArgs): ParsedCliArgs => {
     if (args.length === 0) {
       return acc
     }
@@ -186,11 +183,7 @@ export function filterTestFiles(
     return allFiles
   }
   const matched = allFiles.filter(file =>
-    filters.some(filter =>
-      file === filter
-      || file.endsWith(`/${filter}`)
-      || file.includes(filter),
-    ),
+    filters.some(filter => file === filter || file.endsWith(`/${filter}`) || file.includes(filter)),
   )
   return matched.length > 0 ? matched : filters
 }
@@ -239,15 +232,14 @@ export function findFreePort(): Promise<number> {
     server.on('error', reject)
     server.listen(0, '127.0.0.1', () => {
       const address = server.address()
-      server.close((closeErr) => {
+      server.close(closeErr => {
         if (closeErr) {
           reject(closeErr)
           return
         }
         if (address !== null && typeof address === 'object') {
           resolve(address.port)
-        }
-        else {
+        } else {
           reject(new Error('Could not determine free port'))
         }
       })
@@ -286,7 +278,9 @@ export async function waitForCdpReady(
     const now = Temporal.Now.instant().epochMilliseconds
     if (now >= deadline) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-      throw new Error(`Timed out waiting for Obsidian CDP endpoint on port ${port} after ${timeoutMs}ms`)
+      throw new Error(
+        `Timed out waiting for Obsidian CDP endpoint on port ${port} after ${timeoutMs}ms`,
+      )
     }
 
     try {
@@ -302,13 +296,11 @@ export async function waitForCdpReady(
           if (isAppReady === true) {
             return
           }
-        }
-        finally {
+        } finally {
           await client.close()
         }
       }
-    }
-    catch (fetchErr: unknown) {
+    } catch (fetchErr: unknown) {
       // Retry until port and websocket become ready
       void fetchErr
     }
@@ -329,22 +321,21 @@ export async function stopObsidian(
   vault: string | undefined,
   gracePeriodMs: number = SIGTERM_GRACE_PERIOD_MS,
 ): Promise<void> {
-  const exited = proc.exitCode !== null || proc.signalCode !== null
-    ? Promise.resolve()
-    : new Promise<void>((resolve) => {
-      proc.once('exit', () => resolve())
-    })
+  const exited =
+    proc.exitCode !== null || proc.signalCode !== null
+      ? Promise.resolve()
+      : new Promise<void>(resolve => {
+          proc.once('exit', () => resolve())
+        })
 
   if (proc.pid !== undefined) {
     try {
       if (process.platform === 'win32') {
         process.kill(proc.pid, 'SIGTERM')
-      }
-      else {
+      } else {
         process.kill(-proc.pid, 'SIGTERM')
       }
-    }
-    catch (killErr: unknown) {
+    } catch (killErr: unknown) {
       // Process may already have stopped
       void killErr
     }
@@ -356,16 +347,16 @@ export async function stopObsidian(
   ])
 
   if (outcome === 'timed-out' && proc.pid !== undefined) {
-    process.stderr.write('Obsidian did not exit within the SIGTERM grace period, escalating to SIGKILL\n')
+    process.stderr.write(
+      'Obsidian did not exit within the SIGTERM grace period, escalating to SIGKILL\n',
+    )
     try {
       if (process.platform === 'win32') {
         process.kill(proc.pid, 'SIGKILL')
-      }
-      else {
+      } else {
         process.kill(-proc.pid, 'SIGKILL')
       }
-    }
-    catch (killErr: unknown) {
+    } catch (killErr: unknown) {
       // Process may already have stopped
       void killErr
     }
@@ -382,7 +373,7 @@ export async function stopObsidian(
 
   results
     .filter(result => result.status === 'rejected')
-    .forEach((result) => {
+    .forEach(result => {
       process.stderr.write(`Obsidian directory cleanup failed: ${String(result.reason)}\n`)
     })
 }
@@ -412,27 +403,25 @@ export function terminateOnSignal(
 
 export type LauncherLike = Pick<ObsidianLauncher, 'setupVault' | 'launch'>
 
-export type LaunchSuiteOptions
-  = & Readonly<{
-    rootDir?: string
-    vaultPath?: string
-    cacheDir?: string
-    appVersion?: string
-    installerVersion?: string
-    port?: number
-  }>
-  & Readonly<{
+export type LaunchSuiteOptions = Readonly<{
+  rootDir?: string
+  vaultPath?: string
+  cacheDir?: string
+  appVersion?: string
+  installerVersion?: string
+  port?: number
+}> &
+  Readonly<{
     launcher?: LauncherLike
   }>
 
-export type LaunchedObsidian
-  = & Readonly<{
-    proc: ChildProcess
-    configDir: string
-    vault: string | undefined
-    port: number
-  }>
-  & Readonly<{
+export type LaunchedObsidian = Readonly<{
+  proc: ChildProcess
+  configDir: string
+  vault: string | undefined
+  port: number
+}> &
+  Readonly<{
     removeSignalHandlers: () => void
   }>
 
@@ -448,7 +437,7 @@ export async function launchObsidianForSuite(
   const cacheDir = options?.cacheDir ?? CACHE_DIR
   const appVersion = options?.appVersion ?? DEFAULT_OBSIDIAN_APP_VERSION
   const installerVersion = options?.installerVersion ?? DEFAULT_OBSIDIAN_INSTALLER_VERSION
-  const port = options?.port ?? await findFreePort()
+  const port = options?.port ?? (await findFreePort())
 
   const launcher: LauncherLike = options?.launcher ?? new ObsidianLauncher({ cacheDir })
 
@@ -505,7 +494,11 @@ export interface RunBunTestOptions {
   readonly testFiles: readonly string[]
   readonly passthroughArgs?: readonly string[]
   readonly env?: Record<string, string | undefined>
-  readonly stdio?: ['inherit' | 'pipe' | 'ignore', 'inherit' | 'pipe' | 'ignore', 'inherit' | 'pipe' | 'ignore']
+  readonly stdio?: [
+    'inherit' | 'pipe' | 'ignore',
+    'inherit' | 'pipe' | 'ignore',
+    'inherit' | 'pipe' | 'ignore',
+  ]
 }
 
 export function toBunTestArg(file: string): string {
@@ -526,16 +519,11 @@ export function buildBunTestArgs(
   passthroughArgs: readonly string[] = [],
 ): readonly string[] {
   const hasTimeoutArg = passthroughArgs.some(
-    arg => arg === '--timeout' || arg === '-t' || arg.startsWith('--timeout=') || arg.startsWith('-t='),
+    arg =>
+      arg === '--timeout' || arg === '-t' || arg.startsWith('--timeout=') || arg.startsWith('-t='),
   )
   const timeoutArgs = hasTimeoutArg ? [] : ['--timeout', String(DEFAULT_TEST_TIMEOUT_MS)]
-  return [
-    'bun',
-    'test',
-    ...timeoutArgs,
-    ...passthroughArgs,
-    ...testFiles.map(toBunTestArg),
-  ]
+  return ['bun', 'test', ...timeoutArgs, ...passthroughArgs, ...testFiles.map(toBunTestArg)]
 }
 
 /**
@@ -555,23 +543,19 @@ export async function runBunTest(options: RunBunTestOptions): Promise<number> {
   return proc.exited
 }
 
-export type RunSuiteOptions
-  = & Readonly<{
-    launchOptions?: LaunchSuiteOptions
-    passthroughArgs?: readonly string[]
-    cdpTimeoutMs?: number
-  }>
-  & Readonly<{
+export type RunSuiteOptions = Readonly<{
+  launchOptions?: LaunchSuiteOptions
+  passthroughArgs?: readonly string[]
+  cdpTimeoutMs?: number
+}> &
+  Readonly<{
     runner?: (options: RunBunTestOptions) => Promise<number>
   }>
 
 /**
  * Runs a single test suite with dedicated Obsidian process lifecycle.
  */
-export async function runTestSuite(
-  suite: TestSuite,
-  options?: RunSuiteOptions,
-): Promise<number> {
+export async function runTestSuite(suite: TestSuite, options?: RunSuiteOptions): Promise<number> {
   console.log(`Starting test suite: ${suite.name} (${suite.files.length} test file(s))`)
   const launched = await launchObsidianForSuite(suite, options?.launchOptions)
   try {
@@ -590,31 +574,29 @@ export async function runTestSuite(
 
     if (exitCode === 0) {
       console.log(`Suite ${suite.name} passed`)
-    }
-    else {
+    } else {
       console.error(`Suite ${suite.name} failed with exit code ${exitCode}`)
     }
 
     return exitCode
-  }
-  finally {
+  } finally {
     launched.removeSignalHandlers()
     await stopObsidian(launched.proc, launched.configDir, launched.vault)
   }
 }
 
-export type OrchestratorOptions
-  = & Readonly<{
-    allFiles?: readonly string[]
-    launchOptions?: LaunchSuiteOptions
-    cdpTimeoutMs?: number
-  }>
-  & Readonly<{
+export type OrchestratorOptions = Readonly<{
+  allFiles?: readonly string[]
+  launchOptions?: LaunchSuiteOptions
+  cdpTimeoutMs?: number
+}> &
+  Readonly<{
     suiteRunner?: (suite: TestSuite, options?: RunSuiteOptions) => Promise<number>
   }>
 
 function printHelp(): void {
-  console.log(`
+  console.log(
+    `
 Usage: bun scripts/run-e2e.ts [options] [files/filters...] [-- passthroughArgs]
 
 Options:
@@ -628,7 +610,8 @@ Examples:
   bun scripts/run-e2e.ts --suite light
   bun scripts/run-e2e.ts e2e/pie-chart-rendering.e2e.ts
   bun scripts/run-e2e.ts --bail e2e/bar-chart-rendering.e2e.ts
-`.trim())
+`.trim(),
+  )
 }
 
 /**
@@ -644,7 +627,7 @@ export async function runOrchestrator(
     return 0
   }
 
-  const allFiles = options?.allFiles ?? await findE2eTestFiles()
+  const allFiles = options?.allFiles ?? (await findE2eTestFiles())
   const filteredFiles = filterTestFiles(allFiles, parsed.fileFilters)
   const suites = planTestSuites(filteredFiles, parsed.suite)
 
@@ -678,7 +661,8 @@ export async function runOrchestrator(
 
     const newFailureCount = exitCode === 0 ? failureCount : failureCount + 1
 
-    const shouldBail = parsed.passthroughArgs.includes('--bail') || parsed.passthroughArgs.includes('-b')
+    const shouldBail =
+      parsed.passthroughArgs.includes('--bail') || parsed.passthroughArgs.includes('-b')
     if (shouldBail && exitCode !== 0) {
       console.error(`Bailing after failure in suite: ${currentSuite.name}`)
       return newFailureCount

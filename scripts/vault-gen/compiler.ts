@@ -24,7 +24,8 @@ function buildNotes(spec: ChartExampleSpec, seed: number): readonly NoteDefiniti
     createNote(
       path.join(spec.chartType, 'notes', `${spec.notePrefix}-${padIndex(index, rows.length)}.md`),
       frontmatter,
-    ))
+    ),
+  )
 }
 
 // Wipes everything under the chart-type directory except a top-level
@@ -65,24 +66,28 @@ export async function writeChartTypeDirectory(
   const failures = writeErrors.filter((err): err is Error => err instanceof Error)
   if (failures.length > 0) {
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
-    throw new Error(`Failed to write ${failures.length} note(s) for ${spec.chartType}: ${failures.map(e => e.message).join('; ')}`)
+    throw new Error(
+      `Failed to write ${failures.length} note(s) for ${spec.chartType}: ${failures.map(e => e.message).join('; ')}`,
+    )
   }
 
   const variantsByFile = R.groupBy(spec.variants, variant => variant.fileName)
   const fileEntries = Object.entries(variantsByFile)
 
-  await Promise.all(fileEntries.map(async ([, variants]) => {
-    if (!variants || variants.length === 0) {
-      return
-    }
-    const firstVariant = variants[0]
-    if (!firstVariant) {
-      return
-    }
-    const filePath = baseFilePath(vaultRoot, spec.chartType, firstVariant)
-    await fs.mkdir(path.dirname(filePath), { recursive: true })
-    await fs.writeFile(filePath, buildBaseFileYaml(spec.chartType, variants))
-  }))
+  await Promise.all(
+    fileEntries.map(async ([, variants]) => {
+      if (!variants || variants.length === 0) {
+        return
+      }
+      const firstVariant = variants[0]
+      if (!firstVariant) {
+        return
+      }
+      const filePath = baseFilePath(vaultRoot, spec.chartType, firstVariant)
+      await fs.mkdir(path.dirname(filePath), { recursive: true })
+      await fs.writeFile(filePath, buildBaseFileYaml(spec.chartType, variants))
+    }),
+  )
 
   return {
     chartType: spec.chartType,

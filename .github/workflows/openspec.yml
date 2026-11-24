@@ -2,19 +2,19 @@ name: OpenSpec
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
     paths:
-      - "openspec/**"
-      - ".github/workflows/openspec.yml"
-      - ".github/actions/setup-env/action.yml"
-      - "package.json"
+      - 'openspec/**'
+      - '.github/workflows/openspec.yml'
+      - '.github/actions/setup-env/action.yml'
+      - 'package.json'
   pull_request:
-    branches: ["**"]
+    branches: ['**']
     paths:
-      - "openspec/**"
-      - ".github/workflows/openspec.yml"
-      - ".github/actions/setup-env/action.yml"
-      - "package.json"
+      - 'openspec/**'
+      - '.github/workflows/openspec.yml'
+      - '.github/actions/setup-env/action.yml'
+      - 'package.json'
   workflow_dispatch: {}
 
 permissions: {}

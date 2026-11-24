@@ -30,26 +30,36 @@ test.describe('scatter chart rendering', () => {
   // continent of the very first row -- so that row can never land anywhere
   // but dataIndex 0 of series 0, regardless of how the rest of the rows
   // group.
-  test('hovering the first point shows its continent and coordinates in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'scatter/Basic.base', viewName: 'GDP vs life expectancy' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('hovering the first point shows its continent and coordinates in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'scatter/Basic.base', viewName: 'GDP vs life expectancy' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     await waitForVaultIndexed(page)
 

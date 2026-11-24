@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'bun:test'
 import { createCartesianChartOption } from '../../../src/charts/transformers/cartesian'
-import { getLegendOption, TOP_LEGEND_TOOLBAR_RIGHT_MARGIN } from '../../../src/charts/transformers/legend'
+import {
+  getLegendOption,
+  TOP_LEGEND_TOOLBAR_RIGHT_MARGIN,
+} from '../../../src/charts/transformers/legend'
 
 describe('Responsive Chart Features', () => {
   const mockData = [
@@ -57,8 +60,7 @@ describe('Responsive Chart Features', () => {
       const dz = options.dataZoom
       if (dz) {
         expect(dz).toHaveLength(0)
-      }
-      else {
+      } else {
         expect(dz).toBeUndefined()
       }
     })

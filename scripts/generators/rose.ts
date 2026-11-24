@@ -4,7 +4,7 @@ import { DEPARTMENTS, themeSubset } from './themes'
 
 export interface RoseSample {
   readonly type: 'rose'
-  readonly data: ReadonlyArray<{ readonly category: string, readonly value: number }>
+  readonly data: ReadonlyArray<{ readonly category: string; readonly value: number }>
 }
 
 /**
@@ -12,19 +12,14 @@ export interface RoseSample {
  * Generates department spend figures -- 10 categories, enough for a rich
  * ranking and petal variance while staying label-readable.
  */
-export const roseChartArbitrary = themeSubset(
-  DEPARTMENTS,
-  10,
-)
-  .chain((categories) => {
+export const roseChartArbitrary = themeSubset(DEPARTMENTS, 10)
+  .chain(categories => {
     return fc.record({
       categories: fc.constant(categories),
-      values: fc.array(
-        fc.integer({ min: 15_000,
-          max: 250_000 }),
-        { minLength: categories.length,
-          maxLength: categories.length },
-      ),
+      values: fc.array(fc.integer({ min: 15_000, max: 250_000 }), {
+        minLength: categories.length,
+        maxLength: categories.length,
+      }),
     })
   })
   .map((data): RoseSample => ({

@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('calendar chart rendering', () => {
   // Regression coverage for bck-44j: createCalendarChartOption sorts its
@@ -11,31 +17,44 @@ test.describe('calendar chart rendering', () => {
   // date by construction (scripts/generators/heatmap.ts's
   // calendarChartArbitrary iterates sequential days from that anchor with no
   // reordering) -- so it lands at dataIndex 0 regardless of the sort.
-  test('hovering the first calendar cell shows its date and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'calendar/Basic.base', viewName: 'Mood calendar' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }> }>(await getChartOption(page))
-        return option?.series?.[0]?.data?.length ?? 0
+  test('hovering the first calendar cell shows its date and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'calendar/Basic.base', viewName: 'Mood calendar' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{
+            readonly series?: ReadonlyArray<{ readonly data?: readonly unknown[] }>
+          }>(await getChartOption(page))
+          return option?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Mood-Day-000.md is { Date: "2024-01-01", Mood: 3 } -- calendarChartArbitrary
     // pins the first cell to FIRST_DAY_MOOD (3) so this assertion is stable
     // regardless of the sampled per-day noise.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     // createCalendarChartOption's tooltip.formatter is a custom
     // `${p.value[0]} : ${p.value[1]}` template (raw string interpolation, not

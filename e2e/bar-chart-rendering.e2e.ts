@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface DatasetLike {
   readonly source?: readonly unknown[]
@@ -20,27 +26,37 @@ test.describe('bar chart rendering', () => {
   // now has a custom formatter labeling the category with xAxisLabel and
   // each series line with its series name (which defaults to yAxisLabel when
   // seriesProp is unset, as here).
-  test('hovering the first bar shows its category, series name, and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/Basic.base', viewName: 'Department spend' })
+  test('hovering the first bar shows its category, series name, and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'bar/Basic.base', viewName: 'Department spend' },
+    )
 
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
 
     // Dept-Spend-0.md (the vault's deterministically-generated first note
     // for this chart type) is { Department: "Engineering", Spend: 15005 }.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     expect(tooltipText).toContain('Department: Engineering')
     expect(tooltipText).toContain('Spend: 15,005')
@@ -53,26 +69,36 @@ test.describe('bar chart rendering', () => {
   // into a horizontal bar chart. Assert the swap landed on the live ECharts
   // option rather than a screenshot, mirroring area-chart-rendering.e2e.ts's
   // identical FlippedAxis.base coverage.
-  test('the flipped-axis variant renders the category axis on y and the value axis on x', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/FlippedAxis.base', viewName: 'Department spend (flipped axis)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the flipped-axis variant renders the category axis on y and the value axis on x', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'bar/FlippedAxis.base', viewName: 'Department spend (flipped axis)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // getOption() normalizes xAxis/yAxis to arrays. Default (un-flipped) bar
     // puts the Department category on x and Spend value on y; flipAxis
@@ -80,7 +106,7 @@ test.describe('bar chart rendering', () => {
     // default.
     const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string }[]
-      readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+      readonly yAxis?: readonly { readonly type?: string; readonly data?: readonly unknown[] }[]
     }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.type).toBe('value')
     expect(option?.yAxis?.[0]?.type).toBe('category')
@@ -94,26 +120,36 @@ test.describe('bar chart rendering', () => {
   // renders visibly tilted category labels) -- this pins that live behavior
   // down as a permanent assertion on the shared cartesian.ts/utils.ts path
   // every other cartesian chart type (line, stacked-bar, heatmap, etc.) uses.
-  test('xAxisLabelRotate rotates the category axis labels, not the grid offset', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/RotatedLabels.base', viewName: 'Department spend (rotated labels)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('xAxisLabelRotate rotates the category axis labels, not the grid offset', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'bar/RotatedLabels.base', viewName: 'Department spend (rotated labels)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<{
       readonly xAxis?: readonly { readonly axisLabel?: { readonly rotate?: number } }[]

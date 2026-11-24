@@ -1,6 +1,4 @@
-import type {
-  BasesOptions,
-} from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import type { EChartsOption } from 'echarts'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
@@ -16,22 +14,14 @@ export class BoxplotChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'boxplot',
-      {
-        ...this.getCommonTransformerOptions(),
-        seriesProp: seriesProp,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'boxplot', {
+      ...this.getCommonTransformerOptions(),
+      seriesProp: seriesProp,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
-    return [
-      ...BaseChartView.getCommonViewOptions(),
-    ]
+    return [...BaseChartView.getCommonViewOptions()]
   }
 
   public readonly type = 'boxplot-chart'

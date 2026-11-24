@@ -19,7 +19,15 @@ export class WordCloudChartView extends BaseChartView {
 
     const transformerOptions: WordCloudTransformerOptions = {
       ...this.getCommonTransformerOptions(),
-      shape: this.getLiteralOption('shape', ['circle', 'cardioid', 'diamond', 'triangle-forward', 'triangle', 'pentagon', 'star'] as const),
+      shape: this.getLiteralOption('shape', [
+        'circle',
+        'cardioid',
+        'diamond',
+        'triangle-forward',
+        'triangle',
+        'pentagon',
+        'star',
+      ] as const),
       gridSize: Number(this.config.get('gridSize') || 2),
       sizeRangeMin: Number(this.config.get('sizeRangeMin') || 12),
       sizeRangeMax: Number(this.config.get('sizeRangeMax') || 60),
@@ -28,13 +36,7 @@ export class WordCloudChartView extends BaseChartView {
       rotationStep: Number(this.config.get('rotationStep') || 45),
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'wordCloud',
-      transformerOptions,
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'wordCloud', transformerOptions)
   }
 
   static getViewOptions(): BasesOptions[] {

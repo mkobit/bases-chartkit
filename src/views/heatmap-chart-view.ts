@@ -41,17 +41,11 @@ export class HeatmapChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'heatmap',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp: valueProp,
-        valueLabel: this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY),
-        ...this.getVisualMapTransformerOptions(),
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'heatmap', {
+      ...this.getCommonTransformerOptions(),
+      valueProp: valueProp,
+      valueLabel: this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY),
+      ...this.getVisualMapTransformerOptions(),
+    })
   }
 }

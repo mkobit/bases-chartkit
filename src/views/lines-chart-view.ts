@@ -17,22 +17,21 @@ export class LinesChartView extends BaseChartView {
     const y2Prop = this.config.get(LinesChartView.END_Y_PROP_KEY)
     const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
 
-    if (typeof xProp !== 'string' || typeof yProp !== 'string' || typeof x2Prop !== 'string' || typeof y2Prop !== 'string') {
+    if (
+      typeof xProp !== 'string' ||
+      typeof yProp !== 'string' ||
+      typeof x2Prop !== 'string' ||
+      typeof y2Prop !== 'string'
+    ) {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'lines',
-      {
-        ...this.getCommonTransformerOptions(),
-        x2Prop,
-        y2Prop,
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'lines', {
+      ...this.getCommonTransformerOptions(),
+      x2Prop,
+      y2Prop,
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
@@ -67,11 +66,13 @@ export class LinesChartView extends BaseChartView {
         displayName: t('views.lines.series_prop'),
         placeholder: t('views.lines.series_prop_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((opt) => {
+      ...BaseChartView.getCommonViewOptions().filter(opt => {
         if ('key' in opt && typeof opt.key === 'string') {
-          return opt.key !== BaseChartView.X_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.Y_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.SERIES_PROP_KEY
+          return (
+            opt.key !== BaseChartView.X_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.Y_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.SERIES_PROP_KEY
+          )
         }
         return true
       }),

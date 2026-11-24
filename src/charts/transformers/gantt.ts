@@ -38,7 +38,10 @@ export interface GanttTooltipParam {
   }
 }
 
-function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>, valueFormat?: string): string {
+function formatTooltip(
+  params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>,
+  valueFormat?: string,
+): string {
   const p: ReadonlyArray<GanttTooltipParam> = Array.isArray(params) ? params : [params]
   const visibleItems = p.filter((item: GanttTooltipParam) => item.seriesName !== '_start')
   const [firstVisible] = visibleItems
@@ -48,17 +51,27 @@ function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipPar
     : (() => {
         const category = firstVisible.name
 
-        const itemsHtml = visibleItems.map((item: GanttTooltipParam) => {
-          const data = item.data
-          const startStr = Temporal.Instant.fromEpochMilliseconds(data.start).toZonedDateTimeISO('UTC').toPlainDate().toString()
-          const endStr = Temporal.Instant.fromEpochMilliseconds(data.end).toZonedDateTimeISO('UTC').toPlainDate().toString()
+        const itemsHtml = visibleItems
+          .map((item: GanttTooltipParam) => {
+            const data = item.data
+            const startStr = Temporal.Instant.fromEpochMilliseconds(data.start)
+              .toZonedDateTimeISO('UTC')
+              .toPlainDate()
+              .toString()
+            const endStr = Temporal.Instant.fromEpochMilliseconds(data.end)
+              .toZonedDateTimeISO('UTC')
+              .toPlainDate()
+              .toString()
 
-          const marker = item.marker || ''
-          const seriesName = item.seriesName || ''
-          const durationStr = valueFormat ? formatValue(data.value, valueFormat) : formatDurationMs(data.value)
+            const marker = item.marker || ''
+            const seriesName = item.seriesName || ''
+            const durationStr = valueFormat
+              ? formatValue(data.value, valueFormat)
+              : formatDurationMs(data.value)
 
-          return `<div>${marker} <b>${seriesName}</b> <br/>Start: ${startStr}<br/>End: ${endStr}<br/>Duration: ${durationStr}</div>`
-        }).join('')
+            return `<div>${marker} <b>${seriesName}</b> <br/>Start: ${startStr}<br/>End: ${endStr}<br/>Duration: ${durationStr}</div>`
+          })
+          .join('')
 
         return `<div><b>${category}</b></div>${itemsHtml}`
       })()
@@ -115,7 +128,9 @@ function getTimeAxisCustomValues(
       const qIndex = startQ + i
       const year = Math.floor(qIndex / 4)
       const month = (qIndex % 4) * 3 + 1
-      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime('UTC').epochMilliseconds
+      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime(
+        'UTC',
+      ).epochMilliseconds
       return periodStartMs < minMs ? minMs : periodStartMs
     }).filter(ms => ms >= minMs && ms <= maxMs)
 
@@ -133,7 +148,9 @@ function getTimeAxisCustomValues(
       const mIndex = startM + i
       const year = Math.floor(mIndex / 12)
       const month = (mIndex % 12) + 1
-      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime('UTC').epochMilliseconds
+      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime(
+        'UTC',
+      ).epochMilliseconds
       return periodStartMs < minMs ? minMs : periodStartMs
     }).filter(ms => ms >= minMs && ms <= maxMs)
   }
@@ -149,43 +166,31 @@ export function createGanttChartOption(
 
   const validData: readonly GanttDataPoint[] = R.pipe(
     data,
-    items => items.map((item, idx) => {
-      const meta = extractRowMetadata(item, idx)
-      const task = safeToString(getNestedValue(
-        item,
-        taskProp,
-      ))
-      const startRaw = getNestedValue(
-        item,
-        startProp,
-      )
-      const endRaw = getNestedValue(
-        item,
-        endProp,
-      )
-      const seriesName = seriesProp
-        ? safeToString(getNestedValue(
-            item,
-            seriesProp,
-          ))
-        : 'Task'
+    items =>
+      items.map((item, idx) => {
+        const meta = extractRowMetadata(item, idx)
+        const task = safeToString(getNestedValue(item, taskProp))
+        const startRaw = getNestedValue(item, startProp)
+        const endRaw = getNestedValue(item, endProp)
+        const seriesName = seriesProp ? safeToString(getNestedValue(item, seriesProp)) : 'Task'
 
-      const start = parseDateToEpochMs(startRaw)
-      const end = parseDateToEpochMs(endRaw)
+        const start = parseDateToEpochMs(startRaw)
+        const end = parseDateToEpochMs(endRaw)
 
-      const point: GanttDataPoint | null = (!task || start === null || end === null || end < start)
-        ? null
-        : {
-            task,
-            start,
-            end,
-            duration: end - start,
-            seriesName,
-            dataIndex: meta.rowIndex,
-            ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
-          }
-      return point
-    }),
+        const point: GanttDataPoint | null =
+          !task || start === null || end === null || end < start
+            ? null
+            : {
+                task,
+                start,
+                end,
+                duration: end - start,
+                seriesName,
+                dataIndex: meta.rowIndex,
+                ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
+              }
+        return point
+      }),
     R.filter((x): x is GanttDataPoint => x !== null),
   )
 
@@ -198,12 +203,13 @@ export function createGanttChartOption(
   // The invisible '_start' series stacks from 0, so ECharts' default time-axis
   // auto-range spans [epoch, max end] instead of the actual task window —
   // pin min/max to the real data range explicitly.
-  const axisRange = validData.length === 0
-    ? undefined
-    : {
-        min: Math.min(...validData.map(d => d.start)),
-        max: Math.max(...validData.map(d => d.end)),
-      }
+  const axisRange =
+    validData.length === 0
+      ? undefined
+      : {
+          min: Math.min(...validData.map(d => d.start)),
+          max: Math.max(...validData.map(d => d.end)),
+        }
 
   const labelClearanceMs = axisRange ? (axisRange.max - axisRange.min) * 0.15 : 0
   const tasksWithMultipleBars = R.pipe(
@@ -211,21 +217,14 @@ export function createGanttChartOption(
     R.groupBy(d => d.task),
   )
 
-  const groupedData = R.groupBy(
-    validData,
-    d => d.seriesName ?? 'Default',
-  )
+  const groupedData = R.groupBy(validData, d => d.seriesName ?? 'Default')
 
   const seriesOptions: ReadonlyArray<BarSeriesOption> = R.pipe(
     Object.entries(groupedData),
-    R.flatMap(([sName,
-      sData]): ReadonlyArray<BarSeriesOption> => {
-      const dataMap = R.indexBy(
-        sData,
-        d => d.task,
-      )
+    R.flatMap(([sName, sData]): ReadonlyArray<BarSeriesOption> => {
+      const dataMap = R.indexBy(sData, d => d.task)
 
-      const startSeriesData = tasks.map((t) => {
+      const startSeriesData = tasks.map(t => {
         const item = dataMap[t]
         return !item
           ? '-'
@@ -235,7 +234,7 @@ export function createGanttChartOption(
             }
       })
 
-      const durationSeriesData = tasks.map((t) => {
+      const durationSeriesData = tasks.map(t => {
         const item = dataMap[t]
         if (!item) {
           return '-'
@@ -243,9 +242,9 @@ export function createGanttChartOption(
         const rowBars = tasksWithMultipleBars[t] ?? []
         const hasAdjacentRightBar = rowBars.some(
           other =>
-            other.seriesName !== item.seriesName
-            && other.end > item.end
-            && other.start <= item.end + labelClearanceMs,
+            other.seriesName !== item.seriesName &&
+            other.end > item.end &&
+            other.start <= item.end + labelClearanceMs,
         )
         return {
           value: item.duration,
@@ -316,7 +315,10 @@ export function createGanttChartOption(
   return {
     tooltip: {
       trigger: 'item',
-      formatter: asTooltipFormatter((params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>) => formatTooltip(params, options.valueFormat)),
+      formatter: asTooltipFormatter(
+        (params: GanttTooltipParam | ReadonlyArray<GanttTooltipParam>) =>
+          formatTooltip(params, options.valueFormat),
+      ),
     },
     // ECharts defaults to listing every series in the legend when `data`
     // isn't set explicitly — that would include the invisible '_start'
@@ -347,7 +349,13 @@ export function createGanttChartOption(
         // route a number straight to numeric formatting and ignore date tokens
         // like 'MMM DD' or 'YYYY-[Q]Q', printing raw milliseconds; formatDateValue
         // parses the epoch-ms and applies the date pattern instead.
-        formatter: (value: number) => options.xAxisFormat ? formatDateValue(value, options.xAxisFormat) : Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
+        formatter: (value: number) =>
+          options.xAxisFormat
+            ? formatDateValue(value, options.xAxisFormat)
+            : Temporal.Instant.fromEpochMilliseconds(value)
+                .toZonedDateTimeISO('UTC')
+                .toPlainDate()
+                .toString(),
         ...(customTickValues ? { customValues: [...customTickValues] } : {}),
       },
       ...(customTickValues ? { axisTick: { customValues: [...customTickValues] } } : {}),

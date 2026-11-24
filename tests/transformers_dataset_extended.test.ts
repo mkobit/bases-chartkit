@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'bun:test'
 import { createScatterChartOption } from '../src/charts/transformers/scatter'
 import { createCandlestickChartOption } from '../src/charts/transformers/candlestick'
-import type { CandlestickSeriesOption, ContinuousVisualMapComponentOption, EChartsOption, ScatterSeriesOption } from 'echarts'
+import type {
+  CandlestickSeriesOption,
+  ContinuousVisualMapComponentOption,
+  EChartsOption,
+  ScatterSeriesOption,
+} from 'echarts'
 
 interface ScatterDatasetSource {
   readonly x: string
@@ -23,19 +28,33 @@ interface CandlestickDatasetSource {
 }
 
 function isScatterDatasetSource(value: unknown): value is ScatterDatasetSource {
-  return typeof value === 'object' && value !== null
-    && 'x' in value && typeof value.x === 'string'
-    && 'y' in value && typeof value.y === 'number'
-    && 's' in value && typeof value.s === 'string'
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'x' in value &&
+    typeof value.x === 'string' &&
+    'y' in value &&
+    typeof value.y === 'number' &&
+    's' in value &&
+    typeof value.s === 'string'
+  )
 }
 
 function isCandlestickDatasetSource(value: unknown): value is CandlestickDatasetSource {
-  return typeof value === 'object' && value !== null
-    && 'x' in value && typeof value.x === 'string'
-    && 'open' in value && typeof value.open === 'number'
-    && 'close' in value && typeof value.close === 'number'
-    && 'low' in value && typeof value.low === 'number'
-    && 'high' in value && typeof value.high === 'number'
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'x' in value &&
+    typeof value.x === 'string' &&
+    'open' in value &&
+    typeof value.open === 'number' &&
+    'close' in value &&
+    typeof value.close === 'number' &&
+    'low' in value &&
+    typeof value.low === 'number' &&
+    'high' in value &&
+    typeof value.high === 'number'
+  )
 }
 
 // DatasetOption['source'] is a generic library union with no discriminant TS
@@ -43,13 +62,17 @@ function isCandlestickDatasetSource(value: unknown): value is CandlestickDataset
 function firstScatterSource(option: EChartsOption): readonly ScatterDatasetSource[] {
   const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
   const source = dataset?.source
-  return Array.isArray(source) ? source.flatMap(row => isScatterDatasetSource(row) ? [row] : []) : []
+  return Array.isArray(source)
+    ? source.flatMap(row => (isScatterDatasetSource(row) ? [row] : []))
+    : []
 }
 
 function firstCandlestickSource(option: EChartsOption): readonly CandlestickDatasetSource[] {
   const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
   const source = dataset?.source
-  return Array.isArray(source) ? source.flatMap(row => isCandlestickDatasetSource(row) ? [row] : []) : []
+  return Array.isArray(source)
+    ? source.flatMap(row => (isCandlestickDatasetSource(row) ? [row] : []))
+    : []
 }
 
 // EChartsOption['series']/['visualMap'] are `type`-discriminated unions, so
@@ -84,127 +107,79 @@ function firstContinuousVisualMap(option: EChartsOption): ContinuousVisualMapCom
   return visualMap
 }
 
-describe(
-  'Transformers with Dataset - Extended',
-  () => {
-    describe(
-      'Scatter Transformer',
-      () => {
-        it(
-          'should create options using dataset and transform for grouped data',
-          () => {
-            const data = [
-              { x: 'A',
-                y: 10,
-                group: 'G1',
-                size: 5 },
-              { x: 'A',
-                y: 20,
-                group: 'G2',
-                size: 10 },
-              { x: 'B',
-                y: 15,
-                group: 'G1',
-                size: 5 },
-            ]
+describe('Transformers with Dataset - Extended', () => {
+  describe('Scatter Transformer', () => {
+    it('should create options using dataset and transform for grouped data', () => {
+      const data = [
+        { x: 'A', y: 10, group: 'G1', size: 5 },
+        { x: 'A', y: 20, group: 'G2', size: 10 },
+        { x: 'B', y: 15, group: 'G1', size: 5 },
+      ]
 
-            const option = createScatterChartOption(
-              data,
-              'x',
-              'y',
-              { seriesProp: 'group',
-                sizeProp: 'size' },
-            )
+      const option = createScatterChartOption(data, 'x', 'y', {
+        seriesProp: 'group',
+        sizeProp: 'size',
+      })
 
-            expect(option.dataset).toBeDefined()
-            expect(Array.isArray(option.dataset)).toBe(true)
+      expect(option.dataset).toBeDefined()
+      expect(Array.isArray(option.dataset)).toBe(true)
 
-            const source = firstScatterSource(option)
-            expect(source).toHaveLength(3)
+      const source = firstScatterSource(option)
+      expect(source).toHaveLength(3)
 
-            // Check normalization
-            expect(source[0]).toEqual({ x: 'A',
-              y: 10,
-              s: 'G1',
-              size: 5,
-              rowIndex: 0 })
+      // Check normalization
+      expect(source[0]).toEqual({ x: 'A', y: 10, s: 'G1', size: 5, rowIndex: 0 })
 
-            // Expect G1 and G2 series
-            expect(option.series).toHaveLength(2)
+      // Expect G1 and G2 series
+      expect(option.series).toHaveLength(2)
 
-            expect(scatterSeriesAt(option, 0).datasetIndex).toBe(1)
-            expect(scatterSeriesAt(option, 0).encode).toEqual({ x: 'x',
-              y: 'y',
-              tooltip: ['x',
-                'y',
-                'size',
-                's'] })
+      expect(scatterSeriesAt(option, 0).datasetIndex).toBe(1)
+      expect(scatterSeriesAt(option, 0).encode).toEqual({
+        x: 'x',
+        y: 'y',
+        tooltip: ['x', 'y', 'size', 's'],
+      })
 
-            // Symbol size check - now handled via visualMap if sizeProp is present
+      // Symbol size check - now handled via visualMap if sizeProp is present
 
-            // Refactored to avoid if/else
+      // Refactored to avoid if/else
 
-            const checkVisualMap = () => {
-              // scatter.ts stores the dimension as the string 'size' via its
-              // isolated getDimension() type-lie, so the declared `number` type
-              // doesn't reflect the real runtime value -- read it as unknown.
-              const dimension: unknown = firstContinuousVisualMap(option).dimension
-              expect(dimension).toBe('size')
-            }
+      const checkVisualMap = () => {
+        // scatter.ts stores the dimension as the string 'size' via its
+        // isolated getDimension() type-lie, so the declared `number` type
+        // doesn't reflect the real runtime value -- read it as unknown.
+        const dimension: unknown = firstContinuousVisualMap(option).dimension
+        expect(dimension).toBe('size')
+      }
 
-            const checkSymbolSizeFn = () => {
-              const sizeFn = scatterSeriesAt(option, 0).symbolSize
-              expect(sizeFn).toBeTypeOf('function')
-              // We could test the function logic if we cast it, but presence is enough for this branch
-            }
+      const checkSymbolSizeFn = () => {
+        const sizeFn = scatterSeriesAt(option, 0).symbolSize
+        expect(sizeFn).toBeTypeOf('function')
+        // We could test the function logic if we cast it, but presence is enough for this branch
+      }
 
-            option.visualMap ? checkVisualMap() : checkSymbolSizeFn()
-          },
-        )
-      },
-    )
+      option.visualMap ? checkVisualMap() : checkSymbolSizeFn()
+    })
+  })
 
-    describe(
-      'Candlestick Transformer',
-      () => {
-        it(
-          'should create options using dataset',
-          () => {
-            const data = [
-              { date: '2023-01-01',
-                open: 10,
-                close: 20,
-                low: 5,
-                high: 25 },
-            ]
+  describe('Candlestick Transformer', () => {
+    it('should create options using dataset', () => {
+      const data = [{ date: '2023-01-01', open: 10, close: 20, low: 5, high: 25 }]
 
-            const option = createCandlestickChartOption(
-              data,
-              'date',
-            )
+      const option = createCandlestickChartOption(data, 'date')
 
-            expect(option.dataset).toBeDefined()
-            const source = firstCandlestickSource(option)
+      expect(option.dataset).toBeDefined()
+      const source = firstCandlestickSource(option)
 
-            expect(source).toEqual([{ x: '2023-01-01',
-              open: 10,
-              close: 20,
-              low: 5,
-              high: 25,
-              rowIndex: 0 }])
+      expect(source).toEqual([
+        { x: '2023-01-01', open: 10, close: 20, low: 5, high: 25, rowIndex: 0 },
+      ])
 
-            expect(firstCandlestickSeries(option).encode).toEqual({ x: 'x',
-              y: ['open',
-                'close',
-                'low',
-                'high'],
-              tooltip: ['open',
-                'close',
-                'low',
-                'high'] })
-          },
-        )
-      },
-    )
-  },
-)
+      expect(firstCandlestickSeries(option).encode).toEqual({
+        x: 'x',
+        y: ['open', 'close', 'low', 'high'],
+        tooltip: ['open', 'close', 'low', 'high'],
+      })
+    })
+  })
+})

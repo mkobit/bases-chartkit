@@ -25,21 +25,20 @@ export class BulletChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      categoryProp,
-      valueProp,
-      'bullet',
-      {
-        ...this.getCommonTransformerOptions(),
-        yAxisLabel: this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ?? this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ?? valueProp,
-        targetLabel: this.getPropDisplayName(BulletChartView.TARGET_PROP_KEY) ?? t('views.bullet.target_series_name'),
-        targetProp,
-        rangeLowProp,
-        rangeMidProp,
-        rangeHighProp,
-      },
-    )
+    return transformDataToChartOption(data, categoryProp, valueProp, 'bullet', {
+      ...this.getCommonTransformerOptions(),
+      yAxisLabel:
+        this.getStringOption(BaseChartView.Y_AXIS_LABEL_KEY) ??
+        this.getPropDisplayName(BaseChartView.VALUE_PROP_KEY) ??
+        valueProp,
+      targetLabel:
+        this.getPropDisplayName(BulletChartView.TARGET_PROP_KEY) ??
+        t('views.bullet.target_series_name'),
+      targetProp,
+      rangeLowProp,
+      rangeMidProp,
+      rangeHighProp,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
@@ -80,11 +79,13 @@ export class BulletChartView extends BaseChartView {
         key: BulletChartView.RANGE_HIGH_PROP_KEY,
         placeholder: t('views.bullet.range_high_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((opt) => {
+      ...BaseChartView.getCommonViewOptions().filter(opt => {
         if ('key' in opt) {
-          return opt.key !== BaseChartView.X_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.Y_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.SERIES_PROP_KEY
+          return (
+            opt.key !== BaseChartView.X_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.Y_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.SERIES_PROP_KEY
+          )
         }
         return true
       }),

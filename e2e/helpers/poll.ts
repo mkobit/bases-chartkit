@@ -35,72 +35,76 @@ export function createPollMatcher<T>(
   const intervals = options?.intervals ?? [100, 250, 500, 1_000]
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- proxy wraps dynamic matcher properties
-  return new Proxy({}, {
-    get(_target, prop) {
-      if (typeof prop !== 'string') {
-        return undefined
-      }
-
-      if (prop === 'not') {
-        return createPollMatcher(fn, options, !negated)
-      }
-
-      return async (...matcherArgs: readonly unknown[]): Promise<void> => {
-        const startTime = Temporal.Now.instant().epochMilliseconds
-        const deadline = startTime + timeoutMs
-
-        const pollStep = async (attemptIndex: number, lastError: unknown): Promise<void> => {
-          const now = Temporal.Now.instant().epochMilliseconds
-          if (now >= deadline) {
-            const failureReason = lastError instanceof Error ? lastError.message : String(lastError)
-            const timeoutMessage = options?.message !== undefined
-              ? `${options.message}\nPoll timed out after ${timeoutMs}ms: ${failureReason}`
-              : `Poll timed out after ${timeoutMs}ms: ${failureReason}`
-            // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-            throw new Error(timeoutMessage)
-          }
-
-          if (attemptIndex > 0) {
-            const currentInterval = intervals[Math.min(attemptIndex - 1, intervals.length - 1)] ?? 250
-            const sleepDuration = Math.min(currentInterval, Math.max(0, deadline - now))
-            await Bun.sleep(sleepDuration)
-          }
-
-          try {
-            const result = fn()
-            const actual = result instanceof Promise ? await result : result
-            const assertion = bunExpect(actual)
-            const targetMatcher = negated ? assertion.not : assertion
-            const matcherCandidate: unknown = Reflect.get(targetMatcher, prop)
-
-            if (typeof matcherCandidate !== 'function') {
-              // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-              throw new Error(`Unknown expectation matcher: ${prop}`)
-            }
-
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- execute dynamic matcher function
-            (matcherCandidate as (...args: readonly unknown[]) => void).apply(targetMatcher, matcherArgs as unknown[])
-            return
-          }
-          catch (error: unknown) {
-            return pollStep(attemptIndex + 1, error)
-          }
+  return new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (typeof prop !== 'string') {
+          return undefined
         }
 
-        return pollStep(0, undefined)
-      }
+        if (prop === 'not') {
+          return createPollMatcher(fn, options, !negated)
+        }
+
+        return async (...matcherArgs: readonly unknown[]): Promise<void> => {
+          const startTime = Temporal.Now.instant().epochMilliseconds
+          const deadline = startTime + timeoutMs
+
+          const pollStep = async (attemptIndex: number, lastError: unknown): Promise<void> => {
+            const now = Temporal.Now.instant().epochMilliseconds
+            if (now >= deadline) {
+              const failureReason =
+                lastError instanceof Error ? lastError.message : String(lastError)
+              const timeoutMessage =
+                options?.message !== undefined
+                  ? `${options.message}\nPoll timed out after ${timeoutMs}ms: ${failureReason}`
+                  : `Poll timed out after ${timeoutMs}ms: ${failureReason}`
+              // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
+              throw new Error(timeoutMessage)
+            }
+
+            if (attemptIndex > 0) {
+              const currentInterval =
+                intervals[Math.min(attemptIndex - 1, intervals.length - 1)] ?? 250
+              const sleepDuration = Math.min(currentInterval, Math.max(0, deadline - now))
+              await Bun.sleep(sleepDuration)
+            }
+
+            try {
+              const result = fn()
+              const actual = result instanceof Promise ? await result : result
+              const assertion = bunExpect(actual)
+              const targetMatcher = negated ? assertion.not : assertion
+              const matcherCandidate: unknown = Reflect.get(targetMatcher, prop)
+
+              if (typeof matcherCandidate !== 'function') {
+                // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
+                throw new Error(`Unknown expectation matcher: ${prop}`)
+              }
+
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- execute dynamic matcher function
+              const typedMatcher = matcherCandidate as (...args: readonly unknown[]) => void
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- forward dynamic matcher args
+              const typedArgs = matcherArgs as unknown[]
+              typedMatcher.apply(targetMatcher, typedArgs)
+              return
+            } catch (error: unknown) {
+              return pollStep(attemptIndex + 1, error)
+            }
+          }
+
+          return pollStep(0, undefined)
+        }
+      },
     },
-  }) as PollExpect<T>
+  ) as PollExpect<T>
 }
 
 /**
  * Augmented expect function that includes the poll method.
  */
-export const expect = Object.assign(
-  <T>(actual: T) => bunExpect(actual),
-  bunExpect,
-  {
-    poll: <T>(fn: PollFunction<T>, options?: PollOptions): PollExpect<T> =>
-      createPollMatcher(fn, options),
-  },
-)
+export const expect = Object.assign(<T>(actual: T) => bunExpect(actual), bunExpect, {
+  poll: <T>(fn: PollFunction<T>, options?: PollOptions): PollExpect<T> =>
+    createPollMatcher(fn, options),
+})

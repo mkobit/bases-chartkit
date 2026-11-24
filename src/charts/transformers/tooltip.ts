@@ -1,6 +1,7 @@
 import type { EChartsOption } from 'echarts'
 
-export type TooltipFormatterFn = NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never
+export type TooltipFormatterFn =
+  NonNullable<EChartsOption['tooltip']> extends { formatter?: infer F } ? F : never
 
 // ECharts' `tooltip.formatter` option type is a broad union covering every
 // trigger/chart shape it supports. Chart-specific tooltip formatters written

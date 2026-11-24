@@ -17,13 +17,7 @@ export class ParetoChartView extends BaseChartView {
 
     const options = this.getCommonTransformerOptions()
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'pareto',
-      options,
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'pareto', options)
   }
 
   static getViewOptions(): BasesOptions[] {
@@ -42,9 +36,6 @@ export class ParetoChartView extends BaseChartView {
       yOption.displayName = t('views.pareto.value_prop')
     }
 
-    return [
-      ...options,
-      ...BaseChartView.getAxisViewOptions(),
-    ]
+    return [...options, ...BaseChartView.getAxisViewOptions()]
   }
 }

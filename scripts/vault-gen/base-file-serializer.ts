@@ -47,10 +47,7 @@ function serializePropertiesBlock(propertyIds: readonly string[]): readonly stri
   }
   return [
     'properties:',
-    ...propertyIds.flatMap(id => [
-      `  ${id}:`,
-      `    displayName: ${displayNameFor(id)}`,
-    ]),
+    ...propertyIds.flatMap(id => [`  ${id}:`, `    displayName: ${displayNameFor(id)}`]),
   ]
 }
 
@@ -73,17 +70,16 @@ function serializeFormulasBlock(variants: readonly ChartVariantSpec[]): readonly
   if (entries.length === 0) {
     return []
   }
-  return [
-    'formulas:',
-    ...entries.map(([name, expression]) => `  ${name}: '${expression}'`),
-  ]
+  return ['formulas:', ...entries.map(([name, expression]) => `  ${name}: '${expression}'`)]
 }
 
 function serializeViewItem(chartType: string, variant: ChartVariantSpec): readonly string[] {
-  const literalLines = Object.entries(variant.literalOptions ?? {})
-    .map(([key, value]) => `    ${key}: ${serializeValue(value)}`)
-  const bindingLines = Object.entries(variant.propBindings)
-    .map(([key, value]) => `    ${key}: ${value}`)
+  const literalLines = Object.entries(variant.literalOptions ?? {}).map(
+    ([key, value]) => `    ${key}: ${serializeValue(value)}`,
+  )
+  const bindingLines = Object.entries(variant.propBindings).map(
+    ([key, value]) => `    ${key}: ${value}`,
+  )
 
   // Every variant scopes to its own chart-type directory's notes by
   // default -- without this, a view with no other filter matches every
@@ -92,11 +88,7 @@ function serializeViewItem(chartType: string, variant: ChartVariantSpec): readon
   // 9 notes), which gets worse as more chart-type directories are added.
   const folderFilter = `file.folder == "${chartType}/notes"`
   const allFilters = [folderFilter, ...(variant.filters ?? [])]
-  const filterLines = [
-    '    filters:',
-    '      and:',
-    ...allFilters.map(f => `        - ${f}`),
-  ]
+  const filterLines = ['    filters:', '      and:', ...allFilters.map(f => `        - ${f}`)]
 
   return [
     `  - type: ${variant.viewType}`,
@@ -107,14 +99,17 @@ function serializeViewItem(chartType: string, variant: ChartVariantSpec): readon
   ]
 }
 
-function serializeViewsBlock(chartType: string, variants: readonly ChartVariantSpec[]): readonly string[] {
-  return [
-    'views:',
-    ...variants.flatMap(variant => serializeViewItem(chartType, variant)),
-  ]
+function serializeViewsBlock(
+  chartType: string,
+  variants: readonly ChartVariantSpec[],
+): readonly string[] {
+  return ['views:', ...variants.flatMap(variant => serializeViewItem(chartType, variant))]
 }
 
-export function buildBaseFileYaml(chartType: string, variants: readonly ChartVariantSpec[]): string {
+export function buildBaseFileYaml(
+  chartType: string,
+  variants: readonly ChartVariantSpec[],
+): string {
   const propertyIds = collectAllPropertyIds(variants)
   const lines = [
     ...serializePropertiesBlock(propertyIds),

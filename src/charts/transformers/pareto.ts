@@ -21,28 +21,17 @@ export function createParetoChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  const normalizedData: ReadonlyArray<{ readonly name: string
-    readonly value: number }> = R.pipe(
+  const normalizedData: ReadonlyArray<{ readonly name: string; readonly value: number }> = R.pipe(
     data,
     R.map(item => ({
-      name: safeToString(getNestedValue(
-        item,
-        xProp,
-      )),
-      value: Number(getNestedValue(
-        item,
-        yProp,
-      )),
+      name: safeToString(getNestedValue(item, xProp)),
+      value: Number(getNestedValue(item, yProp)),
     })),
     R.filter(item => !Number.isNaN(item.value)),
-    R.sortBy([item => item.value,
-      'desc']),
+    R.sortBy([item => item.value, 'desc']),
   )
 
-  const totalValue = R.sumBy(
-    normalizedData,
-    item => item.value,
-  )
+  const totalValue = R.sumBy(normalizedData, item => item.value)
 
   interface ParetoAccumulator {
     readonly sum: number
@@ -53,27 +42,25 @@ export function createParetoChartOption(
     }>
   }
 
-  const initialAcc: ParetoAccumulator = { sum: 0,
-    result: [] }
+  const initialAcc: ParetoAccumulator = { sum: 0, result: [] }
 
   const finalData = R.pipe(
     normalizedData,
-    R.reduce(
-      (acc: ParetoAccumulator, item) => {
-        const currentSum = acc.sum + item.value
-        const cumulativePercentage = totalValue === 0 ? 0 : (currentSum / totalValue) * 100
-        return {
-          sum: currentSum,
-          result: [...acc.result,
-            {
-              name: item.name,
-              value: item.value,
-              cumulative: cumulativePercentage,
-            }],
-        }
-      },
-      initialAcc,
-    ),
+    R.reduce((acc: ParetoAccumulator, item) => {
+      const currentSum = acc.sum + item.value
+      const cumulativePercentage = totalValue === 0 ? 0 : (currentSum / totalValue) * 100
+      return {
+        sum: currentSum,
+        result: [
+          ...acc.result,
+          {
+            name: item.name,
+            value: item.value,
+            cumulative: cumulativePercentage,
+          },
+        ],
+      }
+    }, initialAcc),
     x => x.result,
   )
 
@@ -84,23 +71,16 @@ export function createParetoChartOption(
     interval: xAxisInterval,
     rotate: xAxisRotate,
     hideOverlap: xAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    finalData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    false,
-    {
-      labels: finalData.map(item => item.name),
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(finalData.length, isCompact, options?.xAxisLabelRotate, false, {
+    labels: finalData.map(item => item.name),
+    containerWidth,
+  })
 
   const barSeries: BarSeriesOption = {
     name: yAxisLabel,
     type: 'bar',
     yAxisIndex: 0, // Left Axis
-    encode: { x: 'name',
-      y: 'value' },
+    encode: { x: 'name', y: 'value' },
   }
 
   const lineSeries: LineSeriesOption = {
@@ -109,10 +89,9 @@ export function createParetoChartOption(
     yAxisIndex: 1, // Right Axis
     symbol: 'circle',
     symbolSize: 6,
-    encode: { x: 'name',
-      y: 'cumulative' },
+    encode: { x: 'name', y: 'cumulative' },
     tooltip: {
-      valueFormatter: (value) => {
+      valueFormatter: value => {
         const val = Array.isArray(value) ? value[0] : value
         return (typeof val === 'number' ? val.toFixed(1) : String(val)) + ' %'
       },
@@ -169,11 +148,9 @@ export function createParetoChartOption(
       },
     ],
     dataset: {
-
       source: finalData,
     },
-    series: [barSeries,
-      lineSeries],
+    series: [barSeries, lineSeries],
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
   }
 

@@ -1,4 +1,11 @@
-import type { EChartsOption, SeriesOption, LineSeriesOption, BarSeriesOption, DatasetComponentOption, DataZoomComponentOption } from 'echarts'
+import type {
+  EChartsOption,
+  SeriesOption,
+  LineSeriesOption,
+  BarSeriesOption,
+  DatasetComponentOption,
+  DataZoomComponentOption,
+} from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
@@ -52,17 +59,21 @@ function formatTooltip(
 ): string {
   const list: ReadonlyArray<CartesianTooltipParam> = Array.isArray(params) ? params : [params]
   const validRows: ReadonlyArray<CartesianTooltipRow> = list
-    .map((p): CartesianTooltipRow | null => (isCartesianDataPoint(p.value) ? { param: p, row: p.value } : null))
+    .map((p): CartesianTooltipRow | null =>
+      isCartesianDataPoint(p.value) ? { param: p, row: p.value } : null,
+    )
     .filter((r): r is CartesianTooltipRow => r !== null)
   const first = validRows[0]
   if (!first) {
     return ''
   }
-  const lines = validRows.map(({ param, row }) => {
-    const marker = param.marker ?? ''
-    const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
-    return `${marker}${row.s}: ${yText}`
-  }).join('<br/>')
+  const lines = validRows
+    .map(({ param, row }) => {
+      const marker = param.marker ?? ''
+      const yText = row.y === null ? '-' : row.y.toLocaleString('en-US')
+      return `${marker}${row.s}: ${yText}`
+    })
+    .join('<br/>')
   return `<b>${xAxisLabel}: ${first.row.x}</b><br/>${lines}`
 }
 
@@ -86,26 +97,18 @@ export function createCartesianChartOption(
   const normalizedData: ReadonlyArray<CartesianDataPoint> = R.map(
     data,
     (item, index): CartesianDataPoint => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yValRaw = Number(getNestedValue(
-        item,
-        yProp,
-      ))
-      const sValRaw = seriesProp
-        ? getNestedValue(
-            item,
-            seriesProp,
-          )
-        : undefined
+      const xValRaw = getNestedValue(item, xProp)
+      const yValRaw = Number(getNestedValue(item, yProp))
+      const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
       const meta = extractRowMetadata(item, index)
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        s:
+          seriesProp && sValRaw !== undefined && sValRaw !== null
+            ? safeToString(sValRaw)
+            : yAxisLabel,
         rowIndex: meta.rowIndex,
         ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
       }
@@ -130,16 +133,10 @@ export function createCartesianChartOption(
     interval: xAxisInterval,
     rotate: xAxisRotate,
     hideOverlap: xAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    xAxisData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    flipAxis,
-    {
-      labels: formattedXLabels,
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(xAxisData.length, isCompact, options?.xAxisLabelRotate, flipAxis, {
+    labels: formattedXLabels,
+    containerWidth,
+  })
 
   const seriesNames: readonly string[] = R.pipe(
     normalizedData,
@@ -156,14 +153,12 @@ export function createCartesianChartOption(
     ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
-          config: { dimension: 's',
-            value: name },
+          config: { dimension: 's', value: name },
         },
       }))
     : []
 
-  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
-    ...filterDatasets]
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset, ...filterDatasets]
 
   const seriesOptions: ReadonlyArray<SeriesOption> = seriesNames.map((name, idx): SeriesOption => {
     const datasetIndex = seriesProp ? idx + 1 : 0
@@ -172,16 +167,8 @@ export function createCartesianChartOption(
       name: name,
       datasetIndex: datasetIndex,
       encode: flipAxis
-        ? { x: 'y',
-            y: 'x',
-            tooltip: ['x',
-              'y',
-              's'] }
-        : { x: 'x',
-            y: 'y',
-            tooltip: ['x',
-              'y',
-              's'] },
+        ? { x: 'y', y: 'x', tooltip: ['x', 'y', 's'] }
+        : { x: 'x', y: 'y', tooltip: ['x', 'y', 's'] },
     } as const
 
     return chartType === 'line'
@@ -207,21 +194,22 @@ export function createCartesianChartOption(
         })()
   })
 
-  const dataZoomOptions: ReadonlyArray<DataZoomComponentOption> = (isCompact && !flipAxis)
-    ? [
-        {
-          type: 'slider',
-          show: true,
-          xAxisIndex: [0],
-          bottom: 10,
-          height: 20,
-        },
-        {
-          type: 'inside',
-          xAxisIndex: [0],
-        },
-      ]
-    : []
+  const dataZoomOptions: ReadonlyArray<DataZoomComponentOption> =
+    isCompact && !flipAxis
+      ? [
+          {
+            type: 'slider',
+            show: true,
+            xAxisIndex: [0],
+            bottom: 10,
+            height: 20,
+          },
+          {
+            type: 'inside',
+            xAxisIndex: [0],
+          },
+        ]
+      : []
 
   const opt: EChartsOption = {
     dataset: [...datasets],
@@ -258,12 +246,17 @@ export function createCartesianChartOption(
       : {
           type: 'value',
           name: yAxisLabel,
-          ...(yAxisFormat ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } } : {}),
+          ...(yAxisFormat
+            ? { axisLabel: { formatter: (val: unknown) => formatValue(val, yAxisFormat) } }
+            : {}),
         },
     series: [...seriesOptions],
     tooltip: {
       trigger: 'axis',
-      formatter: asTooltipFormatter((params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>) => formatTooltip(params, xAxisLabel)),
+      formatter: asTooltipFormatter(
+        (params: CartesianTooltipParam | ReadonlyArray<CartesianTooltipParam>) =>
+          formatTooltip(params, xAxisLabel),
+      ),
     },
     grid: getCartesianGridOption(options, { hasDataZoomSlider: isCompact && !flipAxis }),
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),

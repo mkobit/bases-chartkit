@@ -37,11 +37,13 @@ export class RadialBarChartView extends BaseChartView {
         type: 'toggle',
         key: BaseChartView.FLIP_AXIS_KEY,
       },
-      ...BaseChartView.getCommonViewOptions().filter((opt) => {
+      ...BaseChartView.getCommonViewOptions().filter(opt => {
         if ('key' in opt) {
-          return opt.key !== BaseChartView.X_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.Y_AXIS_PROP_KEY
-            && opt.key !== BaseChartView.SERIES_PROP_KEY
+          return (
+            opt.key !== BaseChartView.X_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.Y_AXIS_PROP_KEY &&
+            opt.key !== BaseChartView.SERIES_PROP_KEY
+          )
         }
         return true
       }),
@@ -59,17 +61,11 @@ export class RadialBarChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'radialBar',
-      {
-        ...this.getCommonTransformerOptions(),
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-        stack: isStacked,
-        flipAxis,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'radialBar', {
+      ...this.getCommonTransformerOptions(),
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+      stack: isStacked,
+      flipAxis,
+    })
   }
 }

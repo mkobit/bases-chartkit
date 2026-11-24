@@ -90,16 +90,10 @@ export function createPieChartOption(
   const normalizedData: ReadonlyArray<PieDataPoint> = R.pipe(
     data,
     R.map((item): PieDataPoint => {
-      const valRaw = getNestedValue(
-        item,
-        nameProp,
-      )
+      const valRaw = getNestedValue(item, nameProp)
       const name = valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
 
-      const val = Number(getNestedValue(
-        item,
-        valueProp,
-      ))
+      const val = Number(getNestedValue(item, valueProp))
       return {
         name: name,
         value: Number.isNaN(val) ? 0 : val,
@@ -122,7 +116,8 @@ export function createPieChartOption(
     defaultRadius: '75%',
     sideLegendRadius: '55%',
   })
-  const hasChrome = Boolean(options?.legend) || Boolean(options?.title) || Boolean(options?.description)
+  const hasChrome =
+    Boolean(options?.legend) || Boolean(options?.title) || Boolean(options?.description)
 
   const seriesItem: PieSeriesOption = {
     type: 'pie',
@@ -156,7 +151,9 @@ export function createPieChartOption(
     series: [seriesItem],
     tooltip: {
       trigger: 'item',
-      formatter: asTooltipFormatter((param: PieTooltipParam) => formatTooltip(param, options?.valueFormat)),
+      formatter: asTooltipFormatter((param: PieTooltipParam) =>
+        formatTooltip(param, options?.valueFormat),
+      ),
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(options?.theme ? { theme: options.theme } : {}),

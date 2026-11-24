@@ -1,4 +1,10 @@
-import type { EChartsOption, CalendarComponentOption, HeatmapSeriesOption, VisualMapComponentOption, TooltipComponentFormatterCallbackParams } from 'echarts'
+import type {
+  EChartsOption,
+  CalendarComponentOption,
+  HeatmapSeriesOption,
+  VisualMapComponentOption,
+  TooltipComponentFormatterCallbackParams,
+} from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
@@ -31,25 +37,16 @@ export function createCalendarChartOption(
 
   const calendarData: ReadonlyArray<CalendarPoint> = R.pipe(
     data,
-    R.map((item) => {
-      const dateRaw = getNestedValue(
-        item,
-        dateProp,
-      )
+    R.map(item => {
+      const dateRaw = getNestedValue(item, dateProp)
       const dateVal = safeToString(dateRaw)
 
       return !dateVal
         ? null
         : (() => {
-            const val = valueProp
-              ? Number(getNestedValue(
-                  item,
-                  valueProp,
-                ))
-              : Number.NaN
+            const val = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
             const finalVal = Number.isNaN(val) ? 0 : val
-            return { date: dateVal,
-              value: finalVal }
+            return { date: dateVal, value: finalVal }
           })()
     }),
     R.filter((d): d is CalendarPoint => d !== null),
@@ -59,16 +56,12 @@ export function createCalendarChartOption(
     ? (() => {
         const minDate = Temporal.Now.plainDateISO().toString()
         return {
-          calendar: { range: [minDate,
-            minDate] },
+          calendar: { range: [minDate, minDate] },
           series: [],
         }
       })()
     : (() => {
-        const sortedData: ReadonlyArray<CalendarPoint> = R.sortBy(
-          calendarData,
-          d => d.date,
-        )
+        const sortedData: ReadonlyArray<CalendarPoint> = R.sortBy(calendarData, d => d.date)
         // @ts-expect-error - suppress strictNullChecks/type errors
         const minDate = sortedData[0].date
         // @ts-expect-error - suppress strictNullChecks/type errors
@@ -76,17 +69,10 @@ export function createCalendarChartOption(
 
         const range = sortedData.reduce(
           (acc, d) => ({
-            min: Math.min(
-              acc.min,
-              d.value,
-            ),
-            max: Math.max(
-              acc.max,
-              d.value,
-            ),
+            min: Math.min(acc.min, d.value),
+            max: Math.max(acc.max, d.value),
           }),
-          { min: Infinity,
-            max: -Infinity },
+          { min: Infinity, max: -Infinity },
         )
 
         const dataMin = range.min === Infinity ? 0 : range.min
@@ -98,8 +84,7 @@ export function createCalendarChartOption(
         // ECharts expects [date, value] pairs.
         const seriesData: ReadonlyArray<MutableCalendarHeatmapValueOption> = R.map(
           sortedData,
-          (d): MutableCalendarHeatmapValueOption => [d.date,
-            d.value],
+          (d): MutableCalendarHeatmapValueOption => [d.date, d.value],
         )
 
         const calendarItem: CalendarComponentOption = {
@@ -115,10 +100,8 @@ export function createCalendarChartOption(
           // A 53-week year at 11px/cell is 583px wide, fitting within a
           // ~668px pane with room on both sides for day labels and margin.
           left: 'center',
-          cellSize: [11,
-            11],
-          range: [minDate,
-            maxDate],
+          cellSize: [11, 11],
+          range: [minDate, maxDate],
           itemStyle: {
             borderWidth: STYLE_TOKENS.strokeWidth.hairline,
           },
@@ -147,9 +130,10 @@ export function createCalendarChartOption(
           // magnitude as hue and read as unordered. A view can still override
           // the ramp via visualMapColor (see the CustomColor variant).
           inRange: {
-            color: options?.visualMapColor && options.visualMapColor.length > 0
-              ? [...options.visualMapColor]
-              : [...DEFAULT_SEQUENTIAL_COLOR_GRADIENT],
+            color:
+              options?.visualMapColor && options.visualMapColor.length > 0
+                ? [...options.visualMapColor]
+                : [...DEFAULT_SEQUENTIAL_COLOR_GRADIENT],
           },
         }
 
@@ -159,9 +143,7 @@ export function createCalendarChartOption(
             formatter: (params: TooltipComponentFormatterCallbackParams) => {
               const item = Array.isArray(params) ? params[0] : params
               const val = item?.value
-              return (!val || !Array.isArray(val))
-                ? ''
-                : `${String(val[0])} : ${String(val[1])}`
+              return !val || !Array.isArray(val) ? '' : `${String(val[0])} : ${String(val[1])}`
             },
           },
           visualMap: visualMapOption,

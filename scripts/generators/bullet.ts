@@ -13,42 +13,41 @@ import { KPI_METRICS, themeSubset } from './themes'
  * ceiling rather than sampled directly with fc.float, per this project's
  * "fc.float produces degenerate/NaN samples under numRuns: 1" lesson.
  */
-export const bulletChartArbitrary = themeSubset(
-  KPI_METRICS,
-  8,
-).chain((metrics) => {
-  return fc.array(
-    fc.tuple(
-      fc.integer({ min: 40, max: 120 }), // rangeLow
-      fc.integer({ min: 25, max: 60 }), // rangeMid offset above rangeLow
-      fc.integer({ min: 20, max: 50 }), // rangeHigh offset above rangeMid
-      fc.integer({ min: 30, max: 130 }), // value, as a % of rangeHigh
-      fc.integer({ min: 10, max: 90 }), // target, interpolated between rangeMid and rangeHigh
-    ),
-    { minLength: metrics.length, maxLength: metrics.length },
-  ).map((rolls) => {
-    const data = R.pipe(
-      R.zip(metrics, rolls),
-      R.map(([metric, [rangeLow, midOffset, highOffset, valuePercent, targetPercent]]) => {
-        const rangeMid = rangeLow + midOffset
-        const rangeHigh = rangeMid + highOffset
-        const value = Math.round(rangeHigh * valuePercent / 100)
-        const target = rangeMid + Math.round((rangeHigh - rangeMid) * targetPercent / 100)
-
-        return {
-          metric,
-          value,
-          target,
-          rangeLow,
-          rangeMid,
-          rangeHigh,
-        }
-      }),
+export const bulletChartArbitrary = themeSubset(KPI_METRICS, 8).chain(metrics => {
+  return fc
+    .array(
+      fc.tuple(
+        fc.integer({ min: 40, max: 120 }), // rangeLow
+        fc.integer({ min: 25, max: 60 }), // rangeMid offset above rangeLow
+        fc.integer({ min: 20, max: 50 }), // rangeHigh offset above rangeMid
+        fc.integer({ min: 30, max: 130 }), // value, as a % of rangeHigh
+        fc.integer({ min: 10, max: 90 }), // target, interpolated between rangeMid and rangeHigh
+      ),
+      { minLength: metrics.length, maxLength: metrics.length },
     )
+    .map(rolls => {
+      const data = R.pipe(
+        R.zip(metrics, rolls),
+        R.map(([metric, [rangeLow, midOffset, highOffset, valuePercent, targetPercent]]) => {
+          const rangeMid = rangeLow + midOffset
+          const rangeHigh = rangeMid + highOffset
+          const value = Math.round((rangeHigh * valuePercent) / 100)
+          const target = rangeMid + Math.round(((rangeHigh - rangeMid) * targetPercent) / 100)
 
-    return {
-      type: 'bullet',
-      data,
-    }
-  })
+          return {
+            metric,
+            value,
+            target,
+            rangeLow,
+            rangeMid,
+            rangeHigh,
+          }
+        }),
+      )
+
+      return {
+        type: 'bullet',
+        data,
+      }
+    })
 })

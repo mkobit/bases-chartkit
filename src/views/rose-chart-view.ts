@@ -26,20 +26,14 @@ export class RoseChartView extends BaseChartView {
     const padAngle = this.getNumberOption(RoseChartView.PAD_ANGLE_KEY)
     const borderRadius = this.getNumberOption(RoseChartView.BORDER_RADIUS_KEY)
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'rose',
-      {
-        ...this.getCommonTransformerOptions(),
-        ...(roseType !== undefined ? { roseType } : {}),
-        ...(innerRadius !== undefined ? { innerRadius } : {}),
-        ...(outerRadius !== undefined ? { outerRadius } : {}),
-        ...(padAngle !== undefined ? { padAngle } : {}),
-        ...(borderRadius !== undefined ? { borderRadius } : {}),
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'rose', {
+      ...this.getCommonTransformerOptions(),
+      ...(roseType !== undefined ? { roseType } : {}),
+      ...(innerRadius !== undefined ? { innerRadius } : {}),
+      ...(outerRadius !== undefined ? { outerRadius } : {}),
+      ...(padAngle !== undefined ? { padAngle } : {}),
+      ...(borderRadius !== undefined ? { borderRadius } : {}),
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

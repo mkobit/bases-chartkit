@@ -17,18 +17,12 @@ export class BubbleChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'bubble',
-      {
-        ...this.getCommonTransformerOptions(),
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-        sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
-        sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'bubble', {
+      ...this.getCommonTransformerOptions(),
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+      sizeProp: typeof sizeProp === 'string' ? sizeProp : undefined,
+      sizeLabel: this.getPropDisplayName(BaseChartView.SIZE_PROP_KEY),
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

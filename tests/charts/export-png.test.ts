@@ -8,10 +8,11 @@ import {
   type ClipboardWriter,
 } from '../../src/charts/export-png'
 
-const SAMPLE_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+const SAMPLE_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
 const SAMPLE_PNG_DATA_URL = `data:image/png;base64,${SAMPLE_PNG_BASE64}`
 
-const stubClipboardItemFactory: ClipboardItemFactory = (items) => {
+const stubClipboardItemFactory: ClipboardItemFactory = items => {
   const types = Object.keys(items)
   return {
     types,
@@ -29,7 +30,7 @@ describe('dataUrlToPngBlob', () => {
     const bytes = buffer ? new Uint8Array(buffer) : new Uint8Array()
     expect(bytes.length).toBeGreaterThan(0)
     // PNG magic bytes: 89 50 4E 47
-    expect(Array.from(bytes.slice(0, 4))).toEqual([0x89, 0x50, 0x4E, 0x47])
+    expect(Array.from(bytes.slice(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47])
   })
 
   it('returns null for non-PNG data URLs', () => {

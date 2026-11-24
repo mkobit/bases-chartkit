@@ -2,11 +2,7 @@ import * as fc from 'fast-check'
 import * as R from 'remeda'
 import { CHICAGO_EVENT_TYPES } from './themes'
 
-export const CHICAGO_SEASONS = [
-  'Peak Summer',
-  'Year-Round',
-  'Spring-Fall',
-] as const
+export const CHICAGO_SEASONS = ['Peak Summer', 'Year-Round', 'Spring-Fall'] as const
 
 export type ChicagoSeason = (typeof CHICAGO_SEASONS)[number]
 
@@ -113,35 +109,37 @@ const extraMetricsArbitrary = fc.tuple(
  * Rating, TicketPrice, Category, and Season; per-landmark identity and
  * coordinates are fixed so every row resolves to a real GeoJSON feature.
  */
-export const mapChartArbitrary: fc.Arbitrary<MapSample> = fc.array(
-  fc.tuple(
-    fc.constantFrom(...CHICAGO_EVENT_TYPES),
-    fc.integer({ min: 15,
-      max: 150 }),
-  ),
-  { minLength: CHICAGO_LANDMARKS.length,
-    maxLength: CHICAGO_LANDMARKS.length },
-).chain(rolls =>
-  extraMetricsArbitrary.map((extraRolls) => {
-    const data = R.pipe(
-      R.zip(CHICAGO_LANDMARKS, R.zip(rolls, extraRolls)),
-      R.map(([landmark, [[eventType, eventCount], [attendance, ratingTenths, ticketPrice]]]): MapLandmarkRow => ({
-        landmark: landmark.name,
-        lat: landmark.lat,
-        lon: landmark.lon,
-        category: landmark.category,
-        season: landmark.season,
-        eventType,
-        eventCount,
-        attendance,
-        rating: ratingTenths / 10,
-        ticketPrice,
-      })),
-    )
+export const mapChartArbitrary: fc.Arbitrary<MapSample> = fc
+  .array(fc.tuple(fc.constantFrom(...CHICAGO_EVENT_TYPES), fc.integer({ min: 15, max: 150 })), {
+    minLength: CHICAGO_LANDMARKS.length,
+    maxLength: CHICAGO_LANDMARKS.length,
+  })
+  .chain(rolls =>
+    extraMetricsArbitrary.map(extraRolls => {
+      const data = R.pipe(
+        R.zip(CHICAGO_LANDMARKS, R.zip(rolls, extraRolls)),
+        R.map(
+          ([
+            landmark,
+            [[eventType, eventCount], [attendance, ratingTenths, ticketPrice]],
+          ]): MapLandmarkRow => ({
+            landmark: landmark.name,
+            lat: landmark.lat,
+            lon: landmark.lon,
+            category: landmark.category,
+            season: landmark.season,
+            eventType,
+            eventCount,
+            attendance,
+            rating: ratingTenths / 10,
+            ticketPrice,
+          }),
+        ),
+      )
 
-    return {
-      type: 'map',
-      data,
-    }
-  }),
-)
+      return {
+        type: 'map',
+        data,
+      }
+    }),
+  )

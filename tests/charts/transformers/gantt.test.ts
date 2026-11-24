@@ -9,7 +9,12 @@ interface GanttDurationDatum {
 }
 
 function isGanttDurationDatum(value: unknown): value is GanttDurationDatum {
-  return typeof value === 'object' && value !== null && 'value' in value && typeof value.value === 'number'
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'value' in value &&
+    typeof value.value === 'number'
+  )
 }
 
 // EChartsOption['series'] is a `type`-discriminated union, so checking the
@@ -17,7 +22,7 @@ function isGanttDurationDatum(value: unknown): value is GanttDurationDatum {
 function barSeriesList(option: EChartsOption): readonly BarSeriesOption[] {
   const series = option.series
   const list = Array.isArray(series) ? series : series ? [series] : []
-  return list.flatMap(s => s.type === 'bar' ? [s] : [])
+  return list.flatMap(s => (s.type === 'bar' ? [s] : []))
 }
 
 // EChartsOption['xAxis']/['yAxis'] are `type`-discriminated unions -- gantt.ts
@@ -61,434 +66,344 @@ function legendComponent(option: EChartsOption) {
   return legend
 }
 
-describe(
-  'createGanttChartOption',
-  () => {
-    const data = [
-      { task: 'Task 1',
-        start: '2023-01-01',
-        end: '2023-01-05' },
-      { task: 'Task 2',
-        start: '2023-01-06',
-        end: '2023-01-10' },
-      { task: 'Task 3',
-        start: '2023-01-02',
-        end: '2023-01-08' },
-      { task: 'Invalid',
-        start: null,
-        end: '2023-01-05' },
-      { task: 'Negative',
-        start: '2023-01-10',
-        end: '2023-01-05' }, // End before start
+describe('createGanttChartOption', () => {
+  const data = [
+    { task: 'Task 1', start: '2023-01-01', end: '2023-01-05' },
+    { task: 'Task 2', start: '2023-01-06', end: '2023-01-10' },
+    { task: 'Task 3', start: '2023-01-02', end: '2023-01-08' },
+    { task: 'Invalid', start: null, end: '2023-01-05' },
+    { task: 'Negative', start: '2023-01-10', end: '2023-01-05' }, // End before start
+  ]
+
+  it('should create basic gantt chart option', () => {
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    expect(option.series).toBeDefined()
+    // Should have 2 series (start + duration) for the default group
+    expect(option.series).toHaveLength(2)
+
+    const series = barSeriesList(option)
+    const startSeries = series[0]
+    const durationSeries = series[1]
+
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(startSeries.name).toBe('_start')
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(startSeries.stack).toBeDefined()
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(startSeries.itemStyle?.color).toBe('transparent')
+
+    // Data length should match number of valid tasks (3)
+    // Task 1, Task 2, Task 3. Invalid and Negative should be filtered.
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(startSeries.data).toHaveLength(3)
+
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(durationSeries.stack).toBe(startSeries.stack)
+  })
+
+  it('should handle grouping via seriesProp', () => {
+    const groupedData = [
+      { task: 'Task 1', start: '2023-01-01', end: '2023-01-05', type: 'Dev' },
+      { task: 'Task 1', start: '2023-01-06', end: '2023-01-10', type: 'Test' }, // Same task, different phase
+      { task: 'Task 2', start: '2023-01-02', end: '2023-01-08', type: 'Dev' },
     ]
 
-    it(
-      'should create basic gantt chart option',
-      () => {
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
+    const option = createGanttChartOption(groupedData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      seriesProp: 'type',
+    })
 
-        expect(option.series).toBeDefined()
-        // Should have 2 series (start + duration) for the default group
-        expect(option.series).toHaveLength(2)
+    // 2 groups (Dev, Test) -> 2 * 2 series = 4 series
+    expect(option.series).toHaveLength(4)
 
-        const series = barSeriesList(option)
-        const startSeries = series[0]
-        const durationSeries = series[1]
+    const series = barSeriesList(option)
+    const names = series.map(s => s.name)
 
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(startSeries.name).toBe('_start')
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(startSeries.stack).toBeDefined()
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(startSeries.itemStyle?.color).toBe('transparent')
+    expect(names).toContain('Dev')
+    expect(names).toContain('Test')
+    expect(names.filter(n => n === '_start')).toHaveLength(2)
+  })
 
-        // Data length should match number of valid tasks (3)
-        // Task 1, Task 2, Task 3. Invalid and Negative should be filtered.
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(startSeries.data).toHaveLength(3)
+  it('should calculate duration correctly', () => {
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
 
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(durationSeries.stack).toBe(startSeries.stack)
-      },
+    const series = barSeriesList(option)
+    const durationSeries = series[1]
+
+    // Task 1: 01-01 to 01-05 = 4 days difference in ms?
+    // Wait, 01-05 usually means start of day.
+    // 2023-01-05 - 2023-01-01 = 4 * 24 * 3600 * 1000
+
+    const rawData = durationSeries?.data
+    const data0 = (
+      Array.isArray(rawData) ? rawData.flatMap(row => (isGanttDurationDatum(row) ? [row] : [])) : []
+    )[0]
+
+    expect(data0?.value).toBeGreaterThan(0)
+
+    // 4 days in ms
+
+    expect(data0?.value).toBe(4 * 24 * 60 * 60 * 1000)
+  })
+
+  it('should unwrap Obsidian Value-wrapped date properties instead of dropping the task', () => {
+    // Reproduces the Gantt-Chart.base bug: BasesNote#get() returns a
+    // `Value` wrapper for date properties (e.g. { icon, date, time,
+    // renderTo(), toString() -> '2023-10-01' }), not a raw string or
+    // native Date. normalizeDate() didn't unwrap it, so every task's
+    // start/end failed to parse and got filtered out (blank chart).
+    const wrappedDate = (iso: string) => ({
+      icon: 'lucide-calendar',
+      time: false,
+      renderTo: () => undefined,
+      toString: () => iso,
+    })
+
+    const wrappedData = [
+      { task: 'Planning', start: wrappedDate('2023-10-01'), end: wrappedDate('2023-10-05') },
+    ]
+
+    const option = createGanttChartOption(wrappedData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    const yAxis = categoryYAxis(option)
+    expect(yAxis.data).toContain('Planning')
+  })
+
+  it('should pin the time axis to the actual task window, not the stacked-from-epoch range', () => {
+    // Regression: the invisible '_start' series stacks bar values from 0,
+    // so ECharts' default time-axis auto-range spanned [epoch, max end]
+    // (decades) instead of the real task window (days).
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    const xAxis = valueXAxis(option)
+    expect(xAxis.min).toBe(
+      Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
     )
-
-    it(
-      'should handle grouping via seriesProp',
-      () => {
-        const groupedData = [
-          { task: 'Task 1',
-            start: '2023-01-01',
-            end: '2023-01-05',
-            type: 'Dev' },
-          { task: 'Task 1',
-            start: '2023-01-06',
-            end: '2023-01-10',
-            type: 'Test' }, // Same task, different phase
-          { task: 'Task 2',
-            start: '2023-01-02',
-            end: '2023-01-08',
-            type: 'Dev' },
-        ]
-
-        const option = createGanttChartOption(
-          groupedData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            seriesProp: 'type',
-          },
-        )
-
-        // 2 groups (Dev, Test) -> 2 * 2 series = 4 series
-        expect(option.series).toHaveLength(4)
-
-        const series = barSeriesList(option)
-        const names = series.map(s => s.name)
-
-        expect(names).toContain('Dev')
-        expect(names).toContain('Test')
-        expect(names.filter(n => n === '_start')).toHaveLength(2)
-      },
+    expect(xAxis.max).toBe(
+      Temporal.PlainDate.from('2023-01-10').toZonedDateTime('UTC').epochMilliseconds,
     )
+  })
 
-    it(
-      'should calculate duration correctly',
-      () => {
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
+  it('should use a value axis (not time) so stacked bars actually render, formatting ticks as dates', () => {
+    // Regression: ECharts fails to position stacked bars against a
+    // 'time'-type axis at all (bars silently disappear) even though the
+    // same numeric values render correctly on a 'value'-type axis —
+    // verified empirically against a live chart instance. Epoch ms are
+    // plain numbers, so 'value' + an axisLabel formatter gets both a
+    // working chart and human-readable date ticks.
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
 
-        const series = barSeriesList(option)
-        const durationSeries = series[1]
+    const xAxis = valueXAxis(option)
+    expect(xAxis.type).toBe('value')
 
-        // Task 1: 01-01 to 01-05 = 4 days difference in ms?
-        // Wait, 01-05 usually means start of day.
-        // 2023-01-05 - 2023-01-01 = 4 * 24 * 3600 * 1000
-
-        const rawData = durationSeries?.data
-        const data0 = (Array.isArray(rawData) ? rawData.flatMap(row => isGanttDurationDatum(row) ? [row] : []) : [])[0]
-
-        expect(data0?.value).toBeGreaterThan(0)
-
-        // 4 days in ms
-
-        expect(data0?.value).toBe(4 * 24 * 60 * 60 * 1000)
-      },
+    const formatted = xAxisFormatter(option)(
+      Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
+      0,
+      undefined,
     )
+    expect(formatted).toBe('2023-01-01')
+  })
 
-    it(
-      'should unwrap Obsidian Value-wrapped date properties instead of dropping the task',
-      () => {
-        // Reproduces the Gantt-Chart.base bug: BasesNote#get() returns a
-        // `Value` wrapper for date properties (e.g. { icon, date, time,
-        // renderTo(), toString() -> '2023-10-01' }), not a raw string or
-        // native Date. normalizeDate() didn't unwrap it, so every task's
-        // start/end failed to parse and got filtered out (blank chart).
-        const wrappedDate = (iso: string) => ({
-          icon: 'lucide-calendar',
-          time: false,
-          renderTo: () => undefined,
-          toString: () => iso,
-        })
+  it('should format time-axis ticks with a date pattern when xAxisFormat is set', () => {
+    // Regression: the tick value is epoch-ms (a number), and the old
+    // formatter routed it through formatValue(), which treats numbers as
+    // numeric and ignores date tokens -- so 'MMM DD' / 'YYYY-[Q]Q' printed
+    // raw milliseconds. It must parse the epoch-ms and apply the pattern.
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      xAxisFormat: 'YYYY-[Q]Q',
+    })
 
-        const wrappedData = [
-          { task: 'Planning',
-            start: wrappedDate('2023-10-01'),
-            end: wrappedDate('2023-10-05') },
-        ]
+    const epochMs = Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds
+    const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
 
-        const option = createGanttChartOption(
-          wrappedData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
+    expect(formatted).toBe('2023-Q1')
+  })
 
-        const yAxis = categoryYAxis(option)
-        expect(yAxis.data).toContain('Planning')
+  it('should format time-axis ticks with month/day tokens when xAxisFormat is set', () => {
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      xAxisFormat: 'MMM DD',
+    })
+
+    const epochMs = Temporal.PlainDate.from('2023-03-05').toZonedDateTime('UTC').epochMilliseconds
+    const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
+
+    expect(formatted).toBe('Mar 05')
+  })
+
+  it('should exclude the invisible _start series from the legend', () => {
+    // Regression (fs4.11): ECharts lists every series in the legend when
+    // `legend.data` isn't set explicitly, so the invisible '_start'
+    // helper series (used to offset stacked bars) leaked into it as a
+    // raw internal name.
+    const groupedData = [
+      { task: 'Task 1', start: '2023-01-01', end: '2023-01-05', type: 'Dev' },
+      { task: 'Task 2', start: '2023-01-02', end: '2023-01-08', type: 'Test' },
+    ]
+
+    const option = createGanttChartOption(groupedData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      seriesProp: 'type',
+      legend: true,
+    })
+
+    const legend = legendComponent(option)
+    expect(legend.data).toEqual(['Dev', 'Test'])
+    expect(legend.data).not.toContain('_start')
+  })
+
+  it('should hide overlapping task-bar labels instead of letting them collide with an adjacent row', () => {
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    const series = barSeriesList(option)
+    const durationSeries = series[1]
+
+    // @ts-expect-error - suppress strictNullChecks/type errors
+    expect(durationSeries.labelLayout?.hideOverlap).toBe(true)
+  })
+
+  it('should filter invalid data', () => {
+    const option = createGanttChartOption(data, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    const yAxis = categoryYAxis(option)
+
+    expect(yAxis.data).not.toContain('Invalid')
+
+    expect(yAxis.data).not.toContain('Negative')
+  })
+
+  it('should attach rowIndex and filePath to duration series data items', () => {
+    const testData = [
+      { task: 'Task A', start: '2023-01-01', end: '2023-01-05', file: { path: 'notes/a.md' } },
+      {
+        task: 'Task B',
+        start: '2023-01-06',
+        end: '2023-01-10',
+        rowIndex: 88,
+        filePath: 'notes/b.md',
       },
-    )
+    ]
 
-    it(
-      'should pin the time axis to the actual task window, not the stacked-from-epoch range',
-      () => {
-        // Regression: the invisible '_start' series stacks bar values from 0,
-        // so ECharts' default time-axis auto-range spanned [epoch, max end]
-        // (decades) instead of the real task window (days).
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
+    const option = createGanttChartOption(testData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
 
-        const xAxis = valueXAxis(option)
-        expect(xAxis.min).toBe(Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds)
-        expect(xAxis.max).toBe(Temporal.PlainDate.from('2023-01-10').toZonedDateTime('UTC').epochMilliseconds)
-      },
-    )
+    const series = barSeriesList(option)
+    const durationSeries = series[1]
+    expect(durationSeries).toBeDefined()
+    const durationData = Array.isArray(durationSeries?.data)
+      ? durationSeries.data.flatMap(d => (isGanttDurationDatum(d) ? [d] : []))
+      : []
+    expect(durationData).toHaveLength(2)
+    expect(durationData[0]?.rowIndex).toBe(0)
+    expect(durationData[0]?.filePath).toBe('notes/a.md')
+    expect(durationData[1]?.rowIndex).toBe(88)
+    expect(durationData[1]?.filePath).toBe('notes/b.md')
+  })
 
-    it(
-      'should use a value axis (not time) so stacked bars actually render, formatting ticks as dates',
-      () => {
-        // Regression: ECharts fails to position stacked bars against a
-        // 'time'-type axis at all (bars silently disappear) even though the
-        // same numeric values render correctly on a 'value'-type axis —
-        // verified empirically against a live chart instance. Epoch ms are
-        // plain numbers, so 'value' + an axisLabel formatter gets both a
-        // working chart and human-readable date ticks.
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
+  it('should emit distinct quarter ticks via customValues when xAxisFormat is quarter-based', () => {
+    const quarterData = [
+      { task: 'Task A', start: '2024-01-07', end: '2024-03-15', phase: 'Q1' },
+      { task: 'Task B', start: '2024-04-10', end: '2024-08-20', phase: 'Q2-Q3' },
+    ]
+    const option = createGanttChartOption(quarterData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      seriesProp: 'phase',
+      xAxisFormat: 'YYYY-[Q]Q',
+    })
 
-        const xAxis = valueXAxis(option)
-        expect(xAxis.type).toBe('value')
+    const xAxis = valueXAxis(option)
+    const customValues = xAxis.axisLabel?.customValues
+    expect(Array.isArray(customValues)).toBe(true)
+    if (!Array.isArray(customValues)) {
+      return
+    }
+    const formatter = xAxisFormatter(option)
+    const labels = customValues.map((v, idx) => formatter(Number(v), idx, undefined))
+    expect(labels).toEqual(['2024-Q1', '2024-Q2', '2024-Q3'])
+  })
 
-        const formatted = xAxisFormatter(option)(
-          Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds,
-          0,
-          undefined,
-        )
-        expect(formatted).toBe('2023-01-01')
-      },
-    )
+  it('should suppress labels on bars with an adjacent bar to the right on the same task row and reserve right grid margin', () => {
+    const multiBarData = [
+      { task: 'Data Warehouse', start: '2024-01-07', end: '2024-02-08', month: 'Jan 2024' },
+      { task: 'Data Warehouse', start: '2024-02-08', end: '2024-03-10', month: 'Feb 2024' },
+      { task: 'API Gateway', start: '2024-06-01', end: '2024-08-30', month: 'Jun 2024' },
+    ]
+    const option = createGanttChartOption(multiBarData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+      seriesProp: 'month',
+    })
 
-    it(
-      'should format time-axis ticks with a date pattern when xAxisFormat is set',
-      () => {
-        // Regression: the tick value is epoch-ms (a number), and the old
-        // formatter routed it through formatValue(), which treats numbers as
-        // numeric and ignores date tokens -- so 'MMM DD' / 'YYYY-[Q]Q' printed
-        // raw milliseconds. It must parse the epoch-ms and apply the pattern.
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            xAxisFormat: 'YYYY-[Q]Q',
-          },
-        )
+    const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid
+    expect(grid?.right).toBe('22%')
 
-        const epochMs = Temporal.PlainDate.from('2023-01-01').toZonedDateTime('UTC').epochMilliseconds
-        const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
+    const series = barSeriesList(option)
+    const janSeries = series.find(s => s.name === 'Jan 2024')
+    const febSeries = series.find(s => s.name === 'Feb 2024')
+    const junSeries = series.find(s => s.name === 'Jun 2024')
 
-        expect(formatted).toBe('2023-Q1')
-      },
-    )
+    const janItem = Array.isArray(janSeries?.data) ? janSeries.data[0] : undefined
+    const febItem = Array.isArray(febSeries?.data) ? febSeries.data[0] : undefined
+    const junItem = Array.isArray(junSeries?.data) ? junSeries.data[1] : undefined
 
-    it(
-      'should format time-axis ticks with month/day tokens when xAxisFormat is set',
-      () => {
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            xAxisFormat: 'MMM DD',
-          },
-        )
-
-        const epochMs = Temporal.PlainDate.from('2023-03-05').toZonedDateTime('UTC').epochMilliseconds
-        const formatted = xAxisFormatter(option)(epochMs, 0, undefined)
-
-        expect(formatted).toBe('Mar 05')
-      },
-    )
-
-    it(
-      'should exclude the invisible _start series from the legend',
-      () => {
-        // Regression (fs4.11): ECharts lists every series in the legend when
-        // `legend.data` isn't set explicitly, so the invisible '_start'
-        // helper series (used to offset stacked bars) leaked into it as a
-        // raw internal name.
-        const groupedData = [
-          { task: 'Task 1',
-            start: '2023-01-01',
-            end: '2023-01-05',
-            type: 'Dev' },
-          { task: 'Task 2',
-            start: '2023-01-02',
-            end: '2023-01-08',
-            type: 'Test' },
-        ]
-
-        const option = createGanttChartOption(
-          groupedData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            seriesProp: 'type',
-            legend: true,
-          },
-        )
-
-        const legend = legendComponent(option)
-        expect(legend.data).toEqual(['Dev', 'Test'])
-        expect(legend.data).not.toContain('_start')
-      },
-    )
-
-    it(
-      'should hide overlapping task-bar labels instead of letting them collide with an adjacent row',
-      () => {
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
-
-        const series = barSeriesList(option)
-        const durationSeries = series[1]
-
-        // @ts-expect-error - suppress strictNullChecks/type errors
-        expect(durationSeries.labelLayout?.hideOverlap).toBe(true)
-      },
-    )
-
-    it(
-      'should filter invalid data',
-      () => {
-        const option = createGanttChartOption(
-          data,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
-
-        const yAxis = categoryYAxis(option)
-
-        expect(yAxis.data).not.toContain('Invalid')
-
-        expect(yAxis.data).not.toContain('Negative')
-      },
-    )
-
-    it(
-      'should attach rowIndex and filePath to duration series data items',
-      () => {
-        const testData = [
-          { task: 'Task A', start: '2023-01-01', end: '2023-01-05', file: { path: 'notes/a.md' } },
-          { task: 'Task B', start: '2023-01-06', end: '2023-01-10', rowIndex: 88, filePath: 'notes/b.md' },
-        ]
-
-        const option = createGanttChartOption(
-          testData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-          },
-        )
-
-        const series = barSeriesList(option)
-        const durationSeries = series[1]
-        expect(durationSeries).toBeDefined()
-        const durationData = Array.isArray(durationSeries?.data)
-          ? durationSeries.data.flatMap(d => (isGanttDurationDatum(d) ? [d] : []))
-          : []
-        expect(durationData).toHaveLength(2)
-        expect(durationData[0]?.rowIndex).toBe(0)
-        expect(durationData[0]?.filePath).toBe('notes/a.md')
-        expect(durationData[1]?.rowIndex).toBe(88)
-        expect(durationData[1]?.filePath).toBe('notes/b.md')
-      },
-    )
-
-    it(
-      'should emit distinct quarter ticks via customValues when xAxisFormat is quarter-based',
-      () => {
-        const quarterData = [
-          { task: 'Task A', start: '2024-01-07', end: '2024-03-15', phase: 'Q1' },
-          { task: 'Task B', start: '2024-04-10', end: '2024-08-20', phase: 'Q2-Q3' },
-        ]
-        const option = createGanttChartOption(
-          quarterData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            seriesProp: 'phase',
-            xAxisFormat: 'YYYY-[Q]Q',
-          },
-        )
-
-        const xAxis = valueXAxis(option)
-        const customValues = xAxis.axisLabel?.customValues
-        expect(Array.isArray(customValues)).toBe(true)
-        if (!Array.isArray(customValues)) {
-          return
-        }
-        const formatter = xAxisFormatter(option)
-        const labels = customValues.map((v, idx) => formatter(Number(v), idx, undefined))
-        expect(labels).toEqual(['2024-Q1', '2024-Q2', '2024-Q3'])
-      },
-    )
-
-    it(
-      'should suppress labels on bars with an adjacent bar to the right on the same task row and reserve right grid margin',
-      () => {
-        const multiBarData = [
-          { task: 'Data Warehouse', start: '2024-01-07', end: '2024-02-08', month: 'Jan 2024' },
-          { task: 'Data Warehouse', start: '2024-02-08', end: '2024-03-10', month: 'Feb 2024' },
-          { task: 'API Gateway', start: '2024-06-01', end: '2024-08-30', month: 'Jun 2024' },
-        ]
-        const option = createGanttChartOption(
-          multiBarData,
-          {
-            taskProp: 'task',
-            startProp: 'start',
-            endProp: 'end',
-            seriesProp: 'month',
-          },
-        )
-
-        const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid
-        expect(grid?.right).toBe('22%')
-
-        const series = barSeriesList(option)
-        const janSeries = series.find(s => s.name === 'Jan 2024')
-        const febSeries = series.find(s => s.name === 'Feb 2024')
-        const junSeries = series.find(s => s.name === 'Jun 2024')
-
-        const janItem = Array.isArray(janSeries?.data) ? janSeries.data[0] : undefined
-        const febItem = Array.isArray(febSeries?.data) ? febSeries.data[0] : undefined
-        const junItem = Array.isArray(junSeries?.data) ? junSeries.data[1] : undefined
-
-        expect(typeof janItem === 'object' && janItem !== null && 'label' in janItem ? janItem.label : undefined).toEqual({ show: false })
-        expect(typeof febItem === 'object' && febItem !== null && 'label' in febItem ? febItem.label : undefined).toBeUndefined()
-        expect(typeof junItem === 'object' && junItem !== null && 'label' in junItem ? junItem.label : undefined).toBeUndefined()
-      },
-    )
-  },
-)
+    expect(
+      typeof janItem === 'object' && janItem !== null && 'label' in janItem
+        ? janItem.label
+        : undefined,
+    ).toEqual({ show: false })
+    expect(
+      typeof febItem === 'object' && febItem !== null && 'label' in febItem
+        ? febItem.label
+        : undefined,
+    ).toBeUndefined()
+    expect(
+      typeof junItem === 'object' && junItem !== null && 'label' in junItem
+        ? junItem.label
+        : undefined,
+    ).toBeUndefined()
+  })
+})

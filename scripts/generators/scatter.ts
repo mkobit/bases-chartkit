@@ -29,38 +29,33 @@ import { CONTINENTS, themeItem } from './themes'
  * every chart type that shares this arbitrary, without touching the
  * realistic slope/noise ranges themselves.
  */
-export const scatterChartArbitrary = fc.record({
-  count: fc.integer({ min: 35,
-    max: 65 }),
-  slope: fc.float({ min: 0.5,
-    max: 2.0,
-    noNaN: true }),
-  intercept: fc.integer({ min: 10,
-    max: 50 }),
-}).chain((config) => {
-  return fc.array(
-    fc.record({
-      x: fc.float({ min: 10,
-        max: 180,
-        noNaN: true }),
-      noise: fc.float({ min: -15,
-        max: 15,
-        noNaN: true }),
-    }),
-    { minLength: config.count,
-      maxLength: config.count },
-  ).map((points) => {
-    const rawData = points.map(p => ({
-      x: parseFloat(p.x.toFixed(1)),
-      y: parseFloat((p.x * config.slope + config.intercept + p.noise).toFixed(1)),
-    }))
-    const data = R.uniqueBy(rawData, d => d.x)
-    return {
-      type: 'scatter',
-      data,
-    }
+export const scatterChartArbitrary = fc
+  .record({
+    count: fc.integer({ min: 35, max: 65 }),
+    slope: fc.float({ min: 0.5, max: 2.0, noNaN: true }),
+    intercept: fc.integer({ min: 10, max: 50 }),
   })
-})
+  .chain(config => {
+    return fc
+      .array(
+        fc.record({
+          x: fc.float({ min: 10, max: 180, noNaN: true }),
+          noise: fc.float({ min: -15, max: 15, noNaN: true }),
+        }),
+        { minLength: config.count, maxLength: config.count },
+      )
+      .map(points => {
+        const rawData = points.map(p => ({
+          x: parseFloat(p.x.toFixed(1)),
+          y: parseFloat((p.x * config.slope + config.intercept + p.noise).toFixed(1)),
+        }))
+        const data = R.uniqueBy(rawData, d => d.x)
+        return {
+          type: 'scatter',
+          data,
+        }
+      })
+  })
 
 /**
  * Layers a categorical seriesProp (continent) and a real-world-scale
@@ -77,18 +72,19 @@ export const scatterChartArbitrary = fc.record({
  * Sized-By-Population variant in vault-gen/registry.ts). Do not shrink this
  * range to "look nicer" -- that would silently defang the regression test.
  */
-export const demographicScatterArbitrary = scatterChartArbitrary.chain(scatter => fc.array(
-  fc.tuple(
-    themeItem(CONTINENTS),
-    fc.integer({ min: 5, max: 1400 }),
-  ),
-  { minLength: scatter.data.length, maxLength: scatter.data.length },
-).map(extras => ({
-  type: 'scatter',
-  data: R.zip(scatter.data, extras).map(([point, [continent, population]]) => ({
-    x: point.x,
-    y: point.y,
-    continent,
-    population,
-  })),
-})))
+export const demographicScatterArbitrary = scatterChartArbitrary.chain(scatter =>
+  fc
+    .array(fc.tuple(themeItem(CONTINENTS), fc.integer({ min: 5, max: 1400 })), {
+      minLength: scatter.data.length,
+      maxLength: scatter.data.length,
+    })
+    .map(extras => ({
+      type: 'scatter',
+      data: R.zip(scatter.data, extras).map(([point, [continent, population]]) => ({
+        x: point.x,
+        y: point.y,
+        continent,
+        population,
+      })),
+    })),
+)

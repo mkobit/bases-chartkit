@@ -1,11 +1,15 @@
 #!/usr/bin/env bun
 import { spawnSync } from 'node:child_process'
 import { z } from 'zod'
-const payloadSchema = z.object({
-  tool_input: z.object({
-    file_path: z.string(),
-  }).partial(),
-}).partial()
+const payloadSchema = z
+  .object({
+    tool_input: z
+      .object({
+        file_path: z.string(),
+      })
+      .partial(),
+  })
+  .partial()
 async function main(): Promise<void> {
   const raw = await new Response(Bun.stdin.stream()).text()
   const parsed = payloadSchema.safeParse(raw.trim().length > 0 ? JSON.parse(raw) : {})

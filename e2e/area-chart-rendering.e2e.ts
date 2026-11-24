@@ -1,5 +1,12 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface AreaSeriesLike {
   readonly name?: string
@@ -26,26 +33,36 @@ test.describe('area chart rendering', () => {
   // grouping and drift if the fixture changes, so this reads series[0]'s
   // resolved region name and dataset[0]'s first row for that region off the
   // live option, hovers exactly that point, and asserts the tooltip matches.
-  test('hovering the first point of the first region series shows its region, date, and revenue in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'area/Basic.base', viewName: 'Sales by region (area)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('hovering the first point of the first region series shows its region, date, and revenue in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'area/Basic.base', viewName: 'Sales by region (area)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // See stacked-bar-chart-rendering.e2e.ts for why this waits for full
     // indexing before reading the comparison values, then reads them AFTER
@@ -53,7 +70,10 @@ test.describe('area chart rendering', () => {
     // values describe the exact render the tooltip came from.
     await waitForVaultIndexed(page)
 
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     const option = asOptionLike<{
       readonly series: readonly AreaSeriesLike[]
@@ -90,33 +110,43 @@ test.describe('area chart rendering', () => {
   // y-axis and Revenue along the x-axis. Assert the swap landed on the live
   // ECharts option rather than a screenshot: it proves the config flowed
   // config -> AreaChartView -> transformer -> rendered option end-to-end.
-  test('the flipped-axis variant renders the category axis on y and the value axis on x', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'area/FlippedAxis.base', viewName: 'Sales by region (flipped axis)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the flipped-axis variant renders the category axis on y and the value axis on x', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'area/FlippedAxis.base', viewName: 'Sales by region (flipped axis)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // getOption() normalizes xAxis/yAxis to arrays. Default (un-flipped) area
     // puts the Date category on x and Revenue value on y; flipAxis inverts
     // both, so this assertion fails if the option ever regressed to default.
     const option = asOptionLike<{
       readonly xAxis?: readonly { readonly type?: string }[]
-      readonly yAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+      readonly yAxis?: readonly { readonly type?: string; readonly data?: readonly unknown[] }[]
     }>(await getChartOption(page))
     expect(option?.xAxis?.[0]?.type).toBe('value')
     expect(option?.yAxis?.[0]?.type).toBe('category')
@@ -133,38 +163,50 @@ test.describe('area chart rendering', () => {
   // null/undefined fallback), not full-month-name strings. Category data is a
   // plain string[] on a category axis, so getChartOption reads it directly --
   // no in-page formatter invocation needed.
-  test('the formula variant plots Bases-formula-formatted "Month DD, YYYY" dates on the x-axis', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'area/Formula.base', viewName: 'Sales by region (formatted dates)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('the formula variant plots Bases-formula-formatted "Month DD, YYYY" dates on the x-axis', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'area/Formula.base', viewName: 'Sales by region (formatted dates)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     await waitForVaultIndexed(page)
 
     const option = asOptionLike<{
-      readonly xAxis?: readonly { readonly type?: string, readonly data?: readonly unknown[] }[]
+      readonly xAxis?: readonly { readonly type?: string; readonly data?: readonly unknown[] }[]
     }>(await getChartOption(page))
     const categories = option?.xAxis?.[0]?.data ?? []
     expect(categories.length).toBeGreaterThan(0)
     // Every backing note's Date is the first of a 2024 month, so each formula-
     // computed category is a full month name, zero-padded day 01, and the year.
     for (const category of categories) {
-      expect(category).toMatch(/^(January|February|March|April|May|June|July|August|September|October|November|December) \d{2}, 2024$/)
+      expect(category).toMatch(
+        /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{2}, 2024$/,
+      )
     }
     expect(categories).toContain('January 01, 2024')
   })

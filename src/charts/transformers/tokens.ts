@@ -16,15 +16,7 @@ export const COLOR_TOKENS = {
       '#ea7ccc', // Pink
       '#48b5b7', // Teal
     ],
-    sequential: [
-      '#cde2fb',
-      '#9ec5f4',
-      '#6da7ec',
-      '#3987e5',
-      '#256abf',
-      '#184f95',
-      '#0d366b',
-    ],
+    sequential: ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'],
   },
   status: {
     up: '#14b143',

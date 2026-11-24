@@ -1,5 +1,9 @@
 import { test, expect } from './fixtures/obsidian'
-import { evaluateObsidian, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  evaluateObsidian,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('pictorial-bar chart rendering', () => {
   // Regression coverage for bck-44j, extending the bar hover-tooltip pattern
@@ -17,27 +21,37 @@ test.describe('pictorial-bar chart rendering', () => {
   // Rect is a much larger leaf than any individual repeated symbol tile, so it
   // loses the smallest-area tie-break and a real, hit-testable pictogram tile
   // gets hovered instead.
-  test('hovering the first bar shows its category, series name, and value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'pictorial-bar/Basic.base', viewName: 'Department spend (pictorial bar)' })
+  test('hovering the first bar shows its category, series name, and value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'pictorial-bar/Basic.base', viewName: 'Department spend (pictorial bar)' },
+    )
 
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
 
     // Dept-Spend-0.md (the vault's deterministically-generated first note
     // for this chart type) is { Department: "Sales", Spend: 140022 }.
-    const tooltipText = await hoverChartDataPointAndGetTooltip(page, { seriesIndex: 0, dataIndex: 0 })
+    const tooltipText = await hoverChartDataPointAndGetTooltip(page, {
+      seriesIndex: 0,
+      dataIndex: 0,
+    })
 
     // Regression coverage for bck-i9b.8: pictorial-bar.ts's default
     // (formatter-less) axis-trigger tooltip hit the same object-row labeling

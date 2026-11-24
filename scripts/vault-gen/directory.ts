@@ -52,13 +52,16 @@ function buildDirectoryMarkdown(specs: readonly ChartExampleSpec[]): string {
   const bulletLines = R.pipe(
     specs,
     R.sortBy(spec => spec.chartType),
-    R.map(spec => `- **[[${primaryVariantPath(spec)}|${spec.chartType}]]** — ${spec.description}${echartsSuffix(spec)}`),
+    R.map(
+      spec =>
+        `- **[[${primaryVariantPath(spec)}|${spec.chartType}]]** — ${spec.description}${echartsSuffix(spec)}`,
+    ),
   )
 
   return [
     '# Bases Chart Kit example vault',
     '',
-    'This vault demonstrates every chart type supported by Bases Chart Kit. Each folder is a self-contained example: the chart type\'s `.base` file(s) plus the backing notes they read from.',
+    "This vault demonstrates every chart type supported by Bases Chart Kit. Each folder is a self-contained example: the chart type's `.base` file(s) plus the backing notes they read from.",
     '',
     'Browse every example `.base` file interactively:',
     '',
@@ -76,6 +79,9 @@ function buildDirectoryMarkdown(specs: readonly ChartExampleSpec[]): string {
 // Always built from the full registry (not whatever subset a --chart-type
 // filter selected for regeneration) so a partial run never leaves the index
 // reflecting only the chart types it happened to touch.
-export async function writeDirectoryIndex(specs: readonly ChartExampleSpec[], vaultRoot: string): Promise<void> {
+export async function writeDirectoryIndex(
+  specs: readonly ChartExampleSpec[],
+  vaultRoot: string,
+): Promise<void> {
   await fs.writeFile(path.join(vaultRoot, 'Directory.md'), buildDirectoryMarkdown(specs))
 }

@@ -3,7 +3,9 @@ import { isRecord, safeToString } from './bases-values'
 // Duck-types a native Date (or anything Date-shaped) without importing the
 // banned `Date` global as a type -- same pattern as isRenderableValue above.
 function isDateLike(val: unknown): val is { readonly getTime: () => number } {
-  return typeof val === 'object' && val !== null && 'getTime' in val && typeof val.getTime === 'function'
+  return (
+    typeof val === 'object' && val !== null && 'getTime' in val && typeof val.getTime === 'function'
+  )
 }
 
 // Parses a raw Bases property value (number, native Date, Value-wrapper, or
@@ -27,16 +29,13 @@ export function parseDateToEpochMs(val: unknown): number | null {
   }
   try {
     return Temporal.Instant.from(str).epochMilliseconds
-  }
-  catch {
+  } catch {
     try {
       return Temporal.PlainDateTime.from(str).toZonedDateTime('UTC').epochMilliseconds
-    }
-    catch {
+    } catch {
       try {
         return Temporal.PlainDate.from(str).toZonedDateTime('UTC').epochMilliseconds
-      }
-      catch {
+      } catch {
         return null
       }
     }

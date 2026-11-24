@@ -103,10 +103,7 @@ describe('Chart interactivity', () => {
         data: [10, 20],
         dataIndex: 1,
       }
-      const data = [
-        { filePath: 'Notes/First.md' },
-        { filePath: 'Notes/Second.md' },
-      ]
+      const data = [{ filePath: 'Notes/First.md' }, { filePath: 'Notes/Second.md' }]
       expect(extractTargetFilePath(params, data)).toBe('Notes/Second.md')
     })
 
@@ -165,10 +162,7 @@ describe('Chart interactivity', () => {
     })
 
     it('filters out-of-range or missing file paths from rowIndices', () => {
-      const data = [
-        { filePath: 'Notes/Zero.md' },
-        { otherProp: 'No file path here' },
-      ]
+      const data = [{ filePath: 'Notes/Zero.md' }, { otherProp: 'No file path here' }]
       const params = {
         data: {
           rowIndices: [0, 1, 99],
@@ -178,9 +172,7 @@ describe('Chart interactivity', () => {
     })
 
     it('prefers filePaths over rowIndices when both are present', () => {
-      const data = [
-        { filePath: 'Notes/DataZero.md' },
-      ]
+      const data = [{ filePath: 'Notes/DataZero.md' }]
       const params = {
         data: {
           filePaths: ['Notes/Direct.md'],
@@ -191,9 +183,7 @@ describe('Chart interactivity', () => {
     })
 
     it('falls back to rowIndices when filePaths is empty', () => {
-      const data = [
-        { filePath: 'Notes/DataZero.md' },
-      ]
+      const data = [{ filePath: 'Notes/DataZero.md' }]
       const params = {
         data: {
           filePaths: [],
@@ -267,13 +257,15 @@ describe('Chart interactivity', () => {
   describe('resolveModClickLeaf', () => {
     it('returns pane type for Mod-click', () => {
       const fakeEvent: RawMouseEventData = { button: 0, metaKey: true }
-      const isModEvent = (evt?: RawMouseEventData | null) => (evt && (evt.metaKey || evt.ctrlKey) ? 'tab' : false)
+      const isModEvent = (evt?: RawMouseEventData | null) =>
+        evt && (evt.metaKey || evt.ctrlKey) ? 'tab' : false
       expect(resolveModClickLeaf(fakeEvent, isModEvent)).toBe('tab')
     })
 
     it('returns pane type for middle click', () => {
       const fakeEvent: RawMouseEventData = { button: 1, metaKey: false }
-      const isModEvent = (evt?: RawMouseEventData | null) => (evt && evt.button === 1 ? 'tab' : false)
+      const isModEvent = (evt?: RawMouseEventData | null) =>
+        evt && evt.button === 1 ? 'tab' : false
       expect(resolveModClickLeaf(fakeEvent, isModEvent)).toBe('tab')
     })
 
@@ -328,7 +320,9 @@ describe('Chart interactivity', () => {
   describe('Disambiguation selector logic', () => {
     describe('formatDisambiguationLabel', () => {
       it('extracts filename from path containing folders', () => {
-        expect(formatDisambiguationLabel('Folder/Subfolder/Project Note.md')).toBe('Project Note.md')
+        expect(formatDisambiguationLabel('Folder/Subfolder/Project Note.md')).toBe(
+          'Project Note.md',
+        )
       })
 
       it('returns plain filename if no slash is present', () => {
@@ -371,7 +365,7 @@ describe('Chart interactivity', () => {
         const tracker = new SelectionTracker()
         const paths = ['Folder/Note A.md', 'Folder/Note B.md']
 
-        populateDisambiguationMenu(menu, paths, (filePath) => {
+        populateDisambiguationMenu(menu, paths, filePath => {
           tracker.record(filePath)
         })
 

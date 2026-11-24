@@ -10,7 +10,7 @@ export class ChartResizeController {
   constructor(targetEl: HTMLElement, onResize: () => void, delayMs = 100) {
     this.onResize = onResize
     this.delayMs = delayMs
-    this.observer = new ResizeObserver((_entries) => {
+    this.observer = new ResizeObserver(_entries => {
       this.trigger()
     })
     this.observer.observe(targetEl)

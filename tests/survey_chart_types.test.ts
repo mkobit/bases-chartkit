@@ -58,7 +58,9 @@ describe('resolveSurveyTheme', () => {
     const resolved = resolveSurveyTheme('sepia', '/repo')
     expect(resolved.theme).toBeUndefined()
     expect(resolved.outputDir).toBe('/repo/docs/images/chart-types')
-    expect(resolved.warning).toContain('SURVEY_THEME=sepia is not "dark"; falling back to light mode')
+    expect(resolved.warning).toContain(
+      'SURVEY_THEME=sepia is not "dark"; falling back to light mode',
+    )
   })
 })
 
@@ -97,8 +99,7 @@ describe('collectChartViews', () => {
           chartType: 'echarts-pie',
         },
       ])
-    }
-    finally {
+    } finally {
       await fs.rm(tempVault, { recursive: true, force: true })
     }
   })
@@ -117,41 +118,50 @@ describe('captureCanvasScreenshot and captureView', () => {
       },
       websocket: {
         message(ws, raw) {
-          const parsed: { readonly id?: number, readonly method?: string, readonly params?: { readonly expression?: string } }
-            = JSON.parse(String(raw))
+          const parsed: {
+            readonly id?: number
+            readonly method?: string
+            readonly params?: { readonly expression?: string }
+          } = JSON.parse(String(raw))
 
           if (parsed.method === 'Runtime.evaluate') {
             const expr = parsed.params?.expression ?? ''
             if (expr.includes('getBoundingClientRect')) {
-              ws.send(JSON.stringify({
+              ws.send(
+                JSON.stringify({
+                  id: parsed.id,
+                  result: {
+                    result: {
+                      value: { x: 12, y: 34, width: 668, height: 501 },
+                    },
+                  },
+                }),
+              )
+              return
+            }
+            ws.send(
+              JSON.stringify({
                 id: parsed.id,
                 result: {
                   result: {
-                    value: { x: 12, y: 34, width: 668, height: 501 },
+                    value: 1,
                   },
                 },
-              }))
-              return
-            }
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                result: {
-                  value: 1,
-                },
-              },
-            }))
+              }),
+            )
             return
           }
 
           if (parsed.method === 'Page.captureScreenshot') {
             capturedParams = [...capturedParams, parsed.params]
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                data: Buffer.from('png-canvas-bytes').toString('base64'),
-              },
-            }))
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: {
+                  data: Buffer.from('png-canvas-bytes').toString('base64'),
+                },
+              }),
+            )
             return
           }
 
@@ -196,8 +206,7 @@ describe('captureCanvasScreenshot and captureView', () => {
         fileName: 'bar-basic--department-spend.png',
         ok: true,
       })
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
       await fs.rm(tempOut, { recursive: true, force: true })
@@ -215,16 +224,18 @@ describe('captureCanvasScreenshot and captureView', () => {
       },
       websocket: {
         message(ws, raw) {
-          const parsed: { readonly id?: number, readonly method?: string } = JSON.parse(String(raw))
+          const parsed: { readonly id?: number; readonly method?: string } = JSON.parse(String(raw))
           if (parsed.method === 'Runtime.evaluate') {
-            ws.send(JSON.stringify({
-              id: parsed.id,
-              result: {
-                exceptionDetails: {
-                  text: 'Simulated renderer error',
+            ws.send(
+              JSON.stringify({
+                id: parsed.id,
+                result: {
+                  exceptionDetails: {
+                    text: 'Simulated renderer error',
+                  },
                 },
-              },
-            }))
+              }),
+            )
             return
           }
           ws.send(JSON.stringify({ id: parsed.id, result: {} }))
@@ -250,8 +261,7 @@ describe('captureCanvasScreenshot and captureView', () => {
       expect(result.ok).toBe(false)
       expect(result.fileName).toBe('bar-basic--broken-view.png')
       expect(result.error).toContain('Simulated renderer error')
-    }
-    finally {
+    } finally {
       await client.close()
       await server.stop(true)
       await fs.rm(tempOut, { recursive: true, force: true })

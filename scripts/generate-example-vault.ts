@@ -29,7 +29,10 @@ interface CliOptions {
   readonly outDir: string
 }
 
-function resolveSpecs(specs: readonly ChartExampleSpec[], chartTypeFilter: readonly string[] | undefined): readonly ChartExampleSpec[] {
+function resolveSpecs(
+  specs: readonly ChartExampleSpec[],
+  chartTypeFilter: readonly string[] | undefined,
+): readonly ChartExampleSpec[] {
   if (!chartTypeFilter || chartTypeFilter.length === 0) {
     return specs
   }
@@ -53,7 +56,9 @@ function printPlan(specs: readonly ChartExampleSpec[], seed: number, outDir: str
 function printResults(results: readonly WriteResult[]): void {
   console.log('\nGeneration Summary:')
   for (const result of results) {
-    console.log(`- ${result.chartType}: ${result.noteCount} note(s), ${result.baseFileCount} .base file(s)`)
+    console.log(
+      `- ${result.chartType}: ${result.noteCount} note(s), ${result.baseFileCount} .base file(s)`,
+    )
   }
   const totalNotes = results.reduce((sum, r) => sum + r.noteCount, 0)
   console.log(`\nTotal: ${results.length} chart type(s), ${totalNotes} note(s)`)
@@ -63,7 +68,9 @@ async function main(options: CliOptions): Promise<void> {
   const specs = resolveSpecs(registry, options.chartType)
 
   if (specs.length === 0) {
-    console.error(`No chart types matched --chart-type filter: ${(options.chartType ?? []).join(', ')}`)
+    console.error(
+      `No chart types matched --chart-type filter: ${(options.chartType ?? []).join(', ')}`,
+    )
     process.exit(1)
   }
 
@@ -75,7 +82,9 @@ async function main(options: CliOptions): Promise<void> {
   }
 
   if (!options.skipConfirm) {
-    const confirmed = await confirmAction(`This will clear and regenerate ${specs.length} chart-type director${specs.length === 1 ? 'y' : 'ies'} under ${options.outDir}. Continue?`)
+    const confirmed = await confirmAction(
+      `This will clear and regenerate ${specs.length} chart-type director${specs.length === 1 ? 'y' : 'ies'} under ${options.outDir}. Continue?`,
+    )
     if (!confirmed) {
       console.log('Aborted.')
       return
@@ -99,23 +108,41 @@ const EMPTY_CHART_TYPE_LIST: readonly string[] = []
 
 program
   .name('generate-example-vault')
-  .description('Regenerate the example vault\'s chart-type directories from scripts/vault-gen/registry.ts')
+  .description(
+    "Regenerate the example vault's chart-type directories from scripts/vault-gen/registry.ts",
+  )
   .option('-s, --seed <number>', 'Seed for deterministic generation', Number, DEFAULT_SEED)
-  .option('--chart-type <slug>', 'Restrict to one chart-type directory (repeatable)', (value: string, previous: readonly string[]) => [...previous, value], EMPTY_CHART_TYPE_LIST)
+  .option(
+    '--chart-type <slug>',
+    'Restrict to one chart-type directory (repeatable)',
+    (value: string, previous: readonly string[]) => [...previous, value],
+    EMPTY_CHART_TYPE_LIST,
+  )
   .option('--dry-run', 'Print the plan without writing any files', false)
   .option('-y, --skip-confirm', 'Skip the confirmation prompt', false)
   .option('--out-dir <path>', 'Override the output vault directory', DEFAULT_VAULT_DIR)
-  .action(async (options: { seed: number, chartType: readonly string[], dryRun: boolean, skipConfirm: boolean, outDir: string }) => {
-    await main({
-      seed: options.seed,
-      chartType: options.chartType,
-      dryRun: options.dryRun,
-      skipConfirm: options.skipConfirm,
-      outDir: options.outDir,
-    })
-  })
+  .action(
+    async (options: {
+      seed: number
+      chartType: readonly string[]
+      dryRun: boolean
+      skipConfirm: boolean
+      outDir: string
+    }) => {
+      await main({
+        seed: options.seed,
+        chartType: options.chartType,
+        dryRun: options.dryRun,
+        skipConfirm: options.skipConfirm,
+        outDir: options.outDir,
+      })
+    },
+  )
 
 program.parseAsync().catch((error: unknown) => {
-  console.error('Fatal error in generate-example-vault:', error instanceof Error ? error.message : String(error))
+  console.error(
+    'Fatal error in generate-example-vault:',
+    error instanceof Error ? error.message : String(error),
+  )
   process.exit(1)
 })

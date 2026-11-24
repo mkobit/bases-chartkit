@@ -18,11 +18,7 @@ interface BoxplotResult {
 }
 
 function isBoxplotResult(data: unknown): data is BoxplotResult {
-  return (
-    isRecord(data)
-    && 'boxData' in data
-    && Array.isArray(data['boxData'])
-  )
+  return isRecord(data) && 'boxData' in data && Array.isArray(data['boxData'])
 }
 
 export function createBoxplotChartOption(
@@ -37,11 +33,8 @@ export function createBoxplotChartOption(
 
   const xAxisData: readonly string[] = R.pipe(
     data,
-    R.map((item) => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
+    R.map(item => {
+      const xValRaw = getNestedValue(item, xProp)
       return xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw)
     }),
     R.unique(),
@@ -49,34 +42,25 @@ export function createBoxplotChartOption(
 
   const seriesMap = R.pipe(
     data,
-    R.groupBy((item) => {
+    R.groupBy(item => {
       return !seriesProp
         ? yAxisLabel
         : (() => {
-            const sRaw = getNestedValue(
-              item,
-              seriesProp,
-            )
+            const sRaw = getNestedValue(item, seriesProp)
             return sRaw === undefined || sRaw === null ? 'Unknown' : safeToString(sRaw)
           })()
     }),
     R.mapValues((items: readonly BoxplotRow[]) => {
       return R.pipe(
         items,
-        R.groupBy((item) => {
-          const xValRaw = getNestedValue(
-            item,
-            xProp,
-          )
+        R.groupBy(item => {
+          const xValRaw = getNestedValue(item, xProp)
           return xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw)
         }),
         R.mapValues((catItems: readonly BoxplotRow[]): readonly number[] => {
           return R.pipe(
             catItems,
-            R.map(item => Number(getNestedValue(
-              item,
-              yProp,
-            ))),
+            R.map(item => Number(getNestedValue(item, yProp))),
             R.filter(val => !Number.isNaN(val)),
           )
         }),
@@ -86,9 +70,11 @@ export function createBoxplotChartOption(
 
   const seriesOptions: ReadonlyArray<BoxplotSeriesOption> = R.pipe(
     R.keys(seriesMap),
-    R.map((sName) => {
+    R.map(sName => {
       const catMap: Readonly<Record<string, readonly number[]>> = seriesMap[sName] ?? {}
-      const rawData: readonly (readonly number[])[] = xAxisData.map((xVal): readonly number[] => catMap[xVal] || [])
+      const rawData: readonly (readonly number[])[] = xAxisData.map(
+        (xVal): readonly number[] => catMap[xVal] || [],
+      )
 
       const result: unknown = prepareBoxplotData(rawData)
 

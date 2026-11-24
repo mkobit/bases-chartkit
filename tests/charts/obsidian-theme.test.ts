@@ -41,9 +41,12 @@ class MockCanvasContext2d {
 
   set fillStyle(value: string) {
     const normalized = this.resolvedColors[value]
-    this.current = normalized !== undefined
-      ? normalized
-      : (value === '#000000' || value === '#ffffff' ? value : this.current)
+    this.current =
+      normalized !== undefined
+        ? normalized
+        : value === '#000000' || value === '#ffffff'
+          ? value
+          : this.current
   }
 }
 
@@ -66,9 +69,8 @@ function createMockTargetWithCanvas(
           getPropertyValue: (prop: string) => cssVars[prop] ?? '',
         }),
       },
-      createElement: (tagName: string) => tagName === 'canvas'
-        ? { getContext: (id: string) => (id === '2d' ? ctx : null) }
-        : null,
+      createElement: (tagName: string) =>
+        tagName === 'canvas' ? { getContext: (id: string) => (id === '2d' ? ctx : null) } : null,
     },
   }
 }

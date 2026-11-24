@@ -15,19 +15,15 @@ export const PIE_TRAFFIC_SOURCES = [
  * Generates 8-12 diverse name-value pairs using Traffic Sources theme
  * with realistic volumes (500 to 25,000) and natural variance.
  */
-export const pieChartArbitrary = fc.subarray(
-  [...PIE_TRAFFIC_SOURCES],
-  { minLength: 8, maxLength: 12 },
-)
-  .chain((names) => {
+export const pieChartArbitrary = fc
+  .subarray([...PIE_TRAFFIC_SOURCES], { minLength: 8, maxLength: 12 })
+  .chain(names => {
     return fc.record({
       names: fc.constant(names),
-      values: fc.array(
-        fc.integer({ min: 500,
-          max: 25_000 }),
-        { minLength: names.length,
-          maxLength: names.length },
-      ),
+      values: fc.array(fc.integer({ min: 500, max: 25_000 }), {
+        minLength: names.length,
+        maxLength: names.length,
+      }),
     })
   })
   .map(data => ({

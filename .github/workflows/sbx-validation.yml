@@ -4,19 +4,19 @@ on:
   push:
     branches: [main]
     paths:
-      - ".sbx/**"
-      - "mise.toml"
-      - "package.json"
-      - ".github/workflows/sbx-validation.yml"
+      - '.sbx/**'
+      - 'mise.toml'
+      - 'package.json'
+      - '.github/workflows/sbx-validation.yml'
   pull_request:
-    branches: ["**"]
+    branches: ['**']
     paths:
-      - ".sbx/**"
-      - "mise.toml"
-      - "package.json"
-      - ".github/workflows/sbx-validation.yml"
+      - '.sbx/**'
+      - 'mise.toml'
+      - 'package.json'
+      - '.github/workflows/sbx-validation.yml'
   schedule:
-    - cron: "0 4 * * 1"
+    - cron: '0 4 * * 1'
   workflow_dispatch: {}
 
 concurrency:
@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SBX_VERSION: "v0.50.0"
+  SBX_VERSION: 'v0.50.0'
 
 permissions: {}
 

@@ -26,7 +26,7 @@ function firstFunnelSeries(option: EChartsOption): FunnelSeriesOption {
 // narrows each entry to our { name, value } shape rather than asserting it.
 function funnelData(option: EChartsOption): readonly FunnelDatum[] {
   const data = firstFunnelSeries(option).data
-  return Array.isArray(data) ? data.flatMap(d => isFunnelDatum(d) ? [d] : []) : []
+  return Array.isArray(data) ? data.flatMap(d => (isFunnelDatum(d) ? [d] : [])) : []
 }
 
 function optionTheme(option: EChartsOption): unknown {
@@ -35,413 +35,268 @@ function optionTheme(option: EChartsOption): unknown {
     : undefined
 }
 
-describe(
-  'Transformer: Funnel',
-  () => {
-    it(
-      'should transform data into basic funnel series',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 100 },
-          { name: 'Step 2',
-            value: 80 },
-          { name: 'Step 3',
-            value: 60 },
-        ]
+describe('Transformer: Funnel', () => {
+  it('should transform data into basic funnel series', () => {
+    const data = [
+      { name: 'Step 1', value: 100 },
+      { name: 'Step 2', value: 80 },
+      { name: 'Step 3', value: 60 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        expect(option.series).toBeDefined()
-        expect(Array.isArray(option.series)).toBe(true)
-        if (!Array.isArray(option.series)) {
-          return
-        }
-        expect(option.series).toHaveLength(1)
+    expect(option.series).toBeDefined()
+    expect(Array.isArray(option.series)).toBe(true)
+    if (!Array.isArray(option.series)) {
+      return
+    }
+    expect(option.series).toHaveLength(1)
 
-        const series = firstFunnelSeries(option)
-        expect(series.type).toBe('funnel')
-        expect(series.minSize).toBe('28%')
+    const series = firstFunnelSeries(option)
+    expect(series.type).toBe('funnel')
+    expect(series.minSize).toBe('28%')
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
-        expect(seriesData).toHaveLength(3)
-        // Order should be sorted descending by value, which it already is in the input
-        expect(seriesData[0]?.name).toBe('Step 1')
-        expect(seriesData[0]?.value).toBe(100)
-      },
-    )
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
+    expect(seriesData).toHaveLength(3)
+    // Order should be sorted descending by value, which it already is in the input
+    expect(seriesData[0]?.name).toBe('Step 1')
+    expect(seriesData[0]?.value).toBe(100)
+  })
 
-    it(
-      'should sort series by value descending',
-      () => {
-        const data = [
-          { name: 'Step 3',
-            value: 60 },
-          { name: 'Step 1',
-            value: 100 },
-          { name: 'Step 2',
-            value: 80 },
-        ]
+  it('should sort series by value descending', () => {
+    const data = [
+      { name: 'Step 3', value: 60 },
+      { name: 'Step 1', value: 100 },
+      { name: 'Step 2', value: 80 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        if (!Array.isArray(option.series)) {
-          return
-        }
+    if (!Array.isArray(option.series)) {
+      return
+    }
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
 
-        expect(seriesData).toHaveLength(3)
-        expect(seriesData[0]?.name).toBe('Step 1')
-        expect(seriesData[0]?.value).toBe(100)
-        expect(seriesData[1]?.name).toBe('Step 2')
-        expect(seriesData[1]?.value).toBe(80)
-        expect(seriesData[2]?.name).toBe('Step 3')
-        expect(seriesData[2]?.value).toBe(60)
-      },
-    )
+    expect(seriesData).toHaveLength(3)
+    expect(seriesData[0]?.name).toBe('Step 1')
+    expect(seriesData[0]?.value).toBe(100)
+    expect(seriesData[1]?.name).toBe('Step 2')
+    expect(seriesData[1]?.value).toBe(80)
+    expect(seriesData[2]?.name).toBe('Step 3')
+    expect(seriesData[2]?.value).toBe(60)
+  })
 
-    it(
-      'should handle missing/null names as \'Unknown\'',
-      () => {
-        const data = [
-          { value: 100 }, // missing name
-          { name: null,
-            value: 50 },
-          { name: undefined,
-            value: 25 },
-        ]
+  it("should handle missing/null names as 'Unknown'", () => {
+    const data = [
+      { value: 100 }, // missing name
+      { name: null, value: 50 },
+      { name: undefined, value: 25 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        if (!Array.isArray(option.series)) {
-          return
-        }
+    if (!Array.isArray(option.series)) {
+      return
+    }
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
 
-        // All three rows fall back to name 'Unknown', so they aggregate into
-        // a single stage rather than three separate 'Unknown' segments.
-        expect(seriesData).toHaveLength(1)
-        expect(seriesData[0]?.name).toBe('Unknown')
-        expect(seriesData[0]?.value).toBe(175)
-      },
-    )
+    // All three rows fall back to name 'Unknown', so they aggregate into
+    // a single stage rather than three separate 'Unknown' segments.
+    expect(seriesData).toHaveLength(1)
+    expect(seriesData[0]?.name).toBe('Unknown')
+    expect(seriesData[0]?.value).toBe(175)
+  })
 
-    it(
-      'should aggregate duplicate categories by summing their values',
-      () => {
-        const data = [
-          { name: 'Visit',
-            value: 100 },
-          { name: 'Visit',
-            value: 100 },
-          { name: 'Visit',
-            value: 100 },
-          { name: 'Cart',
-            value: 50 },
-          { name: 'Purchase',
-            value: 10 },
-        ]
+  it('should aggregate duplicate categories by summing their values', () => {
+    const data = [
+      { name: 'Visit', value: 100 },
+      { name: 'Visit', value: 100 },
+      { name: 'Visit', value: 100 },
+      { name: 'Cart', value: 50 },
+      { name: 'Purchase', value: 10 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        if (!Array.isArray(option.series)) {
-          return
-        }
+    if (!Array.isArray(option.series)) {
+      return
+    }
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
 
-        expect(seriesData).toHaveLength(3)
-        expect(seriesData[0]).toEqual({ name: 'Visit',
-          value: 300 })
-        expect(seriesData[1]).toEqual({ name: 'Cart',
-          value: 50 })
-        expect(seriesData[2]).toEqual({ name: 'Purchase',
-          value: 10 })
-      },
-    )
+    expect(seriesData).toHaveLength(3)
+    expect(seriesData[0]).toEqual({ name: 'Visit', value: 300 })
+    expect(seriesData[1]).toEqual({ name: 'Cart', value: 50 })
+    expect(seriesData[2]).toEqual({ name: 'Purchase', value: 10 })
+  })
 
-    it(
-      'should coerce NaN values to 0',
-      () => {
-        const data = [
-          { name: 'Valid',
-            value: 100 },
-          { name: 'Invalid String',
-            value: 'not-a-number' },
-          { name: 'Missing Value' },
-        ]
+  it('should coerce NaN values to 0', () => {
+    const data = [
+      { name: 'Valid', value: 100 },
+      { name: 'Invalid String', value: 'not-a-number' },
+      { name: 'Missing Value' },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        if (!Array.isArray(option.series)) {
-          return
-        }
+    if (!Array.isArray(option.series)) {
+      return
+    }
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
 
-        expect(seriesData).toHaveLength(3)
+    expect(seriesData).toHaveLength(3)
 
-        // Since it's sorted descending, 'Valid' (100) will be first, followed by the two 0s
-        expect(seriesData[0]?.name).toBe('Valid')
-        expect(seriesData[0]?.value).toBe(100)
+    // Since it's sorted descending, 'Valid' (100) will be first, followed by the two 0s
+    expect(seriesData[0]?.name).toBe('Valid')
+    expect(seriesData[0]?.value).toBe(100)
 
-        // The NaN values should be coerced to 0
-        expect(seriesData[1]?.value).toBe(0)
-        expect(seriesData[2]?.value).toBe(0)
-      },
-    )
+    // The NaN values should be coerced to 0
+    expect(seriesData[1]?.value).toBe(0)
+    expect(seriesData[2]?.value).toBe(0)
+  })
 
-    it(
-      'should handle empty data',
-      () => {
-        const data: readonly Readonly<Record<string, unknown>>[] = []
+  it('should handle empty data', () => {
+    const data: readonly Readonly<Record<string, unknown>>[] = []
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel')
 
-        if (!Array.isArray(option.series)) {
-          return
-        }
+    if (!Array.isArray(option.series)) {
+      return
+    }
 
-        const seriesData = funnelData(option)
-        expect(seriesData).toBeDefined()
-        if (!seriesData) {
-          return
-        }
+    const seriesData = funnelData(option)
+    expect(seriesData).toBeDefined()
+    if (!seriesData) {
+      return
+    }
 
-        expect(seriesData).toHaveLength(0)
-      },
-    )
+    expect(seriesData).toHaveLength(0)
+  })
 
-    it(
-      'should include legend when showLegend is true',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 100 },
-        ]
+  it('should include legend when showLegend is true', () => {
+    const data = [{ name: 'Step 1', value: 100 }]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { legend: true },
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel', { legend: true })
 
-        expect(option.legend).toBeDefined()
-        // The return of getLegendOption has properties like orient, type, left/right/top/bottom
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(option.legend.type).toBe('scroll')
-      },
-    )
+    expect(option.legend).toBeDefined()
+    // The return of getLegendOption has properties like orient, type, left/right/top/bottom
+    // @ts-expect-error - suppress strictNullChecks in tests
+    expect(option.legend.type).toBe('scroll')
+  })
 
-    it(
-      'should set sort to ascending when flipAxis is true and sort is undefined',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 100 },
-          { name: 'Step 2',
-            value: 60 },
-          { name: 'Step 3',
-            value: 80 },
-        ]
+  it('should set sort to ascending when flipAxis is true and sort is undefined', () => {
+    const data = [
+      { name: 'Step 1', value: 100 },
+      { name: 'Step 2', value: 60 },
+      { name: 'Step 3', value: 80 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { flipAxis: true },
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel', { flipAxis: true })
 
-        const series = firstFunnelSeries(option)
-        expect(series.sort).toBe('ascending')
+    const series = firstFunnelSeries(option)
+    expect(series.sort).toBe('ascending')
 
-        const seriesData = funnelData(option)
-        expect(seriesData.map(d => d.value)).toEqual([60,
-          80,
-          100])
-      },
-    )
+    const seriesData = funnelData(option)
+    expect(seriesData.map(d => d.value)).toEqual([60, 80, 100])
+  })
 
-    it(
-      'should respect explicit sort option over flipAxis',
-      () => {
-        const data = [
-          { name: 'Step 2',
-            value: 80 },
-          { name: 'Step 1',
-            value: 100 },
-          { name: 'Step 3',
-            value: 60 },
-        ]
+  it('should respect explicit sort option over flipAxis', () => {
+    const data = [
+      { name: 'Step 2', value: 80 },
+      { name: 'Step 1', value: 100 },
+      { name: 'Step 3', value: 60 },
+    ]
 
-        const noneOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { flipAxis: true,
-            sort: 'none' },
-        )
-        const noneSeries = firstFunnelSeries(noneOption)
-        expect(noneSeries.sort).toBe('none')
-        expect(funnelData(noneOption).map(d => d.name)).toEqual(['Step 2',
-          'Step 1',
-          'Step 3'])
+    const noneOption = transformDataToChartOption(data, 'name', 'value', 'funnel', {
+      flipAxis: true,
+      sort: 'none',
+    })
+    const noneSeries = firstFunnelSeries(noneOption)
+    expect(noneSeries.sort).toBe('none')
+    expect(funnelData(noneOption).map(d => d.name)).toEqual(['Step 2', 'Step 1', 'Step 3'])
 
-        const descOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { flipAxis: true,
-            sort: 'descending' },
-        )
-        const descSeries = firstFunnelSeries(descOption)
-        expect(descSeries.sort).toBe('descending')
-        expect(funnelData(descOption).map(d => d.value)).toEqual([100,
-          80,
-          60])
-      },
-    )
+    const descOption = transformDataToChartOption(data, 'name', 'value', 'funnel', {
+      flipAxis: true,
+      sort: 'descending',
+    })
+    const descSeries = firstFunnelSeries(descOption)
+    expect(descSeries.sort).toBe('descending')
+    expect(funnelData(descOption).map(d => d.value)).toEqual([100, 80, 60])
+  })
 
-    it(
-      'should pass funnelAlign, gap, and borderRadius to series',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 100 },
-          { name: 'Step 2',
-            value: 50 },
-        ]
+  it('should pass funnelAlign, gap, and borderRadius to series', () => {
+    const data = [
+      { name: 'Step 1', value: 100 },
+      { name: 'Step 2', value: 50 },
+    ]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          {
-            funnelAlign: 'left',
-            gap: 4,
-            borderRadius: 6,
-          },
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel', {
+      funnelAlign: 'left',
+      gap: 4,
+      borderRadius: 6,
+    })
 
-        const series = firstFunnelSeries(option)
-        expect(series.funnelAlign).toBe('left')
-        expect(series.gap).toBe(4)
-        expect(series.itemStyle?.borderRadius).toBe(6)
-      },
-    )
+    const series = firstFunnelSeries(option)
+    expect(series.funnelAlign).toBe('left')
+    expect(series.gap).toBe(4)
+    expect(series.itemStyle?.borderRadius).toBe(6)
+  })
 
-    it(
-      'should include theme in returned option when provided',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 100 },
-        ]
+  it('should include theme in returned option when provided', () => {
+    const data = [{ name: 'Step 1', value: 100 }]
 
-        const option = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { theme: 'Vintage' },
-        )
+    const option = transformDataToChartOption(data, 'name', 'value', 'funnel', { theme: 'Vintage' })
 
-        expect(optionTheme(option)).toBe('Vintage')
-      },
-    )
+    expect(optionTheme(option)).toBe('Vintage')
+  })
 
-    it(
-      'should preserve default tooltip formatter when valueFormat is undefined and format with formatValue when defined',
-      () => {
-        const data = [
-          { name: 'Step 1',
-            value: 1500 },
-        ]
+  it('should preserve default tooltip formatter when valueFormat is undefined and format with formatValue when defined', () => {
+    const data = [{ name: 'Step 1', value: 1500 }]
 
-        const defaultOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-        )
-        const defaultTooltip = Array.isArray(defaultOption.tooltip) ? defaultOption.tooltip[0] : defaultOption.tooltip
-        expect(defaultTooltip?.formatter).toBe('{b} : {c}%')
+    const defaultOption = transformDataToChartOption(data, 'name', 'value', 'funnel')
+    const defaultTooltip = Array.isArray(defaultOption.tooltip)
+      ? defaultOption.tooltip[0]
+      : defaultOption.tooltip
+    expect(defaultTooltip?.formatter).toBe('{b} : {c}%')
 
-        const formattedOption = transformDataToChartOption(
-          data,
-          'name',
-          'value',
-          'funnel',
-          { valueFormat: '{value} users' },
-        )
-        const formattedTooltip = Array.isArray(formattedOption.tooltip) ? formattedOption.tooltip[0] : formattedOption.tooltip
-        expect(typeof formattedTooltip?.formatter).toBe('function')
-        if (typeof formattedTooltip?.formatter === 'function') {
-          const result: unknown = Reflect.apply(formattedTooltip.formatter, undefined, [{
-            name: 'Step 1',
-            value: 1500,
-          }])
-          expect(result).toBe('Step 1 : 1500 users')
-        }
-      },
-    )
-  },
-)
+    const formattedOption = transformDataToChartOption(data, 'name', 'value', 'funnel', {
+      valueFormat: '{value} users',
+    })
+    const formattedTooltip = Array.isArray(formattedOption.tooltip)
+      ? formattedOption.tooltip[0]
+      : formattedOption.tooltip
+    expect(typeof formattedTooltip?.formatter).toBe('function')
+    if (typeof formattedTooltip?.formatter === 'function') {
+      const result: unknown = Reflect.apply(formattedTooltip.formatter, undefined, [
+        {
+          name: 'Step 1',
+          value: 1500,
+        },
+      ])
+      expect(result).toBe('Step 1 : 1500 users')
+    }
+  })
+})

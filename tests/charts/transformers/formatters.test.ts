@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { formatValue, formatDurationMs, formatDateValue, formatNumericValue } from '../../../src/charts/transformers/formatters'
+import {
+  formatValue,
+  formatDurationMs,
+  formatDateValue,
+  formatNumericValue,
+} from '../../../src/charts/transformers/formatters'
 
 describe('formatters', () => {
   describe('formatDurationMs', () => {

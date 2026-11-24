@@ -17,23 +17,21 @@ export class GanttChartView extends BaseChartView {
     const endProp = this.config.get(GanttChartView.END_PROP_KEY)
     const seriesProp = this.config.get(BaseChartView.SERIES_PROP_KEY)
 
-    if (typeof taskProp !== 'string' || typeof startProp !== 'string' || typeof endProp !== 'string') {
+    if (
+      typeof taskProp !== 'string' ||
+      typeof startProp !== 'string' ||
+      typeof endProp !== 'string'
+    ) {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
+    return transformDataToChartOption(data, taskProp, '', 'gantt', {
+      ...this.getCommonTransformerOptions(),
       taskProp,
-      '',
-      'gantt',
-      {
-        ...this.getCommonTransformerOptions(),
-        taskProp,
-        startProp,
-        endProp,
-        seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-      },
-    )
+      startProp,
+      endProp,
+      seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+    })
   }
 
   static getViewOptions(): BasesOptions[] {
@@ -62,11 +60,13 @@ export class GanttChartView extends BaseChartView {
         type: 'property',
         placeholder: t('views.gantt.group_prop_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((o) => {
+      ...BaseChartView.getCommonViewOptions().filter(o => {
         const key = o.key
-        return key !== BaseChartView.X_AXIS_PROP_KEY
-          && key !== BaseChartView.Y_AXIS_PROP_KEY
-          && key !== BaseChartView.SERIES_PROP_KEY
+        return (
+          key !== BaseChartView.X_AXIS_PROP_KEY &&
+          key !== BaseChartView.Y_AXIS_PROP_KEY &&
+          key !== BaseChartView.SERIES_PROP_KEY
+        )
       }),
     ]
   }

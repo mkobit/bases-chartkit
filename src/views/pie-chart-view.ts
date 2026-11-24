@@ -26,20 +26,14 @@ export class PieChartView extends BaseChartView {
     const padAngle = this.getNumberOption(PieChartView.PAD_ANGLE_KEY)
     const borderRadius = this.getNumberOption(PieChartView.BORDER_RADIUS_KEY)
 
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'pie',
-      {
-        ...this.getCommonTransformerOptions(),
-        ...(innerRadius !== undefined ? { innerRadius } : {}),
-        ...(outerRadius !== undefined ? { outerRadius } : {}),
-        ...(donut !== undefined ? { donut } : {}),
-        ...(padAngle !== undefined ? { padAngle } : {}),
-        ...(borderRadius !== undefined ? { borderRadius } : {}),
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'pie', {
+      ...this.getCommonTransformerOptions(),
+      ...(innerRadius !== undefined ? { innerRadius } : {}),
+      ...(outerRadius !== undefined ? { outerRadius } : {}),
+      ...(donut !== undefined ? { donut } : {}),
+      ...(padAngle !== undefined ? { padAngle } : {}),
+      ...(borderRadius !== undefined ? { borderRadius } : {}),
+    })
   }
 
   static getViewOptions(): BasesOptions[] {

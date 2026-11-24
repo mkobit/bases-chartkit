@@ -8,7 +8,9 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { runObsidianCli } from './obsidian-cli'
 
-const outputPath = path.resolve(process.argv[2] ?? path.join('.test-output', 'vault-screenshot.png'))
+const outputPath = path.resolve(
+  process.argv[2] ?? path.join('.test-output', 'vault-screenshot.png'),
+)
 
 async function main(): Promise<void> {
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
@@ -22,6 +24,9 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: unknown) => {
-  console.error('Fatal error in vault-screenshot:', err instanceof Error ? err.message : String(err))
+  console.error(
+    'Fatal error in vault-screenshot:',
+    err instanceof Error ? err.message : String(err),
+  )
   process.exit(1)
 })

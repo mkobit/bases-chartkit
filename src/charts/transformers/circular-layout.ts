@@ -42,13 +42,13 @@ export function resolveCircularLayout(
   if (!hasTopChrome && !hasBottomChrome) {
     return {
       center: [cx, '50%'],
-      radius: (hasLeftLegend || hasRightLegend) ? sideLegendRadius : defaultRadius,
+      radius: hasLeftLegend || hasRightLegend ? sideLegendRadius : defaultRadius,
     }
   }
 
   if (hasTopChrome && hasBottomChrome) {
-    const cy = (hasTopTitle && hasTopLegend) ? '55%' : hasTopTitle ? '54%' : '50%'
-    const radius = (hasTopTitle && hasTopLegend) ? '54%' : hasTopTitle ? '58%' : '60%'
+    const cy = hasTopTitle && hasTopLegend ? '55%' : hasTopTitle ? '54%' : '50%'
+    const radius = hasTopTitle && hasTopLegend ? '54%' : hasTopTitle ? '58%' : '60%'
     return {
       center: [cx, cy],
       radius,
@@ -56,8 +56,8 @@ export function resolveCircularLayout(
   }
 
   if (hasTopChrome) {
-    const cy = (hasTopTitle && hasTopLegend) ? '58%' : hasSubtitle ? '56%' : '54%'
-    const radius = (hasTopTitle && hasTopLegend) ? '60%' : '66%'
+    const cy = hasTopTitle && hasTopLegend ? '58%' : hasSubtitle ? '56%' : '54%'
+    const radius = hasTopTitle && hasTopLegend ? '60%' : '66%'
     return {
       center: [cx, cy],
       radius,

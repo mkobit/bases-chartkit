@@ -1,5 +1,10 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 test.describe('chart rendering', () => {
   test('opens a .base file and mounts an echarts canvas', async ({ obsidianPage: { page } }) => {
@@ -7,19 +12,23 @@ test.describe('chart rendering', () => {
     // workspace layout so getLeaf has a tab group to attach to. Specify viewName
     // so the chart subview is the active one (without it the leaf may settle on
     // a non-rendering default view).
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/Basic.base', viewName: 'Department spend' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'bar/Basic.base', viewName: 'Department spend' },
+    )
 
     // Canvas presence in the DOM is the regression signal: it proves the chart
     // view's onload() ran cleanly (addAction-style bugs would throw and skip
@@ -28,98 +37,122 @@ test.describe('chart rendering', () => {
     // heatmap, theme-river) so this is low-risk today, but a cold Obsidian
     // profile's vault indexing time is shared across every test, so this uses
     // the same generous timeout as the rest of the suite.
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
   })
 
-  test('retrieves live ECharts option via getChartOption helper', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('retrieves live ECharts option via getChartOption helper', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/Basic.base', viewName: 'Department spend' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'bar/Basic.base', viewName: 'Department spend' },
+    )
 
     // Wait for the chart to render and for its series to be populated.
-    await expect.poll(
-      async () => {
-        const opt = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly type: string }> }>(await getChartOption(page))
-        return opt?.series?.length ?? 0
-      },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(
+        async () => {
+          const opt = asOptionLike<{ readonly series?: ReadonlyArray<{ readonly type: string }> }>(
+            await getChartOption(page),
+          )
+          return opt?.series?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Verify the options.
-    const option = asOptionLike<{ readonly series: ReadonlyArray<{ readonly type: string }> }>(await getChartOption(page))
+    const option = asOptionLike<{ readonly series: ReadonlyArray<{ readonly type: string }> }>(
+      await getChartOption(page),
+    )
     expect(option).not.toBeNull()
     expect(option?.series?.[0]?.type).toBe('bar')
   })
 
   test('exposes fullscreen toolbar affordance and command', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'bar/Basic.base', viewName: 'Department spend' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      { path: 'bar/Basic.base', viewName: 'Department spend' },
+    )
 
-    await expect.poll(
-      async () => page.locator('.bases-echarts canvas').count(),
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-echarts canvas').count(), {
+        timeout: VAULT_INDEXED_POLL_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0)
 
-    const copyPngButton = page.locator('.bases-chart-toolbar .clickable-icon[aria-label="Copy chart as PNG"]')
+    const copyPngButton = page.locator(
+      '.bases-chart-toolbar .clickable-icon[aria-label="Copy chart as PNG"]',
+    )
     await expect(copyPngButton).toHaveCount(1)
     await copyPngButton.click()
-    await expect(page.locator('.notice', { hasText: 'Chart copied to clipboard as PNG' })).toBeVisible()
+    await expect(
+      page.locator('.notice', { hasText: 'Chart copied to clipboard as PNG' }),
+    ).toBeVisible()
 
-    const fullscreenButton = page.locator('.bases-chart-toolbar .clickable-icon[aria-label="Full screen"]')
+    const fullscreenButton = page.locator(
+      '.bases-chart-toolbar .clickable-icon[aria-label="Full screen"]',
+    )
     await expect(fullscreenButton).toHaveCount(1)
 
     // Click toolbar affordance to open fullscreen chart modal
     await fullscreenButton.click()
-    await expect.poll(
-      async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(),
-      { timeout: 5_000 },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(), {
+        timeout: 5_000,
+      })
+      .toBeGreaterThan(0)
 
     // Close modal
     await page.keyboard.press('Escape')
-    await expect.poll(
-      async () => page.locator('.bases-chart-modal').count(),
-      { timeout: 5_000 },
-    ).toBe(0)
+    await expect
+      .poll(async () => page.locator('.bases-chart-modal').count(), { timeout: 5_000 })
+      .toBe(0)
 
     // Trigger fullscreen via registered command
-    await evaluateObsidian(page, (app) => {
+    await evaluateObsidian(page, app => {
       app.commands.executeCommandById('bases-chartkit:open-active-chart-fullscreen')
     })
-    await expect.poll(
-      async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(),
-      { timeout: 5_000 },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(async () => page.locator('.bases-chart-modal .bases-echarts canvas').count(), {
+        timeout: 5_000,
+      })
+      .toBeGreaterThan(0)
 
     // Close modal
     await page.keyboard.press('Escape')
-    await expect.poll(
-      async () => page.locator('.bases-chart-modal').count(),
-      { timeout: 5_000 },
-    ).toBe(0)
+    await expect
+      .poll(async () => page.locator('.bases-chart-modal').count(), { timeout: 5_000 })
+      .toBe(0)
   })
 })

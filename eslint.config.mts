@@ -4,7 +4,6 @@ import obsidianmd from 'eslint-plugin-obsidianmd'
 import globals from 'globals'
 import functional from 'eslint-plugin-functional'
 import promise from 'eslint-plugin-promise'
-import stylistic from '@stylistic/eslint-plugin'
 import unicorn from 'eslint-plugin-unicorn'
 import { type Config, globalIgnores } from 'eslint/config'
 import { type Rule } from 'eslint'
@@ -39,7 +38,7 @@ const DEPENDENCY_LIST_KEYS = ['dependencies', 'devDependencies', 'peerDependenci
 // extension that never appears in plain package.json. Narrowed rather than
 // asserted so a real (impossible-in-practice) Identifier key still sorts
 // using something -- its own name -- instead of throwing.
-function memberKeyName(member: { name: { type: string, value?: string, name?: string } }): string {
+function memberKeyName(member: { name: { type: string; value?: string; name?: string } }): string {
   return member.name.type === 'String' ? (member.name.value ?? '') : (member.name.name ?? '')
 }
 
@@ -54,16 +53,16 @@ const packageJsonPlugin = {
         },
         fixable: 'code',
         messages: {
-          unsorted: 'Dependencies in \'{{key}}\' should be sorted alphabetically.',
+          unsorted: "Dependencies in '{{key}}' should be sorted alphabetically.",
         },
       },
       create(context) {
         return {
           Member(node) {
             if (
-              node.name.type === 'String'
-              && DEPENDENCY_LIST_KEYS.includes(node.name.value)
-              && node.value.type === 'Object'
+              node.name.type === 'String' &&
+              DEPENDENCY_LIST_KEYS.includes(node.name.value) &&
+              node.value.type === 'Object'
             ) {
               const members = node.value.members
               const memberNames = members.map(memberKeyName)
@@ -138,11 +137,13 @@ const userTextPlugin = {
       meta: {
         type: 'problem',
         docs: {
-          description: 'Require i18next t() for user-visible strings (Notice, displayName, placeholder)',
+          description:
+            'Require i18next t() for user-visible strings (Notice, displayName, placeholder)',
         },
         messages: {
-          notice: 'Pass a t(\'...\') key to Notice instead of a raw string; add the key to src/lang/locales/en.json.',
-          prop: 'User-visible \'{{key}}\' must use a t(\'...\') key, not a raw string; add the key to src/lang/locales/en.json.',
+          notice:
+            "Pass a t('...') key to Notice instead of a raw string; add the key to src/lang/locales/en.json.",
+          prop: "User-visible '{{key}}' must use a t('...') key, not a raw string; add the key to src/lang/locales/en.json.",
         },
         schema: [],
       },
@@ -224,7 +225,6 @@ export default tseslint.config(
   ...yml.configs['flat/recommended'],
   restrictToJs(functional.configs.strict),
   restrictToJs(functional.configs.stylistic),
-  restrictToJs(stylistic.configs.recommended),
   // Note: tseslint.configs.recommended and functional.configs.externalTypeScriptRecommended
   // are intentionally NOT spread here. obsidianmd.configs.recommended already registers the
   // @typescript-eslint plugin via its internal extends. Spreading tseslint.configs.recommended
@@ -251,37 +251,55 @@ export default tseslint.config(
       'eqeqeq': 'error',
       'curly': 'error',
 
-      'no-restricted-globals': ['error', {
-        name: 'Date',
-        message: 'Use Temporal instead of Date. In Obsidian code, use moment.',
-      }],
-      '@typescript-eslint/no-restricted-types': ['error', {
-        types: {
-          Date: 'Use Temporal instead of Date. In Obsidian code, use moment.',
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'Date',
+          message: 'Use Temporal instead of Date. In Obsidian code, use moment.',
         },
-      }],
-      'no-restricted-imports': ['error', {
-        patterns: ['**/index', '**/index.ts', '**/index.js'],
-      }],
+      ],
+      '@typescript-eslint/no-restricted-types': [
+        'error',
+        {
+          types: {
+            Date: 'Use Temporal instead of Date. In Obsidian code, use moment.',
+          },
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['**/index', '**/index.ts', '**/index.js'],
+        },
+      ],
 
       // Type Safety Rules
-      '@typescript-eslint/consistent-type-assertions': ['error', {
-        assertionStyle: 'never',
-      }],
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        {
+          assertionStyle: 'never',
+        },
+      ],
       // Enforce separate type imports (User Request)
-      '@typescript-eslint/consistent-type-imports': ['error', {
-        prefer: 'type-imports',
-        fixStyle: 'separate-type-imports',
-      }],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports',
+        },
+      ],
 
       // Unicorn Rules
-      'unicorn/numeric-separators-style': ['error', {
-        onlyIfContainsSeparator: true,
-        number: {
-          minimumDigits: 0,
-          groupLength: 3,
+      'unicorn/numeric-separators-style': [
+        'error',
+        {
+          onlyIfContainsSeparator: true,
+          number: {
+            minimumDigits: 0,
+            groupLength: 3,
+          },
         },
-      }],
+      ],
 
       // Ensure strictness explicitly (reinforcing 'strict' config)
       'functional/no-let': 'error',
@@ -300,31 +318,39 @@ export default tseslint.config(
       'functional/readonly-type': ['error', 'keyword'],
       'functional/no-class-inheritance': 'error',
       'functional/functional-parameters': 'error',
-      'functional/immutable-data': ['error', {
-        ignoreClasses: true,
-        ignoreAccessorPattern: ['this.**'],
-      }],
-      'functional/prefer-immutable-types': ['error', {
-        enforcement: 'ReadonlyShallow',
-        ignoreClasses: true,
-        ignoreTypePattern: ['^.*Option$'],
-      }],
-      'functional/type-declaration-immutability': ['error', {
-        rules: [
-          {
-            identifiers: '^I?Mutable.+',
-            immutability: 'Mutable',
-            comparator: 'AtLeast',
-          },
-          {
-            identifiers: '^(?!I?Mutable).+',
-            immutability: 'ReadonlyDeep',
-            comparator: 'AtLeast',
-          },
-        ],
-        ignoreInterfaces: false,
-      }],
-
+      'functional/immutable-data': [
+        'error',
+        {
+          ignoreClasses: true,
+          ignoreAccessorPattern: ['this.**'],
+        },
+      ],
+      'functional/prefer-immutable-types': [
+        'error',
+        {
+          enforcement: 'ReadonlyShallow',
+          ignoreClasses: true,
+          ignoreTypePattern: ['^.*Option$'],
+        },
+      ],
+      'functional/type-declaration-immutability': [
+        'error',
+        {
+          rules: [
+            {
+              identifiers: '^I?Mutable.+',
+              immutability: 'Mutable',
+              comparator: 'AtLeast',
+            },
+            {
+              identifiers: '^(?!I?Mutable).+',
+              immutability: 'ReadonlyDeep',
+              comparator: 'AtLeast',
+            },
+          ],
+          ignoreInterfaces: false,
+        },
+      ],
     },
   },
   // Generic JSON
@@ -381,10 +407,13 @@ export default tseslint.config(
       'functional/functional-parameters': 'off',
       'functional/prefer-immutable-types': 'off',
       'functional/type-declaration-immutability': 'off',
-      'functional/immutable-data': ['error', {
-        ignoreClasses: true,
-        ignoreAccessorPattern: ['this.**'],
-      }],
+      'functional/immutable-data': [
+        'error',
+        {
+          ignoreClasses: true,
+          ignoreAccessorPattern: ['this.**'],
+        },
+      ],
       '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
@@ -421,10 +450,13 @@ export default tseslint.config(
       'functional/functional-parameters': 'off',
       'functional/prefer-immutable-types': 'off',
       'functional/type-declaration-immutability': 'off',
-      'functional/immutable-data': ['error', {
-        ignoreClasses: true,
-        ignoreAccessorPattern: ['this.**'],
-      }],
+      'functional/immutable-data': [
+        'error',
+        {
+          ignoreClasses: true,
+          ignoreAccessorPattern: ['this.**'],
+        },
+      ],
       'functional/no-let': 'off', // Allow let in e2e tests
       '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in tests
       '@typescript-eslint/no-implied-eval': 'off', // evaluateObsidian uses new Function() to serialize/deserialize test fns
@@ -491,26 +523,32 @@ export default tseslint.config(
       'src/charts/transformers/waterfall.ts',
     ],
     rules: {
-      'functional/prefer-immutable-types': ['error', {
-        enforcement: 'ReadonlyShallow',
-        ignoreClasses: true,
-        ignoreTypePattern: ['^.*Option$'],
-      }],
-      'functional/type-declaration-immutability': ['error', {
-        rules: [
-          {
-            identifiers: '^I?Mutable.+',
-            immutability: 'Mutable',
-            comparator: 'AtLeast',
-          },
-          {
-            identifiers: '^(?!I?Mutable).+',
-            immutability: 'ReadonlyShallow',
-            comparator: 'AtLeast',
-          },
-        ],
-        ignoreInterfaces: false,
-      }],
+      'functional/prefer-immutable-types': [
+        'error',
+        {
+          enforcement: 'ReadonlyShallow',
+          ignoreClasses: true,
+          ignoreTypePattern: ['^.*Option$'],
+        },
+      ],
+      'functional/type-declaration-immutability': [
+        'error',
+        {
+          rules: [
+            {
+              identifiers: '^I?Mutable.+',
+              immutability: 'Mutable',
+              comparator: 'AtLeast',
+            },
+            {
+              identifiers: '^(?!I?Mutable).+',
+              immutability: 'ReadonlyShallow',
+              comparator: 'AtLeast',
+            },
+          ],
+          ignoreInterfaces: false,
+        },
+      ],
     },
   },
   // Temporary override for gantt.ts pending refactor
@@ -524,7 +562,14 @@ export default tseslint.config(
   },
   // Scripts (and shared/, the Node-side tooling utilities scripts/ and e2e/ both import)
   {
-    files: ['scripts/**/*.ts', 'scripts/**/*.cjs', 'esbuild.config.mjs', 'version-bump.mjs', 'shared/**/*.ts', '.claude/hooks/**/*.ts'],
+    files: [
+      'scripts/**/*.ts',
+      'scripts/**/*.cjs',
+      'esbuild.config.mjs',
+      'version-bump.mjs',
+      'shared/**/*.ts',
+      '.claude/hooks/**/*.ts',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -559,8 +604,6 @@ export default tseslint.config(
       'functional/functional-parameters': 'off',
       // Allow require in scripts
       '@typescript-eslint/no-require-imports': 'off',
-      // Relax stylistic indent for scripts if mixed content, but generally enforce tab
-      '@stylistic/indent': ['error', 2],
       '@typescript-eslint/no-unsafe-assignment': 'off',
     },
   },
@@ -570,7 +613,10 @@ export default tseslint.config(
       'user-text': userTextPlugin,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'functional/no-expression-statements': 'off',
       'functional/no-try-statements': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
@@ -640,22 +686,30 @@ export default tseslint.config(
     },
     rules: {
       'unicorn/prefer-optional-catch-binding': 'error',
-      'no-restricted-syntax': ['error', {
-        selector: 'TSAsExpression > TSAsExpression[typeAnnotation.type=\'TSUnknownKeyword\']',
-        message: 'Avoid `as unknown as T` casts. Augment types or extract a typed accessor. If a library type bridge genuinely needs it, eslint-disable-next-line with a reason comment.',
-      },
-      {
-        selector: 'CatchClause > BlockStatement[body.length=0]',
-        message: 'Empty catch blocks are forbidden. Handle the error or use an eslint-disable comment with a reason.',
-      },
-      {
-        selector: 'CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name=\'console\'][callee.property.name=/^(error|log|warn|info)$/]',
-        message: 'Catch blocks that only log are forbidden. Re-throw, handle via Notice, or wrap the error.',
-      },
-      {
-        selector: 'CatchClause > Identifier[typeAnnotation.typeAnnotation.type=\'TSAnyKeyword\']',
-        message: 'Catch clauses with \'any\' type annotation are forbidden. Bind typed error or omit if unused.',
-      }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+          message:
+            'Avoid `as unknown as T` casts. Augment types or extract a typed accessor. If a library type bridge genuinely needs it, eslint-disable-next-line with a reason comment.',
+        },
+        {
+          selector: 'CatchClause > BlockStatement[body.length=0]',
+          message:
+            'Empty catch blocks are forbidden. Handle the error or use an eslint-disable comment with a reason.',
+        },
+        {
+          selector:
+            "CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name='console'][callee.property.name=/^(error|log|warn|info)$/]",
+          message:
+            'Catch blocks that only log are forbidden. Re-throw, handle via Notice, or wrap the error.',
+        },
+        {
+          selector: "CatchClause > Identifier[typeAnnotation.typeAnnotation.type='TSAnyKeyword']",
+          message:
+            "Catch clauses with 'any' type annotation are forbidden. Bind typed error or omit if unused.",
+        },
+      ],
     },
   },
   // Config files (relax rules)
@@ -692,9 +746,12 @@ export default tseslint.config(
       'eslint-comments/require-description': 'error',
       // Disallow eslint-disable directives repo-wide unless the file is
       // explicitly listed in quality-ratchet.yaml.
-      'eslint-comments/no-use': ['error', {
-        allow: ['eslint', 'eslint-enable', 'eslint-env', 'exported', 'global', 'globals'],
-      }],
+      'eslint-comments/no-use': [
+        'error',
+        {
+          allow: ['eslint', 'eslint-enable', 'eslint-env', 'exported', 'global', 'globals'],
+        },
+      ],
     },
   },
   {
@@ -704,10 +761,13 @@ export default tseslint.config(
     },
     rules: {
       'yml/sort-keys': ['error', 'asc', { caseSensitive: true, natural: false }],
-      'yml/sort-sequence-values': ['error', {
-        pathPattern: '.*',
-        order: { type: 'asc', caseSensitive: true, natural: false },
-      }],
+      'yml/sort-sequence-values': [
+        'error',
+        {
+          pathPattern: '.*',
+          order: { type: 'asc', caseSensitive: true, natural: false },
+        },
+      ],
       'quality-ratchet/valid-exemptions': 'error',
     },
   },

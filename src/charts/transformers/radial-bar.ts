@@ -32,25 +32,17 @@ export function createRadialBarChartOption(
   const normalizedData: ReadonlyArray<RadialBarDataPoint> = R.map(
     data,
     (item): RadialBarDataPoint => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yValRaw = Number(getNestedValue(
-        item,
-        yProp,
-      ))
-      const sValRaw = seriesProp
-        ? getNestedValue(
-            item,
-            seriesProp,
-          )
-        : undefined
+      const xValRaw = getNestedValue(item, xProp)
+      const yValRaw = Number(getNestedValue(item, yProp))
+      const sValRaw = seriesProp ? getNestedValue(item, seriesProp) : undefined
 
       return {
         x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
         y: Number.isNaN(yValRaw) ? null : yValRaw,
-        s: seriesProp && sValRaw !== undefined && sValRaw !== null ? safeToString(sValRaw) : yAxisLabel,
+        s:
+          seriesProp && sValRaw !== undefined && sValRaw !== null
+            ? safeToString(sValRaw)
+            : yAxisLabel,
       }
     },
   )
@@ -76,34 +68,30 @@ export function createRadialBarChartOption(
     ? seriesNames.map((name): DatasetComponentOption => ({
         transform: {
           type: 'filter',
-          config: { dimension: 's',
-            value: name },
+          config: { dimension: 's', value: name },
         },
       }))
     : []
 
-  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset,
-    ...filterDatasets]
+  const datasets: ReadonlyArray<DatasetComponentOption> = [sourceDataset, ...filterDatasets]
 
-  const seriesOptions: ReadonlyArray<BarSeriesOption> = seriesNames.map((name, idx): BarSeriesOption => {
-    const datasetIndex = seriesProp ? idx + 1 : 0
+  const seriesOptions: ReadonlyArray<BarSeriesOption> = seriesNames.map(
+    (name, idx): BarSeriesOption => {
+      const datasetIndex = seriesProp ? idx + 1 : 0
 
-    return {
-      type: 'bar',
-      name: name,
-      coordinateSystem: 'polar',
-      datasetIndex: datasetIndex,
-      // polar bar series read radius/angle encode channels, not x/y —
-      // with x/y no bars render even though the angleAxis still draws.
-      encode: flipAxis
-        ? { angle: 'y',
-            radius: 'x' }
-        : { angle: 'x',
-            radius: 'y' },
-      ...(!seriesProp ? { colorBy: 'data' as const } : {}),
-      ...(isStacked ? { stack: 'total' } : {}),
-    }
-  })
+      return {
+        type: 'bar',
+        name: name,
+        coordinateSystem: 'polar',
+        datasetIndex: datasetIndex,
+        // polar bar series read radius/angle encode channels, not x/y —
+        // with x/y no bars render even though the angleAxis still draws.
+        encode: flipAxis ? { angle: 'y', radius: 'x' } : { angle: 'x', radius: 'y' },
+        ...(!seriesProp ? { colorBy: 'data' as const } : {}),
+        ...(isStacked ? { stack: 'total' } : {}),
+      }
+    },
+  )
 
   const circularLayout = resolveCircularLayout(options, {
     defaultRadius: flipAxis ? '72%' : '75%',

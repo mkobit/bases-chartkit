@@ -80,8 +80,7 @@ async function findObsidianPage(cdpPort: number): Promise<CdpPage | undefined> {
     const res = await fetch(`http://127.0.0.1:${cdpPort}/json/list`)
     const pages: readonly CdpPage[] = await res.json()
     return pages.find(p => p.type === 'page')
-  }
-  catch {
+  } catch {
     return undefined
   }
 }
@@ -91,11 +90,13 @@ function resizeOverWebsocket(wsUrl: string): Promise<void> {
     const ws = new WebSocket(wsUrl)
     ws.addEventListener('error', () => reject(new Error('ws error connecting to CDP')))
     ws.addEventListener('open', () => {
-      ws.send(JSON.stringify({
-        id: 1,
-        method: 'Runtime.evaluate',
-        params: { expression: `window.resizeTo(${WINDOW_WIDTH}, ${WINDOW_HEIGHT})` },
-      }))
+      ws.send(
+        JSON.stringify({
+          id: 1,
+          method: 'Runtime.evaluate',
+          params: { expression: `window.resizeTo(${WINDOW_WIDTH}, ${WINDOW_HEIGHT})` },
+        }),
+      )
     })
     ws.addEventListener('message', () => {
       ws.close()
@@ -144,15 +145,13 @@ async function main(): Promise<void> {
     // Already copied and had plugins installed above -- copy:false here
     // avoids a redundant second copy of the vault.
     copy: false,
-    args: [
-      '--disable-gpu',
-      `--remote-debugging-port=${cdpPort}`,
-      '--remote-allow-origins=*',
-    ],
+    args: ['--disable-gpu', `--remote-debugging-port=${cdpPort}`, '--remote-allow-origins=*'],
     spawnOptions: { stdio: 'inherit' },
   })
 
-  console.log(`\nObsidian CLI: \`bun scripts/vault-eval.ts '<js>'\`, \`vault:screenshot\`, \`vault:reload\` | CDP (devtools/resize only): http://localhost:${cdpPort}\n`)
+  console.log(
+    `\nObsidian CLI: \`bun scripts/vault-eval.ts '<js>'\`, \`vault:screenshot\`, \`vault:reload\` | CDP (devtools/resize only): http://localhost:${cdpPort}\n`,
+  )
 
   void resizeWindowWhenReady(cdpPort)
 
@@ -162,11 +161,11 @@ async function main(): Promise<void> {
   forwardSignal('SIGINT')
   forwardSignal('SIGTERM')
 
-  proc.on('close', (code) => {
+  proc.on('close', code => {
     void Promise.allSettled([
       fs.rm(configDir, { recursive: true, force: true }),
       vault ? fs.rm(vault, { recursive: true, force: true }) : Promise.resolve(),
-    ]).then((results) => {
+    ]).then(results => {
       for (const result of results) {
         if (result.status === 'rejected') {
           console.warn(`obsidian tmpdir cleanup failed: ${String(result.reason)}`)

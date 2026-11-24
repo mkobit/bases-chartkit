@@ -14,29 +14,32 @@ describe('resolveCircularLayout', () => {
       center: ['42%', '50%'],
       radius: '62%',
     })
-    expect(resolveCircularLayout({ legend: true, legendPosition: 'left' }, { sideLegendRadius: '55%' })).toEqual({
+    expect(
+      resolveCircularLayout({ legend: true, legendPosition: 'left' }, { sideLegendRadius: '55%' }),
+    ).toEqual({
       center: ['58%', '50%'],
       radius: '55%',
     })
   })
 
   it('balances center and shrinks radius when both top subtitle and bottom legend are present', () => {
-    expect(resolveCircularLayout({
-      title: 'Server load',
-      description: 'Angle is time-of-day',
-      legend: true,
-      legendPosition: 'bottom',
-    })).toEqual({
+    expect(
+      resolveCircularLayout({
+        title: 'Server load',
+        description: 'Angle is time-of-day',
+        legend: true,
+        legendPosition: 'bottom',
+      }),
+    ).toEqual({
       center: ['50%', '54%'],
       radius: '58%',
     })
   })
 
   it('shrinks radius when both top legend and bottom visualMap are present', () => {
-    expect(resolveCircularLayout(
-      { legend: true, legendPosition: 'top' },
-      { hasBottomVisualMap: true },
-    )).toEqual({
+    expect(
+      resolveCircularLayout({ legend: true, legendPosition: 'top' }, { hasBottomVisualMap: true }),
+    ).toEqual({
       center: ['50%', '50%'],
       radius: '60%',
     })
@@ -47,12 +50,14 @@ describe('resolveCircularLayout', () => {
       center: ['50%', '54%'],
       radius: '66%',
     })
-    expect(resolveCircularLayout({
-      title: 'Title',
-      description: 'Subtitle',
-      legend: true,
-      legendPosition: 'top',
-    })).toEqual({
+    expect(
+      resolveCircularLayout({
+        title: 'Title',
+        description: 'Subtitle',
+        legend: true,
+        legendPosition: 'top',
+      }),
+    ).toEqual({
       center: ['50%', '58%'],
       radius: '60%',
     })

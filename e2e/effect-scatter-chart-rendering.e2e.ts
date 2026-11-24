@@ -53,26 +53,39 @@ test.describe('effect-scatter chart rendering', () => {
   // necessarily seriesIndex 0's own point. Fixed by deduplicating the
   // generated data by `x` alone (see scatter.ts), which every consumer of
   // that arbitrary (scatter/effect-scatter/polar-scatter) shares.
-  test('hovering the first point shows its continent and coordinates in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'effect-scatter/basic/Basic.base', viewName: 'GDP vs life expectancy (effect scatter)' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(await getChartOption(page))
-        return option?.dataset?.[0]?.source?.length ?? 0
+  test('hovering the first point shows its continent and coordinates in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      {
+        path: 'effect-scatter/basic/Basic.base',
+        viewName: 'GDP vs life expectancy (effect scatter)',
+      },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly dataset?: readonly DatasetLike[] }>(
+            await getChartOption(page),
+          )
+          return option?.dataset?.[0]?.source?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // Bases can still be re-rendering (a later setOption call landing as
     // indexing catches up) even after the poll above finds a non-empty
@@ -108,36 +121,51 @@ test.describe('effect-scatter chart rendering', () => {
   // raw symbolSize. Real-world magnitudes (country population, in the
   // millions here) would otherwise draw a circle large enough to cover the
   // whole canvas.
-  test('normalizes sizeProp into a bounded symbol size, not raw data magnitude', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('normalizes sizeProp into a bounded symbol size, not raw data magnitude', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'effect-scatter/sized-by-population/Sized-By-Population.base', viewName: 'GDP vs life expectancy sized by population' })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
+      },
+      {
+        path: 'effect-scatter/sized-by-population/Sized-By-Population.base',
+        viewName: 'GDP vs life expectancy sized by population',
+      },
+    )
 
     // Wait for the effect-scatter series to have resolved item visuals --
     // Bases resolves its query asynchronously, so population data (and the
     // symbolSize it drives) arrives after the first paint. effect-scatter/
     // sorts alphabetically after calendar/ (365 notes), so it's at risk of
     // the same cold-start indexing delay as radar/ and map/.
-    await expect.poll(
-      async () => (await getSeriesVisualValues(page, { seriesIndex: 0, visualKey: 'symbolSize' })).length,
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+    await expect
+      .poll(
+        async () =>
+          (await getSeriesVisualValues(page, { seriesIndex: 0, visualKey: 'symbolSize' })).length,
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // These are the *actually rendered* pixel sizes ECharts computed for each
     // point, read from the live instance's visual-encoding model -- not the
     // static option object the transformer produced. Country populations here
     // range from ~7M to ~61M; unnormalized, that's the raw symbolSize in px.
-    const symbolSizes = await getSeriesVisualValues(page, { seriesIndex: 0, visualKey: 'symbolSize' })
+    const symbolSizes = await getSeriesVisualValues(page, {
+      seriesIndex: 0,
+      visualKey: 'symbolSize',
+    })
 
     expect(symbolSizes.length).toBeGreaterThan(0)
     for (const size of symbolSizes) {

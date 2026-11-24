@@ -11,10 +11,7 @@ import {
   parseQualityRatchetYaml,
   validateQualityRatchetEntries,
 } from '../shared/quality-ratchet'
-import type {
-  QualityRatchetExemptions,
-  StaleExemption,
-} from '../shared/quality-ratchet'
+import type { QualityRatchetExemptions, StaleExemption } from '../shared/quality-ratchet'
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..')
 
@@ -74,7 +71,9 @@ async function inspectExemptions(
     const fatalMessages = result.messages.filter(message => message.fatal === true)
     for (const fatalMessage of fatalMessages) {
       const relPath = path.relative(rootDir, absPath)
-      fatalErrors.push(`${relPath}:${fatalMessage.line}:${fatalMessage.column}: ${fatalMessage.message}`)
+      fatalErrors.push(
+        `${relPath}:${fatalMessage.line}:${fatalMessage.column}: ${fatalMessage.message}`,
+      )
     }
     const triggeredRuleIds = new Set(
       result.messages
@@ -192,7 +191,10 @@ async function main(): Promise<void> {
 
 if (import.meta.main) {
   main().catch((err: unknown) => {
-    console.error('Fatal error checking quality ratchet:', err instanceof Error ? err.message : String(err))
+    console.error(
+      'Fatal error checking quality ratchet:',
+      err instanceof Error ? err.message : String(err),
+    )
     process.exit(1)
   })
 }

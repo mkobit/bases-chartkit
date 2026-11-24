@@ -19,17 +19,18 @@ async function main(): Promise<void> {
   // Copy fresh artifacts in
   const pluginDir = path.join(VAULT_PATH, '.obsidian', 'plugins', PLUGIN_ID)
   await fs.mkdir(pluginDir, { recursive: true })
-  await Promise.all(PLUGIN_ARTIFACTS.map(async (f) => {
-    const src = path.join(ROOT_DIR, f)
-    try {
-      await fs.access(src)
-    }
-    catch {
-      console.error(`Missing ${f} at repo root — run \`bun run build\` or \`bun run dev\` first`)
-      process.exit(1)
-    }
-    await fs.cp(src, path.join(pluginDir, f))
-  }))
+  await Promise.all(
+    PLUGIN_ARTIFACTS.map(async f => {
+      const src = path.join(ROOT_DIR, f)
+      try {
+        await fs.access(src)
+      } catch {
+        console.error(`Missing ${f} at repo root — run \`bun run build\` or \`bun run dev\` first`)
+        process.exit(1)
+      }
+      await fs.cp(src, path.join(pluginDir, f))
+    }),
+  )
 
   const { stdout, stderr, exitCode } = await runObsidianCli(['plugin:reload', `id=${PLUGIN_ID}`])
   if (exitCode !== 0) {

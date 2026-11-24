@@ -86,7 +86,7 @@ class MockBasesView {
     this.allProperties = properties
   }
 
-  setData(data: { data: readonly unknown[], properties: BasesPropertyId[] }): void {
+  setData(data: { data: readonly unknown[]; properties: BasesPropertyId[] }): void {
     this.data = data
   }
 }
@@ -173,8 +173,7 @@ describe('EChartsView', () => {
   afterAll(() => {
     if (!hadActiveDocument) {
       Reflect.deleteProperty(global, 'activeDocument')
-    }
-    else {
+    } else {
       Reflect.set(global, 'activeDocument', previousActiveDocument)
     }
   })
@@ -196,7 +195,8 @@ describe('EChartsView', () => {
     const entries = [
       {
         file: { path: 'notes/item.md' },
-        getValue: (id: BasesPropertyId) => (id === 'note.label' ? { toString: () => 'Item' } : { data: 10, toString: () => '10' }),
+        getValue: (id: BasesPropertyId) =>
+          id === 'note.label' ? { toString: () => 'Item' } : { data: 10, toString: () => '10' },
       },
     ]
     const props: readonly BasesPropertyId[] = ['note.label', 'note.value']
@@ -214,7 +214,9 @@ describe('EChartsView', () => {
         state: { kind: 'empty' },
         option: null,
       })
-      expect(resolveEChartsOptionState('# comment\n  # another', entries, props, parseYaml)).toEqual({
+      expect(
+        resolveEChartsOptionState('# comment\n  # another', entries, props, parseYaml),
+      ).toEqual({
         state: { kind: 'empty' },
         option: null,
       })
@@ -304,7 +306,11 @@ series:
       expect(statusEl.classList.contains('bases-echarts-hidden')).toBe(false)
       expect(statusEl.getText().length).toBeGreaterThan(0)
 
-      view.setConfigGetter((key: string) => (key === 'echartsOption' ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] } : undefined))
+      view.setConfigGetter((key: string) =>
+        key === 'echartsOption'
+          ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] }
+          : undefined,
+      )
       view.onDataUpdated()
 
       expect(initSpy).toHaveBeenCalledTimes(1)
@@ -326,11 +332,17 @@ series:
       initSpy = spyOn(echarts, 'init').mockReturnValue(mockChart)
 
       const view: any = new EChartsView(makeControllerStub(), makeScrollElStub(), makePluginStub())
-      view.setConfigGetter((key: string) => (key === 'echartsOption' ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] } : undefined))
+      view.setConfigGetter((key: string) =>
+        key === 'echartsOption'
+          ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] }
+          : undefined,
+      )
       view.onDataUpdated()
       expect(setOptionMock).toHaveBeenCalledTimes(1)
 
-      view.setConfigGetter((key: string) => (key === 'echartsOption' ? { series: [{ type: 'bar' }] } : undefined))
+      view.setConfigGetter((key: string) =>
+        key === 'echartsOption' ? { series: [{ type: 'bar' }] } : undefined,
+      )
       view.onDataUpdated()
 
       expect(disposeMock).toHaveBeenCalledTimes(1)
@@ -359,7 +371,11 @@ series:
       initSpy = spyOn(echarts, 'init').mockReturnValue(mockChart)
 
       const view: any = new EChartsView(makeControllerStub(), makeScrollElStub(), makePluginStub())
-      view.setConfigGetter((key: string) => (key === 'echartsOption' ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] } : undefined))
+      view.setConfigGetter((key: string) =>
+        key === 'echartsOption'
+          ? { dataset: { id: 'bases' }, series: [{ type: 'bar' }] }
+          : undefined,
+      )
       view.setAllProperties(['note.x'])
       view.setData({
         data: [

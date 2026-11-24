@@ -13,41 +13,28 @@ function firstPieSeries(option: EChartsOption): PieSeriesOption {
   return series
 }
 
-describe(
-  'Pie Chart Transformer (Dataset Architecture)',
-  () => {
-    const data = [
-      { name: 'Item A',
-        value: 10 },
-      { name: 'Item B',
-        value: 20 },
-    ]
+describe('Pie Chart Transformer (Dataset Architecture)', () => {
+  const data = [
+    { name: 'Item A', value: 10 },
+    { name: 'Item B', value: 20 },
+  ]
 
-    it(
-      'should create a pie chart using dataset',
-      () => {
-        const option = createPieChartOption(
-          data,
-          'name',
-          'value',
-        )
+  it('should create a pie chart using dataset', () => {
+    const option = createPieChartOption(data, 'name', 'value')
 
-        expect(option.dataset).toBeDefined()
-        // Check source dataset
-        const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
-        expect(dataset).toHaveProperty('source')
+    expect(option.dataset).toBeDefined()
+    // Check source dataset
+    const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+    expect(dataset).toHaveProperty('source')
 
-        // @ts-expect-error - suppress strictNullChecks in tests
-        expect(dataset.source).toHaveLength(2)
+    // @ts-expect-error - suppress strictNullChecks in tests
+    expect(dataset.source).toHaveLength(2)
 
-        // Check series
-        const series = firstPieSeries(option)
-        expect(series).toBeDefined()
-        expect(series.type).toBe('pie')
-        expect(series.datasetIndex).toBe(0)
-        expect(series.encode).toEqual({ itemName: 'name',
-          value: 'value' })
-      },
-    )
-  },
-)
+    // Check series
+    const series = firstPieSeries(option)
+    expect(series).toBeDefined()
+    expect(series.type).toBe('pie')
+    expect(series.datasetIndex).toBe(0)
+    expect(series.encode).toEqual({ itemName: 'name', value: 'value' })
+  })
+})

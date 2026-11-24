@@ -26,13 +26,14 @@ export function getCartesianGridOption(
   const legendPos = hasLegend ? resolveLegendPosition(options) : undefined
   const hasSlider = gridOptions?.hasDataZoomSlider ?? false
 
-  const bottom = hasSlider && legendPos === 'bottom'
-    ? COMPACT_SLIDER_WITH_BOTTOM_LEGEND_MARGIN
-    : hasSlider
-      ? COMPACT_SLIDER_BOTTOM_MARGIN
-      : legendPos === 'bottom'
-        ? BOTTOM_LEGEND_MARGIN
-        : DEFAULT_GRID_MARGIN
+  const bottom =
+    hasSlider && legendPos === 'bottom'
+      ? COMPACT_SLIDER_WITH_BOTTOM_LEGEND_MARGIN
+      : hasSlider
+        ? COMPACT_SLIDER_BOTTOM_MARGIN
+        : legendPos === 'bottom'
+          ? BOTTOM_LEGEND_MARGIN
+          : DEFAULT_GRID_MARGIN
 
   return {
     left: legendPos === 'left' ? VERTICAL_LEGEND_SIDE_MARGIN : DEFAULT_GRID_MARGIN,

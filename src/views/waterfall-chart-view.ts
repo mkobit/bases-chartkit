@@ -46,15 +46,9 @@ export class WaterfallChartView extends BaseChartView {
     const totalProp = this.config.get(BaseChartView.TOTAL_PROP_KEY)
 
     // We use 'waterfall' chart type
-    return transformDataToChartOption(
-      data,
-      xProp,
-      yProp,
-      'waterfall',
-      {
-        ...this.getCommonTransformerOptions(),
-        totalProp: typeof totalProp === 'string' ? totalProp : undefined,
-      },
-    )
+    return transformDataToChartOption(data, xProp, yProp, 'waterfall', {
+      ...this.getCommonTransformerOptions(),
+      totalProp: typeof totalProp === 'string' ? totalProp : undefined,
+    })
   }
 }

@@ -7,11 +7,17 @@ import { t } from '../lang/text'
 
 export class ThemeRiverChartView extends BaseChartView {
   readonly type = 'theme-river-chart'
-  getViewType(): string { return 'theme-river-chart' }
+  getViewType(): string {
+    return 'theme-river-chart'
+  }
 
-  getDisplayText(): string { return 'Theme river' }
+  getDisplayText(): string {
+    return 'Theme river'
+  }
 
-  getIcon(): string { return 'waves' }
+  getIcon(): string {
+    return 'waves'
+  }
 
   static getViewOptions(): BasesOptions[] {
     return [
@@ -50,16 +56,10 @@ export class ThemeRiverChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      dateProp,
-      '',
-      'themeRiver',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp: valueProp,
-        themeProp: themeProp,
-      },
-    )
+    return transformDataToChartOption(data, dateProp, '', 'themeRiver', {
+      ...this.getCommonTransformerOptions(),
+      valueProp: valueProp,
+      themeProp: themeProp,
+    })
   }
 }

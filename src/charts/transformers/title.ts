@@ -1,7 +1,9 @@
 import type { TitleComponentOption } from 'echarts'
 import type { BaseTransformerOptions } from './base'
 
-export function getTitleOption(options?: BaseTransformerOptions): Readonly<TitleComponentOption> | undefined {
+export function getTitleOption(
+  options?: BaseTransformerOptions,
+): Readonly<TitleComponentOption> | undefined {
   const text = options?.title
   const subtext = options?.description
 

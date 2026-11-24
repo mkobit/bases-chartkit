@@ -12,10 +12,7 @@ export class SettingTab extends PluginSettingTab {
   private newThemeJson = ''
 
   constructor(app: Readonly<App>, plugin: Readonly<BarePlugin>) {
-    super(
-      app,
-      plugin,
-    )
+    super(app, plugin)
     this.plugin = plugin
   }
 
@@ -119,18 +116,23 @@ export class SettingTab extends PluginSettingTab {
           name: theme.name,
           desc: t('settings.custom_themes.desc'),
           render: (setting: Setting) => {
-            setting.addExtraButton(button => button
-              .setIcon('trash')
-              .setTooltip(t('settings.custom_themes.delete_tooltip'))
-              .onClick(async () => {
-                this.plugin.settings = {
-                  ...this.plugin.settings,
-                  customThemes: this.plugin.settings.customThemes.filter((_, i) => i !== index),
-                  selectedTheme: this.plugin.settings.selectedTheme === theme.name ? '' : this.plugin.settings.selectedTheme,
-                }
-                await this.plugin.saveSettings()
-                this.update()
-              }))
+            setting.addExtraButton(button =>
+              button
+                .setIcon('trash')
+                .setTooltip(t('settings.custom_themes.delete_tooltip'))
+                .onClick(async () => {
+                  this.plugin.settings = {
+                    ...this.plugin.settings,
+                    customThemes: this.plugin.settings.customThemes.filter((_, i) => i !== index),
+                    selectedTheme:
+                      this.plugin.settings.selectedTheme === theme.name
+                        ? ''
+                        : this.plugin.settings.selectedTheme,
+                  }
+                  await this.plugin.saveSettings()
+                  this.update()
+                }),
+            )
           },
         })),
       },
@@ -141,64 +143,74 @@ export class SettingTab extends PluginSettingTab {
           {
             name: t('settings.add_theme.name_label'),
             render: (setting: Setting) => {
-              setting.addText(text => text
-                .setPlaceholder(t('settings.add_theme.name_placeholder'))
-                .setValue(this.newThemeName)
-                .onChange((value) => {
-                  this.newThemeName = value
-                }))
+              setting.addText(text =>
+                text
+                  .setPlaceholder(t('settings.add_theme.name_placeholder'))
+                  .setValue(this.newThemeName)
+                  .onChange(value => {
+                    this.newThemeName = value
+                  }),
+              )
             },
           },
           {
             name: t('settings.add_theme.json_label'),
             desc: t('settings.add_theme.json_desc'),
             render: (setting: Setting) => {
-              setting.addTextArea(text => text
-                .setPlaceholder(t('settings.add_theme.json_placeholder'))
-                .setValue(this.newThemeJson)
-                .onChange((value) => {
-                  this.newThemeJson = value
-                }))
+              setting.addTextArea(text =>
+                text
+                  .setPlaceholder(t('settings.add_theme.json_placeholder'))
+                  .setValue(this.newThemeJson)
+                  .onChange(value => {
+                    this.newThemeJson = value
+                  }),
+              )
             },
           },
           {
             name: '',
             render: (setting: Setting) => {
-              setting.addButton(button => button
-                .setButtonText(t('settings.add_theme.button'))
-                .setCta()
-                .onClick(async () => {
-                  if (!this.newThemeName.trim() || !this.newThemeJson.trim()) {
-                    new Notice(t('settings.add_theme.missing_fields_error'))
-                    return
-                  }
+              setting.addButton(button =>
+                button
+                  .setButtonText(t('settings.add_theme.button'))
+                  .setCta()
+                  .onClick(async () => {
+                    if (!this.newThemeName.trim() || !this.newThemeJson.trim()) {
+                      new Notice(t('settings.add_theme.missing_fields_error'))
+                      return
+                    }
 
-                  if (this.plugin.settings.customThemes.some(t => t.name === this.newThemeName.trim())) {
-                    new Notice(t('settings.add_theme.exists_error'))
-                    return
-                  }
+                    if (
+                      this.plugin.settings.customThemes.some(
+                        t => t.name === this.newThemeName.trim(),
+                      )
+                    ) {
+                      new Notice(t('settings.add_theme.exists_error'))
+                      return
+                    }
 
-                  if (!validateTheme(this.newThemeJson)) {
-                    new Notice(t('settings.add_theme.invalid_json_error'))
-                    return
-                  }
+                    if (!validateTheme(this.newThemeJson)) {
+                      new Notice(t('settings.add_theme.invalid_json_error'))
+                      return
+                    }
 
-                  this.plugin.settings = {
-                    ...this.plugin.settings,
-                    customThemes: [
-                      ...this.plugin.settings.customThemes,
-                      {
-                        name: this.newThemeName.trim(),
-                        json: this.newThemeJson.trim(),
-                      },
-                    ],
-                  }
-                  this.newThemeName = ''
-                  this.newThemeJson = ''
-                  await this.plugin.saveSettings()
-                  new Notice(t('settings.add_theme.success'))
-                  this.update()
-                }))
+                    this.plugin.settings = {
+                      ...this.plugin.settings,
+                      customThemes: [
+                        ...this.plugin.settings.customThemes,
+                        {
+                          name: this.newThemeName.trim(),
+                          json: this.newThemeJson.trim(),
+                        },
+                      ],
+                    }
+                    this.newThemeName = ''
+                    this.newThemeJson = ''
+                    await this.plugin.saveSettings()
+                    new Notice(t('settings.add_theme.success'))
+                    this.update()
+                  }),
+              )
             },
           },
         ],

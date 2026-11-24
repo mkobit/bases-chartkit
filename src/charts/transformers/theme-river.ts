@@ -1,8 +1,17 @@
-import type { CustomSeriesOption, EChartsOption, SingleAxisComponentOption, ThemeRiverSeriesOption } from 'echarts'
+import type {
+  CustomSeriesOption,
+  EChartsOption,
+  SingleAxisComponentOption,
+  ThemeRiverSeriesOption,
+} from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getNestedValue, safeToString } from './bases-values'
 import { parseDateToEpochMs } from './dates'
-import { GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND, getLegendOption, hasTopLegendWithSubtitle } from './legend'
+import {
+  GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND,
+  getLegendOption,
+  hasTopLegendWithSubtitle,
+} from './legend'
 import { getTitleOption } from './title'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 import * as R from 'remeda'
@@ -28,9 +37,7 @@ interface ThemeRiverItem {
 function asThemeRiverData(items: readonly ThemeRiverItem[]): ThemeRiverSeriesOption['data'] {
   // ECharts' ThemerRiverDataItem is a mutable [date, value, name] tuple, so this is a genuine mutable boundary.
   // eslint-disable-next-line functional/prefer-immutable-types -- see comment above; can't be satisfied without gaming the tuple's typing.
-  return items.map(d => [d.date,
-    d.value,
-    d.theme])
+  return items.map(d => [d.date, d.value, d.theme])
 }
 
 interface Point2D {
@@ -50,18 +57,21 @@ const RIVER_SMOOTH = 0.4
 function smoothCurveSegments(points: readonly Point2D[]): string {
   const n = points.length
   const tension = RIVER_SMOOTH / 2
-  return points.slice(0, -1).map((p0, i) => {
-    const p1 = points[i + 1] ?? p0
-    const prev = i > 0 ? (points[i - 1] ?? p0) : p0
-    const next = i + 2 < n ? (points[i + 2] ?? p1) : p1
-    const minY = Math.min(p0.y, p1.y)
-    const maxY = Math.max(p0.y, p1.y)
-    const cp1x = p0.x + (p1.x - prev.x) * tension
-    const cp1y = Math.min(maxY, Math.max(minY, p0.y + (p1.y - prev.y) * tension))
-    const cp2x = p1.x - (next.x - p0.x) * tension
-    const cp2y = Math.min(maxY, Math.max(minY, p1.y - (next.y - p0.y) * tension))
-    return `C${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p1.x} ${p1.y}`
-  }).join('')
+  return points
+    .slice(0, -1)
+    .map((p0, i) => {
+      const p1 = points[i + 1] ?? p0
+      const prev = i > 0 ? (points[i - 1] ?? p0) : p0
+      const next = i + 2 < n ? (points[i + 2] ?? p1) : p1
+      const minY = Math.min(p0.y, p1.y)
+      const maxY = Math.max(p0.y, p1.y)
+      const cp1x = p0.x + (p1.x - prev.x) * tension
+      const cp1y = Math.min(maxY, Math.max(minY, p0.y + (p1.y - prev.y) * tension))
+      const cp2x = p1.x - (next.x - p0.x) * tension
+      const cp2y = Math.min(maxY, Math.max(minY, p1.y - (next.y - p0.y) * tension))
+      return `C${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p1.x} ${p1.y}`
+    })
+    .join('')
 }
 
 function buildVerticalBandPath(
@@ -85,13 +95,24 @@ function buildVerticalBandPath(
   return `M${firstLeft.x} ${firstLeft.y}${downCurve}L${lastRight.x} ${lastRight.y}${upCurve}Z`
 }
 
-function hasRectBounds(coordSys: unknown): coordSys is { readonly x: number, readonly y: number, readonly width: number, readonly height: number } {
-  return typeof coordSys === 'object'
-    && coordSys !== null
-    && 'x' in coordSys && typeof coordSys.x === 'number'
-    && 'y' in coordSys && typeof coordSys.y === 'number'
-    && 'width' in coordSys && typeof coordSys.width === 'number'
-    && 'height' in coordSys && typeof coordSys.height === 'number'
+function hasRectBounds(coordSys: unknown): coordSys is {
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly height: number
+} {
+  return (
+    typeof coordSys === 'object' &&
+    coordSys !== null &&
+    'x' in coordSys &&
+    typeof coordSys.x === 'number' &&
+    'y' in coordSys &&
+    typeof coordSys.y === 'number' &&
+    'width' in coordSys &&
+    typeof coordSys.width === 'number' &&
+    'height' in coordSys &&
+    typeof coordSys.height === 'number'
+  )
 }
 
 interface EpochValue {
@@ -109,13 +130,17 @@ function asCustomSeriesData(rows: readonly EpochValue[]): CustomSeriesOption['da
 // in both `themeRiverLayout` and `ThemeRiverView`, collapsing bands to a zero-width
 // line when `singleAxis.orient === 'vertical'`. Render each theme as a `custom`
 // series on the vertical `singleAxis` instead so bands spread horizontally.
-function buildVerticalThemeRiverSeries(riverData: readonly ThemeRiverItem[]): readonly CustomSeriesOption[] {
+function buildVerticalThemeRiverSeries(
+  riverData: readonly ThemeRiverItem[],
+): readonly CustomSeriesOption[] {
   if (riverData.length === 0) {
     return []
   }
 
   const dates: readonly string[] = R.unique(riverData.map(d => d.date))
-  const dateEpochs: readonly number[] = dates.map(d => Temporal.PlainDate.from(d).toZonedDateTime('UTC').epochMilliseconds)
+  const dateEpochs: readonly number[] = dates.map(
+    d => Temporal.PlainDate.from(d).toZonedDateTime('UTC').epochMilliseconds,
+  )
   const themes: readonly string[] = R.unique(riverData.map(d => d.theme))
 
   const valueByKey = R.pipe(
@@ -134,7 +159,7 @@ function buildVerticalThemeRiverSeries(riverData: readonly ThemeRiverItem[]): re
     const baseline = (maxTotal - total) / 2
     return R.reduce(
       themes,
-      (acc: { readonly offset: number, readonly slices: readonly NormalizedSlice[] }, theme) => {
+      (acc: { readonly offset: number; readonly slices: readonly NormalizedSlice[] }, theme) => {
         const val = valueByKey[`${date}\0${theme}`] ?? 0
         const left = maxTotal > 0 ? (baseline + acc.offset) / maxTotal : 0.5
         const right = maxTotal > 0 ? (baseline + acc.offset + val) / maxTotal : 0.5
@@ -223,11 +248,8 @@ export function createThemeRiverChartOption(
 
   const riverData: readonly ThemeRiverItem[] = R.pipe(
     data,
-    R.map((item) => {
-      const dateRaw = getNestedValue(
-        item,
-        dateProp,
-      )
+    R.map(item => {
+      const dateRaw = getNestedValue(item, dateProp)
       // Parsed via Temporal (AGENTS.md) rather than handed to ECharts'
       // time axis as whatever string safeToString happens to produce --
       // that let non-date values through silently and broke the axis with
@@ -237,26 +259,18 @@ export function createThemeRiverChartOption(
       return epochMs === null
         ? null
         : (() => {
-            const dateVal = Temporal.Instant.fromEpochMilliseconds(epochMs).toZonedDateTimeISO('UTC').toPlainDate().toString()
-            const valNum = valueProp
-              ? Number(getNestedValue(
-                  item,
-                  valueProp,
-                ))
-              : Number.NaN
+            const dateVal = Temporal.Instant.fromEpochMilliseconds(epochMs)
+              .toZonedDateTimeISO('UTC')
+              .toPlainDate()
+              .toString()
+            const valNum = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
             const val = Number.isNaN(valNum) ? 0 : valNum
 
-            const tRaw = themeProp
-              ? getNestedValue(
-                  item,
-                  themeProp,
-                )
-              : undefined
-            const theme = (tRaw !== undefined && tRaw !== null) ? safeToString(tRaw) : (valueProp ?? 'Value')
+            const tRaw = themeProp ? getNestedValue(item, themeProp) : undefined
+            const theme =
+              tRaw !== undefined && tRaw !== null ? safeToString(tRaw) : (valueProp ?? 'Value')
 
-            const res: ThemeRiverItem = { date: dateVal,
-              value: val,
-              theme }
+            const res: ThemeRiverItem = { date: dateVal, value: val, theme }
             return res
           })()
     }),
@@ -274,34 +288,34 @@ export function createThemeRiverChartOption(
   const singleAxis: SingleAxisComponentOption = {
     type: 'time',
     orient: flip ? 'vertical' : 'horizontal',
-    boundaryGap: [0,
-      0],
-    top: hasTopLegendWithSubtitle(options) ? GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND : (title ? 70 : 50),
+    boundaryGap: [0, 0],
+    top: hasTopLegendWithSubtitle(options)
+      ? GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND
+      : title
+        ? 70
+        : 50,
     bottom: 55,
-    ...(flip
-      ? { left: 60,
-          right: 60,
-          position: 'left',
-          inverse: true }
-      : {}),
+    ...(flip ? { left: 60, right: 60, position: 'left', inverse: true } : {}),
   }
 
   const series: EChartsOption['series'] = flip
     ? [...buildVerticalThemeRiverSeries(riverData)]
-    : [{
-        type: 'themeRiver',
-        data: asThemeRiverData(riverData),
-        // Direct-label each band with its topic name so identity never rests on
-        // the legend swatch alone -- the river bands are wide enough to carry a
-        // short label, and it reads without cross-referencing the legend.
-        label: { show: true },
-        emphasis: {
-          itemStyle: {
-            shadowBlur: STYLE_TOKENS.shadowBlur.deep,
-            shadowColor: COLOR_TOKENS.chrome.shadows.deep,
+    : [
+        {
+          type: 'themeRiver',
+          data: asThemeRiverData(riverData),
+          // Direct-label each band with its topic name so identity never rests on
+          // the legend swatch alone -- the river bands are wide enough to carry a
+          // short label, and it reads without cross-referencing the legend.
+          label: { show: true },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: STYLE_TOKENS.shadowBlur.deep,
+              shadowColor: COLOR_TOKENS.chrome.shadows.deep,
+            },
           },
         },
-      }]
+      ]
 
   return {
     ...(title ? { title } : {}),

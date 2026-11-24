@@ -19,10 +19,10 @@ export const serializeFrontmatter = (fm: Readonly<Record<string, FrontmatterValu
     }
     // Explicitly check for Temporal types using instanceof
     if (
-      value instanceof Temporal.PlainDate
-      || value instanceof Temporal.Instant
-      || value instanceof Temporal.PlainDateTime
-      || value instanceof Temporal.ZonedDateTime
+      value instanceof Temporal.PlainDate ||
+      value instanceof Temporal.Instant ||
+      value instanceof Temporal.PlainDateTime ||
+      value instanceof Temporal.ZonedDateTime
     ) {
       return [`${key}: ${String(value)}`]
     }

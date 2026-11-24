@@ -41,10 +41,7 @@ export default class BarePlugin extends Plugin {
     registerChartCommands(this)
     registerChartViews(this)
 
-    this.addSettingTab(new SettingTab(
-      this.app,
-      this,
-    ))
+    this.addSettingTab(new SettingTab(this.app, this))
   }
 
   onunload() {}
@@ -53,11 +50,7 @@ export default class BarePlugin extends Plugin {
     // Obsidian's loadData() is typed Promise<any> -- no cast needed to feed it
     // into Object.assign, whose result already collapses to `any` once one of
     // its sources is `any`, and `any` is assignable to `this.settings` as-is.
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      await this.loadData(),
-    )
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
   }
 
   async saveSettings() {
@@ -70,7 +63,7 @@ export default class BarePlugin extends Plugin {
     valid.forEach(({ name, theme }) => {
       echarts.registerTheme(name, theme)
     })
-    invalidNames.forEach((name) => {
+    invalidNames.forEach(name => {
       new Notice(t('settings.custom_themes.parse_error', { name }))
     })
   }

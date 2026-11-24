@@ -21,32 +21,22 @@ function buildLinks(
 ): readonly SankeyLink[] {
   return R.pipe(
     data,
-    R.map((item) => {
-      const sourceRaw = getNestedValue(
-        item,
-        sourceProp,
-      )
-      const targetRaw = getNestedValue(
-        item,
-        targetProp,
-      )
+    R.map(item => {
+      const sourceRaw = getNestedValue(item, sourceProp)
+      const targetRaw = getNestedValue(item, targetProp)
 
-      return (sourceRaw !== null && sourceRaw !== undefined && targetRaw !== null && targetRaw !== undefined)
+      return sourceRaw !== null &&
+        sourceRaw !== undefined &&
+        targetRaw !== null &&
+        targetRaw !== undefined
         ? (() => {
             const source = safeToString(sourceRaw)
             const target = safeToString(targetRaw)
 
-            const valNum = valueProp
-              ? Number(getNestedValue(
-                  item,
-                  valueProp,
-                ))
-              : Number.NaN
+            const valNum = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
             const value = Number.isNaN(valNum) ? 1 : valNum
 
-            return { source,
-              target,
-              value }
+            return { source, target, value }
           })()
         : null
     }),
@@ -84,7 +74,8 @@ function detectCycleFrom(
           const neighbors = adjacency[node] ?? []
 
           const result = neighbors.reduce<CycleSearchResult>(
-            (acc, neighbor) => (acc.hasCycle ? acc : detectCycleFrom(neighbor, adjacency, acc.state)),
+            (acc, neighbor) =>
+              acc.hasCycle ? acc : detectCycleFrom(neighbor, adjacency, acc.state),
             { hasCycle: false, state: nextState },
           )
 
@@ -92,7 +83,10 @@ function detectCycleFrom(
             ? result
             : {
                 hasCycle: false,
-                state: { visiting: state.visiting, visited: new Set([...result.state.visited, node]) },
+                state: {
+                  visiting: state.visiting,
+                  visited: new Set([...result.state.visited, node]),
+                },
               }
         })()
 }
@@ -101,16 +95,8 @@ function detectCycleFrom(
 // acyclic graph") at render time otherwise -- callers must check this before
 // handing links to ECharts, since a cycle can't be filtered row-by-row the
 // way a self-loop can.
-export function hasSankeyCycle(
-  data: BasesData,
-  sourceProp: string,
-  targetProp: string,
-): boolean {
-  const links = buildLinks(
-    data,
-    sourceProp,
-    targetProp,
-  )
+export function hasSankeyCycle(data: BasesData, sourceProp: string, targetProp: string): boolean {
+  const links = buildLinks(data, sourceProp, targetProp)
 
   const adjacency = R.pipe(
     links,
@@ -141,11 +127,7 @@ export function sankeyLinkSignature(
   targetProp: string,
 ): string {
   return R.pipe(
-    buildLinks(
-      data,
-      sourceProp,
-      targetProp,
-    ),
+    buildLinks(data, sourceProp, targetProp),
     R.map(l => `${l.source}->${l.target}`),
     R.sortBy(x => x),
     (x: readonly string[]) => x.join('|'),
@@ -158,17 +140,11 @@ export function createSankeyChartOption(
   targetProp: string,
   options?: SankeyTransformerOptions,
 ): EChartsOption {
-  const links = buildLinks(
-    data,
-    sourceProp,
-    targetProp,
-    options?.valueProp,
-  )
+  const links = buildLinks(data, sourceProp, targetProp, options?.valueProp)
 
   const nodes: ReadonlyArray<{ readonly name: string }> = R.pipe(
     links,
-    R.flatMap((l): readonly string[] => [l.source,
-      l.target]),
+    R.flatMap((l): readonly string[] => [l.source, l.target]),
     R.unique(),
     R.map(name => ({ name })),
   )

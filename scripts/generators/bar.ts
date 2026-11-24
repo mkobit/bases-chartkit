@@ -7,19 +7,14 @@ import { DEPARTMENTS, REGIONS, themeSubset } from './themes'
  * Generates department spend figures -- 8-10 categories, enough for a real
  * ranking while staying label-readable in a screenshot.
  */
-export const barChartArbitrary = themeSubset(
-  DEPARTMENTS,
-  10,
-)
-  .chain((categories) => {
+export const barChartArbitrary = themeSubset(DEPARTMENTS, 10)
+  .chain(categories => {
     return fc.record({
       categories: fc.constant(categories),
-      values: fc.array(
-        fc.integer({ min: 15_000,
-          max: 250_000 }),
-        { minLength: categories.length,
-          maxLength: categories.length },
-      ),
+      values: fc.array(fc.integer({ min: 15_000, max: 250_000 }), {
+        minLength: categories.length,
+        maxLength: categories.length,
+      }),
     })
   })
   .map(data => ({
@@ -48,26 +43,25 @@ const STACKED_BAR_QUARTERS = [
 // indexing, which would type as `number | undefined` under this repo's
 // noUncheckedIndexedAccess and fail to satisfy FrontmatterValue.
 const QUARTER_REGION_COMBINATIONS = STACKED_BAR_QUARTERS.flatMap(quarter =>
-  REGIONS.map(region => ({ quarter, region })))
+  REGIONS.map(region => ({ quarter, region })),
+)
 
 /**
  * Arbitrary for a Stacked Bar chart dataset.
  * Generates an 8-quarter x 4-region revenue cross-product -- every quarter has
  * a revenue figure for every region, spanning two years with organic variance.
  */
-export const stackedBarChartArbitrary = fc.record({
-  maxRevenue: fc.integer({ min: 30_000,
-    max: 80_000 }),
-})
-  .chain((config) => {
+export const stackedBarChartArbitrary = fc
+  .record({
+    maxRevenue: fc.integer({ min: 30_000, max: 80_000 }),
+  })
+  .chain(config => {
     return fc.record({
       combinations: fc.constant(QUARTER_REGION_COMBINATIONS),
-      revenues: fc.array(
-        fc.integer({ min: 10_000,
-          max: config.maxRevenue }),
-        { minLength: QUARTER_REGION_COMBINATIONS.length,
-          maxLength: QUARTER_REGION_COMBINATIONS.length },
-      ),
+      revenues: fc.array(fc.integer({ min: 10_000, max: config.maxRevenue }), {
+        minLength: QUARTER_REGION_COMBINATIONS.length,
+        maxLength: QUARTER_REGION_COMBINATIONS.length,
+      }),
     })
   })
   .map(data => ({

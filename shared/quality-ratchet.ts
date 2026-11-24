@@ -31,7 +31,8 @@ const VALID_EXEMPTIONS_MESSAGES = {
   invalidRuleKey: 'Exemption key must be a non-empty ESLint rule ID string.',
   duplicateRule: 'Duplicate exemption rule "{{ruleId}}".',
   invalidFileList: 'Exemption entry for "{{ruleId}}" must be a YAML sequence of file paths.',
-  invalidFilePath: 'Exemption path for "{{ruleId}}" must be a normalized repo-relative file path string.',
+  invalidFilePath:
+    'Exemption path for "{{ruleId}}" must be a normalized repo-relative file path string.',
   duplicateFile: 'Duplicate exempted file "{{file}}" under "{{ruleId}}".',
   missingFile: 'Exempted file "{{file}}" under "{{ruleId}}" does not exist on disk.',
 } as const
@@ -83,11 +84,21 @@ function isYamlDocument(value: unknown): value is YamlDocument {
 }
 
 function isYamlMapping(value: unknown): value is YamlMapping {
-  return isYamlNode(value) && value.type === 'YAMLMapping' && 'pairs' in value && Array.isArray(value.pairs)
+  return (
+    isYamlNode(value) &&
+    value.type === 'YAMLMapping' &&
+    'pairs' in value &&
+    Array.isArray(value.pairs)
+  )
 }
 
 function isYamlSequence(value: unknown): value is YamlSequence {
-  return isYamlNode(value) && value.type === 'YAMLSequence' && 'entries' in value && Array.isArray(value.entries)
+  return (
+    isYamlNode(value) &&
+    value.type === 'YAMLSequence' &&
+    'entries' in value &&
+    Array.isArray(value.entries)
+  )
 }
 
 function isYamlScalar(value: unknown): value is YamlScalar {
@@ -114,7 +125,7 @@ export function parseQualityRatchetYaml(content: string): QualityRatchetParseRes
     const validated = qualityRatchetSchema.safeParse(parsed)
     if (!validated.success) {
       const details = validated.error.issues
-        .map((issue) => {
+        .map(issue => {
           const issuePath = issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''
           return `${issuePath}${issue.message}`
         })
@@ -122,8 +133,7 @@ export function parseQualityRatchetYaml(content: string): QualityRatchetParseRes
       return { ok: false, error: `Invalid ${QUALITY_RATCHET_FILENAME}: ${details}` }
     }
     return { ok: true, exemptions: validated.data }
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     return { ok: false, error: `Failed to parse ${QUALITY_RATCHET_FILENAME}: ${message}` }
   }
@@ -139,18 +149,24 @@ export function loadQualityRatchetForConfig(filePath: string): QualityRatchetExe
     if (!isRecord(parsed)) {
       return {}
     }
-    const entries = Object.entries(parsed).flatMap(([ruleId, value]): readonly (readonly [string, readonly string[]])[] => {
-      if (ruleId.trim().length === 0 || !Array.isArray(value)) {
-        return []
-      }
-      const validFiles = [...new Set(
-        value.filter((item): item is string => typeof item === 'string' && isValidRepoRelativeFilePath(item)),
-      )]
-      return validFiles.length > 0 ? [[ruleId, validFiles]] : []
-    })
+    const entries = Object.entries(parsed).flatMap(
+      ([ruleId, value]): readonly (readonly [string, readonly string[]])[] => {
+        if (ruleId.trim().length === 0 || !Array.isArray(value)) {
+          return []
+        }
+        const validFiles = [
+          ...new Set(
+            value.filter(
+              (item): item is string =>
+                typeof item === 'string' && isValidRepoRelativeFilePath(item),
+            ),
+          ),
+        ]
+        return validFiles.length > 0 ? [[ruleId, validFiles]] : []
+      },
+    )
     return Object.fromEntries(entries)
-  }
-  catch {
+  } catch {
     // Allow ESLint to finish loading config so yml/valid-exemptions rules report YAML syntax/format errors directly.
     return {}
   }
@@ -169,7 +185,9 @@ export function validateQualityRatchetEntries(
     const seenFiles = new Set<string>()
     for (const file of files) {
       if (!isValidRepoRelativeFilePath(file)) {
-        errors.push(`Invalid file path "${file}" under "${ruleId}": must be a normalized repo-relative path.`)
+        errors.push(
+          `Invalid file path "${file}" under "${ruleId}": must be a normalized repo-relative path.`,
+        )
         continue
       }
       if (seenFiles.has(file)) {
@@ -186,7 +204,9 @@ export function validateQualityRatchetEntries(
   return errors
 }
 
-export function createRatchetExemptionConfigs(exemptions: QualityRatchetExemptions): Linter.Config[] {
+export function createRatchetExemptionConfigs(
+  exemptions: QualityRatchetExemptions,
+): Linter.Config[] {
   return Object.entries(exemptions)
     .filter(([, files]) => files.length > 0)
     .map(([ruleId, files]) => ({
@@ -198,7 +218,11 @@ export function createRatchetExemptionConfigs(exemptions: QualityRatchetExemptio
     }))
 }
 
-function resolveYamlRootDir(physicalFilename: string, filename: string, defaultRootDir: string): string {
+function resolveYamlRootDir(
+  physicalFilename: string,
+  filename: string,
+  defaultRootDir: string,
+): string {
   if (path.isAbsolute(physicalFilename)) {
     return path.dirname(physicalFilename)
   }
@@ -213,7 +237,8 @@ function createValidExemptionsRule(defaultRootDir: string): RuleDefinition {
     meta: {
       type: 'problem',
       docs: {
-        description: 'Validate quality-ratchet.yaml structure, path uniqueness, and file existence on disk',
+        description:
+          'Validate quality-ratchet.yaml structure, path uniqueness, and file existence on disk',
       },
       messages: VALID_EXEMPTIONS_MESSAGES,
       schema: [],
@@ -237,11 +262,19 @@ function createValidExemptionsRule(defaultRootDir: string): RuleDefinition {
             return
           }
 
-          const rootDir = resolveYamlRootDir(context.physicalFilename, context.filename, defaultRootDir)
+          const rootDir = resolveYamlRootDir(
+            context.physicalFilename,
+            context.filename,
+            defaultRootDir,
+          )
           const seenRules = new Set<string>()
 
           for (const pair of rawNode.content.pairs) {
-            if (!isYamlScalar(pair.key) || typeof pair.key.value !== 'string' || pair.key.value.trim().length === 0) {
+            if (
+              !isYamlScalar(pair.key) ||
+              typeof pair.key.value !== 'string' ||
+              pair.key.value.trim().length === 0
+            ) {
               report(pair.key ?? pair, 'invalidRuleKey')
               continue
             }
@@ -249,8 +282,7 @@ function createValidExemptionsRule(defaultRootDir: string): RuleDefinition {
             const ruleId = pair.key.value
             if (seenRules.has(ruleId)) {
               report(pair.key, 'duplicateRule', { ruleId })
-            }
-            else {
+            } else {
               seenRules.add(ruleId)
             }
 
@@ -261,7 +293,11 @@ function createValidExemptionsRule(defaultRootDir: string): RuleDefinition {
 
             const seenFiles = new Set<string>()
             for (const entry of pair.value.entries) {
-              if (!isYamlScalar(entry) || typeof entry.value !== 'string' || !isValidRepoRelativeFilePath(entry.value)) {
+              if (
+                !isYamlScalar(entry) ||
+                typeof entry.value !== 'string' ||
+                !isValidRepoRelativeFilePath(entry.value)
+              ) {
                 report(entry ?? pair.value, 'invalidFilePath', { ruleId })
                 continue
               }

@@ -1,0 +1,15 @@
+# Generated / external / non-code directories and files
+bases-chartkit-example-vault/
+docs/
+node_modules/
+playwright-report/
+dist/
+coverage/
+test-results/
+.beads/
+.obsidian-cache/
+
+# Only format JS, TS, JSON, and YAML
+*.md
+*.css
+*.toml

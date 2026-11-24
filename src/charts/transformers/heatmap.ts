@@ -1,4 +1,9 @@
-import type { EChartsOption, HeatmapSeriesOption, DatasetComponentOption, VisualMapComponentOption } from 'echarts'
+import type {
+  EChartsOption,
+  HeatmapSeriesOption,
+  DatasetComponentOption,
+  VisualMapComponentOption,
+} from 'echarts'
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
@@ -39,7 +44,12 @@ export interface HeatmapTooltipParam {
 }
 
 // See scatter.ts's identical comment for why this is required at all.
-function formatTooltip(param: HeatmapTooltipParam, xLabel: string, yLabel: string, valueLabel: string): string {
+function formatTooltip(
+  param: HeatmapTooltipParam,
+  xLabel: string,
+  yLabel: string,
+  valueLabel: string,
+): string {
   const row = isHeatmapCell(param.value) ? param.value : null
   if (!row) {
     return ''
@@ -62,34 +72,20 @@ export function createHeatmapChartOption(
   const containerWidth = options?.containerWidth ?? 1000
   const isCompact = isMobile || containerWidth < 600
 
-  const normalizedData: ReadonlyArray<HeatmapCell> = R.map(
-    data,
-    (item, index): HeatmapCell => {
-      const xValRaw = getNestedValue(
-        item,
-        xProp,
-      )
-      const yValRaw = getNestedValue(
-        item,
-        yProp,
-      )
-      const valNum = valueProp
-        ? Number(getNestedValue(
-            item,
-            valueProp,
-          ))
-        : Number.NaN
-      const meta = extractRowMetadata(item, index)
+  const normalizedData: ReadonlyArray<HeatmapCell> = R.map(data, (item, index): HeatmapCell => {
+    const xValRaw = getNestedValue(item, xProp)
+    const yValRaw = getNestedValue(item, yProp)
+    const valNum = valueProp ? Number(getNestedValue(item, valueProp)) : Number.NaN
+    const meta = extractRowMetadata(item, index)
 
-      return {
-        x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
-        y: yValRaw === undefined || yValRaw === null ? 'Unknown' : safeToString(yValRaw),
-        value: Number.isNaN(valNum) ? 0 : valNum,
-        rowIndex: meta.rowIndex,
-        ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
-      }
-    },
-  )
+    return {
+      x: xValRaw === undefined || xValRaw === null ? 'Unknown' : safeToString(xValRaw),
+      y: yValRaw === undefined || yValRaw === null ? 'Unknown' : safeToString(yValRaw),
+      value: Number.isNaN(valNum) ? 0 : valNum,
+      rowIndex: meta.rowIndex,
+      ...(meta.filePath !== undefined ? { filePath: meta.filePath } : {}),
+    }
+  })
 
   const xAxisData: readonly string[] = R.pipe(
     normalizedData,
@@ -113,10 +109,7 @@ export function createHeatmapChartOption(
     false,
   )
 
-  const values: readonly number[] = R.map(
-    normalizedData,
-    d => d.value,
-  )
+  const values: readonly number[] = R.map(normalizedData, d => d.value)
 
   const dataMin = values.length > 0 ? Math.min(...values) : 0
   const dataMax = values.length > 0 ? Math.max(...values) : 10
@@ -125,9 +118,7 @@ export function createHeatmapChartOption(
   const finalMaxVal = options?.visualMapMax !== undefined ? options.visualMapMax : dataMax
 
   const dataset: DatasetComponentOption = {
-    dimensions: ['x',
-      'y',
-      'value'],
+    dimensions: ['x', 'y', 'value'],
     source: normalizedData,
   }
 
@@ -138,9 +129,7 @@ export function createHeatmapChartOption(
       x: 'x',
       y: 'y',
       value: 'value',
-      tooltip: ['x',
-        'y',
-        'value'],
+      tooltip: ['x', 'y', 'value'],
     },
     label: {
       show: true,
@@ -153,7 +142,7 @@ export function createHeatmapChartOption(
       color: COLOR_TOKENS.chrome.labelInk,
       textBorderColor: COLOR_TOKENS.chrome.labelHalo,
       textBorderWidth: STYLE_TOKENS.strokeWidth.medium,
-      formatter: (params) => {
+      formatter: params => {
         const val = isHeatmapCell(params.value) ? params.value.value : undefined
         return val === undefined || Number.isNaN(val) ? '' : safeToString(val)
       },
@@ -162,7 +151,9 @@ export function createHeatmapChartOption(
 
   const hasTitle = Boolean(options?.title)
   const hasSubtitle = Boolean(options?.description)
-  const isBottomVisualMap = options?.visualMapTop === undefined && (options?.visualMapOrient ?? 'horizontal') === 'horizontal'
+  const isBottomVisualMap =
+    options?.visualMapTop === undefined &&
+    (options?.visualMapOrient ?? 'horizontal') === 'horizontal'
 
   const visualMapOption: VisualMapComponentOption = {
     min: finalMinVal,
@@ -176,9 +167,10 @@ export function createHeatmapChartOption(
     formatter: formatCompactVisualMapLabel,
     dimension: 2,
     inRange: {
-      color: options?.visualMapColor && options.visualMapColor.length > 0
-        ? [...options.visualMapColor]
-        : [...DEFAULT_SEQUENTIAL_COLOR_GRADIENT],
+      color:
+        options?.visualMapColor && options.visualMapColor.length > 0
+          ? [...options.visualMapColor]
+          : [...DEFAULT_SEQUENTIAL_COLOR_GRADIENT],
     },
   }
 
@@ -186,7 +178,9 @@ export function createHeatmapChartOption(
     dataset: [dataset],
     tooltip: {
       position: 'top',
-      formatter: asTooltipFormatter((param: HeatmapTooltipParam) => formatTooltip(param, xAxisLabel, yAxisLabel, options?.valueLabel ?? valueProp ?? 'Value')),
+      formatter: asTooltipFormatter((param: HeatmapTooltipParam) =>
+        formatTooltip(param, xAxisLabel, yAxisLabel, options?.valueLabel ?? valueProp ?? 'Value'),
+      ),
     },
     grid: {
       top: hasSubtitle ? 60 : hasTitle ? 42 : '8%',

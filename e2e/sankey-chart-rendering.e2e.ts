@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 import type { SankeySeriesOption } from 'echarts'
 
 interface SankeyOptionLike {
@@ -8,27 +14,33 @@ interface SankeyOptionLike {
 
 test.describe('sankey chart rendering', () => {
   test('renders nodes and links for a valid acyclic funnel', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'sankey/Basic.base', viewName: 'User funnel flow (sankey)' })
-
-    await expect.poll(
-      async () => {
-        const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
-        return opt?.series?.[0]?.links?.length ?? 0
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'sankey/Basic.base', viewName: 'User funnel flow (sankey)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
+          return opt?.series?.[0]?.links?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     const option = asOptionLike<SankeyOptionLike>(await getChartOption(page))
     expect(option?.series?.[0]?.type).toBe('sankey')
@@ -44,9 +56,11 @@ test.describe('sankey chart rendering', () => {
   // Fixture notes are created at runtime (rather than committed to the
   // example vault) so the showcase vault never ships intentionally-cyclic
   // data alongside its documented, visually-verified examples.
-  test('cyclic source/target data shows a Notice and clears the chart instead of crashing', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app) => {
-      await new Promise<void>((resolve) => {
+  test('cyclic source/target data shows a Notice and clears the chart instead of crashing', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(page, async app => {
+      await new Promise<void>(resolve => {
         app.workspace.onLayoutReady(() => {
           resolve()
         })
@@ -55,27 +69,36 @@ test.describe('sankey chart rendering', () => {
       const folder = 'sankey-cycle-regression'
       await app.vault.createFolder(folder).catch(() => undefined)
       await app.vault.createFolder(`${folder}/notes`).catch(() => undefined)
-      await app.vault.create(`${folder}/notes/A.md`, '---\nSource: "X"\nTarget: "Y"\nAmount: 5\n---\n')
-      await app.vault.create(`${folder}/notes/B.md`, '---\nSource: "Y"\nTarget: "X"\nAmount: 3\n---\n')
-      await app.vault.create(`${folder}/Cycle.base`, [
-        'properties:',
-        '  note.Amount:',
-        '    displayName: Amount',
-        '  note.Source:',
-        '    displayName: Source',
-        '  note.Target:',
-        '    displayName: Target',
-        'views:',
-        '  - type: sankey-chart',
-        '    name: Cycle regression',
-        '    xAxisProp: note.Source',
-        '    yAxisProp: note.Target',
-        '    valueProp: note.Amount',
-        '    filters:',
-        '      and:',
-        `        - file.folder == "${folder}/notes"`,
-        '',
-      ].join('\n'))
+      await app.vault.create(
+        `${folder}/notes/A.md`,
+        '---\nSource: "X"\nTarget: "Y"\nAmount: 5\n---\n',
+      )
+      await app.vault.create(
+        `${folder}/notes/B.md`,
+        '---\nSource: "Y"\nTarget: "X"\nAmount: 3\n---\n',
+      )
+      await app.vault.create(
+        `${folder}/Cycle.base`,
+        [
+          'properties:',
+          '  note.Amount:',
+          '    displayName: Amount',
+          '  note.Source:',
+          '    displayName: Source',
+          '  note.Target:',
+          '    displayName: Target',
+          'views:',
+          '  - type: sankey-chart',
+          '    name: Cycle regression',
+          '    xAxisProp: note.Source',
+          '    yAxisProp: note.Target',
+          '    valueProp: note.Amount',
+          '    filters:',
+          '      and:',
+          `        - file.folder == "${folder}/notes"`,
+          '',
+        ].join('\n'),
+      )
 
       const leaf = app.workspace.getLeaf('tab')
       await leaf.setViewState({
@@ -104,26 +127,34 @@ test.describe('sankey chart rendering', () => {
   // *separate* 'edge' data model (`seriesModel.getData('edge')`) that
   // getSeriesItemScreenPosition's dataIndex-based lookup (against the main
   // data) can't address -- a node is the only tractable hover target here.
-  test('hovering a sankey node shows its name and total flow value in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'sankey/Basic.base', viewName: 'User funnel flow (sankey)' })
-
-    await expect.poll(
-      async () => {
-        const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
-        return opt?.series?.[0]?.data?.length ?? 0
+  test('hovering a sankey node shows its name and total flow value in the tooltip', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'sankey/Basic.base', viewName: 'User funnel flow (sankey)' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const opt = asOptionLike<SankeyOptionLike>(await getChartOption(page))
+          return opt?.series?.[0]?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     // sankey.ts's `nodes` array is built via flatMap(source, target) +
     // R.unique() over every link row, in Funnel-Step-0..7.md's alphabetical

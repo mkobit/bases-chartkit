@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { transformDataToChartOption } from '../../../src/charts/transformer'
-import { GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND, TOP_LEGEND_WITH_SUBTITLE_OFFSET } from '../../../src/charts/transformers/legend'
+import {
+  GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND,
+  TOP_LEGEND_WITH_SUBTITLE_OFFSET,
+} from '../../../src/charts/transformers/legend'
 import { getTitleOption } from '../../../src/charts/transformers/title'
 
 describe('Chart titles and explainability descriptions', () => {
@@ -49,16 +52,10 @@ describe('Chart titles and explainability descriptions', () => {
     ]
 
     test('injects title and description into scatter chart option', () => {
-      const option = transformDataToChartOption(
-        dummyData,
-        'gdp',
-        'life',
-        'scatter',
-        {
-          title: 'GDP vs Life Expectancy',
-          description: 'GDP on X axis, Life Expectancy on Y axis',
-        },
-      )
+      const option = transformDataToChartOption(dummyData, 'gdp', 'life', 'scatter', {
+        title: 'GDP vs Life Expectancy',
+        description: 'GDP on X axis, Life Expectancy on Y axis',
+      })
 
       expect(option.title).toEqual({
         text: 'GDP vs Life Expectancy',
@@ -69,16 +66,10 @@ describe('Chart titles and explainability descriptions', () => {
     })
 
     test('injects title and description into polar line chart option', () => {
-      const option = transformDataToChartOption(
-        dummyData,
-        'gdp',
-        'life',
-        'polarLine',
-        {
-          title: 'Radial Metric Distribution',
-          description: 'Angle represents GDP value; radius represents life expectancy',
-        },
-      )
+      const option = transformDataToChartOption(dummyData, 'gdp', 'life', 'polarLine', {
+        title: 'Radial Metric Distribution',
+        description: 'Angle represents GDP value; radius represents life expectancy',
+      })
 
       expect(option.title).toEqual({
         text: 'Radial Metric Distribution',
@@ -126,16 +117,10 @@ describe('Chart titles and explainability descriptions', () => {
 
     test('merges title and description when chart transformer returns pre-existing title text', () => {
       // parallel chart returns title: { text: 'No dimensions specified' } when dimensions string is empty
-      const option = transformDataToChartOption(
-        dummyData,
-        '',
-        '',
-        'parallel',
-        {
-          title: 'User Parallel Title',
-          description: 'Explainability caption',
-        },
-      )
+      const option = transformDataToChartOption(dummyData, '', '', 'parallel', {
+        title: 'User Parallel Title',
+        description: 'Explainability caption',
+      })
 
       expect(option.title).toEqual({
         text: 'No dimensions specified',
@@ -157,7 +142,10 @@ describe('Chart titles and explainability descriptions', () => {
         legend: true,
         legendPosition: 'top',
       })
-      expect(boxplotOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
+      expect(boxplotOpt.legend).toMatchObject({
+        top: TOP_LEGEND_WITH_SUBTITLE_OFFSET,
+        left: 'center',
+      })
       expect(boxplotOpt.grid).toMatchObject({ top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
 
       const bulletData = [
@@ -174,7 +162,10 @@ describe('Chart titles and explainability descriptions', () => {
         rangeMidProp: 'RangeMid',
         rangeHighProp: 'RangeHigh',
       })
-      expect(bulletOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
+      expect(bulletOpt.legend).toMatchObject({
+        top: TOP_LEGEND_WITH_SUBTITLE_OFFSET,
+        left: 'center',
+      })
       expect(bulletOpt.grid).toMatchObject({ top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
 
       const ganttData = [
@@ -190,8 +181,14 @@ describe('Chart titles and explainability descriptions', () => {
         endProp: 'End',
         seriesProp: 'Project',
       })
-      expect(ganttOpt.legend).toMatchObject({ top: TOP_LEGEND_WITH_SUBTITLE_OFFSET, left: 'center' })
-      expect(ganttOpt.grid).toMatchObject({ containLabel: true, top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND })
+      expect(ganttOpt.legend).toMatchObject({
+        top: TOP_LEGEND_WITH_SUBTITLE_OFFSET,
+        left: 'center',
+      })
+      expect(ganttOpt.grid).toMatchObject({
+        containLabel: true,
+        top: GRID_TOP_WITH_SUBTITLE_AND_TOP_LEGEND,
+      })
     })
 
     test('keeps top legend at 0 and omits grid top offset when no subtitle is configured', () => {

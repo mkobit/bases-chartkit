@@ -41,16 +41,10 @@ export function createFunnelChartOption(
   const grouped: Readonly<Record<string, ReadonlyArray<FunnelDataPoint>>> = R.pipe(
     data,
     R.map((item): FunnelDataPoint => {
-      const valRaw = getNestedValue(
-        item,
-        nameProp,
-      )
+      const valRaw = getNestedValue(item, nameProp)
       const name = valRaw === undefined || valRaw === null ? 'Unknown' : safeToString(valRaw)
 
-      const val = Number(getNestedValue(
-        item,
-        valueProp,
-      ))
+      const val = Number(getNestedValue(item, valueProp))
       return {
         name: name,
         value: Number.isNaN(val) ? 0 : val,
@@ -59,8 +53,8 @@ export function createFunnelChartOption(
     R.groupBy(d => d.name),
   )
 
-  const resolvedSort: 'descending' | 'ascending' | 'none' | undefined = options?.sort
-    ?? (options?.flipAxis ? 'ascending' : undefined)
+  const resolvedSort: 'descending' | 'ascending' | 'none' | undefined =
+    options?.sort ?? (options?.flipAxis ? 'ascending' : undefined)
   const effectiveSort = resolvedSort ?? 'descending'
 
   const aggregatedData: ReadonlyArray<FunnelDataPoint> = R.pipe(
@@ -71,10 +65,10 @@ export function createFunnelChartOption(
     })),
   )
 
-  const seriesData: ReadonlyArray<FunnelDataPoint> = effectiveSort === 'none'
-    ? aggregatedData
-    : R.sortBy(aggregatedData, [x => x.value,
-        effectiveSort === 'ascending' ? 'asc' : 'desc'])
+  const seriesData: ReadonlyArray<FunnelDataPoint> =
+    effectiveSort === 'none'
+      ? aggregatedData
+      : R.sortBy(aggregatedData, [x => x.value, effectiveSort === 'ascending' ? 'asc' : 'desc'])
 
   const seriesItem: FunnelSeriesOption = {
     type: 'funnel',
@@ -104,9 +98,10 @@ export function createFunnelChartOption(
     series: [seriesItem],
     tooltip: {
       trigger: 'item',
-      formatter: valueFormat !== undefined
-        ? asTooltipFormatter((param: FunnelTooltipParam) => formatTooltip(param, valueFormat))
-        : '{b} : {c}%',
+      formatter:
+        valueFormat !== undefined
+          ? asTooltipFormatter((param: FunnelTooltipParam) => formatTooltip(param, valueFormat))
+          : '{b} : {c}%',
     },
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
     ...(options?.theme ? { theme: options.theme } : {}),

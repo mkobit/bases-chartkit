@@ -36,24 +36,21 @@ export class RadarChartView extends BaseChartView {
     // character with Strength/Intelligence/Agility columns) — each metric
     // becomes a radar axis, xProp names each series.
     if (typeof metricPropsRaw === 'string' && metricPropsRaw.trim().length > 0) {
-      const metricProps = metricPropsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0)
+      const metricProps = metricPropsRaw
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
       const metricLabels = Object.fromEntries(
         metricProps.map(prop => [prop, this.getDisplayNameForPropertyPath(prop)]),
       )
       return metricProps.length === 0
         ? null
-        : transformDataToChartOption(
-            data,
-            xProp,
-            '',
-            'radar',
-            {
-              ...this.getCommonTransformerOptions(),
-              ...styleOptions,
-              metricProps,
-              metricLabels,
-            },
-          )
+        : transformDataToChartOption(data, xProp, '', 'radar', {
+            ...this.getCommonTransformerOptions(),
+            ...styleOptions,
+            metricProps,
+            metricLabels,
+          })
     }
 
     const yProp = this.config.get(BaseChartView.Y_AXIS_PROP_KEY)
@@ -61,22 +58,16 @@ export class RadarChartView extends BaseChartView {
 
     return typeof yProp !== 'string'
       ? null
-      : transformDataToChartOption(
-          data,
-          xProp,
-          yProp,
-          'radar',
-          {
-            ...this.getCommonTransformerOptions(),
-            ...styleOptions,
-            seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
-          },
-        )
+      : transformDataToChartOption(data, xProp, yProp, 'radar', {
+          ...this.getCommonTransformerOptions(),
+          ...styleOptions,
+          seriesProp: typeof seriesProp === 'string' ? seriesProp : undefined,
+        })
   }
 
   static getViewOptions(): BasesOptions[] {
     // Clone options to avoid side effects on other charts
-    const commonOptions = BaseChartView.getCommonViewOptions().map((opt) => {
+    const commonOptions = BaseChartView.getCommonViewOptions().map(opt => {
       const isXAxis = 'key' in opt && opt.key === BaseChartView.X_AXIS_PROP_KEY
       return isXAxis
         ? {

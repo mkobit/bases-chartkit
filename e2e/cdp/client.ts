@@ -110,7 +110,7 @@ export class CdpClientSession implements CdpClient {
     this.ws = ws
     this.wsUrl = wsUrl
 
-    this.ws.addEventListener('message', (event) => {
+    this.ws.addEventListener('message', event => {
       this.handleMessage(event.data)
     })
 
@@ -184,8 +184,12 @@ export class CdpClientSession implements CdpClient {
       ...(params.code !== undefined ? { code: params.code } : {}),
       ...(params.text !== undefined ? { text: params.text } : {}),
       ...(params.unmodifiedText !== undefined ? { unmodifiedText: params.unmodifiedText } : {}),
-      ...(params.windowsVirtualKeyCode !== undefined ? { windowsVirtualKeyCode: params.windowsVirtualKeyCode } : {}),
-      ...(params.nativeVirtualKeyCode !== undefined ? { nativeVirtualKeyCode: params.nativeVirtualKeyCode } : {}),
+      ...(params.windowsVirtualKeyCode !== undefined
+        ? { windowsVirtualKeyCode: params.windowsVirtualKeyCode }
+        : {}),
+      ...(params.nativeVirtualKeyCode !== undefined
+        ? { nativeVirtualKeyCode: params.nativeVirtualKeyCode }
+        : {}),
       ...(params.macCharCode !== undefined ? { macCharCode: params.macCharCode } : {}),
     })
   }
@@ -226,7 +230,7 @@ export class CdpClientSession implements CdpClient {
   private handleClose(): void {
     const remainingRequests = Array.from(this.pendingRequests.values())
     this.pendingRequests.clear()
-    remainingRequests.forEach((req) => {
+    remainingRequests.forEach(req => {
       req.reject(new Error('WebSocket connection closed before response'))
     })
   }
@@ -253,7 +257,14 @@ export async function fetchCdpTargets(
     throw new Error(`Invalid CDP response from port ${port}: expected array`)
   }
 
-  return raw.filter((item): item is CdpTarget => typeof item === 'object' && item !== null && 'id' in item && 'type' in item && 'webSocketDebuggerUrl' in item)
+  return raw.filter(
+    (item): item is CdpTarget =>
+      typeof item === 'object' &&
+      item !== null &&
+      'id' in item &&
+      'type' in item &&
+      'webSocketDebuggerUrl' in item,
+  )
 }
 
 /**
@@ -268,17 +279,18 @@ export function findPageTarget(targets: readonly CdpTarget[]): CdpTarget | undef
  * Accepts either a numeric debugging port or a WebSocket URL string.
  */
 export async function connectCdp(target: string | number): Promise<CdpClient> {
-  const wsUrl = typeof target === 'number'
-    ? await (async () => {
-        const targets = await fetchCdpTargets(target)
-        const page = findPageTarget(targets)
-        if (page === undefined) {
-          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
-          throw new Error(`No page target found on CDP port ${target}`)
-        }
-        return page.webSocketDebuggerUrl
-      })()
-    : target
+  const wsUrl =
+    typeof target === 'number'
+      ? await (async () => {
+          const targets = await fetchCdpTargets(target)
+          const page = findPageTarget(targets)
+          if (page === undefined) {
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain new Error(...); pre-existing false positive, see e2e/fixtures/obsidian.ts.
+            throw new Error(`No page target found on CDP port ${target}`)
+          }
+          return page.webSocketDebuggerUrl
+        })()
+      : target
 
   return new Promise<CdpClient>((resolve, reject) => {
     const ws = new WebSocket(wsUrl)

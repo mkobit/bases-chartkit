@@ -30,7 +30,10 @@ export function createParallelChartOption(
   dimensionsStr: string,
   options?: ParallelTransformerOptions,
 ): EChartsOption {
-  const dims: readonly string[] = dimensionsStr.split(',').map(s => s.trim()).filter(s => s.length > 0)
+  const dims: readonly string[] = dimensionsStr
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
 
   return dims.length === 0
     ? {
@@ -40,87 +43,79 @@ export function createParallelChartOption(
       }
     : (() => {
         const seriesProp = options?.seriesProp
-        const layout: 'horizontal' | 'vertical' | undefined = options?.layout
-          ?? (options?.flipAxis !== undefined ? (options.flipAxis ? 'vertical' : 'horizontal') : undefined)
+        const layout: 'horizontal' | 'vertical' | undefined =
+          options?.layout ??
+          (options?.flipAxis !== undefined
+            ? options.flipAxis
+              ? 'vertical'
+              : 'horizontal'
+            : undefined)
 
         // Use standard map to avoid remeda type issues with indexed map in strict mode
-        const parallelAxis: readonly ParallelAxisSpec[] = dims.map((dim, index): ParallelAxisSpec => {
-          const values: readonly unknown[] = R.map(
-            data,
-            item => getNestedValue(
-              item,
-              dim,
-            ),
-          )
+        const parallelAxis: readonly ParallelAxisSpec[] = dims.map(
+          (dim, index): ParallelAxisSpec => {
+            const values: readonly unknown[] = R.map(data, item => getNestedValue(item, dim))
 
-          const nonNullValues: readonly unknown[] = R.filter(
-            values,
-            v => v !== null && v !== undefined && v !== '',
-          )
-          const isNumeric = nonNullValues.every(v => !Number.isNaN(Number(v)))
+            const nonNullValues: readonly unknown[] = R.filter(
+              values,
+              v => v !== null && v !== undefined && v !== '',
+            )
+            const isNumeric = nonNullValues.every(v => !Number.isNaN(Number(v)))
 
-          const name = options?.dimensionLabels?.[dim] ?? dim
+            const name = options?.dimensionLabels?.[dim] ?? dim
 
-          return (isNumeric && nonNullValues.length > 0)
-            ? {
-                dim: index,
-                name,
-                type: 'value' as const,
-              }
-            : (() => {
-                const uniqueVals: readonly string[] = R.pipe(
-                  nonNullValues,
-                  R.map(safeToString),
-                  R.unique(),
-                )
-                return {
+            return isNumeric && nonNullValues.length > 0
+              ? {
                   dim: index,
                   name,
-                  type: 'category' as const,
-                  data: uniqueVals,
+                  type: 'value' as const,
                 }
-              })()
-        })
+              : (() => {
+                  const uniqueVals: readonly string[] = R.pipe(
+                    nonNullValues,
+                    R.map(safeToString),
+                    R.unique(),
+                  )
+                  return {
+                    dim: index,
+                    name,
+                    type: 'category' as const,
+                    data: uniqueVals,
+                  }
+                })()
+          },
+        )
 
         const seriesDataMap = R.pipe(
           data,
-          R.groupBy((item) => {
+          R.groupBy(item => {
             return seriesProp
               ? (() => {
-                  const sValRaw = getNestedValue(
-                    item,
-                    seriesProp,
-                  )
-                  return (sValRaw !== undefined && sValRaw !== null) ? safeToString(sValRaw) : 'Unknown'
+                  const sValRaw = getNestedValue(item, seriesProp)
+                  return sValRaw !== undefined && sValRaw !== null
+                    ? safeToString(sValRaw)
+                    : 'Unknown'
                 })()
               : 'Series 1'
           }),
           R.mapValues((items: BasesData): ReadonlyArray<ParallelRow> =>
-            R.map(
-              items,
-              (item): ParallelRow => {
-                return R.map(
-                  dims,
-                  (dim, index): number | string | null => {
-                    const valRaw = getNestedValue(
-                      item,
-                      dim,
-                    )
+            R.map(items, (item): ParallelRow => {
+              return R.map(dims, (dim, index): number | string | null => {
+                const valRaw = getNestedValue(item, dim)
 
-                    return (valRaw === null || valRaw === undefined || valRaw === '')
-                      ? null
-                      : (() => {
-                          // Look up by index, not by resolved axis name — the
-                          // axis `name` may now be a friendly displayName that
-                          // no longer matches the raw `dim` property path.
-                          const axis = parallelAxis[index]
-                          const isNum = axis?.type === 'value'
-                          return isNum ? Number(valRaw) : safeToString(valRaw)
-                        })()
-                  },
-                )
-              },
-            )),
+                return valRaw === null || valRaw === undefined || valRaw === ''
+                  ? null
+                  : (() => {
+                      // Look up by index, not by resolved axis name — the
+                      // axis `name` may now be a friendly displayName that
+                      // no longer matches the raw `dim` property path.
+                      const axis = parallelAxis[index]
+                      const isNum = axis?.type === 'value'
+                      return isNum ? Number(valRaw) : safeToString(valRaw)
+                    })()
+              })
+            }),
+          ),
         )
 
         const series: ReadonlyArray<ParallelSeriesOption> = R.map(
@@ -176,8 +171,10 @@ export function createParallelChartOption(
           },
           // ECharts wants fresh mutable axis (and per-axis data) arrays, same
           // boundary rule as the series `data` build below.
-          parallelAxis: parallelAxis.map(axis => ({ ...axis,
-            data: axis.data ? [...axis.data] : undefined })),
+          parallelAxis: parallelAxis.map(axis => ({
+            ...axis,
+            data: axis.data ? [...axis.data] : undefined,
+          })),
           series: [...series],
           tooltip: {
             trigger: 'item',

@@ -1,6 +1,4 @@
-import type {
-  BasesOptions,
-} from 'obsidian'
+import type { BasesOptions } from 'obsidian'
 import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
@@ -35,9 +33,13 @@ export class SunburstChartView extends BaseChartView {
         key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.sunburst.value_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((o) => {
+      ...BaseChartView.getCommonViewOptions().filter(o => {
         const key = o.key
-        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+        return (
+          key !== BaseChartView.X_AXIS_PROP_KEY &&
+          key !== BaseChartView.Y_AXIS_PROP_KEY &&
+          key !== BaseChartView.SERIES_PROP_KEY
+        )
       }),
     ]
   }
@@ -50,15 +52,9 @@ export class SunburstChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      pathProp,
-      '',
-      'sunburst',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp: valueProp,
-      },
-    )
+    return transformDataToChartOption(data, pathProp, '', 'sunburst', {
+      ...this.getCommonTransformerOptions(),
+      valueProp: valueProp,
+    })
   }
 }

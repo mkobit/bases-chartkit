@@ -1,5 +1,12 @@
 import { test, expect } from './fixtures/obsidian'
-import { asOptionLike, evaluateObsidian, getChartOption, hoverChartDataPointAndGetTooltip, waitForVaultIndexed, VAULT_INDEXED_POLL_TIMEOUT_MS } from './helpers/evaluate'
+import {
+  asOptionLike,
+  evaluateObsidian,
+  getChartOption,
+  hoverChartDataPointAndGetTooltip,
+  waitForVaultIndexed,
+  VAULT_INDEXED_POLL_TIMEOUT_MS,
+} from './helpers/evaluate'
 
 interface BoxplotSeriesLike {
   readonly type?: string
@@ -18,30 +25,42 @@ test.describe('boxplot chart rendering', () => {
   // near-black background. The fix sets an explicit transparent fill, which
   // is theme-agnostic -- this only exercises the default (light) e2e
   // profile, but the assertion holds regardless of theme.
-  test('boxplot series has a transparent fill, not the ECharts default white', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('boxplot series has a transparent fill, not the ECharts default white', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'boxplot/Basic.base', viewName: 'Product score distribution' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
-        return option?.series?.length ?? 0
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: 30_000 },
-    ).toBeGreaterThan(0)
+      { path: 'boxplot/Basic.base', viewName: 'Product score distribution' },
+    )
 
-    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly unknown[] }>(
+            await getChartOption(page),
+          )
+          return option?.series?.length ?? 0
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0)
+
+    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(
+      await getChartOption(page),
+    )
     if (option === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -75,31 +94,43 @@ test.describe('boxplot chart rendering', () => {
   // values immediately after it resolves (rather than before starting the
   // hover) guarantees they describe the exact same render the tooltip came
   // from.
-  test('hovering a product\'s box shows its five-number summary in the tooltip', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => resolve())
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'boxplot/Basic.base', viewName: 'Product score distribution' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
-        const boxplotSeries = option?.series?.find(s => s.type === 'boxplot')
-        return boxplotSeries?.data?.length ?? 0
+  test("hovering a product's box shows its five-number summary in the tooltip", async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => resolve())
+        })
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
-    ).toBeGreaterThan(0)
+      { path: 'boxplot/Basic.base', viewName: 'Product score distribution' },
+    )
+
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly BoxplotSeriesLike[] }>(
+            await getChartOption(page),
+          )
+          const boxplotSeries = option?.series?.find(s => s.type === 'boxplot')
+          return boxplotSeries?.data?.length ?? 0
+        },
+        { timeout: VAULT_INDEXED_POLL_TIMEOUT_MS },
+      )
+      .toBeGreaterThan(0)
 
     await waitForVaultIndexed(page)
 
-    const seriesOption = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    const seriesOption = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(
+      await getChartOption(page),
+    )
     if (seriesOption === null) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- this is a plain `new Error(...)`; see the identical disable in e2e/fixtures/obsidian.ts for the same pre-existing false positive.
       throw new Error('expected a non-null chart option')
@@ -144,30 +175,42 @@ test.describe('boxplot chart rendering', () => {
   // Regression test (bck-uif): multi-series / grouped boxplot via seriesProp
   // must apply transparent itemStyle fill uniformly across every series, not
   // just the first.
-  test('grouped boxplot series all have transparent fill across all series', async ({ obsidianPage: { page } }) => {
-    await evaluateObsidian(page, async (app, args: { path: string, viewName: string }) => {
-      await new Promise<void>((resolve) => {
-        app.workspace.onLayoutReady(() => {
-          resolve()
+  test('grouped boxplot series all have transparent fill across all series', async ({
+    obsidianPage: { page },
+  }) => {
+    await evaluateObsidian(
+      page,
+      async (app, args: { path: string; viewName: string }) => {
+        await new Promise<void>(resolve => {
+          app.workspace.onLayoutReady(() => {
+            resolve()
+          })
         })
-      })
-      const leaf = app.workspace.getLeaf('tab')
-      await leaf.setViewState({
-        type: 'bases',
-        state: { file: args.path, viewName: args.viewName },
-        active: true,
-      })
-    }, { path: 'boxplot/Basic.base', viewName: 'Product score distribution by channel' })
-
-    await expect.poll(
-      async () => {
-        const option = asOptionLike<{ readonly series?: readonly unknown[] }>(await getChartOption(page))
-        return option?.series?.length ?? 0
+        const leaf = app.workspace.getLeaf('tab')
+        await leaf.setViewState({
+          type: 'bases',
+          state: { file: args.path, viewName: args.viewName },
+          active: true,
+        })
       },
-      { timeout: 30_000 },
-    ).toBeGreaterThan(1)
+      { path: 'boxplot/Basic.base', viewName: 'Product score distribution by channel' },
+    )
 
-    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(await getChartOption(page))
+    await expect
+      .poll(
+        async () => {
+          const option = asOptionLike<{ readonly series?: readonly unknown[] }>(
+            await getChartOption(page),
+          )
+          return option?.series?.length ?? 0
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(1)
+
+    const option = asOptionLike<{ readonly series: readonly BoxplotSeriesLike[] }>(
+      await getChartOption(page),
+    )
     expect(option).not.toBeNull()
     if (option === null) {
       return

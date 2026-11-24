@@ -16,14 +16,34 @@ const DEFAULT_EXAMPLE_DATA = {
     {
       name: 'Vintage',
       json: JSON.stringify({
-        color: ['#d87c7c', '#919e8b', '#d7ab82', '#6e7074', '#61a0a8', '#efa18d', '#787464', '#cc7e63', '#724e58', '#4b565b'],
+        color: [
+          '#d87c7c',
+          '#919e8b',
+          '#d7ab82',
+          '#6e7074',
+          '#61a0a8',
+          '#efa18d',
+          '#787464',
+          '#cc7e63',
+          '#724e58',
+          '#4b565b',
+        ],
         backgroundColor: 'rgba(254,248,239,1)',
       }),
     },
     {
       name: 'Cool',
       json: JSON.stringify({
-        color: ['#07a2a4', '#9a7fd1', '#588dd5', '#f5994e', '#c05050', '#59678c', '#c9ab00', '#7eb00a'],
+        color: [
+          '#07a2a4',
+          '#9a7fd1',
+          '#588dd5',
+          '#f5994e',
+          '#c05050',
+          '#59678c',
+          '#c9ab00',
+          '#7eb00a',
+        ],
       }),
     },
   ],
@@ -34,7 +54,10 @@ async function main(): Promise<void> {
   const launcher = new ObsidianLauncher({ cacheDir: CACHE_DIR })
   await launcher.installPlugins(VAULT_PATH, [{ path: ROOT_DIR }])
   const pluginDir = path.join(VAULT_PATH, '.obsidian', 'plugins', 'bases-chartkit')
-  await fs.writeFile(path.join(pluginDir, 'data.json'), JSON.stringify(DEFAULT_EXAMPLE_DATA, null, 2))
+  await fs.writeFile(
+    path.join(pluginDir, 'data.json'),
+    JSON.stringify(DEFAULT_EXAMPLE_DATA, null, 2),
+  )
   console.log(`Installed plugin and sample themes data.json into ${pluginDir}`)
 }
 

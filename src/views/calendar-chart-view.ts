@@ -22,9 +22,13 @@ export class CalendarChartView extends BaseChartView {
         key: BaseChartView.VALUE_PROP_KEY,
         placeholder: t('views.calendar.value_placeholder'),
       },
-      ...BaseChartView.getCommonViewOptions().filter((o) => {
+      ...BaseChartView.getCommonViewOptions().filter(o => {
         const key = o.key
-        return key !== BaseChartView.X_AXIS_PROP_KEY && key !== BaseChartView.Y_AXIS_PROP_KEY && key !== BaseChartView.SERIES_PROP_KEY
+        return (
+          key !== BaseChartView.X_AXIS_PROP_KEY &&
+          key !== BaseChartView.Y_AXIS_PROP_KEY &&
+          key !== BaseChartView.SERIES_PROP_KEY
+        )
       }),
       ...BaseChartView.getVisualMapViewOptions(),
     ]
@@ -38,16 +42,10 @@ export class CalendarChartView extends BaseChartView {
       return null
     }
 
-    return transformDataToChartOption(
-      data,
-      dateProp,
-      '',
-      'calendar',
-      {
-        ...this.getCommonTransformerOptions(),
-        valueProp: valueProp,
-        ...this.getVisualMapTransformerOptions(),
-      },
-    )
+    return transformDataToChartOption(data, dateProp, '', 'calendar', {
+      ...this.getCommonTransformerOptions(),
+      valueProp: valueProp,
+      ...this.getVisualMapTransformerOptions(),
+    })
   }
 }

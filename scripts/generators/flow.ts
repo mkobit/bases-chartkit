@@ -1,5 +1,10 @@
 import * as fc from 'fast-check'
-export { graphChartArbitrary, type GraphLinkSample, type GraphSample, type NetworkZone } from './graph'
+export {
+  graphChartArbitrary,
+  type GraphLinkSample,
+  type GraphSample,
+  type NetworkZone,
+} from './graph'
 
 /**
  * Arbitrary for Sankey chart data.
@@ -32,32 +37,30 @@ export const sankeyChartArbitrary = fc.constant(null).map(() => {
  * Arbitrary for Lines chart data.
  * Generates coordinate pairs.
  */
-export const linesChartArbitrary = fc.record({
-  count: fc.integer({ min: 18,
-    max: 30 }),
-}).chain((config) => {
-  return fc.array(
-    fc.record({
-      x1: fc.integer({ min: 0,
-        max: 1000 }),
-      y1: fc.integer({ min: 0,
-        max: 1000 }),
-      x2: fc.integer({ min: 0,
-        max: 1000 }),
-      y2: fc.integer({ min: 0,
-        max: 1000 }),
-    }),
-    { minLength: config.count,
-      maxLength: config.count },
-  ).map((lines) => {
-    return {
-      type: 'lines',
-      data: lines.map(l => ({
-        start_x: l.x1 / 10,
-        start_y: l.y1 / 10,
-        end_x: l.x2 / 10,
-        end_y: l.y2 / 10,
-      })),
-    }
+export const linesChartArbitrary = fc
+  .record({
+    count: fc.integer({ min: 18, max: 30 }),
   })
-})
+  .chain(config => {
+    return fc
+      .array(
+        fc.record({
+          x1: fc.integer({ min: 0, max: 1000 }),
+          y1: fc.integer({ min: 0, max: 1000 }),
+          x2: fc.integer({ min: 0, max: 1000 }),
+          y2: fc.integer({ min: 0, max: 1000 }),
+        }),
+        { minLength: config.count, maxLength: config.count },
+      )
+      .map(lines => {
+        return {
+          type: 'lines',
+          data: lines.map(l => ({
+            start_x: l.x1 / 10,
+            start_y: l.y1 / 10,
+            end_x: l.x2 / 10,
+            end_y: l.y2 / 10,
+          })),
+        }
+      })
+  })

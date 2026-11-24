@@ -29,10 +29,7 @@ export function createHistogramChartOption(
   // filtered before coercion since Number(null) is 0, not NaN.
   const values: readonly number[] = R.pipe(
     data,
-    R.map(row => getNestedValue(
-      row,
-      valueProp,
-    )),
+    R.map(row => getNestedValue(row, valueProp)),
     R.filter(v => v !== null && v !== undefined),
     R.map(Number),
     R.filter((v): v is number => !Number.isNaN(v)),
@@ -40,10 +37,7 @@ export function createHistogramChartOption(
 
   const n = values.length
 
-  const sortedValues: readonly number[] = R.sortBy(
-    values,
-    v => v,
-  )
+  const sortedValues: readonly number[] = R.sortBy(values, v => v)
   const min = R.first(sortedValues) ?? 0
   const max = R.last(sortedValues) ?? 0
   const rangeVal = max - min
@@ -51,57 +45,36 @@ export function createHistogramChartOption(
 
   // Precedence: binWidth > binCount > Sturges
   const sturges = Math.ceil(Math.log2(n) + 1)
-  const defaultBinCount = Math.max(
-    1,
-    options?.binCount ?? sturges,
-  )
+  const defaultBinCount = Math.max(1, options?.binCount ?? sturges)
 
   const hasBinWidth = (options?.binWidth ?? 0) > 0
   const binCountFromWidth = hasBinWidth
-    ? Math.max(
-        1,
-        Math.ceil(safeRange / (options?.binWidth ?? 1)),
-      )
+    ? Math.max(1, Math.ceil(safeRange / (options?.binWidth ?? 1)))
     : defaultBinCount
 
-  const finalBinWidth = hasBinWidth
-    ? (options?.binWidth ?? 1)
-    : safeRange / defaultBinCount
+  const finalBinWidth = hasBinWidth ? (options?.binWidth ?? 1) : safeRange / defaultBinCount
 
   const bins: ReadonlyArray<HistogramBin> = R.pipe(
-    R.range(
-      0,
-      binCountFromWidth,
-    ),
+    R.range(0, binCountFromWidth),
     R.map((i): HistogramBin => {
-      const binMin = min + (i * finalBinWidth)
-      const binMax = min + ((i + 1) * finalBinWidth)
+      const binMin = min + i * finalBinWidth
+      const binMax = min + (i + 1) * finalBinWidth
       const isLast = i === binCountFromWidth - 1
 
       const count = R.pipe(
         values,
-        R.filter(v =>
-          isLast
-            ? (v >= binMin && v <= binMax)
-            : (v >= binMin && v < binMax)),
+        R.filter(v => (isLast ? v >= binMin && v <= binMax : v >= binMin && v < binMax)),
         (vals: readonly number[]) => vals.length,
       )
 
       const label = `${binMin.toFixed(2)} - ${binMax.toFixed(2)}`
 
-      return { label,
-        count }
+      return { label, count }
     }),
   )
 
-  const xAxisData: readonly string[] = R.map(
-    bins,
-    b => b.label,
-  )
-  const seriesData: readonly number[] = R.map(
-    bins,
-    b => b.count,
-  )
+  const xAxisData: readonly string[] = R.map(bins, b => b.label)
+  const seriesData: readonly number[] = R.map(bins, b => b.count)
 
   const isMobile = options?.isMobile ?? false
   const containerWidth = options?.containerWidth ?? 1000
@@ -110,16 +83,10 @@ export function createHistogramChartOption(
     interval: xAxisInterval,
     rotate: xAxisRotate,
     hideOverlap: xAxisHideOverlap,
-  } = getAxisLabelOverlapOptions(
-    xAxisData.length,
-    isCompact,
-    options?.xAxisLabelRotate,
-    false,
-    {
-      labels: xAxisData,
-      containerWidth,
-    },
-  )
+  } = getAxisLabelOverlapOptions(xAxisData.length, isCompact, options?.xAxisLabelRotate, false, {
+    labels: xAxisData,
+    containerWidth,
+  })
 
   const series: BarSeriesOption = {
     name: options?.yAxisLabel ?? 'Frequency',
