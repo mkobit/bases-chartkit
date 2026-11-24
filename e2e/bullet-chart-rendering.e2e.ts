@@ -5,6 +5,7 @@ interface BulletSeriesLike {
   readonly type?: string
   readonly stack?: string
   readonly name?: string
+  readonly color?: string
   readonly itemStyle?: { readonly color?: string }
 }
 
@@ -43,15 +44,15 @@ test.describe('bullet chart rendering', () => {
       throw new Error('expected a non-null chart option')
     }
     const rangeSeries = option.series.filter(s => s.type === 'bar' && s.stack === 'range')
-    const targetSeries = option.series.find(s => s.type === 'scatter')
+    const targetSeries = option.series.find(s => s.type === 'custom')
 
     expect(rangeSeries.map(s => s.itemStyle?.color)).toEqual(['#e0e0e0', '#bdbdbd', '#9e9e9e'])
-    expect(targetSeries?.itemStyle?.color).toBe('#000')
+    expect(targetSeries?.color).toBe('#000')
   })
 
   // Regression coverage for bck-44j. bullet.ts renders five series for this
   // view (3 stacked, silent, tooltip-suppressed range-band bars, then the
-  // KPI's own "value" bar, then a "Target" scatter marker) -- the value bar
+  // KPI's own "value" bar, then a "Target" custom marker) -- the value bar
   // is the one a user actually wants to hover, but its seriesIndex depends
   // on hasRanges/targetProp being configured, so find it structurally
   // (type: 'bar' with no 'range' stack) instead of assuming a fixed index.
