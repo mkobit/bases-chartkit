@@ -127,13 +127,26 @@ export function createMapChartOption(
         inRange: inRangeColor,
       }
 
+  const hasTitle = Boolean(options?.title || options?.xAxisLabel)
+  const hasSubtitle = Boolean(options?.description)
+  const isBottomVisualMap = !isVertical && options?.visualMapTop === undefined
+  const mapTop = hasSubtitle ? 56 : hasTitle ? 36 : undefined
+  const mapBottom = isBottomVisualMap ? 56 : undefined
+
   const seriesItem: MapSeriesOption = {
     type: 'map',
     map: mapName,
     roam: options?.roam ?? true,
+    ...(mapTop !== undefined ? { top: mapTop } : {}),
+    ...(mapBottom !== undefined ? { bottom: mapBottom } : {}),
     data: [...mapData],
     label: {
       show: options?.showLabel ?? false,
+      fontSize: 10,
+      overflow: 'truncate',
+    },
+    labelLayout: {
+      hideOverlap: true,
     },
     emphasis: {
       label: {

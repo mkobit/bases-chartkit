@@ -451,5 +451,21 @@ describe(
         expect(svg).toContain('fill="rgb(0,90,50)"')
       },
     )
+
+    it(
+      'reserves bottom grid margin so visualMap does not crowd x-axis labels',
+      () => {
+        const option = transformDataToChartOption(
+          [{ x: '00:00', y: 'Mon', val: 10 }],
+          'x',
+          'y',
+          'heatmap',
+          { valueProp: 'val' },
+        )
+
+        const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid
+        expect(grid?.bottom).toBe(108)
+      },
+    )
   },
 )
