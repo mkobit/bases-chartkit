@@ -2,6 +2,10 @@
   - tests/fixtures/chart_data.ts
   - tests/heatmap_chart.test.ts
   - tests/transformer_candlestick.test.ts
+'@typescript-eslint/no-unsafe-assignment':
+  - src/charts/transformers/combo.ts
+'@typescript-eslint/no-unsafe-call':
+  - src/charts/transformers/boxplot.ts
 eslint-comments/no-use:
   - e2e/area-chart-rendering.e2e.ts
   - e2e/boxplot-chart-rendering.e2e.ts
@@ -84,3 +88,59 @@ eslint-comments/no-use:
   - tests/transformer_waterfall.test.ts
   - tests/transformers/polar-scatter.test.ts
   - tests/transformers_dataset_extended.test.ts
+functional/no-conditional-statements:
+  - src/charts/transformer.ts
+  - src/charts/transformers/axis-labels.ts
+  - src/charts/transformers/bases-values.ts
+  - src/charts/transformers/bullet.ts
+  - src/charts/transformers/candlestick.ts
+  - src/charts/transformers/cartesian.ts
+  - src/charts/transformers/circular-layout.ts
+  - src/charts/transformers/combo.ts
+  - src/charts/transformers/dates.ts
+  - src/charts/transformers/effect-scatter.ts
+  - src/charts/transformers/formatters.ts
+  - src/charts/transformers/gantt.ts
+  - src/charts/transformers/gauge.ts
+  - src/charts/transformers/heatmap.ts
+  - src/charts/transformers/legend.ts
+  - src/charts/transformers/palette.ts
+  - src/charts/transformers/pictorial-bar.ts
+  - src/charts/transformers/pie.ts
+  - src/charts/transformers/polar-scatter.ts
+  - src/charts/transformers/radar.ts
+  - src/charts/transformers/scatter.ts
+  - src/charts/transformers/theme-river.ts
+  - src/charts/transformers/title.ts
+  - src/charts/transformers/visual-map.ts
+  - src/charts/transformers/waterfall.ts
+functional/no-return-void:
+  - src/charts/transformers/bases-values.ts
+  - src/charts/transformers/boxplot.ts
+  - src/charts/transformers/combo.ts
+  - src/charts/transformers/extensions/word-cloud.ts
+  - src/charts/transformers/gantt.ts
+  - src/charts/transformers/gauge.ts
+  - src/charts/transformers/graph.ts
+  - src/charts/transformers/hierarchy.ts
+  - src/charts/transformers/histogram.ts
+  - src/charts/transformers/map.ts
+  - src/charts/transformers/parallel.ts
+  - src/charts/transformers/pareto.ts
+  - src/charts/transformers/sankey.ts
+  - src/charts/transformers/waterfall.ts
+functional/prefer-immutable-types:
+  - src/charts/transformers/combo.ts
+  - src/charts/transformers/formatters.ts
+  - src/charts/transformers/gantt.ts
+functional/readonly-type:
+  - src/charts/transformers/bullet.ts
+  - src/charts/transformers/candlestick.ts
+  - src/charts/transformers/funnel.ts
+  - src/charts/transformers/graph.ts
+  - src/charts/transformers/heatmap.ts
+  - src/charts/transformers/histogram.ts
+  - src/charts/transformers/lines.ts
+  - src/charts/transformers/map.ts
+  - src/charts/transformers/parallel.ts
+  - src/charts/transformers/waterfall.ts
