@@ -261,7 +261,7 @@ describe(
     )
 
     it(
-      'routes "bullet" to a bar-and-scatter chart',
+      'routes "bullet" to a bar-and-custom chart',
       () => {
         const data = [
           { category: 'A',
@@ -286,7 +286,7 @@ describe(
         )
         const types = seriesTypes(option)
         expect(types).toContain('bar')
-        expect(types).toContain('scatter')
+        expect(types).toContain('custom')
       },
     )
 

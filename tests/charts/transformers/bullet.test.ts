@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'bun:test'
+import * as echarts from 'echarts'
 import { createBulletChartOption } from '../../../src/charts/transformers/bullet'
-import type { BarSeriesOption, ScatterSeriesOption, DatasetComponentOption } from 'echarts'
+import type { BarSeriesOption, CustomSeriesOption, DatasetComponentOption } from 'echarts'
 
 const isBarSeriesOption = (value: unknown): value is BarSeriesOption =>
   typeof value === 'object' && value !== null && 'type' in value && value.type === 'bar'
 
-const isScatterSeriesOption = (value: unknown): value is ScatterSeriesOption =>
-  typeof value === 'object' && value !== null && 'type' in value && value.type === 'scatter'
+const isCustomSeriesOption = (value: unknown): value is CustomSeriesOption =>
+  typeof value === 'object' && value !== null && 'type' in value && value.type === 'custom'
 
 const isDatasetComponentOption = (value: unknown): value is DatasetComponentOption =>
   typeof value === 'object' && value !== null && 'source' in value
@@ -44,7 +45,7 @@ describe(
     ]
 
     it(
-      'should create a bullet chart with bar and scatter series',
+      'should create a bullet chart with bar and custom target series',
       () => {
         const option = createBulletChartOption(
           data,
@@ -57,21 +58,19 @@ describe(
         expect(series).toHaveLength(2)
 
         const barSeries = series.find(isBarSeriesOption)
-        const scatterSeries = series.find(isScatterSeriesOption)
+        const targetSeries = series.find(isCustomSeriesOption)
         expect(barSeries).toBeDefined()
-        expect(scatterSeries).toBeDefined()
+        expect(targetSeries).toBeDefined()
 
         expect(barSeries?.type).toBe('bar')
         expect(barSeries?.encode).toEqual({ x: 'x',
           y: 'y' })
         expect(barSeries?.barWidth).toBe('60%')
 
-        expect(scatterSeries?.type).toBe('scatter')
-        expect(scatterSeries?.encode).toEqual({ x: 'x',
+        expect(targetSeries?.type).toBe('custom')
+        expect(targetSeries?.encode).toEqual({ x: 'x',
           y: 't' })
-        expect(scatterSeries?.symbol).toBe('rect')
-        expect(scatterSeries?.symbolSize).toEqual([40,
-          4]) // Default vertical bar, horizontal marker
+        expect(targetSeries?.color).toBe('#000')
       },
     )
 
@@ -101,6 +100,7 @@ describe(
 
         expect(range1).toBeDefined()
         expect(range1?.stack).toBe('range')
+        expect(range1?.xAxisIndex).toBe(1)
         expect(range1?.z).toBe(0)
         expect(range1?.itemStyle?.color).toBe('#e0e0e0')
         expect(range1?.encode).toEqual({ x: 'x',
@@ -108,6 +108,7 @@ describe(
 
         expect(range2).toBeDefined()
         expect(range2?.stack).toBe('range')
+        expect(range2?.xAxisIndex).toBe(1)
         expect(range2?.z).toBe(0)
         expect(range2?.itemStyle?.color).toBe('#bdbdbd')
         expect(range2?.encode).toEqual({ x: 'x',
@@ -115,6 +116,7 @@ describe(
 
         expect(range3).toBeDefined()
         expect(range3?.stack).toBe('range')
+        expect(range3?.xAxisIndex).toBe(1)
         expect(range3?.z).toBe(0)
         expect(range3?.itemStyle?.color).toBe('#9e9e9e')
         expect(range3?.encode).toEqual({ x: 'x',
@@ -122,7 +124,7 @@ describe(
 
         expect(measure).toBeDefined()
         expect(measure?.z).toBe(2)
-        expect(measure?.barGap).toBe('-100%')
+        expect(measure?.xAxisIndex).toBe(0)
         expect(measure?.barWidth).toBe('40%')
       },
     )
@@ -214,7 +216,7 @@ describe(
         )
 
         const series = Array.isArray(option.series) ? option.series : []
-        const target = series.find(isScatterSeriesOption)
+        const target = series.find(isCustomSeriesOption)
         expect(target).toBeDefined()
         expect(target?.name).toBe('Target')
       },
@@ -231,7 +233,7 @@ describe(
         )
 
         const series = Array.isArray(option.series) ? option.series : []
-        const target = series.find(isScatterSeriesOption)
+        const target = series.find(isCustomSeriesOption)
         expect(target).toBeDefined()
         expect(target?.name).toBe('Target')
         expect(target?.name).not.toBe('target')
@@ -260,8 +262,8 @@ describe(
         expect(range2?.itemStyle?.color).toBe('#bdbdbd')
         expect(range3?.itemStyle?.color).toBe('#9e9e9e')
 
-        const target = series.find(isScatterSeriesOption)
-        expect(target?.itemStyle?.color).toBe('#000')
+        const target = series.find(isCustomSeriesOption)
+        expect(target?.color).toBe('#000')
       },
     )
 
@@ -291,8 +293,8 @@ describe(
         expect(range2?.itemStyle?.color).toBe('#595959')
         expect(range3?.itemStyle?.color).toBe('#737373')
 
-        const target = series.find(isScatterSeriesOption)
-        expect(target?.itemStyle?.color).toBe('#fff')
+        const target = series.find(isCustomSeriesOption)
+        expect(target?.color).toBe('#fff')
       },
     )
 
@@ -318,19 +320,207 @@ describe(
 
         const bars = series.filter(isBarSeriesOption)
         const [r1, , , measure] = bars
-        const target = series.find(isScatterSeriesOption)
+        const target = series.find(isCustomSeriesOption)
 
         expect(r1).toBeDefined()
+        expect(r1?.yAxisIndex).toBe(1)
         expect(r1?.encode).toEqual({ x: 'r1',
           y: 'x' })
 
         expect(measure).toBeDefined()
+        expect(measure?.yAxisIndex).toBe(0)
         expect(measure?.encode).toEqual({ x: 'y',
           y: 'x' })
 
         expect(target).toBeDefined()
-        expect(target?.symbolSize).toEqual([4,
-          30]) // Horizontal bar, vertical marker
+        expect(target?.yAxisIndex).toBe(0)
+        expect(target?.encode).toEqual({ x: 't',
+          y: 'x' })
+      },
+    )
+
+    interface SvgRect {
+      readonly fill: string
+      readonly x: number
+      readonly y: number
+      readonly width: number
+      readonly height: number
+      readonly centerX: number
+      readonly centerY: number
+    }
+
+    const renderSvgRects = (option: ReturnType<typeof createBulletChartOption>): {
+      readonly svg: string
+      readonly rects: readonly SvgRect[]
+    } => {
+      const chart = echarts.init(null, null, {
+        renderer: 'svg',
+        ssr: true,
+        width: 800,
+        height: 450,
+      })
+      chart.setOption(option)
+      const svg = chart.renderToSVGString()
+      chart.dispose()
+
+      const rects: readonly SvgRect[] = [...svg.matchAll(/<path[^>]*d="([^"]+)"[^>]*fill="([^"]+)"[^>]*>/g)]
+        .flatMap((match): readonly SvgRect[] => {
+          const d = match[1] ?? ''
+          const fill = match[2] ?? ''
+          const coords = /^M(-?[\d.]+)\s+(-?[\d.]+)l(-?[\d.]+)\s+(-?[\d.]+)l(-?[\d.]+)\s+(-?[\d.]+)l(-?[\d.]+)\s+(-?[\d.]+)Z$/.exec(d)
+          if (!coords) {
+            return []
+          }
+          const x0 = Number(coords[1])
+          const y0 = Number(coords[2])
+          const dx1 = Number(coords[3])
+          const dy1 = Number(coords[4])
+          const dx2 = Number(coords[5])
+          const dy2 = Number(coords[6])
+          const xs = [x0, x0 + dx1, x0 + dx1 + dx2]
+          const ys = [y0, y0 + dy1, y0 + dy1 + dy2]
+          const minX = Math.min(...xs)
+          const maxX = Math.max(...xs)
+          const minY = Math.min(...ys)
+          const maxY = Math.max(...ys)
+          return [{
+            fill,
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY,
+            centerX: (minX + maxX) / 2,
+            centerY: (minY + maxY) / 2,
+          }]
+        })
+
+      return { svg, rects }
+    }
+
+    it(
+      'should center Value bar inside range bars and span Target marker across Value bar in SVG',
+      () => {
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          {
+            targetProp: 'target',
+            rangeLowProp: 'low',
+            rangeMidProp: 'mid',
+            rangeHighProp: 'high',
+          },
+        )
+
+        const { rects } = renderSvgRects(option)
+        const rangeRects = rects.filter(r => r.fill === '#e0e0e0')
+        const valueRects = rects.filter(r => r.fill === '#5070dd' && r.height > 0)
+        // Target marker rects have height 4 (legend icon has height 14)
+        const targetRects = rects.filter(r => r.fill === '#000' && Math.abs(r.height - 4) < 0.5)
+
+        expect(rangeRects).toHaveLength(4)
+        expect(valueRects).toHaveLength(3) // Category D has value: null (0-height bar)
+        expect(targetRects).toHaveLength(3) // Category C has target: undefined
+
+        // Category A and B have both value and range bars
+        const rangeA = rangeRects[0]
+        const valueA = valueRects[0]
+        const targetA = targetRects[0]
+        expect(rangeA).toBeDefined()
+        expect(valueA).toBeDefined()
+        expect(targetA).toBeDefined()
+
+        if (rangeA && valueA && targetA) {
+          expect(Math.abs(valueA.centerX - rangeA.centerX)).toBeLessThan(1)
+          expect(valueA.width).toBeLessThan(rangeA.width)
+          expect(Math.abs(targetA.centerX - valueA.centerX)).toBeLessThan(1)
+          expect(targetA.width).toBeGreaterThan(valueA.width)
+        }
+      },
+    )
+
+    it(
+      'should center Value bar and span Target marker vertically when flipAxis is true',
+      () => {
+        const option = createBulletChartOption(
+          data,
+          'category',
+          'value',
+          {
+            targetProp: 'target',
+            rangeLowProp: 'low',
+            rangeMidProp: 'mid',
+            rangeHighProp: 'high',
+            flipAxis: true,
+          },
+        )
+
+        const { rects } = renderSvgRects(option)
+        const rangeRects = rects.filter(r => r.fill === '#e0e0e0')
+        const valueRects = rects.filter(r => r.fill === '#5070dd' && r.width > 0)
+        const targetRects = rects.filter(r => r.fill === '#000' && Math.abs(r.width - 4) < 0.5)
+
+        expect(rangeRects).toHaveLength(4)
+        expect(valueRects).toHaveLength(3)
+        expect(targetRects).toHaveLength(3)
+
+        const rangeA = rangeRects[0]
+        const valueA = valueRects[0]
+        const targetA = targetRects[0]
+        expect(rangeA).toBeDefined()
+        expect(valueA).toBeDefined()
+        expect(targetA).toBeDefined()
+
+        if (rangeA && valueA && targetA) {
+          expect(Math.abs(valueA.centerY - rangeA.centerY)).toBeLessThan(1)
+          expect(valueA.height).toBeLessThan(rangeA.height)
+          expect(Math.abs(targetA.centerY - valueA.centerY)).toBeLessThan(1)
+          expect(targetA.height).toBeGreaterThan(valueA.height)
+        }
+      },
+    )
+
+    it(
+      'should render all metric labels without auto-interval hiding them',
+      () => {
+        const metrics = [
+          'Revenue Growth',
+          'Customer Retention',
+          'Order Fulfillment',
+          'Net Promoter Score',
+          'Gross Margin',
+          'Churn Rate',
+          'Active Users',
+          'Conversion Rate',
+          'Support Response',
+          'Inventory Turnover',
+        ]
+        const tenMetricData = metrics.map((metric, idx) => ({
+          category: metric,
+          value: 50 + idx * 3,
+          target: 70,
+          low: 40,
+          mid: 65,
+          high: 90,
+        }))
+
+        const option = createBulletChartOption(
+          tenMetricData,
+          'category',
+          'value',
+          {
+            targetProp: 'target',
+            rangeLowProp: 'low',
+            rangeMidProp: 'mid',
+            rangeHighProp: 'high',
+          },
+        )
+
+        const { svg } = renderSvgRects(option)
+        const renderedTexts = [...svg.matchAll(/<text[^>]*>([^<]+)<\/text>/g)].map(m => m[1])
+        metrics.forEach((metric) => {
+          expect(renderedTexts).toContain(metric)
+        })
       },
     )
   },
