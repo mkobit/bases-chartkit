@@ -108,6 +108,55 @@ describe(
           },
         )
         it(
+          'sets interval: 0 for <= 15 rotated categories and omits interval: 0 (uses auto) for > 15 dense categories',
+          () => {
+            const twelveDates = Array.from({ length: 12 }, (_, i) => ({
+              Date: `2024-${String(i + 1).padStart(2, '0')}-01`,
+              Revenue: 100 + i * 10,
+            }))
+            const rotatedTwelveOpt = createCartesianChartOption(twelveDates, 'Date', 'Revenue', 'line', {
+              areaStyle: true,
+              containerWidth: 668,
+            })
+            const rotatedTwelveX = Array.isArray(rotatedTwelveOpt.xAxis) ? rotatedTwelveOpt.xAxis[0] : rotatedTwelveOpt.xAxis
+            expect(rotatedTwelveX?.axisLabel?.rotate).toBe(45)
+            expect(rotatedTwelveX?.axisLabel?.interval).toBe(0)
+
+            const explicitRotatedTenOpt = createCartesianChartOption(twelveDates.slice(0, 10), 'Date', 'Revenue', 'bar', {
+              xAxisLabelRotate: 45,
+              containerWidth: 668,
+            })
+            const explicitRotatedTenX = Array.isArray(explicitRotatedTenOpt.xAxis)
+              ? explicitRotatedTenOpt.xAxis[0]
+              : explicitRotatedTenOpt.xAxis
+            expect(explicitRotatedTenX?.axisLabel?.rotate).toBe(45)
+            expect(explicitRotatedTenX?.axisLabel?.interval).toBe(0)
+
+            const twentyFiveDates = Array.from({ length: 25 }, (_, i) => ({
+              Date: `2024-01-${String(i + 1).padStart(2, '0')}`,
+              Revenue: 100 + i * 10,
+            }))
+            const denseAutoOpt = createCartesianChartOption(twentyFiveDates, 'Date', 'Revenue', 'line', {
+              areaStyle: true,
+              containerWidth: 668,
+            })
+            const denseAutoX = Array.isArray(denseAutoOpt.xAxis) ? denseAutoOpt.xAxis[0] : denseAutoOpt.xAxis
+            expect(denseAutoX?.axisLabel?.rotate).toBe(45)
+            expect(denseAutoX?.axisLabel?.interval).not.toBe(0)
+            expect(denseAutoX?.axisLabel?.interval).toBe('auto')
+
+            const denseExplicitOpt = createCartesianChartOption(twentyFiveDates, 'Date', 'Revenue', 'line', {
+              areaStyle: true,
+              xAxisLabelRotate: 45,
+              containerWidth: 668,
+            })
+            const denseExplicitX = Array.isArray(denseExplicitOpt.xAxis) ? denseExplicitOpt.xAxis[0] : denseExplicitOpt.xAxis
+            expect(denseExplicitX?.axisLabel?.rotate).toBe(45)
+            expect(denseExplicitX?.axisLabel?.interval).not.toBe(0)
+            expect(denseExplicitX?.axisLabel?.interval).toBe('auto')
+          },
+        )
+        it(
           'should support flip axis',
           () => {
             const options = createCartesianChartOption(
