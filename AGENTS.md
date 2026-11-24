@@ -51,7 +51,7 @@ Follow these steps before you commit or merge changes to documentation screensho
    - `effect-scatter`: uses continuous ripple animation.
 
 ## Dependency installation handling
-We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `.bunfig.toml` as a security measure.
+We reject new versions of packages for a period of time configured via `minimumReleaseAge` in `bunfig.toml` as a security measure.
 If `bun install` fails to find a package, do not try to alter the package manager or bypass the configuration.
 Instead, identify and install an older, stable version of the package.
 
