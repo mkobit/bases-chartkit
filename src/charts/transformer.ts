@@ -256,8 +256,8 @@ const transformerMap: Readonly<Record<
     data,
     xProp,
     yProp,
-    { ...(asOptions<PieTransformerOptions>(options)),
-      roseType: 'area' },
+    { roseType: 'area',
+      ...(asOptions<PieTransformerOptions>(options)) },
   ),
   funnel: (data, xProp, yProp, options): EChartsOption => createFunnelChartOption(
     data,

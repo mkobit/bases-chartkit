@@ -5,6 +5,12 @@ import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
 
 export class PieChartView extends BaseChartView {
+  public static readonly INNER_RADIUS_KEY = 'innerRadius'
+  public static readonly OUTER_RADIUS_KEY = 'outerRadius'
+  public static readonly DONUT_KEY = 'donut'
+  public static readonly PAD_ANGLE_KEY = 'padAngle'
+  public static readonly BORDER_RADIUS_KEY = 'borderRadius'
+
   readonly type = 'pie-chart'
   protected getChartOption(data: BasesData): EChartsOption | null {
     const xProp = this.config.get(BaseChartView.X_AXIS_PROP_KEY)
@@ -14,6 +20,12 @@ export class PieChartView extends BaseChartView {
       return null
     }
 
+    const innerRadius = this.getStringOrNumberOption(PieChartView.INNER_RADIUS_KEY)
+    const outerRadius = this.getStringOrNumberOption(PieChartView.OUTER_RADIUS_KEY)
+    const donut = this.getBooleanOption(PieChartView.DONUT_KEY)
+    const padAngle = this.getNumberOption(PieChartView.PAD_ANGLE_KEY)
+    const borderRadius = this.getNumberOption(PieChartView.BORDER_RADIUS_KEY)
+
     return transformDataToChartOption(
       data,
       xProp,
@@ -21,6 +33,11 @@ export class PieChartView extends BaseChartView {
       'pie',
       {
         ...this.getCommonTransformerOptions(),
+        ...(innerRadius !== undefined ? { innerRadius } : {}),
+        ...(outerRadius !== undefined ? { outerRadius } : {}),
+        ...(donut !== undefined ? { donut } : {}),
+        ...(padAngle !== undefined ? { padAngle } : {}),
+        ...(borderRadius !== undefined ? { borderRadius } : {}),
       },
     )
   }
