@@ -1,7 +1,9 @@
 import type { EChartsOption, BarSeriesOption } from 'echarts'
 import * as R from 'remeda'
 import type { BaseTransformerOptions, BasesData } from './base'
+import { getAxisLabelOverlapOptions } from './axis-labels'
 import { getNestedValue, safeToString } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { COLOR_TOKENS, STYLE_TOKENS } from './tokens'
 
@@ -42,9 +44,11 @@ export function createWaterfallChartOption(
 ): EChartsOption {
   const xAxisLabel = options?.xAxisLabel ?? xProp
   const yAxisLabel = options?.yAxisLabel ?? yProp
-  const xAxisRotate = options?.xAxisLabelRotate ?? 0
   const totalProp = options?.totalProp
   const isDarkMode = options?.isDarkMode ?? false
+  const isMobile = options?.isMobile ?? false
+  const containerWidth = options?.containerWidth ?? 1000
+  const isCompact = isMobile || containerWidth < 600
 
   const validData: readonly WaterfallDataPoint[] = R.pipe(
     data,
@@ -192,15 +196,41 @@ export function createWaterfallChartOption(
       : {}),
   }
 
+  const {
+    interval: xAxisInterval,
+    rotate: xAxisRotate,
+    hideOverlap: xAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
+    xData.length,
+    isCompact,
+    options?.xAxisLabelRotate,
+    false,
+    {
+      labels: xData,
+      containerWidth,
+    },
+  )
+
+  const insideBarLabel: Pick<BarSeriesOption, 'label' | 'labelLayout'> = {
+    label: {
+      show: true,
+      position: 'inside',
+    },
+    // Suppress inside labels when a bar is shorter or narrower than the text
+    // so small deltas (e.g. -8 or -2) do not overlap thin bars and connectors.
+    labelLayout: (params): Readonly<{ readonly fontSize?: number }> => (
+      params.rect.height < params.labelRect.height + 4 || params.rect.width < params.labelRect.width
+        ? { fontSize: 0 }
+        : {}
+    ),
+  }
+
   const totalSeries: readonly BarSeriesOption[] = hasTotals
     ? [{
         name: 'Total',
         type: 'bar',
         stack: 'total',
-        label: {
-          show: true,
-          position: 'inside',
-        },
+        ...insideBarLabel,
         data: [...totalData],
         itemStyle: {
           color: totalBarColor(isDarkMode),
@@ -214,10 +244,7 @@ export function createWaterfallChartOption(
       name: 'Increase',
       type: 'bar',
       stack: 'total',
-      label: {
-        show: true,
-        position: 'inside',
-      },
+      ...insideBarLabel,
       data: [...riseData],
       itemStyle: {
         color: options?.upColor ?? COLOR_TOKENS.status.up,
@@ -227,10 +254,7 @@ export function createWaterfallChartOption(
       name: 'Decrease',
       type: 'bar',
       stack: 'total',
-      label: {
-        show: true,
-        position: 'inside',
-      },
+      ...insideBarLabel,
       data: [...fallData],
       itemStyle: {
         color: options?.downColor ?? COLOR_TOKENS.status.down,
@@ -284,18 +308,15 @@ export function createWaterfallChartOption(
       },
     },
     legend: getLegendOption(options),
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true,
-    },
+    grid: getCartesianGridOption(options),
     xAxis: {
       type: 'category',
       data: [...xData],
       name: xAxisLabel,
       axisLabel: {
         rotate: xAxisRotate,
+        interval: xAxisInterval,
+        hideOverlap: xAxisHideOverlap,
       },
       splitLine: { show: false },
     },

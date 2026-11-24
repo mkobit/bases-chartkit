@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import * as echarts from 'echarts'
 import { createParetoChartOption } from '../../../src/charts/transformers/pareto'
 import type { BarSeriesOption, EChartsOption, LineSeriesOption, YAXisComponentOption, XAXisComponentOption } from 'echarts'
 
@@ -239,6 +240,54 @@ describe(
           100,
           2,
         )
+      },
+    )
+
+    it(
+      'renders clean round Cumulative % ticks (0..100 step 20) and fits all category labels and axis names in SVG',
+      () => {
+        const productData = [
+          { Product: 'Matcha Latte', Sales: 5320 },
+          { Product: 'Cheese Cocoa', Sales: 2600 },
+          { Product: 'Walnut Brownie', Sales: 2047 },
+          { Product: 'Espresso', Sales: 1370 },
+          { Product: 'Fruit Tea', Sales: 1100 },
+          { Product: 'Cold Brew', Sales: 1054 },
+          { Product: 'Taro Smoothie', Sales: 953 },
+          { Product: 'Oolong Tea', Sales: 916 },
+          { Product: 'Americano', Sales: 725 },
+        ]
+        const option = createParetoChartOption(productData, 'Product', 'Sales', { containerWidth: 668 })
+        const yAxes = paretoYAxes(option)
+        const rightAxis = yAxes[1]
+        if (rightAxis && 'interval' in rightAxis) {
+          expect(rightAxis.interval).toBe(20)
+        }
+
+        const chart = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 668, height: 501 })
+        try {
+          chart.setOption(option)
+          const svg = chart.renderToSVGString()
+          expect(svg).toContain('20 %')
+          expect(svg).toContain('40 %')
+          expect(svg).toContain('60 %')
+          expect(svg).toContain('80 %')
+          expect(svg).not.toContain('16.67 %')
+          expect(svg).not.toContain('33.34 %')
+          for (const row of productData) {
+            expect(svg).toContain(row.Product)
+          }
+          expect(svg).toContain('>Product<')
+          const prodMatch = svg.match(/<text[^>]*transform="translate\(([^)]+)\)"[^>]*>Product<\/text>/)
+          expect(prodMatch).not.toBeNull()
+          const [px, py] = (prodMatch?.[1] ?? '0 0').split(/\s+/).map(Number)
+          expect(px).toBeGreaterThan(0)
+          expect(px).toBeLessThan(668)
+          expect(py).toBeLessThan(495)
+        }
+        finally {
+          chart.dispose()
+        }
       },
     )
   },

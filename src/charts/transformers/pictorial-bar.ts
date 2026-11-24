@@ -2,6 +2,7 @@ import type { EChartsOption, PictorialBarSeriesOption, DatasetComponentOption } 
 import type { BaseTransformerOptions, BasesData } from './base'
 import { getAxisLabelOverlapOptions } from './axis-labels'
 import { extractRowMetadata, getNestedValue, isRecord, safeToString } from './bases-values'
+import { getCartesianGridOption } from './grid'
 import { getLegendOption } from './legend'
 import { asTooltipFormatter } from './tooltip'
 import * as R from 'remeda'
@@ -110,13 +111,21 @@ export function createPictorialBarChartOption(
     R.unique(),
   )
 
-  // Smart axis label overlap avoidance: rotate/thin once compact mode or
-  // category count makes rendering every label at 0deg unreadable.
-  const { interval: categoryAxisInterval, rotate: categoryAxisRotate } = getAxisLabelOverlapOptions(
+  // Smart axis label overlap avoidance: rotate/thin once compact mode,
+  // category count, or label widths make rendering every label at 0deg unreadable.
+  const {
+    interval: categoryAxisInterval,
+    rotate: categoryAxisRotate,
+    hideOverlap: categoryAxisHideOverlap,
+  } = getAxisLabelOverlapOptions(
     xAxisData.length,
     isCompact,
     options?.xAxisLabelRotate,
     flipAxis,
+    {
+      labels: xAxisData,
+      containerWidth,
+    },
   )
 
   const seriesNames: readonly string[] = R.pipe(
@@ -192,6 +201,9 @@ export function createPictorialBarChartOption(
       ? {
           type: 'value',
           name: yAxisLabel,
+          axisLabel: {
+            hideOverlap: categoryAxisHideOverlap,
+          },
           splitLine: { show: false },
         }
       : {
@@ -201,6 +213,7 @@ export function createPictorialBarChartOption(
           axisLabel: {
             rotate: categoryAxisRotate,
             interval: categoryAxisInterval,
+            hideOverlap: categoryAxisHideOverlap,
           },
           splitLine: { show: false },
         },
@@ -225,9 +238,7 @@ export function createPictorialBarChartOption(
       trigger: 'axis',
       formatter: asTooltipFormatter(formatTooltip),
     },
-    grid: {
-      containLabel: true,
-    },
+    grid: getCartesianGridOption(options),
     ...(getLegendOption(options) ? { legend: getLegendOption(options) } : {}),
   }
 
