@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { createCartesianChartOption } from '../../../src/charts/transformers/cartesian'
-import { getLegendOption } from '../../../src/charts/transformers/legend'
+import { getLegendOption, TOP_LEGEND_TOOLBAR_RIGHT_MARGIN } from '../../../src/charts/transformers/legend'
 
 describe('Responsive Chart Features', () => {
   const mockData = [
@@ -81,7 +81,41 @@ describe('Responsive Chart Features', () => {
       })
       expect(legend).toBeDefined()
       expect(legend?.top).toBe(0)
+      expect(legend?.right).toBe(TOP_LEGEND_TOOLBAR_RIGHT_MARGIN)
       expect(legend?.bottom).toBeUndefined()
+    })
+
+    it('should reserve toolbar right margin on explicit top legend without affecting bottom, left, or right positions', () => {
+      const topLegend = getLegendOption({
+        legend: true,
+        isMobile: true,
+        legendPosition: 'top',
+      })
+      expect(topLegend).toMatchObject({
+        top: 0,
+        left: 'center',
+        right: TOP_LEGEND_TOOLBAR_RIGHT_MARGIN,
+      })
+
+      const bottomLegend = getLegendOption({
+        legend: true,
+        legendPosition: 'bottom',
+      })
+      expect(bottomLegend).toMatchObject({ bottom: 0, left: 'center' })
+      expect(bottomLegend?.right).toBeUndefined()
+
+      const leftLegend = getLegendOption({
+        legend: true,
+        legendPosition: 'left',
+      })
+      expect(leftLegend).toMatchObject({ left: 0, top: 'middle' })
+      expect(leftLegend?.right).toBeUndefined()
+
+      const rightLegend = getLegendOption({
+        legend: true,
+        legendPosition: 'right',
+      })
+      expect(rightLegend).toMatchObject({ right: 0, top: 'middle' })
     })
 
     it('should respect user specified position even in compact mode', () => {
