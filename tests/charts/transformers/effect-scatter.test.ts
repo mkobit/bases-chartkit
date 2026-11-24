@@ -15,8 +15,8 @@ function effectScatterSeriesAt(option: EChartsOption, index: number): EffectScat
   return series
 }
 
-// effect-scatter.ts sets xAxis.type to 'category' and yAxis.type to 'value',
-// so these check the real discriminants rather than asserting them.
+// effect-scatter.ts sets xAxis.type to 'category' or 'value' depending on the data,
+// and yAxis.type to 'value', so these check the real discriminants rather than asserting them.
 function firstCategoryXAxis(option: EChartsOption) {
   const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
   if (xAxis?.type !== 'category') {
@@ -144,6 +144,44 @@ describe(
         )
 
         expect(firstCategoryXAxis(option).axisLabel?.hideOverlap).toBe(true)
+      },
+    )
+
+    it(
+      'should use value xAxis with numeric data when x property is numeric',
+      () => {
+        const numericData = [
+          { gdp: 50000,
+            lifeExpectancy: 81.2,
+            population: 100 },
+          { gdp: 12000,
+            lifeExpectancy: 72.5,
+            population: 50 },
+        ]
+        const option = createEffectScatterChartOption(
+          numericData,
+          'gdp',
+          'lifeExpectancy',
+          { sizeProp: 'population' },
+        )
+
+        const xAxis = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis
+        expect(xAxis?.type).toBe('value')
+        expect(xAxis !== undefined && 'data' in xAxis).toBe(false)
+
+        const dataset = Array.isArray(option.dataset) ? option.dataset[0] : option.dataset
+        expect(dataset?.source).toEqual([
+          { x: 50000,
+            y: 81.2,
+            s: 'lifeExpectancy',
+            size: 100,
+            rowIndex: 0 },
+          { x: 12000,
+            y: 72.5,
+            s: 'lifeExpectancy',
+            size: 50,
+            rowIndex: 1 },
+        ])
       },
     )
   },
