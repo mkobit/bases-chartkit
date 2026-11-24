@@ -64,6 +64,83 @@ function formatTooltip(params: GanttTooltipParam | ReadonlyArray<GanttTooltipPar
       })()
 }
 
+const MS_PER_DAY = 86_400_000
+
+function isQuarterFormat(xAxisFormat: string): boolean {
+  return xAxisFormat === 'quarter' || xAxisFormat === 'Q' || /\[Q\]|Q/.test(xAxisFormat)
+}
+
+function isMonthOnlyFormat(xAxisFormat: string): boolean {
+  return /M/.test(xAxisFormat) && !/[Dd]/.test(xAxisFormat)
+}
+
+/**
+ * Computes a minimum tick interval in milliseconds for coarse date formats
+ * (quarters or months) so ECharts does not emit duplicate formatted tick labels.
+ */
+function getTimeAxisMinInterval(xAxisFormat?: string): number | undefined {
+  if (!xAxisFormat) {
+    return undefined
+  }
+  if (isQuarterFormat(xAxisFormat)) {
+    return 92 * MS_PER_DAY
+  }
+  if (isMonthOnlyFormat(xAxisFormat)) {
+    return 31 * MS_PER_DAY
+  }
+  return undefined
+}
+
+/**
+ * Generates one tick timestamp per distinct calendar period (quarter or month)
+ * within `[minMs, maxMs]` so coarse `xAxisFormat` labels never repeat.
+ */
+function getTimeAxisCustomValues(
+  minMs: number,
+  maxMs: number,
+  xAxisFormat?: string,
+): readonly number[] | undefined {
+  if (!xAxisFormat || maxMs <= minMs) {
+    return undefined
+  }
+
+  const startZdt = Temporal.Instant.fromEpochMilliseconds(minMs).toZonedDateTimeISO('UTC')
+  const endZdt = Temporal.Instant.fromEpochMilliseconds(maxMs).toZonedDateTimeISO('UTC')
+
+  if (isQuarterFormat(xAxisFormat)) {
+    const startQ = startZdt.year * 4 + Math.floor((startZdt.month - 1) / 3)
+    const endQ = endZdt.year * 4 + Math.floor((endZdt.month - 1) / 3)
+    const count = endQ - startQ + 1
+    const rawTicks = Array.from({ length: count }, (_, i) => {
+      const qIndex = startQ + i
+      const year = Math.floor(qIndex / 4)
+      const month = (qIndex % 4) * 3 + 1
+      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime('UTC').epochMilliseconds
+      return periodStartMs < minMs ? minMs : periodStartMs
+    }).filter(ms => ms >= minMs && ms <= maxMs)
+
+    return rawTicks.filter((ms, idx) => {
+      const next = rawTicks[idx + 1]
+      return next === undefined || next - ms >= 21 * MS_PER_DAY
+    })
+  }
+
+  if (isMonthOnlyFormat(xAxisFormat)) {
+    const startM = startZdt.year * 12 + (startZdt.month - 1)
+    const endM = endZdt.year * 12 + (endZdt.month - 1)
+    const count = endM - startM + 1
+    return Array.from({ length: count }, (_, i) => {
+      const mIndex = startM + i
+      const year = Math.floor(mIndex / 12)
+      const month = (mIndex % 12) + 1
+      const periodStartMs = Temporal.PlainDate.from({ year, month, day: 1 }).toZonedDateTime('UTC').epochMilliseconds
+      return periodStartMs < minMs ? minMs : periodStartMs
+    }).filter(ms => ms >= minMs && ms <= maxMs)
+  }
+
+  return undefined
+}
+
 export function createGanttChartOption(
   data: BasesData,
   options: GanttTransformerOptions,
@@ -128,6 +205,12 @@ export function createGanttChartOption(
         max: Math.max(...validData.map(d => d.end)),
       }
 
+  const labelClearanceMs = axisRange ? (axisRange.max - axisRange.min) * 0.15 : 0
+  const tasksWithMultipleBars = R.pipe(
+    validData,
+    R.groupBy(d => d.task),
+  )
+
   const groupedData = R.groupBy(
     validData,
     d => d.seriesName ?? 'Default',
@@ -154,16 +237,25 @@ export function createGanttChartOption(
 
       const durationSeriesData = tasks.map((t) => {
         const item = dataMap[t]
-        return !item
-          ? '-'
-          : {
-              value: item.duration,
-              start: item.start,
-              end: item.end,
-              seriesName: sName,
-              rowIndex: item.dataIndex,
-              ...(item.filePath !== undefined ? { filePath: item.filePath } : {}),
-            }
+        if (!item) {
+          return '-'
+        }
+        const rowBars = tasksWithMultipleBars[t] ?? []
+        const hasAdjacentRightBar = rowBars.some(
+          other =>
+            other.seriesName !== item.seriesName
+            && other.end > item.end
+            && other.start <= item.end + labelClearanceMs,
+        )
+        return {
+          value: item.duration,
+          start: item.start,
+          end: item.end,
+          seriesName: sName,
+          rowIndex: item.dataIndex,
+          ...(item.filePath !== undefined ? { filePath: item.filePath } : {}),
+          ...(hasAdjacentRightBar ? { label: { show: false } } : {}),
+        }
       })
 
       const stackId = `stack_${sName}`
@@ -216,6 +308,11 @@ export function createGanttChartOption(
 
   const legendOption = getLegendOption(options)
 
+  const minInterval = getTimeAxisMinInterval(options.xAxisFormat)
+  const customTickValues = axisRange
+    ? getTimeAxisCustomValues(axisRange.min, axisRange.max, options.xAxisFormat)
+    : undefined
+
   return {
     tooltip: {
       trigger: 'item',
@@ -234,7 +331,7 @@ export function createGanttChartOption(
       // label above), so a task ending near the timeline's right edge needs
       // room for its label past the plot area, or it gets clipped by the
       // canvas boundary.
-      right: '18%',
+      right: '22%',
       bottom: '3%',
     },
     xAxis: {
@@ -251,8 +348,11 @@ export function createGanttChartOption(
         // like 'MMM DD' or 'YYYY-[Q]Q', printing raw milliseconds; formatDateValue
         // parses the epoch-ms and applies the date pattern instead.
         formatter: (value: number) => options.xAxisFormat ? formatDateValue(value, options.xAxisFormat) : Temporal.Instant.fromEpochMilliseconds(value).toZonedDateTimeISO('UTC').toPlainDate().toString(),
+        ...(customTickValues ? { customValues: [...customTickValues] } : {}),
       },
+      ...(customTickValues ? { axisTick: { customValues: [...customTickValues] } } : {}),
       ...axisRange,
+      ...(minInterval !== undefined ? { minInterval } : {}),
     },
     yAxis: {
       type: 'category',

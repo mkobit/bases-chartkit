@@ -424,5 +424,71 @@ describe(
         expect(durationData[1]?.filePath).toBe('notes/b.md')
       },
     )
+
+    it(
+      'should emit distinct quarter ticks via customValues when xAxisFormat is quarter-based',
+      () => {
+        const quarterData = [
+          { task: 'Task A', start: '2024-01-07', end: '2024-03-15', phase: 'Q1' },
+          { task: 'Task B', start: '2024-04-10', end: '2024-08-20', phase: 'Q2-Q3' },
+        ]
+        const option = createGanttChartOption(
+          quarterData,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+            seriesProp: 'phase',
+            xAxisFormat: 'YYYY-[Q]Q',
+          },
+        )
+
+        const xAxis = valueXAxis(option)
+        const customValues = xAxis.axisLabel?.customValues
+        expect(Array.isArray(customValues)).toBe(true)
+        if (!Array.isArray(customValues)) {
+          return
+        }
+        const formatter = xAxisFormatter(option)
+        const labels = customValues.map((v, idx) => formatter(Number(v), idx, undefined))
+        expect(labels).toEqual(['2024-Q1', '2024-Q2', '2024-Q3'])
+      },
+    )
+
+    it(
+      'should suppress labels on bars with an adjacent bar to the right on the same task row and reserve right grid margin',
+      () => {
+        const multiBarData = [
+          { task: 'Data Warehouse', start: '2024-01-07', end: '2024-02-08', month: 'Jan 2024' },
+          { task: 'Data Warehouse', start: '2024-02-08', end: '2024-03-10', month: 'Feb 2024' },
+          { task: 'API Gateway', start: '2024-06-01', end: '2024-08-30', month: 'Jun 2024' },
+        ]
+        const option = createGanttChartOption(
+          multiBarData,
+          {
+            taskProp: 'task',
+            startProp: 'start',
+            endProp: 'end',
+            seriesProp: 'month',
+          },
+        )
+
+        const grid = Array.isArray(option.grid) ? option.grid[0] : option.grid
+        expect(grid?.right).toBe('22%')
+
+        const series = barSeriesList(option)
+        const janSeries = series.find(s => s.name === 'Jan 2024')
+        const febSeries = series.find(s => s.name === 'Feb 2024')
+        const junSeries = series.find(s => s.name === 'Jun 2024')
+
+        const janItem = Array.isArray(janSeries?.data) ? janSeries.data[0] : undefined
+        const febItem = Array.isArray(febSeries?.data) ? febSeries.data[0] : undefined
+        const junItem = Array.isArray(junSeries?.data) ? junSeries.data[1] : undefined
+
+        expect(typeof janItem === 'object' && janItem !== null && 'label' in janItem ? janItem.label : undefined).toEqual({ show: false })
+        expect(typeof febItem === 'object' && febItem !== null && 'label' in febItem ? febItem.label : undefined).toBeUndefined()
+        expect(typeof junItem === 'object' && junItem !== null && 'label' in junItem ? junItem.label : undefined).toBeUndefined()
+      },
+    )
   },
 )

@@ -66,6 +66,7 @@ describe(
 
         const series = firstFunnelSeries(option)
         expect(series.type).toBe('funnel')
+        expect(series.minSize).toBe('28%')
 
         const seriesData = funnelData(option)
         expect(seriesData).toBeDefined()

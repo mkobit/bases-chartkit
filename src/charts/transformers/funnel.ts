@@ -78,6 +78,9 @@ export function createFunnelChartOption(
 
   const seriesItem: FunnelSeriesOption = {
     type: 'funnel',
+    // Prevent the smallest funnel segment from tapering to a 0%-width tip
+    // where centered inside labels overflow the segment edges.
+    minSize: '28%',
     data: [...seriesData],
     ...(resolvedSort ? { sort: resolvedSort } : {}),
     ...(options?.funnelAlign ? { funnelAlign: options.funnelAlign } : {}),
