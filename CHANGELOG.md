@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0](https://github.com/mkobit/bases-chartkit/compare/0.2.0...0.3.0) (2026-11-25)
+
+
+### Features
+
+* add copy chart as PNG action ([#504](https://github.com/mkobit/bases-chartkit/issues/504)) ([b0b40a1](https://github.com/mkobit/bases-chartkit/commit/b0b40a16964e465fcd17c6a9cd16135e79f45fc0))
+* add shared Bases dataset layer and generic ECharts view ([#499](https://github.com/mkobit/bases-chartkit/issues/499)) ([2763159](https://github.com/mkobit/bases-chartkit/commit/27631594ed330c098b9dc6fe8dac7501a6dfa784))
+
+
+### Bug fixes
+
+* **bullet:** center Value bar over ranges, scale Target marker, and show metric labels ([#517](https://github.com/mkobit/bases-chartkit/issues/517)) ([9e0dfef](https://github.com/mkobit/bases-chartkit/commit/9e0dfef603ade4419809270a11801c3540f44caf))
+* **charts:** adjust circular chart center and radius for label spacing ([#520](https://github.com/mkobit/bases-chartkit/issues/520)) ([e7f0144](https://github.com/mkobit/bases-chartkit/commit/e7f0144f2b4758c7f5122ded75f3e24c1d477772))
+* **charts:** center calendar layout and move visualMap below months ([#519](https://github.com/mkobit/bases-chartkit/issues/519)) ([f7ad718](https://github.com/mkobit/bases-chartkit/commit/f7ad718e36916d0c27248ecd866523039f37e75b))
+* **charts:** format piecewise visualMap labels, deduplicate gantt ticks, and pad funnel minSize ([#521](https://github.com/mkobit/bases-chartkit/issues/521)) ([592ea05](https://github.com/mkobit/bases-chartkit/commit/592ea05f8710b1ea4707b97738f38f716f691a3c))
+* **charts:** normalize Obsidian CSS color tokens for treemap palette ([#518](https://github.com/mkobit/bases-chartkit/issues/518)) ([07b6dde](https://github.com/mkobit/bases-chartkit/commit/07b6dde6d9da4eb8a4f5b08c13ccbc418fdaa27f))
+* **charts:** polish label crowding and spacing in sunburst, treemap, map, and heatmap ([#522](https://github.com/mkobit/bases-chartkit/issues/522)) ([d0a63f3](https://github.com/mkobit/bases-chartkit/commit/d0a63f33db6da89da74f58e1f713c398724d2bd3))
+* **charts:** prevent axis label overlap, axis name clipping, and fractional pareto ticks ([#515](https://github.com/mkobit/bases-chartkit/issues/515)) ([7367f3f](https://github.com/mkobit/bases-chartkit/commit/7367f3f2e899ee7370225ce512ce8e8361ff6682))
+* **charts:** use value axis for numeric X and angle properties in scatter charts ([#512](https://github.com/mkobit/bases-chartkit/issues/512)) ([0b101a0](https://github.com/mkobit/bases-chartkit/commit/0b101a05d86da19171af1162ba1c50ee2b2ebc34))
+* **e2e:** fix bun test runner paths, timeout, and survey import guard ([#506](https://github.com/mkobit/bases-chartkit/issues/506)) ([8351851](https://github.com/mkobit/bases-chartkit/commit/835185155c3d7c8fb1b4265a63a92da2d391d0aa))
+* **theme-river:** render vertical river bands and left singleAxis ([#511](https://github.com/mkobit/bases-chartkit/issues/511)) ([43aedad](https://github.com/mkobit/bases-chartkit/commit/43aedad090afbc835672881f91bb963b2c588c73))
+* **views:** pass pie, radar, and rose style options from config ([#513](https://github.com/mkobit/bases-chartkit/issues/513)) ([5e14683](https://github.com/mkobit/bases-chartkit/commit/5e14683418ae051fa757d220c98fa0cc655a1cd9))
+
 ## [0.2.0](https://github.com/mkobit/bases-chartkit/compare/0.1.0...0.2.0) (2026-11-12)
 
 
