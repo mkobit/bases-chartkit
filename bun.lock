@@ -7,9 +7,9 @@
       "dependencies": {
         "echarts": "6.1.0",
         "echarts-wordcloud": "^2.1.0",
-        "i18next": "^26.6.0",
+        "i18next": "^26.7.1",
         "obsidian": "1.13.1",
-        "remeda": "^2.57.1",
+        "remeda": "^2.58.0",
         "zod": "^4.6.7",
       },
       "devDependencies": {
@@ -32,7 +32,7 @@
         "fast-check": "^4.10.2",
         "globals": "17.14.0",
         "jiti": "^2.7.0",
-        "obsidian-launcher": "^3.4.0",
+        "obsidian-launcher": "^3.5.0",
         "temporal-spec": "^1.0.1",
         "tslib": "2.9.1",
         "typescript": "^6.0.3",
@@ -528,7 +528,7 @@
 
     "hookified": ["hookified@1.15.1", "", {}, "sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg=="],
 
-    "i18next": ["i18next@26.6.0", "", { "peerDependencies": { "typescript": "^5 || ^6 || ^7" }, "optionalPeers": ["typescript"] }, "sha512-jpb1n5386s9mbBLNF6tSNIVhbBUUNiNeDyjWte+uxHP/Wr+CEy7WBM8q29TkfQ46VbwKeJFYdQJK3pSUhLp4CQ=="],
+    "i18next": ["i18next@26.7.1", "", { "peerDependencies": { "typescript": "^5 || ^6 || ^7" }, "optionalPeers": ["typescript"] }, "sha512-cX+3RRVczel/V2kCMTACckSGSpqgtWYEA6beXNYVms7dOQiHojdPYHD26lT4IKimNeoGWrLvtPgjftbRvmZJVw=="],
 
     "iconv-lite": ["iconv-lite@0.7.3", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ=="],
 
@@ -740,7 +740,7 @@
 
     "obsidian": ["obsidian@1.13.1", "", { "dependencies": { "@types/codemirror": "5.60.8", "moment": "2.29.4" }, "peerDependencies": { "@codemirror/state": "6.5.0", "@codemirror/view": "6.38.6" } }, "sha512-qtTEA2pmhJzhuhJqzbBFRYhpIOqvW+krDYjtFynv66KbxBbumHBlsJfWw3I4jtnK/6fZwbQhCrmmDdRwXmX56w=="],
 
-    "obsidian-launcher": ["obsidian-launcher@3.4.0", "", { "dependencies": { "7z-wasm": "1.2.0", "@electron/get": "^5.0.0", "@supercharge/promise-pool": "^3.2.0", "chrome-remote-interface": "^0.33.3", "classic-level": "^3.0.0", "commander": "^14.0.2", "consola": "^3.4.2", "dotenv": "^17.2.3", "fast-xml-parser": "^5.10.0", "fs-extra": "^11.4.0", "lodash": "^4.17.21", "readline-sync": "^1.4.10", "semver": "^7.7.3" }, "bin": { "obsidian-launcher": "./dist/cli.js" } }, "sha512-A9Wft8qrMgnITqpHfyKobdmrig+nrB0SHWjn4malQ2mLy/ZFFcLR9HdtQlON2awedqeIBKUolYkpsXO10it1uw=="],
+    "obsidian-launcher": ["obsidian-launcher@3.5.0", "", { "dependencies": { "7z-wasm": "1.2.0", "@electron/get": "^5.0.0", "@supercharge/promise-pool": "^3.2.0", "chrome-remote-interface": "^0.33.3", "classic-level": "^3.0.0", "commander": "^14.0.2", "consola": "^3.4.2", "dotenv": "^17.2.3", "fast-xml-parser": "^5.10.0", "fs-extra": "^11.4.0", "lodash": "^4.17.21", "readline-sync": "^1.4.10", "semver": "^7.7.3" }, "bin": { "obsidian-launcher": "./dist/cli.js" } }, "sha512-ENc46JK+LunGzgoKc5J8A15fqZbue6cX48PL4zGe09jZ6+F4YZ//rfh1o3Y+ueNXJmo6UUC/0/n89pmkFj7faw=="],
 
     "onetime": ["onetime@7.0.0", "", { "dependencies": { "mimic-function": "^5.0.0" } }, "sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ=="],
 
@@ -798,7 +798,7 @@
 
     "regjsparser": ["regjsparser@0.13.4", "", { "dependencies": { "jsesc": "~3.1.0" }, "bin": { "regjsparser": "bin/parser" } }, "sha512-EWV80YgFaVgFrjGCAsV7oybp4GOxbls5RzBg8OB0nKEVXsBJR1JlV8Di1JhCROg3MzTfe1RI8yitIm1eOs68iA=="],
 
-    "remeda": ["remeda@2.57.1", "", {}, "sha512-BzB/saj0iHH85993HCIp6MOaZbzzehW5eF0sYqnWGmOiquPklZe6cop2t8PDA1kuvHx0nVIOpwyS+EfO875xGw=="],
+    "remeda": ["remeda@2.58.0", "", {}, "sha512-uCy/WL+c+IF/oAb+sjgZ4Y7XPsW58wP8EWiYpIcqWQZBnNEcb8RnLh9PHsERA97ONpkebGw4S6qNcOtFQ+HG7A=="],
 
     "require-from-string": ["require-from-string@2.0.2", "", {}, "sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw=="],
 
