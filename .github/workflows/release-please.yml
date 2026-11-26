@@ -7,18 +7,61 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: plan-release
+  cancel-in-progress: false
+
 jobs:
   release-please:
     name: Manage release PR
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
+      contents: read
+    outputs:
+      release-created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v5.0.0
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check release intent
+        id: intent
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(git log -1 --format=%B | git interpret-trailers --parse |
+            awk 'tolower($1) == "release-as:" { sub(/^[^:]*:[[:space:]]*/, ""); print }')
+          if [[ -n $version ]]; then
+            bash scripts/release/validate-calver.sh "$version"
+            printf 'plan=true\n' >> "$GITHUB_OUTPUT"
+          fi
+
+          if ! git diff --quiet HEAD^ HEAD -- .release-please-manifest.json; then
+            version=$(jq -er '."."' .release-please-manifest.json)
+            bash scripts/release/validate-calver.sh "$version"
+            jq -e --arg version "$version" '.version == $version' manifest.json > /dev/null
+            printf 'publish=true\n' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Release Please
+        id: release
+        if: steps.intent.outputs.plan == 'true' || steps.intent.outputs.publish == 'true'
+        uses: googleapis/release-please-action@v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: ${{ steps.intent.outputs.plan != 'true' }}
+          skip-github-release: ${{ steps.intent.outputs.publish != 'true' }}
+
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.release-created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag }}

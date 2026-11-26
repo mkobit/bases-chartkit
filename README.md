@@ -187,3 +187,22 @@ For more information on building Obsidian plugins, refer to the official documen
 ### License
 
 MIT License
+
+## Release policy
+
+Stable plugin releases use unprefixed UTC Calendar Versioning in the form `YYYY.M.D`, for example `2026.11.5`.
+Unpadded month and day values fit the three-number version format Obsidian requires.
+Sort by the numeric fields to put releases in date order.
+Publish one stable release per UTC day.
+The Obsidian release workflow accepts stable versions only.
+
+1. Squash merge a PR with a `Release-As: 2026.11.5` trailer in the resulting commit message, using the planned UTC release date.
+2. Review the release PR from Release Please and check that the version in `manifest.json` matches the planned release tag.
+3. If the minimum Obsidian version changes, update `versions.json` in the release PR.
+4. Merge the release PR after CI passes.
+   The workflow builds the plugin, attaches its assets to a draft, and then publishes the release.
+
+If the asset upload fails, run the Release workflow with the existing draft's tag.
+Existing releases keep their current tags.
+
+[Obsidian release requirements](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) · [Release Please version overrides](https://github.com/googleapis/release-please#how-do-i-change-the-version-number)
