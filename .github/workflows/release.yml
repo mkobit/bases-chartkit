@@ -1,13 +1,16 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and publish'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to build and attach assets to'
+        description: 'Existing release tag to build and publish'
         required: true
         type: string
 
@@ -25,11 +28,21 @@ jobs:
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Verify draft and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/release/validate-calver.sh "$RELEASE_TAG"
+          jq -e --arg tag "$RELEASE_TAG" '.version == $tag' manifest.json > /dev/null
+          [[ $(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft) == true ]]
 
       - name: Setup environment
         uses: $/.github/actions/setup-env
@@ -37,19 +50,8 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Attach artifacts to GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Attach assets to the draft
         run: gh release upload "$RELEASE_TAG" main.js manifest.json styles.css --clobber
 
-      # release-please creates the release as a draft (config: draft +
-      # force-tag-creation) specifically so it isn't locked by GitHub's
-      # immutable-releases setting until assets are attached here -- undraft
-      # it as the last step so the published release always has all 3
-      # assets. Safe to run against an already-published release too (e.g. a
-      # workflow_dispatch re-run): --draft=false on a non-draft release is a
-      # no-op.
       - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: gh release edit "$RELEASE_TAG" --draft=false

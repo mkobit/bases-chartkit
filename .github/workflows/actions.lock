@@ -17,6 +17,7 @@ workflows:
     '.github/workflows/pr-title.yml':
         - 'amannn/action-semantic-pull-request@v6.1.2'
     '.github/workflows/release-please.yml':
+        - 'actions/checkout@v7.0.1'
         - 'googleapis/release-please-action@v5.0.0'
     '.github/workflows/release.yml':
         - 'actions/checkout@v7.0.1'
