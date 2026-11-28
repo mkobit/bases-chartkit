@@ -111,7 +111,9 @@ describe('Chrome DevTools Protocol target resolution', () => {
 
     const port = server.port ?? 0
     try {
-      expect(fetchCdpTargets(port)).rejects.toThrow('Failed to fetch CDP targets')
+      await Promise.resolve(
+        expect(fetchCdpTargets(port)).rejects.toThrow('Failed to fetch CDP targets'),
+      )
     } finally {
       await server.stop(true)
     }
@@ -128,7 +130,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
 
     const port = server.port ?? 0
     try {
-      expect(fetchCdpTargets(port)).rejects.toThrow('Invalid CDP response')
+      await Promise.resolve(expect(fetchCdpTargets(port)).rejects.toThrow('Invalid CDP response'))
     } finally {
       await server.stop(true)
     }
@@ -256,8 +258,10 @@ describe('Chrome DevTools Protocol client session', () => {
 
     try {
       const client = await connectCdp(`ws://127.0.0.1:${server.port}`)
-      expect(client.evaluate('invalidVariable')).rejects.toThrow(
-        'ReferenceError: invalidVariable is not defined',
+      await Promise.resolve(
+        expect(client.evaluate('invalidVariable')).rejects.toThrow(
+          'ReferenceError: invalidVariable is not defined',
+        ),
       )
       await client.close()
     } finally {
@@ -411,8 +415,6 @@ describe('Chrome DevTools Protocol client session', () => {
   })
 
   test('connects to numeric port and auto-discovers page target', async () => {
-    let wsPort = 0
-
     const wsServer = Bun.serve({
       hostname: '127.0.0.1',
       port: 0,
@@ -430,7 +432,7 @@ describe('Chrome DevTools Protocol client session', () => {
         },
       },
     })
-    wsPort = wsServer.port ?? 0
+    const wsPort = wsServer.port ?? 0
 
     const httpServer = Bun.serve({
       hostname: '127.0.0.1',
@@ -484,7 +486,7 @@ describe('Chrome DevTools Protocol client session', () => {
 
     try {
       const client = await connectCdp(`ws://127.0.0.1:${server.port}`)
-      expect(client.send('Test.neverResponds')).rejects.toThrow('closed')
+      await Promise.resolve(expect(client.send('Test.neverResponds')).rejects.toThrow('closed'))
     } finally {
       await server.stop(true)
     }
