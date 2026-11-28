@@ -4,6 +4,7 @@ import type { RegisteredChartViewType } from '../charts/registered-views'
 import { t } from '../lang/text'
 import { AreaChartView } from './area-chart-view'
 import { BarChartView } from './bar-chart-view'
+import { BaseChartView } from './base-chart-view'
 import { BoxplotChartView } from './boxplot-chart-view'
 import { BubbleChartView } from './bubble-chart-view'
 import { BulletChartView } from './bullet-chart-view'
@@ -57,6 +58,33 @@ export interface ChartViewRegistration {
   readonly options: (plugin: BarePlugin) => BasesOptions[]
 }
 
+function withPluginThemeOptions(
+  options: readonly BasesOptions[],
+  plugin: BarePlugin,
+): BasesOptions[] {
+  const [themeHostOption] = BaseChartView.getHostViewOptions(plugin)
+  if (!themeHostOption || themeHostOption.type !== 'dropdown') {
+    return [...options]
+  }
+
+  const hasThemeOption = options.some(
+    option => option.key === BaseChartView.THEME_KEY && option.type === 'dropdown',
+  )
+
+  if (!hasThemeOption) {
+    return [themeHostOption, ...options]
+  }
+
+  return options.map(option =>
+    option.key === BaseChartView.THEME_KEY && option.type === 'dropdown'
+      ? {
+          ...option,
+          options: themeHostOption.options,
+        }
+      : option,
+  )
+}
+
 function standardView(
   type: RegisteredChartViewType,
   getName: () => string,
@@ -68,7 +96,7 @@ function standardView(
     getName,
     icon,
     factory: (controller, containerEl, plugin) => new ViewClass(controller, containerEl, plugin),
-    options: () => ViewClass.getViewOptions(),
+    options: plugin => withPluginThemeOptions(ViewClass.getViewOptions(), plugin),
   }
 }
 
