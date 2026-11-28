@@ -39,10 +39,10 @@ jobs:
             printf 'plan=true\n' >> "$GITHUB_OUTPUT"
           fi
 
-          if ! git diff --quiet HEAD^ HEAD -- .release-please-manifest.json; then
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1 && ! git diff --quiet HEAD^ HEAD -- .release-please-manifest.json; then
             version=$(jq -er '."."' .release-please-manifest.json)
             bash scripts/release/validate-calver.sh "$version"
-            jq -e --arg version "$version" '.version == $version' manifest.json > /dev/null
+            bash scripts/release/validate-metadata.sh "$version"
             printf 'publish=true\n' >> "$GITHUB_OUTPUT"
           fi
 
