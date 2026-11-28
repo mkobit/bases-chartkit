@@ -307,6 +307,7 @@ export async function captureView(
     process.stderr.write(`[survey-chart-types] ok: ${entry.baseFile} :: ${entry.viewName}\n`)
     return { entry, fileName, ok: true }
   } catch (error: unknown) {
+    await fsp.rm(path.join(outputDir, fileName), { force: true })
     const message = error instanceof Error ? error.message : String(error)
     process.stderr.write(
       `[survey-chart-types] failed to capture "${entry.viewName}" (${entry.baseFile}, type=${entry.chartType}): ${message}\n`,
@@ -315,19 +316,43 @@ export async function captureView(
   }
 }
 
+export interface SurveyRunDeps {
+  readonly resolveTheme?: () => ResolvedSurveyTheme
+  readonly collectViews?: () => ReadonlyArray<ChartViewEntry>
+  readonly captureEntry?: (entry: ChartViewEntry, outputDir: string) => Promise<CaptureResult>
+  readonly writeStderr?: (message: string) => void
+}
+
 /**
- * Launches Obsidian, waits for workspace layout and vault indexing, and
- * captures screenshots for all chart views sequentially.
+ * Clears any pre-existing files in `outputDir` and recreates the directory so
+ * stale screenshots from earlier runs cannot survive partial or failed sweeps.
  */
-export async function runSurvey(): Promise<number> {
-  const { theme, outputDir, warning } = resolveSurveyTheme()
-  if (warning !== undefined) {
-    process.stderr.write(warning)
-  }
-
-  const entries = collectChartViews()
+export function prepareOutputDir(outputDir: string): void {
+  fs.rmSync(outputDir, { recursive: true, force: true })
   fs.mkdirSync(outputDir, { recursive: true })
+}
 
+async function captureAllSequential(
+  entries: ReadonlyArray<ChartViewEntry>,
+  outputDir: string,
+  captureEntry: (entry: ChartViewEntry, outputDir: string) => Promise<CaptureResult>,
+): Promise<ReadonlyArray<CaptureResult>> {
+  // Sequential by design: one Obsidian instance, one workspace leaf, reused
+  // across all views. Reduce-over-a-promise chains each capture after the
+  // previous one settles, appending immutably instead of mutating an
+  // accumulator array.
+  return entries.reduce(async (accPromise, entry) => {
+    const acc = await accPromise
+    const result = await captureEntry(entry, outputDir)
+    return [...acc, result]
+  }, Promise.resolve<ReadonlyArray<CaptureResult>>([]))
+}
+
+async function captureAllWithObsidian(
+  entries: ReadonlyArray<ChartViewEntry>,
+  outputDir: string,
+  theme: ViewMode | undefined,
+): Promise<ReadonlyArray<CaptureResult>> {
   const launched = await launchObsidianForSuite({
     name: theme === 'dark' ? 'dark' : 'standard',
     theme,
@@ -357,32 +382,9 @@ export async function runSurvey(): Promise<number> {
       // every capture.
       await waitForVaultIndexed(page)
 
-      // Sequential by design: one Obsidian instance, one workspace leaf, reused
-      // across all views. Reduce-over-a-promise chains each capture after the
-      // previous one settles, appending immutably instead of mutating an
-      // accumulator array.
-      const results = await entries.reduce(async (accPromise, entry) => {
-        const acc = await accPromise
-        const result = await captureView(page, entry, outputDir)
-        return [...acc, result]
-      }, Promise.resolve<ReadonlyArray<CaptureResult>>([]))
-
-      const succeeded = results.filter(r => r.ok)
-      const failed = results.filter(r => !r.ok)
-
-      process.stderr.write(
-        `[survey-chart-types] captured ${succeeded.length}/${entries.length} screenshots\n`,
+      return await captureAllSequential(entries, outputDir, (entry, dir) =>
+        captureView(page, entry, dir),
       )
-      if (failed.length > 0) {
-        process.stderr.write('[survey-chart-types] failures:\n')
-        for (const failure of failed) {
-          process.stderr.write(
-            `  - ${failure.entry.baseFile} :: ${failure.entry.viewName} (type=${failure.entry.chartType}): ${failure.error ?? 'unknown error'}\n`,
-          )
-        }
-      }
-
-      return succeeded.length > 0 ? 0 : 1
     } finally {
       await client.close()
     }
@@ -390,6 +392,47 @@ export async function runSurvey(): Promise<number> {
     launched.removeSignalHandlers()
     await stopObsidian(launched.proc, launched.configDir, launched.vault)
   }
+}
+
+/**
+ * Launches Obsidian, waits for workspace layout and vault indexing, and
+ * captures screenshots for all chart views sequentially. Returns nonzero if
+ * any expected capture fails or if no chart views are found.
+ */
+export async function runSurvey(deps: SurveyRunDeps = {}): Promise<number> {
+  const writeStderr = deps.writeStderr ?? (message => process.stderr.write(message))
+  const { theme, outputDir, warning } = (deps.resolveTheme ?? resolveSurveyTheme)()
+  if (warning !== undefined) {
+    writeStderr(warning)
+  }
+
+  const entries = (deps.collectViews ?? collectChartViews)()
+  prepareOutputDir(outputDir)
+
+  if (entries.length === 0) {
+    writeStderr('[survey-chart-types] no chart views found to capture\n')
+    return 1
+  }
+
+  const results =
+    deps.captureEntry !== undefined
+      ? await captureAllSequential(entries, outputDir, deps.captureEntry)
+      : await captureAllWithObsidian(entries, outputDir, theme)
+
+  const succeeded = results.filter(r => r.ok && fs.existsSync(path.join(outputDir, r.fileName)))
+  const failed = results.filter(r => !r.ok || !fs.existsSync(path.join(outputDir, r.fileName)))
+
+  writeStderr(`[survey-chart-types] captured ${succeeded.length}/${entries.length} screenshots\n`)
+  if (failed.length > 0) {
+    writeStderr('[survey-chart-types] failures:\n')
+    failed.forEach(failure => {
+      writeStderr(
+        `  - ${failure.entry.baseFile} :: ${failure.entry.viewName} (type=${failure.entry.chartType}): ${failure.error ?? 'missing output file'}\n`,
+      )
+    })
+  }
+
+  return failed.length === 0 && succeeded.length === entries.length ? 0 : 1
 }
 
 async function main(): Promise<void> {
