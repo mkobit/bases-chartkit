@@ -114,7 +114,8 @@ describe('Sankey Transformer', () => {
     const data = [
       { source: 'A', target: 'constructor', value: 4 },
       { source: 'toString', target: '__proto__', value: 3 },
-      { source: 'hasOwnProperty', target: 'valueOf', value: 2 },
+      { source: '__proto__', target: 'hasOwnProperty', value: 2 },
+      { source: 'hasOwnProperty', target: 'valueOf', value: 1 },
     ]
 
     const result = transformDataToChartOption(data, 'source', 'target', 'sankey', {
@@ -135,7 +136,8 @@ describe('Sankey Transformer', () => {
     expect(series?.links).toEqual([
       { source: 'A', target: 'constructor', value: 4 },
       { source: 'toString', target: '__proto__', value: 3 },
-      { source: 'hasOwnProperty', target: 'valueOf', value: 2 },
+      { source: '__proto__', target: 'hasOwnProperty', value: 2 },
+      { source: 'hasOwnProperty', target: 'valueOf', value: 1 },
     ])
   })
 })
@@ -234,6 +236,15 @@ describe('hasSankeyCycle', () => {
     },
   ])('handles inherited property names: $label', ({ data, expected }) => {
     expect(hasSankeyCycle(data, 'source', 'target')).toBe(expected)
+  })
+
+  it('detects a direct cycle through __proto__', () => {
+    const data = [
+      { source: 'A', target: '__proto__' },
+      { source: '__proto__', target: 'A' },
+    ]
+
+    expect(hasSankeyCycle(data, 'source', 'target')).toBe(true)
   })
 })
 
