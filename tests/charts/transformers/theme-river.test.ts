@@ -353,4 +353,27 @@ describe('createThemeRiverChartOption', () => {
     expect(typeof shadowBlur === 'number' && shadowBlur > 0).toBe(true)
     expect(typeof shadowColor).toBe('string')
   })
+
+  it('should reject invalid numeric timestamps and preserve valid rows in mixed input', () => {
+    const mixedData = [
+      { date: '2023-01-01', mentions: 10, topic: 'Tech' },
+      { date: Number.POSITIVE_INFINITY, mentions: 4, topic: 'Tech' },
+      { date: Number.NEGATIVE_INFINITY, mentions: 3, topic: 'Tech' },
+      { date: Number.NaN, mentions: 2, topic: 'Tech' },
+      { date: 8_640_000_000_000_001, mentions: 6, topic: 'Tech' },
+      { date: 1_672_531_200_000.5, mentions: 7, topic: 'Tech' },
+      { date: { getTime: () => Number.NaN }, mentions: 9, topic: 'Tech' },
+      { date: 1_672_617_600_000, mentions: 8, topic: 'Politics' },
+    ]
+
+    const option = createThemeRiverChartOption(mixedData, 'date', {
+      valueProp: 'mentions',
+      themeProp: 'topic',
+    })
+
+    expect(themeRiverRows(option)).toEqual([
+      ['2023-01-01', 10, 'Tech'],
+      ['2023-01-02', 8, 'Politics'],
+    ])
+  })
 })

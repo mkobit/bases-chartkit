@@ -406,4 +406,36 @@ describe('createGanttChartOption', () => {
         : undefined,
     ).toBeUndefined()
   })
+
+  it('should reject invalid numeric timestamps and preserve valid tasks in mixed input', () => {
+    const mixedData = [
+      { task: 'Valid 1', start: '2023-01-01', end: '2023-01-05' },
+      { task: 'Inf start', start: Number.POSITIVE_INFINITY, end: '2023-01-05' },
+      { task: 'Neg inf end', start: '2023-01-01', end: Number.NEGATIVE_INFINITY },
+      { task: 'NaN start', start: Number.NaN, end: '2023-01-05' },
+      { task: 'Out of range end', start: '2023-01-01', end: 8_640_000_000_000_001 },
+      { task: 'Fractional start', start: 1_672_531_200_000.5, end: '2023-01-05' },
+      {
+        task: 'Invalid Date-like',
+        start: { getTime: () => Number.POSITIVE_INFINITY },
+        end: '2023-01-05',
+      },
+      { task: 'Valid 2', start: 1_672_963_200_000, end: 1_673_308_800_000 },
+    ]
+
+    const option = createGanttChartOption(mixedData, {
+      taskProp: 'task',
+      startProp: 'start',
+      endProp: 'end',
+    })
+
+    const yAxis = categoryYAxis(option)
+    expect(yAxis.data).toEqual(['Valid 1', 'Valid 2'])
+
+    const durationSeries = barSeriesList(option)[1]
+    const durationData = Array.isArray(durationSeries?.data)
+      ? durationSeries.data.flatMap(d => (isGanttDurationDatum(d) ? [d] : []))
+      : []
+    expect(durationData).toHaveLength(2)
+  })
 })
