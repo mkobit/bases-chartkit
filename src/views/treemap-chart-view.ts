@@ -3,6 +3,7 @@ import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
+import type BarePlugin from '../main'
 import { t } from '../lang/text'
 
 export class TreemapChartView extends BaseChartView {
@@ -19,8 +20,9 @@ export class TreemapChartView extends BaseChartView {
     return 'layout-grid'
   }
 
-  static getViewOptions(): BasesOptions[] {
+  static getViewOptions(plugin?: BarePlugin): BasesOptions[] {
     return [
+      ...BaseChartView.getHostViewOptions(plugin),
       {
         displayName: t('views.treemap.path_prop'),
         type: 'property',

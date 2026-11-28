@@ -2,6 +2,8 @@ import { describe, it, expect, mock, spyOn, beforeAll, afterAll, afterEach } fro
 import { parse as parseYaml } from 'yaml'
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
+import type { BasesOptions } from 'obsidian'
+import type BarePlugin from '../../src/main'
 import type { PieChartView as PieChartViewType } from '../../src/views/pie-chart-view'
 import type { RadarChartView as RadarChartViewType } from '../../src/views/radar-chart-view'
 import type { RoseChartView as RoseChartViewType } from '../../src/views/rose-chart-view'
@@ -344,4 +346,97 @@ describe('Chart view style options', () => {
       ssrChart.dispose()
     }
   })
+})
+
+interface HostViewOptionCase {
+  readonly name: string
+  readonly loadGetViewOptions: () => Promise<(plugin?: BarePlugin) => BasesOptions[]>
+  readonly expectedSpecificKeys: readonly string[]
+}
+
+const HOST_VIEW_OPTION_CASES: readonly HostViewOptionCase[] = [
+  {
+    name: 'TreemapChartView',
+    loadGetViewOptions: async () => {
+      const { TreemapChartView } = await import('../../src/views/treemap-chart-view')
+      return plugin => TreemapChartView.getViewOptions(plugin)
+    },
+    expectedSpecificKeys: ['xAxisProp', 'valueProp'],
+  },
+  {
+    name: 'CandlestickChartView',
+    loadGetViewOptions: async () => {
+      const { CandlestickChartView } = await import('../../src/views/candlestick-chart-view')
+      return plugin => CandlestickChartView.getViewOptions(plugin)
+    },
+    expectedSpecificKeys: ['xAxisProp', 'openProp', 'closeProp', 'lowProp', 'highProp'],
+  },
+  {
+    name: 'HeatmapChartView',
+    loadGetViewOptions: async () => {
+      const { HeatmapChartView } = await import('../../src/views/heatmap-chart-view')
+      return plugin => HeatmapChartView.getViewOptions(plugin)
+    },
+    expectedSpecificKeys: ['xAxisProp', 'yAxisProp', 'valueProp'],
+  },
+]
+
+describe('Host view options alignment', () => {
+  it.each(HOST_VIEW_OPTION_CASES)(
+    '$name.getViewOptions() includes default theme and height options when plugin is omitted',
+    async ({ loadGetViewOptions, expectedSpecificKeys }) => {
+      const getViewOptions = await loadGetViewOptions()
+      const options = getViewOptions()
+
+      const themeOption = options.find(opt => opt.key === 'theme')
+      expect(themeOption).toBeDefined()
+      expect(themeOption?.type).toBe('dropdown')
+      if (themeOption?.type === 'dropdown') {
+        expect(Object.keys(themeOption.options)).toEqual(['default'])
+        expect(themeOption.options['default']).toBeString()
+      }
+
+      const heightOption = options.find(opt => opt.key === 'height')
+      expect(heightOption).toBeDefined()
+      expect(heightOption?.type).toBe('text')
+
+      const optionKeys = options.map(opt => opt.key)
+      expectedSpecificKeys.forEach(key => {
+        expect(optionKeys).toContain(key)
+      })
+    },
+  )
+
+  it.each(HOST_VIEW_OPTION_CASES)(
+    '$name.getViewOptions(plugin) includes customThemes and height options when plugin is provided',
+    async ({ loadGetViewOptions }) => {
+      const getViewOptions = await loadGetViewOptions()
+      const basePlugin = makePluginStub()
+      const plugin: BarePlugin = {
+        ...basePlugin,
+        settings: {
+          ...basePlugin.settings,
+          customThemes: [
+            { name: 'Nord', json: '{}' },
+            { name: 'Solarized', json: '{}' },
+          ],
+        },
+      }
+      const options = getViewOptions(plugin)
+
+      const themeOption = options.find(opt => opt.key === 'theme')
+      expect(themeOption).toBeDefined()
+      expect(themeOption?.type).toBe('dropdown')
+      if (themeOption?.type === 'dropdown') {
+        expect(Object.keys(themeOption.options)).toEqual(['default', 'Nord', 'Solarized'])
+        expect(themeOption.options['default']).toBeString()
+        expect(themeOption.options['Nord']).toBe('Nord')
+        expect(themeOption.options['Solarized']).toBe('Solarized')
+      }
+
+      const heightOption = options.find(opt => opt.key === 'height')
+      expect(heightOption).toBeDefined()
+      expect(heightOption?.type).toBe('text')
+    },
+  )
 })
