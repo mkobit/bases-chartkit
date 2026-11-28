@@ -251,6 +251,7 @@ describe('Chrome DevTools Protocol readiness wait', () => {
 
   test('resolves when CDP target and window.app are ready', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       websocket: {
         message(ws, raw) {

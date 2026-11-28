@@ -25,6 +25,7 @@ interface MockServerOptions {
 
 function createMockCdpServer(options?: MockServerOptions) {
   return Bun.serve({
+    hostname: '127.0.0.1',
     port: 0,
     fetch(req, server) {
       if (server.upgrade(req)) {

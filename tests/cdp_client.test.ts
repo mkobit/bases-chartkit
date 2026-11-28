@@ -79,6 +79,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
     ]
 
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req) {
         const url = new URL(req.url)
@@ -101,6 +102,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
 
   test('rejects when http endpoint returns non-ok response', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch() {
         return new Response('Internal error', { status: 500, statusText: 'Server Error' })
@@ -117,6 +119,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
 
   test('rejects when http endpoint returns non-array payload', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch() {
         return Response.json({ error: 'not an array' })
@@ -135,6 +138,7 @@ describe('Chrome DevTools Protocol target resolution', () => {
 describe('Chrome DevTools Protocol client session', () => {
   test('sends commands and receives json-rpc results', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -175,6 +179,7 @@ describe('Chrome DevTools Protocol client session', () => {
 
   test('evaluates javascript expressions in page context', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -217,6 +222,7 @@ describe('Chrome DevTools Protocol client session', () => {
 
   test('throws error on failed javascript evaluation', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -264,6 +270,7 @@ describe('Chrome DevTools Protocol client session', () => {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -306,6 +313,7 @@ describe('Chrome DevTools Protocol client session', () => {
     const sink = new MessageSink<CapturedMouseEvent>()
 
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -356,6 +364,7 @@ describe('Chrome DevTools Protocol client session', () => {
     const sink = new MessageSink<CapturedKeyEvent>()
 
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -405,6 +414,7 @@ describe('Chrome DevTools Protocol client session', () => {
     let wsPort = 0
 
     const wsServer = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {
@@ -423,6 +433,7 @@ describe('Chrome DevTools Protocol client session', () => {
     wsPort = wsServer.port ?? 0
 
     const httpServer = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req) {
         const url = new URL(req.url)
@@ -455,6 +466,7 @@ describe('Chrome DevTools Protocol client session', () => {
 
   test('rejects pending requests when websocket closes prematurely', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, s) {
         if (s.upgrade(req)) {

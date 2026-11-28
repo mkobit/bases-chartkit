@@ -3,12 +3,14 @@ import { BaseChartView } from './base-chart-view'
 import { transformDataToChartOption } from '../charts/transformer'
 import type { EChartsOption } from 'echarts'
 import type { BasesData } from '../charts/transformers/base'
+import type BarePlugin from '../main'
 import { t } from '../lang/text'
 
 export class HeatmapChartView extends BaseChartView {
   readonly type = 'heatmap-chart'
-  static getViewOptions(): BasesOptions[] {
+  static getViewOptions(plugin?: BarePlugin): BasesOptions[] {
     return [
+      ...BaseChartView.getHostViewOptions(plugin),
       {
         displayName: t('views.common.x_axis_prop'),
         type: 'property',

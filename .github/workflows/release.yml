@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/release/validate-calver.sh "$RELEASE_TAG"
-          jq -e --arg tag "$RELEASE_TAG" '.version == $tag' manifest.json > /dev/null
+          bash scripts/release/validate-metadata.sh "$RELEASE_TAG"
           [[ $(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft) == true ]]
 
       - name: Setup environment
