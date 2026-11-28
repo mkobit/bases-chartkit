@@ -112,6 +112,7 @@ describe('captureCanvasScreenshot and captureView', () => {
   test('captures canvas bounding rect clip via CDP and writes PNG file', async () => {
     let capturedParams: readonly unknown[] = []
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, srv) {
         if (srv.upgrade(req)) {
@@ -218,6 +219,7 @@ describe('captureCanvasScreenshot and captureView', () => {
 
   test('returns ok: false with error message when view capture fails', async () => {
     const server = Bun.serve({
+      hostname: '127.0.0.1',
       port: 0,
       fetch(req, srv) {
         if (srv.upgrade(req)) {
