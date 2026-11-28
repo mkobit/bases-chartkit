@@ -305,7 +305,7 @@ const CALVER_CASES: readonly CalverCase[] = [
 ]
 
 describe('validate-metadata.sh', () => {
-  it.each(VALID_METADATA_CASES)('$name', ({ tag, files, expectedExitCode }) => {
+  it.each([...VALID_METADATA_CASES])('$name', ({ tag, files, expectedExitCode }) => {
     withTempMetadataDir(files, dir => {
       const result = runScript(VALIDATE_METADATA_SCRIPT, [tag, dir])
       expect(result.exitCode).toBe(expectedExitCode)
@@ -313,7 +313,7 @@ describe('validate-metadata.sh', () => {
     })
   })
 
-  it.each(INVALID_METADATA_CASES)(
+  it.each([...INVALID_METADATA_CASES])(
     '$name',
     ({ tag, files, expectedExitCode, expectedStderrSubstring }) => {
       withTempMetadataDir(files, dir => {
@@ -328,7 +328,7 @@ describe('validate-metadata.sh', () => {
 })
 
 describe('validate-calver.sh', () => {
-  it.each(CALVER_CASES)('$name', ({ tag, expectedExitCode }) => {
+  it.each([...CALVER_CASES])('$name', ({ tag, expectedExitCode }) => {
     const result = runScript(VALIDATE_CALVER_SCRIPT, [tag])
     expect(result.exitCode).toBe(expectedExitCode)
   })

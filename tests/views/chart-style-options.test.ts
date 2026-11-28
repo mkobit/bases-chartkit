@@ -382,7 +382,7 @@ const HOST_VIEW_OPTION_CASES: readonly HostViewOptionCase[] = [
 ]
 
 describe('Host view options alignment', () => {
-  it.each(HOST_VIEW_OPTION_CASES)(
+  it.each([...HOST_VIEW_OPTION_CASES])(
     '$name.getViewOptions() includes default theme and height options when plugin is omitted',
     async ({ loadGetViewOptions, expectedSpecificKeys }) => {
       const getViewOptions = await loadGetViewOptions()
@@ -407,7 +407,7 @@ describe('Host view options alignment', () => {
     },
   )
 
-  it.each(HOST_VIEW_OPTION_CASES)(
+  it.each([...HOST_VIEW_OPTION_CASES])(
     '$name.getViewOptions(plugin) includes customThemes and height options when plugin is provided',
     async ({ loadGetViewOptions }) => {
       const getViewOptions = await loadGetViewOptions()
