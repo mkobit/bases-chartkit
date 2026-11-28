@@ -109,6 +109,35 @@ describe('Sankey Transformer', () => {
     const nodeNames = series.data.map(n => n.name).sort()
     expect(nodeNames).toEqual(['A', 'B'])
   })
+
+  it('renders reserved property names as source and sink nodes', () => {
+    const data = [
+      { source: 'A', target: 'constructor', value: 4 },
+      { source: 'toString', target: '__proto__', value: 3 },
+      { source: 'hasOwnProperty', target: 'valueOf', value: 2 },
+    ]
+
+    const result = transformDataToChartOption(data, 'source', 'target', 'sankey', {
+      valueProp: 'value',
+    })
+    const series = firstSankeySeries(result)
+
+    expect(series).toBeDefined()
+    const nodeNames = (series?.data ?? []).map(n => n.name).sort()
+    expect(nodeNames).toEqual([
+      'A',
+      '__proto__',
+      'constructor',
+      'hasOwnProperty',
+      'toString',
+      'valueOf',
+    ])
+    expect(series?.links).toEqual([
+      { source: 'A', target: 'constructor', value: 4 },
+      { source: 'toString', target: '__proto__', value: 3 },
+      { source: 'hasOwnProperty', target: 'valueOf', value: 2 },
+    ])
+  })
 })
 
 describe('hasSankeyCycle', () => {
@@ -169,6 +198,42 @@ describe('hasSankeyCycle', () => {
     ]
 
     expect(hasSankeyCycle(data, 'source', 'target')).toBe(true)
+  })
+
+  it.each([
+    {
+      label: 'acyclic link to constructor',
+      data: [{ source: 'A', target: 'constructor' }],
+      expected: false,
+    },
+    {
+      label: 'acyclic chain through reserved property names',
+      data: [
+        { source: 'constructor', target: 'toString' },
+        { source: 'toString', target: '__proto__' },
+        { source: '__proto__', target: 'hasOwnProperty' },
+      ],
+      expected: false,
+    },
+    {
+      label: 'direct cycle with constructor',
+      data: [
+        { source: 'A', target: 'constructor' },
+        { source: 'constructor', target: 'A' },
+      ],
+      expected: true,
+    },
+    {
+      label: 'cycle through __proto__ and toString',
+      data: [
+        { source: '__proto__', target: 'toString' },
+        { source: 'toString', target: 'hasOwnProperty' },
+        { source: 'hasOwnProperty', target: '__proto__' },
+      ],
+      expected: true,
+    },
+  ])('handles inherited property names: $label', ({ data, expected }) => {
+    expect(hasSankeyCycle(data, 'source', 'target')).toBe(expected)
   })
 })
 
