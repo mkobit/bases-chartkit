@@ -60,10 +60,53 @@ describe('Command line argument parsing', () => {
     expect(result.fileFilters).toEqual(['e2e/pie-chart-rendering.e2e.ts', 'bar-chart'])
   })
 
-  test('handles double dash separator', () => {
-    const result = parseCliArgs(['--', 'e2e/smoke.e2e.ts', '--bail'])
-    expect(result.fileFilters).toEqual(['e2e/smoke.e2e.ts'])
-    expect(result.passthroughArgs).toEqual(['--bail'])
+  test('preserves ordered passthrough arguments after double dash separator', () => {
+    const cases: readonly {
+      readonly argv: readonly string[]
+      readonly expectedFilters: readonly string[]
+      readonly expectedPassthrough: readonly string[]
+      readonly expectedHelp: boolean
+    }[] = [
+      {
+        argv: ['--', '--test-name-pattern', 'donut'],
+        expectedFilters: [],
+        expectedPassthrough: ['--test-name-pattern', 'donut'],
+        expectedHelp: false,
+      },
+      {
+        argv: ['--', 'e2e/smoke.e2e.ts', '--bail'],
+        expectedFilters: [],
+        expectedPassthrough: ['e2e/smoke.e2e.ts', '--bail'],
+        expectedHelp: false,
+      },
+      {
+        argv: [
+          'e2e/smoke.e2e.ts',
+          '--bail',
+          '--',
+          '--test-name-pattern',
+          'donut',
+          '--rerun-each',
+          '2',
+        ],
+        expectedFilters: ['e2e/smoke.e2e.ts'],
+        expectedPassthrough: ['--bail', '--test-name-pattern', 'donut', '--rerun-each', '2'],
+        expectedHelp: false,
+      },
+      {
+        argv: ['--', '--help'],
+        expectedFilters: [],
+        expectedPassthrough: ['--help'],
+        expectedHelp: false,
+      },
+    ]
+
+    for (const testCase of cases) {
+      const result = parseCliArgs(testCase.argv)
+      expect(result.fileFilters).toEqual(testCase.expectedFilters)
+      expect(result.passthroughArgs).toEqual(testCase.expectedPassthrough)
+      expect(result.showHelp).toBe(testCase.expectedHelp)
+    }
   })
 
   test('collects passthrough flags for bun test', () => {
@@ -109,14 +152,17 @@ describe('Test file classification and suite planning', () => {
     expect(isStandardTest('e2e/theme-fixture-dark.e2e.ts')).toBe(false)
   })
 
-  test('filters test files by matching filters', () => {
+  test('filters test files by matching filters and returns empty for unmatched filters', () => {
     expect(filterTestFiles(sampleFiles, [])).toEqual(sampleFiles)
     expect(filterTestFiles(sampleFiles, ['pie-chart'])).toEqual(['e2e/pie-chart-rendering.e2e.ts'])
+    expect(filterTestFiles(sampleFiles, ['./e2e/pie-chart-rendering.e2e.ts'])).toEqual([
+      'e2e/pie-chart-rendering.e2e.ts',
+    ])
     expect(filterTestFiles(sampleFiles, ['theme-fixture'])).toEqual([
       'e2e/theme-fixture-light.e2e.ts',
       'e2e/theme-fixture-dark.e2e.ts',
     ])
-    expect(filterTestFiles(sampleFiles, ['custom.e2e.ts'])).toEqual(['custom.e2e.ts'])
+    expect(filterTestFiles(sampleFiles, ['nonexistent.e2e.ts'])).toEqual([])
   })
 
   test('plans three suites in order when all files are present', () => {
@@ -371,11 +417,69 @@ describe('High-level orchestrator execution', () => {
     expect(exitCode).toBe(0)
   })
 
-  test('returns 0 when no test files match', async () => {
+  test('returns nonzero when planned suites are empty for requested suite', async () => {
+    const recorder = new SuiteRecorder()
     const exitCode = await runOrchestrator(['--suite', 'light'], {
       allFiles: ['e2e/area-chart-rendering.e2e.ts'],
+      suiteRunner: (suite: TestSuite): Promise<number> => {
+        recorder.record(suite.name)
+        return Promise.resolve(0)
+      },
     })
+    expect(exitCode).not.toBe(0)
+    expect(recorder.executedSuites).toEqual([])
+  })
+
+  test('returns nonzero when file filter matches no files', async () => {
+    const recorder = new SuiteRecorder()
+    const exitCode = await runOrchestrator(['nonexistent-filter'], {
+      allFiles: mockFiles,
+      suiteRunner: (suite: TestSuite): Promise<number> => {
+        recorder.record(suite.name)
+        return Promise.resolve(0)
+      },
+    })
+    expect(exitCode).not.toBe(0)
+    expect(recorder.executedSuites).toEqual([])
+  })
+
+  test('retains explicit existing file support when not in discovered files', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-e2e-explicit-file-'))
+    const explicitFile = path.join(tempDir, 'custom.e2e.ts')
+    await fs.writeFile(explicitFile, '// explicit test file\n')
+
+    const recorder = new SuiteRecorder()
+    try {
+      const exitCode = await runOrchestrator([explicitFile], {
+        allFiles: mockFiles,
+        suiteRunner: (suite: TestSuite): Promise<number> => {
+          recorder.record(suite.name)
+          expect(suite.files).toEqual([explicitFile])
+          return Promise.resolve(0)
+        },
+      })
+      expect(exitCode).toBe(0)
+      expect(recorder.executedSuites).toEqual(['standard'])
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  test('forwards ordered arguments after -- to suite runner', async () => {
+    const recorder = new SuiteRecorder()
+    const exitCode = await runOrchestrator(
+      ['e2e/area-chart-rendering.e2e.ts', '--', '--test-name-pattern', 'donut'],
+      {
+        allFiles: mockFiles,
+        suiteRunner: (suite: TestSuite, runOptions): Promise<number> => {
+          recorder.record(suite.name)
+          expect(runOptions?.passthroughArgs).toEqual(['--test-name-pattern', 'donut'])
+          return Promise.resolve(0)
+        },
+      },
+    )
     expect(exitCode).toBe(0)
+    expect(recorder.executedSuites).toEqual(['standard'])
   })
 
   test('executes planned suites in order and returns 0 on success', async () => {
