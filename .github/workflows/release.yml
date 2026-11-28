@@ -45,7 +45,7 @@ jobs:
           [[ $(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft) == true ]]
 
       - name: Setup environment
-        uses: $/.github/actions/setup-env
+        uses: ./.github/actions/setup-env
 
       - name: Build
         run: bun run build
