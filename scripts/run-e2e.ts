@@ -88,12 +88,9 @@ export function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
     }
 
     if (first === '--') {
-      const additionalFilters = rest.filter(arg => !arg.startsWith('-'))
-      const additionalPassthrough = rest.filter(arg => arg.startsWith('-'))
       return {
         ...acc,
-        fileFilters: [...acc.fileFilters, ...additionalFilters],
-        passthroughArgs: [...acc.passthroughArgs, ...additionalPassthrough],
+        passthroughArgs: [...acc.passthroughArgs, ...rest],
       }
     }
 
@@ -182,10 +179,14 @@ export function filterTestFiles(
   if (filters.length === 0) {
     return allFiles
   }
-  const matched = allFiles.filter(file =>
-    filters.some(filter => file === filter || file.endsWith(`/${filter}`) || file.includes(filter)),
+  const normalizedFilters = filters.map(filter =>
+    filter.startsWith('./') ? filter.slice(2) : filter,
   )
-  return matched.length > 0 ? matched : filters
+  return allFiles.filter(file =>
+    normalizedFilters.some(
+      filter => file === filter || file.endsWith(`/${filter}`) || file.includes(filter),
+    ),
+  )
 }
 
 /**
@@ -614,6 +615,21 @@ Examples:
   )
 }
 
+async function resolveExistingFiles(filters: readonly string[]): Promise<readonly string[]> {
+  const checks = await Promise.all(
+    filters.map(async filter => {
+      const candidate = path.isAbsolute(filter) ? filter : path.resolve(ROOT_DIR, filter)
+      try {
+        const stats = await fs.stat(candidate)
+        return stats.isFile() ? filter : undefined
+      } catch {
+        return undefined
+      }
+    }),
+  )
+  return checks.filter((file): file is string => file !== undefined)
+}
+
 /**
  * Orchestrates the full end-to-end test run across suites.
  */
@@ -628,12 +644,16 @@ export async function runOrchestrator(
   }
 
   const allFiles = options?.allFiles ?? (await findE2eTestFiles())
-  const filteredFiles = filterTestFiles(allFiles, parsed.fileFilters)
+  const matchedFiles = filterTestFiles(allFiles, parsed.fileFilters)
+  const filteredFiles =
+    parsed.fileFilters.length === 0 || matchedFiles.length > 0
+      ? matchedFiles
+      : await resolveExistingFiles(parsed.fileFilters)
   const suites = planTestSuites(filteredFiles, parsed.suite)
 
   if (suites.length === 0) {
-    console.warn('No matching test suites found to run.')
-    return 0
+    console.error('No matching test suites found to run.')
+    return 1
   }
 
   console.log(`Planned suites: ${suites.map(s => s.name).join(', ')}`)

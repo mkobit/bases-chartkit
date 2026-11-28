@@ -10,9 +10,12 @@ import {
   captureView,
   collectChartViews,
   kebabSlug,
+  prepareOutputDir,
   resolveSurveyTheme,
+  runSurvey,
   screenshotFileName,
 } from '../scripts/survey-chart-types'
+import type { ChartViewEntry } from '../scripts/survey-chart-types'
 
 describe('kebabSlug and screenshotFileName', () => {
   test('converts strings to lowercase kebab-case and trims leading/trailing hyphens', () => {
@@ -264,6 +267,154 @@ describe('captureCanvasScreenshot and captureView', () => {
     } finally {
       await client.close()
       await server.stop(true)
+      await fs.rm(tempOut, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('prepareOutputDir and runSurvey completeness', () => {
+  const barEntry: ChartViewEntry = {
+    baseFile: 'bar/Basic.base',
+    viewName: 'Department Spend',
+    chartType: 'echarts-bar',
+  }
+  const pieEntry: ChartViewEntry = {
+    baseFile: 'pie/Basic.base',
+    viewName: 'Revenue Share',
+    chartType: 'echarts-pie',
+  }
+  const lineEntry: ChartViewEntry = {
+    baseFile: 'line/Basic.base',
+    viewName: 'Trend Line',
+    chartType: 'echarts-line',
+  }
+  const sampleEntries: ReadonlyArray<ChartViewEntry> = [barEntry, pieEntry, lineEntry]
+
+  test('prepareOutputDir clears stale files from previous runs', async () => {
+    const tempOut = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-survey-clean-'))
+    try {
+      await fs.writeFile(path.join(tempOut, 'stale.png'), 'old-bytes')
+      await fs.mkdir(path.join(tempOut, 'nested'), { recursive: true })
+      await fs.writeFile(path.join(tempOut, 'nested', 'extra.png'), 'nested-bytes')
+
+      prepareOutputDir(tempOut)
+
+      const remaining = await fs.readdir(tempOut)
+      expect(remaining).toEqual([])
+    } finally {
+      await fs.rm(tempOut, { recursive: true, force: true })
+    }
+  })
+
+  test('runSurvey fails nonzero on partial capture, removes stale images, and reports all failures', async () => {
+    const tempOut = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-survey-partial-'))
+    try {
+      const failingFile = screenshotFileName(pieEntry)
+      const obsoleteFile = 'removed-chart--old-view.png'
+      await fs.writeFile(path.join(tempOut, failingFile), 'stale-pie-image')
+      await fs.writeFile(path.join(tempOut, obsoleteFile), 'stale-removed-image')
+
+      let stderrOutput = ''
+      const exitCode = await runSurvey({
+        resolveTheme: () => ({ theme: undefined, outputDir: tempOut }),
+        collectViews: () => sampleEntries,
+        writeStderr: message => {
+          stderrOutput += message
+        },
+        captureEntry: async (entry, outputDir) => {
+          const fileName = screenshotFileName(entry)
+          if (entry.chartType === 'echarts-pie' || entry.chartType === 'echarts-line') {
+            return { entry, fileName, ok: false, error: `simulated failure for ${entry.chartType}` }
+          }
+          await fs.writeFile(path.join(outputDir, fileName), 'fresh-bar-image')
+          return { entry, fileName, ok: true }
+        },
+      })
+
+      expect(exitCode).toBe(1)
+
+      const files = await fs.readdir(tempOut)
+      expect(files).toEqual([screenshotFileName(barEntry)])
+
+      expect(stderrOutput).toContain('captured 1/3 screenshots')
+      expect(stderrOutput).toContain('simulated failure for echarts-pie')
+      expect(stderrOutput).toContain('simulated failure for echarts-line')
+    } finally {
+      await fs.rm(tempOut, { recursive: true, force: true })
+    }
+  })
+
+  test('runSurvey returns 0 when all expected captures succeed and write output files', async () => {
+    const tempOut = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-survey-ok-'))
+    try {
+      await fs.writeFile(path.join(tempOut, 'obsolete.png'), 'stale-bytes')
+
+      let stderrOutput = ''
+      const exitCode = await runSurvey({
+        resolveTheme: () => ({ theme: undefined, outputDir: tempOut }),
+        collectViews: () => sampleEntries,
+        writeStderr: message => {
+          stderrOutput += message
+        },
+        captureEntry: async (entry, outputDir) => {
+          const fileName = screenshotFileName(entry)
+          await fs.writeFile(path.join(outputDir, fileName), `fresh-${entry.chartType}`)
+          return { entry, fileName, ok: true }
+        },
+      })
+
+      expect(exitCode).toBe(0)
+      const files = (await fs.readdir(tempOut)).toSorted()
+      const expectedFiles = sampleEntries.map(screenshotFileName).toSorted()
+      expect(files).toEqual(expectedFiles)
+      expect(stderrOutput).toContain('captured 3/3 screenshots')
+    } finally {
+      await fs.rm(tempOut, { recursive: true, force: true })
+    }
+  })
+
+  test('runSurvey returns nonzero when no chart views are found', async () => {
+    const tempOut = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-survey-empty-'))
+    try {
+      await fs.writeFile(path.join(tempOut, 'stale.png'), 'stale-bytes')
+
+      let stderrOutput = ''
+      const exitCode = await runSurvey({
+        resolveTheme: () => ({ theme: undefined, outputDir: tempOut }),
+        collectViews: () => [],
+        writeStderr: message => {
+          stderrOutput += message
+        },
+      })
+
+      expect(exitCode).toBe(1)
+      expect(await fs.readdir(tempOut)).toEqual([])
+      expect(stderrOutput).toContain('no chart views found')
+    } finally {
+      await fs.rm(tempOut, { recursive: true, force: true })
+    }
+  })
+
+  test('runSurvey returns nonzero when a capture reports ok without producing an output file', async () => {
+    const tempOut = await fs.mkdtemp(path.join(os.tmpdir(), 'bck-survey-missing-'))
+    try {
+      let stderrOutput = ''
+      const exitCode = await runSurvey({
+        resolveTheme: () => ({ theme: undefined, outputDir: tempOut }),
+        collectViews: () => [barEntry],
+        writeStderr: message => {
+          stderrOutput += message
+        },
+        captureEntry: async entry => ({
+          entry,
+          fileName: screenshotFileName(entry),
+          ok: true,
+        }),
+      })
+
+      expect(exitCode).toBe(1)
+      expect(stderrOutput).toContain('missing output file')
+    } finally {
       await fs.rm(tempOut, { recursive: true, force: true })
     }
   })

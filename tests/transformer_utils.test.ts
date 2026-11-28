@@ -438,6 +438,46 @@ describe('Transformer Modules', () => {
       expect(parseDateToEpochMs(null)).toBeNull()
       expect(parseDateToEpochMs(undefined)).toBeNull()
     })
+
+    it.each([
+      { label: 'NaN', input: Number.NaN },
+      { label: 'Infinity', input: Number.POSITIVE_INFINITY },
+      { label: '-Infinity', input: Number.NEGATIVE_INFINITY },
+      { label: 'above max epoch ms', input: 8_640_000_000_000_001 },
+      { label: 'below min epoch ms', input: -8_640_000_000_000_001 },
+      { label: 'fractional epoch ms', input: 1_672_531_200_000.5 },
+      { label: 'Date-like returning NaN', input: { getTime: () => Number.NaN } },
+      { label: 'Date-like returning Infinity', input: { getTime: () => Number.POSITIVE_INFINITY } },
+      {
+        label: 'Date-like returning out-of-range ms',
+        input: { getTime: () => 8_640_000_000_000_001 },
+      },
+      {
+        label: 'Date-like returning fractional ms',
+        input: { getTime: () => 1_672_531_200_000.5 },
+      },
+    ])('should return null for invalid numeric or Date-like timestamp ($label)', ({ input }) => {
+      expect(parseDateToEpochMs(input)).toBeNull()
+    })
+
+    it.each([
+      { label: 'zero epoch', input: 0, expected: 0 },
+      { label: 'negative zero epoch', input: -0, expected: 0 },
+      {
+        label: 'max Temporal.Instant boundary',
+        input: 8_640_000_000_000_000,
+        expected: 8_640_000_000_000_000,
+      },
+      {
+        label: 'min Temporal.Instant boundary',
+        input: -8_640_000_000_000_000,
+        expected: -8_640_000_000_000_000,
+      },
+    ])('should accept valid boundary epoch ($label)', ({ input, expected }) => {
+      const result = parseDateToEpochMs(input)
+      expect(result).toBe(expected)
+      expect(Object.is(result, -0)).toBe(false)
+    })
   })
 
   describe('getAxisLabelOverlapOptions', () => {

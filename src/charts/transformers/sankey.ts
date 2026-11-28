@@ -59,7 +59,7 @@ interface CycleSearchResult {
 
 function detectCycleFrom(
   node: string,
-  adjacency: Record<string, readonly string[]>,
+  adjacency: ReadonlyMap<string, readonly string[]>,
   state: CycleVisitState,
 ): CycleSearchResult {
   return state.visited.has(node)
@@ -71,7 +71,7 @@ function detectCycleFrom(
             visiting: new Set([...state.visiting, node]),
             visited: state.visited,
           }
-          const neighbors = adjacency[node] ?? []
+          const neighbors = adjacency.get(node) ?? []
 
           const result = neighbors.reduce<CycleSearchResult>(
             (acc, neighbor) =>
@@ -98,10 +98,10 @@ function detectCycleFrom(
 export function hasSankeyCycle(data: BasesData, sourceProp: string, targetProp: string): boolean {
   const links = buildLinks(data, sourceProp, targetProp)
 
-  const adjacency = R.pipe(
-    links,
-    R.groupBy(l => l.source),
-    R.mapValues((group: readonly SankeyLink[]): readonly string[] => group.map(l => l.target)),
+  const adjacency = links.reduce<ReadonlyMap<string, readonly string[]>>(
+    (acc, link): ReadonlyMap<string, readonly string[]> =>
+      new Map([...acc, [link.source, [...(acc.get(link.source) ?? []), link.target]]]),
+    new Map<string, readonly string[]>(),
   )
 
   const nodeNames: readonly string[] = R.pipe(
